@@ -18,6 +18,14 @@
  * 02111-1307, USA.
  */
 
+/* Initial version January 23rd, 2014 Jasmina Blecic
+                   implemented eclipse                                     */
+/* Revision        March 19th,   2014 Jasmina Blecic
+                   implemented switch eclipse/transit                      */
+/* Revision        April 26th,   2014 Jasmina Blecic
+                   implemented intensity grid and flux                     */
+
+
 #ifndef _TRANSIT_STRUCTURES_H
 #define _TRANSIT_STRUCTURES_H
 

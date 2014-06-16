@@ -18,6 +18,10 @@
  * 02111-1307, USA.
  */
 
+/* Revision        March 19th,   2014 Jasmina Blecic
+                   added eclipse_ray_solution                              */
+/* Revision        April 26th,   2014 Jasmina Blecic
+                   added new function for ray grid                         */
 
 #include <time.h>
 #include <transit.h>
