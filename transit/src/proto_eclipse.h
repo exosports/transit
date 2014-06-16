@@ -1,3 +1,8 @@
+/* Revision        March 19th,   2014 Jasmina Blecic
+                   implemented switch eclipse/transit, added new functions  */
+/* Revision        April 26th,   2014 Jasmina Blecic
+                   implemented intensity grid and flux, added new functions */
+
 #if __STDC__ || defined(__cplusplus)
 #define P_(s) s
 #else

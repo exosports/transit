@@ -1,5 +1,8 @@
 #Adapted from recipes by Emile van Bergen, 2002
 
+# Revision        March 19th,   2014 Jasmina Blecic
+#                 added eclipse module
+
 #standard things
 .SUFFIXES:
 .SUFFIXES: .c .o

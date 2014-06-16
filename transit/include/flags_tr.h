@@ -18,6 +18,9 @@
  * 02111-1307, USA.
  */
 
+/* Revision        April 26th,   2014 Jasmina Blecic
+                   added flag for intensity grid          */
+
 #ifndef _FLAGS_TR_H
 #define _FLAGS_TR_H
 

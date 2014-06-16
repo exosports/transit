@@ -18,6 +18,9 @@
  * 02111-1307, USA.
  */
 
+/* Revision        March 19th,   2014 Jasmina Blecic
+                   added eclipse ray solution                      */
+
 #ifndef _TRANSIT_H
 #define _TRANSIT_H
 

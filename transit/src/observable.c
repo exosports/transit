@@ -18,6 +18,9 @@
  * 02111-1307, USA.
  */
 
+/* Revision        April 26th,   2014 Jasmina Blecic
+                   moved lines that free memory to transit.c                */
+
 #include <transit.h>
 
 /* \fcnfh
