@@ -110,8 +110,8 @@ sethcdef(struct transit *tr,
          struct atm_data *at,
          prop_samp *rads){
 
-  int i;
-  int nmb = 0;
+  //int i;
+  //int nmb = 0;
   //Hard coded values.
   //'hc\_t' temperature.
   //'hc\_meanmass' is both the mean mass and the mass of the only
@@ -120,7 +120,7 @@ sethcdef(struct transit *tr,
   //just set at zero in the hardcode modality.
   PREC_ZREC hc_t       = 1350;
   PREC_ATM hc_pres     = 1.0e3;
-  PREC_ATM hc_abund    = 6.5e-4;
+  //PREC_ATM hc_abund    = 6.5e-4;
   PREC_ATM hc_meanmass = 2.3;
 
   int nrad = rads->n;
@@ -140,11 +140,11 @@ sethcdef(struct transit *tr,
   at->atm.t[0] = hc_t;
   at->atm.p[0] = hc_pres;
   at->mm[0]    = hc_meanmass;
-  for(i=0; i<nmb; i++){
-    //at->isov[i].d = (PREC_ATM *)calloc(1, sizeof(PREC_ATM));
-    //at->isov[i].d[0] = stateeqnford(at->mass, hc_abund, hc_meanmass,
-    //                                hc_meanmass, hc_pres, hc_t);
-    hc_abund = 0;
-  }
+  // for(i=0; i<nmb; i++){
+  //   at->isov[i].d = (PREC_ATM *)calloc(1, sizeof(PREC_ATM));
+  //   at->isov[i].d[0] = stateeqnford(at->mass, hc_abund, hc_meanmass,
+  //                                   hc_meanmass, hc_pres, hc_t);
+  //   hc_abund = 0;
+  // }
   telldefaults(iso, at);
 }
