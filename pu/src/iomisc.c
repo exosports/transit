@@ -47,6 +47,7 @@ void   splitnzero_add (char ***array, char *string, char sep)
 char **splitnzero_alloc (char *string, char sep) 
 void   splitnzero_free (char **multi)
 long   countfields (char *l, char sep)
+int    valueinarray(int *array, int value)
 */
 
 #include <pu/iomisc.h>
@@ -1047,7 +1048,7 @@ getname(char *line,
     *name++ = *line++;
 }
 
-/* Search for string atom in list.
+/* Search for given string in a list.
    Return: the index in list if found,
            -1, else                       */
 int
@@ -1064,7 +1065,7 @@ findstring(char *string,  /* String being searched      */
 
 /* \fcnfh
    Move pointer 'lp' to next field.
-   @returns pointer to the beginning of next non-space                  */
+   @returns pointer to the beginning of next non-space                      */
 char *
 nextfield(char *lp){
   /* Skip leading blank spaces and tabs: */
@@ -1076,3 +1077,16 @@ nextfield(char *lp){
 
   return lp;
 }
+
+
+/* Check if value is in the first arraylen elements of array:
+   Return: 1 if exists
+           0 if not                                                         */
+int valueinarray(int *array, int value, int arraylen){
+  int i;
+  for (i=0; i<arraylen; i++)
+    if (array[i] == value)
+      return 1;
+  return 0;
+}
+

@@ -183,13 +183,14 @@ getatm(struct transit *tr){
   }
   nmol = at.n_aiso;
 
-  /* Allocate mass and radius array of the molecules: */
+  /* Allocate mass and radius array of the molecules:                       */
   mol.nmol   = nmol;
+  mol.ID     = (int       *)calloc(nmol, sizeof(int));
   mol.mass   = (PREC_ZREC *)calloc(nmol, sizeof(PREC_ZREC));
   mol.radius = (PREC_ZREC *)calloc(nmol, sizeof(PREC_ZREC));
   mol.molec  = (prop_mol  *)calloc(nmol, sizeof(prop_mol));
-  /* Get values from 'molecules.dat' file: */
-  getmass(&at, &mol);
+  /* Get molecular data values from 'molecules.dat' file:                   */
+  getmoldata(&at, &mol);
 
   /* Allocate arrays for the mean molecular mass, density, and abundance: */
   at.molec        = (prop_mol *)calloc(nmol, sizeof(prop_mol));

@@ -291,17 +291,17 @@ struct isotopes{
   int *imol;          /* Molecule index for this isotope[n_i]               */
   prop_db *db;        /* Database's info [n_db]                             */
   int n_db,           /* Number of databases                                */
-      n_i;            /* Number of isotopes                                 */
+      n_i,            /* Number of isotopes                                 */
+      nmol;           /* Number of different molecules having a line list   */
 };
 
 struct molecules{
-  int nmol;        /* Number of molecules                                   */
-  prop_mol *molec; /* Molecular properties                                  */
-  char **name;     /* Molecules' names                                      */
-  PREC_ZREC *mass; /* Molecules' masses                                     */
-  double *radius;  /* Molecules' radii                                      */
-  int nisomol;     /* Number of molecules with isotopic data base           */
-  int *molID;      /* Molecule universal ID                                 */
+  int nmol;           /* Number of molecules                                */
+  prop_mol *molec;    /* Molecular properties                               */
+  char **name;        /* Molecules' names                                   */
+  PREC_ZREC *mass;    /* Molecules' masses                                  */
+  PREC_ZREC *radius;  /* Molecules' radii                                   */
+  int *ID;            /* Molecule universal ID                              */
 };
 
 
