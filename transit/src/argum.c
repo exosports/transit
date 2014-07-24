@@ -119,6 +119,10 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_STARRAD,
     CLA_SOLUTION_TYPE,
     CLA_INTENS_GRID,
+    CLA_SAVEOPA,
+    CLA_TEMPLOW,
+    CLA_TEMPHIGH,
+    CLA_TEMPDELT,
   };
 
   /* Generate the command-line option parser: */
@@ -132,10 +136,10 @@ processparameters(int argc,            /* Number of command-line args  */
      "Prints list of possible parameters."},
     {"defaults", 'd', no_argument,  NULL, NULL,
      "Prints default values of the different variable."},
-    {"verb",     'v', no_argument,  NULL, NULL,
-     "Increase the verbose level by one."},
     {"quiet",    'q', no_argument,  NULL, NULL,
      "Decrease the verbose level to the minimum."},
+    {"verb",     'v', required_argument,  "2", "Integer",
+     "Set the verbosity level."},
     {"paramf",   'p', ADDPARAMFILE, NULL, "filename",
      "Use filename to read parameters in addition to default file(s):"
      " '" DOTCFGFILENM PREPEXTRACFGFILES"'."},
@@ -162,8 +166,8 @@ processparameters(int argc,            /* Number of command-line args  */
     {NULL,       0,           HELPTITLE,         NULL, NULL,
      "RADIUS OPTIONS (0-valued defaults would mean to use the values given by "
      "the atmosphere file):"},
-    {"radius",   'r',         no_argument,       NULL, NULL,
-     "Interactively input radius parameters."},
+    //{"radius",   'r',         no_argument,       NULL, NULL,
+    // "Interactively input radius parameters."},
     {"rad-low",  CLA_RADLOW,  required_argument, "0", "radius",
      "Lower radius.  If 0, use atmospheric data minimum."},
     {"rad-high", CLA_RADHIGH, required_argument, "0", "radius",
@@ -205,8 +209,8 @@ processparameters(int argc,            /* Number of command-line args  */
     /* Wavelength options:                    */
     {NULL,         0,             HELPTITLE,         NULL,       NULL,
      "WAVELENGTH OPTIONS (all in fct units):"},
-    {"wavelength", 'w',           no_argument,       NULL,       NULL,
-     "Interactively input wavelength parameters."},
+    //{"wavelength", 'w',           no_argument,       NULL,       NULL,
+    // "Interactively input wavelength parameters."},
     {"wl-low",     CLA_WAVLOW,    required_argument, "0",        "wavel",
      "Lower wavelength. 0 if you want to use line data minimum."},
     {"wl-high",    CLA_WAVHIGH,   required_argument, "0",        "wavel",
@@ -225,8 +229,8 @@ processparameters(int argc,            /* Number of command-line args  */
     /* Wavenumber options:                    */
     {NULL,         0,              HELPTITLE,         NULL, NULL,
      "WAVENUMBER OPTIONS (all in cm-1):"},
-    {"wavenumber", 'n',            no_argument,       NULL, NULL,  
-     "Interactively input wavenumber parameters."},
+    //{"wavenumber", 'n',            no_argument,       NULL, NULL,  
+    // "Interactively input wavenumber parameters."},
     {"wn-low",     CLA_WAVNLOW,    required_argument, "0",  "waven",
      "Lower wavenumber. 0 if you want to use equivalent of the wavelength "
      "maximum."},
@@ -263,9 +267,6 @@ processparameters(int argc,            /* Number of command-line args  */
      "Calculate extinction per isotope (allows to display the contribution "
      "from different isotopes, but consumes more memory."},
     /* FINDME: delete no-per-iso, redundant */
-    {"no-per-iso", CLA_NOEXTPERISO, no_argument,       NULL,    NULL,
-     "Do not calculate extinction per isotope. Saves memory (this is the "
-     "default)."},
     {"blowex",     CLA_BLOWEX,      required_argument, "1",     "factor",
      "Blow extinction by factor before computing tau. No physical"
      "significance (use only for debugging)."},
@@ -292,6 +293,18 @@ processparameters(int argc,            /* Number of command-line args  */
     {"saveext",    CLA_SAVEEXT,     required_argument, NULL,    "filename",
      "Save extinction array in this file which won't need to be recomputed "
      "if only the radius scale (scale height) changes."},
+
+    /* Opacity grid options:                                                */
+    {NULL,        0,            HELPTITLE,         NULL, NULL,
+     "OPACITY GRID OPTIONS:"},
+    {"saveopa",    CLA_SAVEOPA, required_argument,   NULL,  "filename",
+     "Filename to save the opacity grid."},
+    {"tlow",   CLA_TEMPLOW,    required_argument,  "500",  "temperature",
+     "Lower temperature sample (in kelvin)."},
+    {"tigh",  CLA_TEMPHIGH,   required_argument, "0.0",  "float",
+     "Upper temp"},
+    {"temp-delt",  CLA_TEMPDELT,   required_argument,  "100.0",  "spacing",
+     "Temperature sample spacing (in kelvin)."},
 
     /* Resulting ray options:                 */
     {NULL,        0,            HELPTITLE,         NULL, NULL,
@@ -397,6 +410,9 @@ processparameters(int argc,            /* Number of command-line args  */
       break;
     case CLA_SAVEEXT:  /* Extinction array    */
       hints->save.ext = strdup(optarg);
+      break;
+    case CLA_SAVEOPA:  /* Opacity array file    */
+      hints->save.opa = strdup(optarg);
       break;
     /* Set detailed fields files and wavenumbers: */
     case CLA_DETCIA:   /* Detailed CIA            */
@@ -655,6 +671,17 @@ processparameters(int argc,            /* Number of command-line args  */
       hints->wns.fct = atof(optarg);
       break;
 
+    /* Opacity's temperature grid parameters:                  */
+    case CLA_TEMPLOW:
+      hints->temp.i = atof(optarg);
+      break;
+    case CLA_TEMPHIGH:
+      hints->temp.f = atof(optarg);
+      break;
+    case CLA_TEMPDELT:
+      hints->temp.d = atof(optarg);
+      break;
+
     case 'u':  /* Maximum accepted Doppler-width ratio         */
       hints->maxratio_doppler = atof(optarg);
       break;
@@ -686,7 +713,7 @@ processparameters(int argc,            /* Number of command-line args  */
       rn = optopt;
       transiterror(TERR_SERIOUS,
                    "Unknown, unsupported, or missing parameter to option of "
-                   "code %i(%c) passed as argument, use '-h' to see "
+                   "code %i (%s) passed as argument, use '-h' to see "
                    "accepted options.\n", rn, (char)rn);
       break;
     default:   /* Ask for syntax help */
@@ -903,14 +930,14 @@ acceptgenhints(struct transit *tr){
                  "Solution kind '%s' is invalid.\n"
                  "Currently Accepted are:\n", th->solname);
 
-    transit_ray_solution **sol=(transit_ray_solution **)raysols;
+    transit_ray_solution **sol = (transit_ray_solution **)raysols;
     while(*sol)
-      transiterror(TERR_SERIOUS|TERR_NOPREAMBLE|TERR_ALLOWCONT,
+      transiterror(TERR_SERIOUS | TERR_NOPREAMBLE | TERR_ALLOWCONT,
                    " %s\n", (*sol++)->name);
 
-    eclipse_ray_solution **ecl=(eclipse_ray_solution **)eclipsesols;
+    eclipse_ray_solution **ecl = (eclipse_ray_solution **)eclipsesols;
     while(*ecl)
-      transiterror(TERR_SERIOUS|TERR_NOPREAMBLE|TERR_ALLOWCONT,
+      transiterror(TERR_SERIOUS | TERR_NOPREAMBLE | TERR_ALLOWCONT,
                    " %s\n", (*ecl++)->name);
     exit(EXIT_FAILURE);
   }

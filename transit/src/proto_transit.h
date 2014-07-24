@@ -5,7 +5,8 @@
 #endif
 
 /* src/transit.c */
-extern int main P_((int argc, char **argv));
+/* FINDME: Main commented out to make MPI to work: */
+//extern int main P_((int argc, char **argv));
 extern void freemem_transit P_((struct transit *tr));
 
 #undef P_

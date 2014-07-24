@@ -181,7 +181,7 @@ extradius(PREC_NREC r,      /* Radius index                          */
       alphal[i] += mol->molec[j].d[r]/mol->mass[j] * csdiameter * csdiameter *
                    sqrt(1/mass[i] + 1/mol->mass[j]);
       if (i==0)
-        transitprint(20, verblevel, "AlphaL[%d] = %.3e\n", j,
+        transitprint(20, verblevel, "AlphaL[%li] = %.3e\n", j,
                     mol->molec[j].d[r]/mol->mass[j] * csdiameter * csdiameter *
                     sqrt(1/mass[i] + 1/mol->mass[j]));
     }
