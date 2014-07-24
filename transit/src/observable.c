@@ -141,14 +141,13 @@ printmod(struct transit *tr){
   else sprintf(wlu, "%8.1g cm", tr->wavs.fct);
 
   /* Print header: */
-  fprintf(outf, "#wvn %s-1%*s wvl %s%*s modulation\n",
-          wnu, (int)(9-strlen(wnu)), "", wlu, (int)(12-strlen(wlu)),"");
-  /* Print wavenumber, wavelength, and modulation at each wavenumber: */
+  fprintf(outf, "#wvl [um]        modulation\n");
+
+  /* Print wavelength (in microns) and modulation at each wavenumber:       */
   for(rn=0; rn<tr->wns.n; rn++)
-    fprintf(outf, "%-17.9g%-17.9g%-18.9g\n",
-            tr->wns.v[rn]/tr->wns.fct,
-            1/tr->wavs.fct/tr->wns.v[rn]/tr->wns.fct,
-            outray->o[rn]);
+    fprintf(outf, "%-17.9g%-18.9g\n",
+                  1/(tr->wns.v[rn]/tr->wns.fct*1e-4),
+                  outray->o[rn]);
 
   fclose(outf);
   return;

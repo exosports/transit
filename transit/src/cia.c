@@ -168,7 +168,7 @@ interpolatecia(struct transit *tr){
 
       case 't': /* Read the sampling temperatures array:      */
         while(isblank(*++lp));
-        nt = countfields(lp, 0); /* Number of temperatures    */
+        nt = countfields(lp, ' '); /* Number of temperatures    */
         if(!nt)
           transiterror(TERR_SERIOUS,
                        "Wrong line %i in CIA file '%s', if it begins with "

@@ -203,6 +203,16 @@ struct extinction{
 };
 
 
+struct opacity{
+  char *opacity_file; /* Name of file to store the opacities                */
+  PREC_RES ****opac;  /* Opacity grid [temp][iso][rad][wav]                 */
+  prop_samp temp,     /* Opacity-grid temperature array                     */
+            rads,     /* Opacity-grid radius array                          */
+            wns;      /* Opacity-grid wavenumber array                      */
+  int *molID;         /* Opacity-grid molecules array                       */
+};
+
+
 struct idxref{
   PREC_RES *n;       /* Index of refraction [rad] */
 };
@@ -275,26 +285,28 @@ struct geometry{
 
 
 struct isotopes{
-  prop_isof *isof;    /* Fixed isotope information      [n_i] */
-  prop_isov *isov;    /* Variable isotope information   [n_i] */
-  double *isoratio;   /* Isotopic abundance ratio       [n_i] */
-  int *imol;          /* Molecule index for this isotope[n_i] */
-  prop_db *db;        /* Database's info [n_db]               */
-  int n_db,           /* Number of databases                  */
-      n_i;            /* Number of isotopes                   */
+  prop_isof *isof;    /* Fixed isotope information      [n_i]               */
+  prop_isov *isov;    /* Variable isotope information   [n_i]               */
+  double *isoratio;   /* Isotopic abundance ratio       [n_i]               */
+  int *imol;          /* Molecule index for this isotope[n_i]               */
+  prop_db *db;        /* Database's info [n_db]                             */
+  int n_db,           /* Number of databases                                */
+      n_i;            /* Number of isotopes                                 */
 };
 
 struct molecules{
-  int nmol;        /* Number of molecules  */
-  prop_mol *molec; /* Molecular properties */
-  char **name;     /* Molecules' names     */
-  PREC_ZREC *mass; /* Molecules' masses    */
-  double *radius;  /* Molecules' radii     */
+  int nmol;        /* Number of molecules                                   */
+  prop_mol *molec; /* Molecular properties                                  */
+  char **name;     /* Molecules' names                                      */
+  PREC_ZREC *mass; /* Molecules' masses                                     */
+  double *radius;  /* Molecules' radii                                      */
+  int nisomol;     /* Number of molecules with isotopic data base           */
+  int *molID;      /* Molecule universal ID                                 */
 };
 
 
 struct outputray{
-  PREC_RES *o;     /* Output as seen before interaction with telescope */
+  PREC_RES *o;     /* Output as seen before interaction with telescope      */
 };
 
 struct extcloud{
@@ -311,7 +323,8 @@ struct extscat{
 };
 
 struct saves{
-  char *ext;
+  char *ext;   /* Extinction grid                                           */
+  char *opa;   /* Opacity    grid                                           */
 };
 
 /* Struct to store requested ext, tau, or cia detailed information:  */
@@ -343,14 +356,11 @@ struct transithint{
        *f_toomuch,      /* Output toomuch filename  */
        *f_outsample;    /* Output sample filename   */
   PREC_NREC ot;         /* Radius index at which to print output from tau    */
-  prop_samp rads, wavs, wns; /* Sampling properties of radius, wavelength
-                                and wavenumber                               */
+  prop_samp rads, ips,  /* Sampling properties of radius, impact parameter,  */
+       wavs, wns, temp; /*   wavelength, wavenumber, and temperature         */
   RaySol  path;         /* Eclipse or transit ray solution.                  */
   long int ann;         /* Number of angles                                  */
   PREC_RES angles[10];  /* Angles                                            */
-  prop_samp ips;        /* Impact parameter sampling, at what radius
-                           sampling does the user wants ray optical depth to
-                           be calculated                                     */
   float allowrq;        /* How much less than one is accepted, and no warning
                            is issued if abundances don't ad up to that       */
   PREC_RES margin;      /* Amount not trusted at the boundaries (uses
@@ -413,10 +423,8 @@ struct transit{
   PREC_RES wnmf;    /* Amount of cm-1 not trusted at the end                 */
   long int angleIndex; /* Index of the current angle                         */
   PREC_RES *Flux;   /* Flux for eclipse                                      */
-  prop_samp rads, wavs, wns; /* Sampling properties of radius, wavelength
-                                and wavenumber                               */
-  prop_samp ips;    /* Impact parameter sampling, at what radius sampling does
-                       the user wants ray optical depth to be calculated     */
+  prop_samp rads, ips, /* Sampling properties of radius, impact parameter,   */
+      wavs, wns, temp; /* wavelength, wavenumber, and temperature            */
   prop_atm atm;     /* Sampled atmospheric data                              */
   short tauiso;     /* Isotope from which to calculate the optical depth     */
   double blowex;    /* Blow extinction by this amount before computing tau,
