@@ -511,60 +511,38 @@ readatmfile(FILE *fp,                /* Atmospheric file               */
 }
 
 
-void getmass(struct atm_data *at, struct molecules *mol){
+/* Read and store non-layer-dependent molecular data (mass, radius, ID)
+   and store in mol struct.                                                 */
+void getmoldata(struct atm_data *at, struct molecules *mol){
   int nmol = at->n_aiso;
   /* FINDME: De-hardcode filename, put it in tr.ds.at: */
   char *filename = "../inputs/molecules.dat";
   FILE *elist;
 
-  /* Atomic masses, names, alias names, alias molecules, and sizes: */
-  double *amass,    /* Atomic masses form list          */
-         *radius;   /* Molecular radii from list        */
-  char **aname,     /* Atomic symbol names              */
-       **rname,     /* Molecules names for listed radii */
-       **alias,     /* Alias of names given in atmfile  */
-       **amol,      /* Corresponding molecule for alias */
-       **elements;  /* Elements in a molecule           */
-  int natoms = 92,  /* Number of listed atoms           */
-      nalias =  2,  /* Number of listed alias names     */
-      nradii = 14,  /* Number of listed radii           */
-      namelen = 3,  /* Atomic symbol name length        */
+  double *mmass,    /* Molecular mass from list                             */
+         *radius;   /* Molecular radii from list                            */
+  int *molID;       /* Molecular universal ID                               */
+  char **rname,     /* Molecules names for listed radii                     */
+       **alias,     /* Alias of names given in atmfile                      */
+       **amol;      /* Corresponding molecule for alias                     */
+  int nalias =  2,  /* Number of listed alias names                         */
+      ndatamol = 14,  /* Number of listed molecules                         */
       maxlinelen = 501,
-      molnamelen,   /* Length of a molecule name        */
-      elen,         /* Element name length              */
-      iatom,        /* Atom's index from list           */
-      ielement,     /* Element counter in a molecule    */
-      i, j;         /* Auxiliary for-loop index         */
-  int *nelements;   /* Number of elements in a molecule */
+      i, j;         /* Auxiliary for-loop index                             */
 
   char line[maxlinelen], *lp,
-       molecule[MAXNAMELEN]; /* Current molecule's name */
+       molecule[MAXNAMELEN]; /* Current molecule's name                     */
 
-  /* Alias names, and corresponding molecules: */
-  amass    = (double *)calloc(natoms,         sizeof(double));
-  aname    = (char  **)calloc(natoms,         sizeof(char *));
-  aname[0] = (char   *)calloc(natoms*namelen, sizeof(char));
-  for (i=1; i<natoms; i++)
-    aname[i] = aname[0] + i*namelen;
-
-  /* Open Molecules file: */
+  /* Open Molecular data file:                                              */
   if((elist=verbfileopen(filename, "Molecular info ")) == NULL)
     exit(EXIT_FAILURE);
 
-  do{  /* Read lines, skipping comments and blank lines: */
+  /* Read lines, skipping comments and blank lines:                         */
+  do{
     lp = fgets(line, maxlinelen, elist);
   }while (lp[0] == '\0' || lp[0] == '\n' || lp[0] == '#');
 
-  /* Fill atoms and mass array with info from element list: */
-  for (i=0; i<natoms; i++){
-    lp += 19; /* The element's symbol starts at the 19th character */
-    getname(lp, aname[i]);
-    lp = nextfield(lp);
-    amass[i] = strtod(lp, NULL);
-    lp = fgets(line, maxlinelen, elist);
-  }
-
-  /* Allocate alias names and corresponding molecules: */
+  /* Allocate alias names and corresponding molecules:                      */
   alias    = (char  **)calloc(nalias, sizeof(char *));
   amol     = (char  **)calloc(nalias, sizeof(char *));
   alias[0] = (char   *)calloc(nalias*MAXNAMELEN, sizeof(char));
@@ -574,108 +552,62 @@ void getmass(struct atm_data *at, struct molecules *mol){
     amol[i]  = amol[0]  + i*MAXNAMELEN;
   }
 
-  /* Continue reading the file to get the alias names: */
-  do{  /* Skip blank and comment lines: */
-    lp = fgets(line, maxlinelen, elist);
-  }while (lp[0] == '\0' || lp[0] == '\n' || lp[0] == '#');
-
-  /* Get aliases from file:         */
+  /* Get aliases from file:                                                 */
   for (i=0; i<nalias; i++){
-    /* Get alias and molecule name: */
+    /* Get alias and molecule name:                                         */
     getname(lp, alias[i]);
     lp = nextfield(lp);
     getname(lp, amol[i]);
     lp = fgets(line, maxlinelen, elist);
   }
 
-  /* Allocate names and radii:         */
-  radius   = (double *)calloc(nradii,            sizeof(double));
-  rname    = (char  **)calloc(nradii,            sizeof(char *));
-  rname[0] = (char   *)calloc(nradii*MAXNAMELEN, sizeof(char));
-  for (i=1; i<nradii; i++)
+  /* Allocate molecule ID, mass, names, and radii:                          */
+  molID    = (int    *)calloc(ndatamol,            sizeof(int));
+  mmass    = (double *)calloc(ndatamol,            sizeof(double));
+  radius   = (double *)calloc(ndatamol,            sizeof(double));
+  rname    = (char  **)calloc(ndatamol,            sizeof(char *));
+  rname[0] = (char   *)calloc(ndatamol*MAXNAMELEN, sizeof(char));
+  for (i=1; i<ndatamol; i++)
     rname[i] = rname[0] + i*MAXNAMELEN;
 
-  /* Go to next block                  */
+  /* Go to next block:                                                      */
   do{
     lp = fgets(line, maxlinelen, elist);
   }while (lp[0] == '\0' || lp[0] == '\n' || lp[0] == '#');
 
-  /* Get radii from file:              */
-  for (i=0; i<nradii; i++){
-    /* Get molecules' name and radius: */
+  /* Read molecular info from file:                                         */
+  for (i=0; i<ndatamol; i++){
+    /* Get universal molecule's ID:                                         */
+    molID[i] = (int)strtol(lp, NULL, 10);
+    /* Get molecule's name:                                                 */
+    lp = nextfield(lp);
     getname(lp, rname[i]);
+    /* Get molecule's mass:                                                 */
+    lp = nextfield(lp);
+    mmass[i] = strtod(lp, NULL);
+    /* Get molecule's radius:                                               */
     lp = nextfield(lp);
     radius[i] = strtod(lp, NULL)/2.0;
     lp = fgets(line, maxlinelen, elist);
   }
 
-  /* Allocate max number of molecules and max len of molecule name: */
-  nelements   = (int   *)calloc(MAXNAMELEN, sizeof(int));
-  elements    = (char **)calloc(MAXNAMELEN, sizeof(char *));
-  elements[0] = (char  *)calloc((MAXNAMELEN+1)*MAXNAMELEN, sizeof(char));
-  for (j=0; j<MAXNAMELEN; j++)
-    elements[j] = elements[0] + j*(MAXNAMELEN+1);
-
-  /* For each molecule: */
+  /* Assign info for each molecule in atosphere:                            */
   for (i=0; i<nmol; i++){
-    /* Check if molecule name is an alias: */
+    /* Check if molecule name is an alias:                                  */
     if ((j=findstring(mol->name[i], alias, nalias)) >= 0)
       strcpy(molecule, amol[j]);
     else
       strcpy(molecule, mol->name[i]);
 
-    /* Allocate elements in a molecule: */
-    molnamelen  = (int)strlen(molecule);
-
-    /* Break down molecule into its elements: */
-    elen     = 0;  /* Element name length            */
-    ielement = 0;  /* Elements in a molecule counter */
-    for (j=0; j<molnamelen; j++){
-      if (isalpha(molecule[j])){
-        if (isupper(molecule[j])){  /* Uppercase letter: */
-          if (elen > 0){
-            /* End last element, advance j, store new letter */
-            if (elen <= 2){ /* If name is longer, it's an alias name */
-              elen = 0;
-              ielement++;  /* Count 1 more element */
-              nelements[ielement] = 1;
-            }
-            elements[ielement][elen++] = molecule[j];
-          }
-          else{ /* New Atom (elen==0) */
-            elements[ielement][elen++] = molecule[j];
-            nelements[ielement] = 1;
-          }
-        }
-        else{ /* Lowercase: */
-          elements[ielement][elen++] = molecule[j];
-        }
-      }
-      else{  /* A numeric value: */
-        nelements[ielement] = (int)strtol(&molecule[j], NULL, 10);
-        elements[ielement][elen] = '\0';
-        j += (int)log10((double)nelements[ielement++]);
-        elen = 0;
-      }
-    }
-    if (elen != 0)
-     ielement++;
-
-    /* Calculate molecule's mass: */
-    for (j=0; j<ielement; j++){
-      /* Find index of atom in list: */
-      iatom = findstring(elements[j], aname, natoms);
-      transitprint(30, verblevel, "Found %d %2s[%2d] atom(s) with mass "
-                 "%9.6f u.\n", nelements[j], aname[iatom], iatom, amass[iatom]);
-      /* Get mass and multiply by the number of atoms in molecule: */
-      mol->mass[i] += amass[iatom] * nelements[j];
-    }
-
-    /* Set the radius: */
-    j = findstring(molecule, rname, nradii);
+    /* Set the radius:                                                      */
+    j = findstring(molecule, rname, ndatamol);
     mol->radius[i] = radius[j] * ANGSTROM;
-    transitprint(30, verblevel, "Molecule '%s' has radius %4.2f A and mass "
-                      "%4.2f u.\n", mol->name[i], mol->radius[i]/ANGSTROM,
-                       mol->mass[i]);
+    /* Set the universal molecular ID:                                      */
+    mol->ID[i]     = molID[j];
+    /* Set the mass:                                                        */
+    mol->mass[i]   = mmass[j];
+    transitprint(1, verblevel, "Molecule %9s (ID: %3i) has radius %4.2f A "
+                 "and mass %7.4f u.\n", mol->name[i], mol->ID[i], 
+                                        mol->radius[i]/ANGSTROM, mol->mass[i]);
   }
 }

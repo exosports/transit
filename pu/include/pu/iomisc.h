@@ -73,6 +73,7 @@ extern char fgetupto(char *line, int max, FILE *fp);
 extern void getname(char *line, char *name);
 extern int findstring(char* string, char **list, int size);
 extern char *nextfield(char *lp);
+extern int valueinarray(int *array, int value, int arraylen);
 #undef P_
 
 #endif /* _IOMISC_H */

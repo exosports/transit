@@ -529,37 +529,47 @@ getinifinasctli(double *ini, /* where initial value would be stored */
 }
 /* TD: data info in a structure */
 
-/* Set the molecule's index of the isotopes: */
+
+/* Set the molecule's index of the isotopes:                                */
 int
 setimol(struct transit *tr){
   struct molecules *mol = tr->ds.mol;
   struct isotopes  *iso = tr->ds.iso;
-  int i; /* Auxiliary for-loop indices */
+  int i; /* Auxiliary for-loop index                                        */
 
   iso->imol = (int *)calloc(iso->n_i, sizeof(int));
+  iso->nmol = 0;
   for (i=0; i<iso->n_i; i++){
     //transitprint(1, verblevel, "Isotope %d is '%s', from DB %d: '%s'.\n",
     //                  i, iso->isof->n, iso->isof->d, iso->db[iso->isof->d].n);
     /* If the database is P&S, it's a water isotope: */
+    /* FINDME: This won't work for HITRAN.                                  */
     if (strcmp(iso->db[iso->isof->d].n, "Partridge & Schwenke (1997)\0")==0){
-      /* Search water molecule's index:              */
+      /* Search water molecule's index:                                     */
       iso->imol[i] = findstring("H2O\0", mol->name, mol->nmol);
       transitprint(30, verblevel, "Isotope '%s', is mol %d: '%s'.\n",
                       iso->isof[i].n, iso->imol[i], mol->name[iso->imol[i]]);
     }
+    /* Find if current imol is already in imol array:                       */
+    if (valueinarray(iso->imol, iso->imol[i], i) == 0){
+      transitprint(20, verblevel, "Isotope %s (%d) is a new molecule (%s).\n",
+                                  iso->isof[i].n, i, mol->name[iso->imol[i]]);
+      iso->nmol++;
+    }
   }
   return 0;
 }
+
 
 int
 getisoratio(struct transit *tr){
   struct isotopes *iso = tr->ds.iso;
   int i, j,
       maxlinelen=501,
-      niratio=4;  /* Number of isotope ratios in list       */
-  double *iratio; /* Isotope number-abundance ratio in list */
-  char **iname;   /* Isotope name in list                   */
-  char line[maxlinelen], *lp; /* string pointers            */
+      niratio=4;       /* Number of isotope ratios in list                  */
+  double *iratio;      /* Isotope number-abundance ratio in list            */
+  char **iname;        /* Isotope name in list                              */
+  char line[maxlinelen], *lp; /* String pointers                            */
   char *filename = "../inputs/molecules.dat";
   FILE *elist;
 
@@ -571,10 +581,19 @@ getisoratio(struct transit *tr){
   for (i=1; i<niratio; i++)
     iname[i] = iname[0] + i*maxeisoname;
 
-  /* Open Molecules file: */
+  /* Open Molecules file:                                                   */
   if((elist=verbfileopen(filename, "Molecular info ")) == NULL)
     exit(EXIT_FAILURE);
 
+  /* Skip Molecule's aliases:                                               */
+  do{
+    lp = fgets(line, maxlinelen, elist);
+  }while (lp[0] == '\0' || lp[0] == '\n' || lp[0] == '#');
+  do{
+    lp = fgets(line, maxlinelen, elist);
+  }while (lp[0] != '\0' && lp[0] != '\n' && lp[0] != '#');
+
+  /* Skip Molecule's info:                                                  */
   do{
     lp = fgets(line, maxlinelen, elist);
   }while (lp[0] == '\0' || lp[0] == '\n' || lp[0] == '#');
@@ -585,37 +604,25 @@ getisoratio(struct transit *tr){
   do{
     lp = fgets(line, maxlinelen, elist);
   }while (lp[0] == '\0' || lp[0] == '\n' || lp[0] == '#');
-  do{
-    lp = fgets(line, maxlinelen, elist);
-  }while (lp[0] != '\0' && lp[0] != '\n' && lp[0] != '#');
 
-  do{
-    lp = fgets(line, maxlinelen, elist);
-  }while (lp[0] == '\0' || lp[0] == '\n' || lp[0] == '#');
-  do{
-    lp = fgets(line, maxlinelen, elist);
-  }while (lp[0] != '\0' && lp[0] != '\n' && lp[0] != '#');
-
-  do{
-    lp = fgets(line, maxlinelen, elist);
-  }while (lp[0] == '\0' || lp[0] == '\n' || lp[0] == '#');
-
-  /* Read list of isotope ratios:                       */
+  /* Read list of isotopic ratios:                                          */
   for (i=0; i<niratio; i++){
-    /* FINDME: For now skip molecule name:              */
+    /* Skip molecule name:                                                  */
     lp = nextfield(lp);
-    getname(lp, iname[i]);        /* Read isotope name  */
-    //transitprint(1, verblevel, "word: %s\n", iname[i]);
+    /* Read isotope name:                                                   */
+    getname(lp, iname[i]);
+    /* Read isotopic fractional abundance ratio:                            */
     lp = nextfield(lp);
-    iratio[i] = strtod(lp, NULL); /* Read isotope ratio */
-    //transitprint(1, verblevel, "number: %.5f\n", iratio[i]);
+    iratio[i] = strtod(lp, NULL);
+    transitprint(30, verblevel, "%s isotopic ratio: %.5f\n",
+                                 iname[i], iratio[i]);
     lp = fgets(line, maxlinelen, elist);
   }
 
-  /* Find respective isotope name in list */
+  /* Find respective isotope name in list:                                  */
   for (i=0;  i < iso->n_i;  i++){
     j = findstring(iso->isof[i].n, iname, niratio);
-    //transitprint(1, verblevel, "jota: %d, name: %s.\n", j, iso->isof[i].n);
+    transitprint(30, verblevel, "j: %d, name: %s.\n", j, iso->isof[i].n);
     iso->isoratio[i] = iratio[j];
   }
   return 0;
