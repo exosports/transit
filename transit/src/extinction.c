@@ -28,22 +28,21 @@
 
 static _Bool extinctperiso, extwncalledonce=0, gominelow;
 static PREC_VOIGT ***profile;
-static PREC_RES ***kalt, /* Shape: [nrad, niso, nwn] */
-                minelow; 
-/* Line info content: */
+static PREC_RES minelow; 
+/* Line info content:                                                       */
 static EXTINCTION_Q PREC_LNDATA *ltwl;
 static EXTINCTION_Q PREC_LNDATA *ltgf, *ltelow;
 static EXTINCTION_Q short *ltisoid;
 static double efct, wfct;
 
-/* Various radius independent variable: */
-static int niso, nmol; //neiso
+/* Various radius independent variable:                                     */
+static int niso, nmol;
 static PREC_RES *wn, iniwn, wni, wnf, dwn, wavfct;
 static PREC_NREC nwn, nlines, nrad;
 static struct isotopes *iso;
 struct molecules *mol;
 
-/* Following to store isotope data, these are auxiliary variables: */
+/* Following to store isotope data, these are auxiliary variables:          */
 static PREC_NREC *wa, *wrc, *nwnh;
 static PREC_VOIGTP *alphal, *alphad;
 static PREC_ATM *densiso;
@@ -99,16 +98,14 @@ newprofile(PREC_VOIGT **pr,  /* Output 2D profile               */
 
 
 /* \fcnfh
-   Compute radius reordering extinction array to be processed by
-   extradius
-
-   Return: 0 on success, else extradius()                     */
+   Compute radius reordering extinction array to be processed by extradius
+   Return: 0 on success, else extradius()                                   */
 int
-computeextradius(PREC_NREC r,            /* Radius index      */
-                 PREC_ATM temp,          /* Temperature       */
-                 struct extinction *ex){ /* Extinction struct */
+computeextradius(PREC_NREC r,            /* Radius index                    */
+                 PREC_ATM temp,          /* Temperature                     */
+                 struct extinction *ex){ /* Extinction struct               */
   int res;
-  if((res=extradius(r, kalt[r], temp, ex->vf, ex->ta, ex->maxratio))==0)
+  if((res=extradius(r, ex->e, temp, ex->vf, ex->ta, ex->maxratio))==0)
     ex->computed[r] = 1;
 
   return res;
@@ -117,22 +114,21 @@ computeextradius(PREC_NREC r,            /* Radius index      */
 
 /*\fcnfh
   Compute extinction coefficient at one specific radius.
-
   Return: 0 on success, else
          -2 if no radii has been specified.
          -3 if only 2 wavelengths points
          -5 if no isotopes selected!
          -6 if fine binning less than 1
          -7 if timesalpha less than 1
-         -8 if maxratio less than 0                                  */
+         -8 if maxratio less than 0                                         */
 int
-extradius(PREC_NREC r,      /* Radius index                          */
-          PREC_RES **kiso,  /* Extinction [iso][wn]                  */
-          PREC_ATM temp,    /* Temperature                           */
-          int fbinvoigt,    /* Fine-bins for voigt profile           */
-          float timesalpha, /* Number of Voigt half-widths computed  */
-          float maxratio){  /* Maximum allowed Doppler radius before
-                                   recalculating profile             */
+extradius(PREC_NREC r,       /* Radius index                                */
+          PREC_RES ***kiso,  /* Extinction [iso][wn]                        */
+          PREC_ATM temp,     /* Temperature                                 */
+          int fbinvoigt,     /* Fine-bins for voigt profile                 */
+          float timesalpha,  /* Number of Voigt half-widths computed        */
+          float maxratio){   /* Maximum allowed Doppler radius before
+                                recalculating profile                       */
 
   PREC_NREC ln;
   int i, imol;
@@ -151,7 +147,7 @@ extradius(PREC_NREC r,      /* Radius index                          */
      sqrt(AMU) units):
       \alpha_D = \frac{\nu}{\sqrt{m}}
          \underbrace{\frac{\sqrt{2k_B T \ln{2}}}{c}}_{\rm{propto\_adop}}
-      \label{dopbr}                                               */
+      \label{dopbr}                                                         */
   double propto_adop = sqrt(2*KB*temp/AMU) * SQRTLN2/LS;
 
   /* Constant proportionality factor of the Lorenz width (FINDME: units?):
@@ -159,19 +155,20 @@ extradius(PREC_NREC r,      /* Radius index                          */
                 \underbrace{\sqrt{\frac{2k_B T}{\pi c^2}}}_{\rm{propto\_alor}}
                 \sum_{i}n_i\sigma_{ir}^2
                       \sqrt{\left(\frac{1}{m_r} + \frac{1}{m_i}\right)}
-     \label{lorwidth}                                                 */
+     \label{lorwidth}                                                       */
   double propto_alor = sqrt(2*KB*temp/PI/AMU)/(AMU*LS);
 
-  /* Initialize a Voigt profile for every isotope as well for
-     the mass, ziso, and densiso arrays:                      */
+  /* Initialize a Voigt profile for every isotope as well for the mass,
+     ziso, and densiso arrays:                                              */
   for (i=0; i<nmol; i++)
     densiso[i] = mol->molec[i].d[r];
-  for(i=0; i<niso; i++){    /* Initialize arrays:             */
-    mass[i]    = iso->isof[i].m;
-    ziso[i]    = iso->isov[i].z[r];
+  /* Initialize arrays:                                                     */
+  for(i=0; i<niso; i++){
+    mass[i] = iso->isof[i].m;     /* Isotope's mass                         */
+    ziso[i] = iso->isov[i].z[r];  /* Isotope's partition function           */
+    imol    = iso->imol[i];       /* Molecule's index for the isotope       */
 
-    imol = iso->imol[i];  /* Isotope's molecule index */
-    /* Calculate Lorentz line width: */
+    /* Calculate Lorentz line width:                                        */
     alphal[i] = 0.0;
     for(j=0; j<nmol; j++){
       csdiameter = (mol->radius[j] + mol->radius[imol]);
@@ -187,66 +184,69 @@ extradius(PREC_NREC r,      /* Radius index                          */
     }
     alphal[i] *= propto_alor;
 
-    /* Calculate Doppler width divided by central wavenumber: */
+    /* Calculate Doppler width divided by central wavenumber:               */
     alphad[i] = propto_adop/sqrt(mass[i]);
 
     if(i == 0)
-      transitprint(20, verblevel, "Lorentz: %.9f, Doppler: %.9f broadening "
+      transitprint(10, verblevel, "Lorentz: %.9f, Doppler: %.9f broadening "
               "(T=%d).\n", alphal[i], alphad[i]*wn[0], (int)temp);
     /* Get a new profile: 'profile[i]' has dimensions ex->vf x (2*nwnh[i]+1).
-       The latter is calculated by newprofile, though: */
+       The latter is calculated by newprofile, though:                      */
     if((nwnh[i] = newprofile(profile[i], fbinvoigt, dwn,
                              wn[0]*alphad[i], alphal[i], timesalpha)) < 1)
       transiterror(TERR_CRITICAL, "newprofile() returned error code %i on its "
                                   "first try for isotope %i.\n", nwnh[i], i);
 
-    w = nwn-1; /* Index of last wavenumber */
-    /* How many other wavenumbers bins to recalculate the Voigt profile: */
+    /* Index of last wavenumber:                                            */
+    w = nwn-1;
+    /* How many other wavenumbers bins to recalculate the Voigt profile:    */
     j = (int)(maxratio*wn[w]/dwn + 0.5);
-    if(!j) j = 1;  /* Has to be at least 1 */
-    /* Wavenumber index where the profile was last calculated:  */
+    /* Has to be at least 1:                                                */
+    if(!j)
+      j = 1;
+    /* Wavenumber index where the profile was last calculated:              */
     wa[i] = w;
-    /* Wavenumber index where the profile will be recalculated: */
+    /* Wavenumber index where the profile will be recalculated:             */
     wrc[i] = w-j;
   }
 
-  /* Compute the spectra, proceed for every line: */
+  /* Compute the spectra, proceed for every line:                           */
   for(ln=0; ln<nlines; ln++){
-    /* Skip lines which strength is lower than minelow:          */
-    if(gominelow && ltelow[ln]<minelow)
-      continue;  /* FINDME: Defining gominelow seems unnecessary */
+    /* Skip lines with strength lower than minelow:                         */
+    if(gominelow  &&  ltelow[ln] < minelow)
+      continue;  /* FINDME: Defining gominelow seems unnecessary            */
 
-    /* Wavenumber of line transition: */
+    /* Wavenumber of line transition:                                       */
     wavn = 1.0/(ltwl[ln]*wfct);
 
-    /* If it is beyond lower limit, skip to next line transition: */
+    /* If it is beyond the lower limit, skip to next line transition:       */
     if(wavn < iniwn)
       continue;
     else
-      /* Closest wavenumber index to transition, but no larger than: */
+      /* Closest wavenumber index to transition, but no larger than:        */
       w = (wavn-iniwn)/dwn;
     transitDEBUG(25, verblevel, "wavn: %g,  lgf: %g.\n", wavn, ltgf[ln]);
 
-    /* If it is beyond the last index, skip to next line transition: */
+    /* If it is beyond the last index, skip to next line transition:        */
     if(w >= nwn)
       continue;
 
     /* Distance from center of line to sampled wavenumber by 'w', in number
-       of fine bins:  */
+       of fine bins:                                                        */
     subw = fbinvoigt*(wavn - w*dwn - iniwn)/dwn;
 
-    i = ltisoid[ln]; /* Isotope ID of line     */
-    k = kiso[i];     /* Extinction coefficient array[wn] for given isotope */
+    i = ltisoid[ln]; /* Isotope ID of line                                  */
+    k = kiso[i][r];  /* Extinction coefficient array[wn] for given isotope  */
 
-    /* FINDME: Comment me: */
-    transitASSERT(wa[i] != -1 && wa[i]<w,
+    /* FINDME: Comment me */
+    transitASSERT(wa[i] != -1  &&  wa[i] < w,
                   "Database is not ordered!, previous wavenumber was at index "
                   "%i, new one at %i (it should have been smaller).\n",
                   wa[i], w);
 
-    /* If w <= wrc, recalculate Voigt profile: */
+    /* If w <= wrc, recalculate Voigt profile:                              */
     if(w<=wrc[i]){
-      /* Calculate next index where to recalculate the profile: */
+      /* Calculate next index where to recalculate the profile:             */
       j = (int)(maxratio*(wn[w])/dwn+0.5);
       if(!j) j = 1;
       wrc[i] = w-j;
@@ -254,7 +254,7 @@ extradius(PREC_NREC r,      /* Radius index                          */
                    "Recalculating Voigt for isotope %i ... current wavenumber "
                    "%li, next wavenumber %li/%li.\n", i, w, wrc[i], nwn);
 
-      /* Free old profile and recalculate Voigt: */
+      /* Free old profile and recalculate Voigt:                            */
       free(profile[i][0]);
       if((nwnh[i] = newprofile(profile[i], fbinvoigt, dwn,
                                wn[w]*alphad[i], alphal[i], timesalpha)) < 1)
@@ -262,18 +262,18 @@ extradius(PREC_NREC r,      /* Radius index                          */
                                     "isotope %i.\n", nwnh[i], i);
     }
 
-    /* TD: SAHA equation is missing in level population!! Code does not
-       consider ionizable levels of species. Error in thesis' equation 3.35! */
+    /* TD: SAHA equation is missing in level population.  The code does not
+       consider ionizable levels of species (thesis' equation 3.35).        */
 
-    /* Calculate opacity coefficient except the broadening factor: */
-    propto_k = densiso[iso->imol[i]] * iso->isoratio[i] * /* Density     */
-               SIGCTE     * ltgf[ln]             * /* Constant * gf      */
-               exp(-EXPCTE*efct*ltelow[ln]/temp) * /* Level population   */
-               (1-exp(-EXPCTE*wavn/temp))        / /* Induced emission   */
-               mass[i]                           / /* Mass               */
-               ziso[i];                            /* Partition function */
+    /* Calculate opacity coefficient except the broadening factor:          */
+    propto_k = densiso[iso->imol[i]] * iso->isoratio[i] * /* Density        */
+               SIGCTE     * ltgf[ln]             *    /* Constant * gf      */
+               exp(-EXPCTE*efct*ltelow[ln]/temp) *    /* Level population   */
+               (1-exp(-EXPCTE*wavn/temp))        /    /* Induced emission   */
+               mass[i]                           /    /* Mass               */
+               ziso[i];                               /* Partition function */
 
-    /* Maximum line opacity coefficient at central wavenumber: */
+    /* Maximum line opacity coefficient at central wavenumber:              */
     if (propto_k > maxk)
       maxk = propto_k;
 
@@ -303,44 +303,31 @@ extradius(PREC_NREC r,      /* Radius index                          */
                  ziso[i],
                  propto_k);
 
-    /* nwnh is (number of points in the profile)/2.                */
+    /* nwnh is (number of points in the profile)/2.                         */
     /* nwnh-w-1 is the starting point of the wavenumber array with
-       respect to the starting index of the profile.               */
-    /* Set profwn such that the index mimic wavenumber's array:    */
+       respect to the starting index of the profile.                        */
+    /* Set profwn such that the index mimic wavenumber's array:             */
     profwn = profile[i][subw] + nwnh[i]-w-1;
 
-    /* Set the lower and upper indices of the profile to be used:  */
-    minj = w-nwnh[i]+1;
-    if(minj<0)
+    /* Set the lower and upper indices of the profile to be used:           */
+    minj = w - nwnh[i] + 1;
+    if(minj < 0)
       minj = 0;
-
-    maxj = w+nwnh[i]+1;
-    if(maxj>nwn)
+    maxj = w + nwnh[i] + 1;
+    if(maxj > nwn)
       maxj = nwn;
 
-    /* Distribute the oscillator strength according to the Voigt profile: */
+    /* Distribute the oscillator strength according to the Voigt profile:   */
     for(j=minj; j<maxj; j++)
       k[j] += propto_k*profwn[j];
 
-    if (r==43 && verblevel==21)
+    if (r == 43 && verblevel == 21)
       printf("%-9li%-20.9g%-20.9g%-20.9g\n", ln, wavn, ltgf[ln], k[5763]);
 
-#if 0
-    if(ltwl[ln]>1696.8267){
-      k=5;
-    }
-    else if(ln==2594618){
-      k=5;
-    }
-    else if(ln==2595091){
-      k=5;
-    }
-#endif
-
-    wa[i] = w;  /* Last wavelength per isotope */
+    wa[i] = w;  /* Last wavelength per isotope                              */
   }
 
-  /* Free the profiles of every non-ignored isotopes: */
+  /* Free the profiles of every non-ignored isotopes:                       */
   for(i=0; i<niso; i++)
       free(profile[i][0]);
   transitprint(2, verblevel, "Done.\n");
@@ -385,6 +372,43 @@ savefile_extinct(char *filename,
 }
 
 
+void
+save_opacity(char *filename,  /* Filename to store the opacity              */
+             PREC_RES ****e,  /* Opacity grid                               */
+             long nmol,       /* Number of molecules                        */
+             long nrad,       /* Number of radius samples                   */
+             long ntemp,      /* Number of temperature samples              */
+             long nwav){      /* Number of wavenumber samples               */
+  FILE *fp;  /* File pointer                                                */
+
+  /* Open file for writing:                                                 */
+  if((fp=fopen(filename, "w")) == NULL){
+    transiterror(TERR_WARNING, "Opacity filename '%s' cannot be opened for "
+                               "writing.\n", filename);
+    return;
+  }
+  transitprint(2, verblevel, "Saving opacity grid to file: '%s'.\n", filename);
+
+  /* Save dimension sizes:                                                  */
+  fwrite(&nmol,  sizeof(long), 1, fp);
+  fwrite(&nrad,  sizeof(long), 1, fp);
+  fwrite(&ntemp, sizeof(long), 1, fp);
+  fwrite(&nwav,  sizeof(long), 1, fp);
+
+  /* Save arrays:                                                           */
+  //fwrite(mol[0],   sizeof(char),  nmol,  fp);
+  //fwrite(rads[0],  sizeof(float), nrad,  fp);
+  //fwrite(temps[0], sizeof(float), ntemp, fp);
+  //fwrite(waven[0], sizeof(float), nwav,  fp);
+
+  /* Save opacity:                                                          */
+  fwrite(e[0][0], sizeof(PREC_RES), 4*nrad*nwav, fp);
+
+  fclose(fp);
+  transitprint(2, verblevel, "Done.\n");
+}
+
+
 /* \fcnfh
    Restoring extinction for a possible next run
 */
@@ -402,18 +426,16 @@ restfile_extinct(char *filename,
                  "Extinction savefile '%s' cannot be opened for reading.\n"
                  "Continuing without restoring. You can safely ignore "
                  "this warning if this the first time you run for this "
-                 "extinction savefile.\n"
-                 ,filename);
+                 "extinction savefile.\n", filename);
     return;
   }
 
   char mn[5];
-  if(fread(mn, sizeof(char), 5, fp)!=5 || strncmp(mn,"@E@S@", 5)!=0){
+  if(fread(mn, sizeof(char), 5, fp) != 5 || strncmp(mn,"@E@S@",5) != 0){
      transiterror(TERR_WARNING,
                   "Given filename for extinction savefile '%s' exists\n"
                   "and is not a valid extinction file. Remove it\n"
-                  "before trying to use extinction savefile\n"
-                  ,filename);
+                  "before trying to use extinction savefile\n", filename);
      fclose(fp);
      return;
   }
@@ -421,15 +443,13 @@ restfile_extinct(char *filename,
   transitprint(2, verblevel, "Restoring extinction file '%s'", filename);
 
   fread(e[0], sizeof(PREC_RES), nrad*nwav, fp);
-  fread(c, sizeof(_Bool), nrad, fp);
+  fread(c,    sizeof(_Bool),    nrad,      fp);
 
   long i;
-  for (i=0 ; i<nrad ; i++)
+  for (i=0; i<nrad; i++)
     if (c[i]) break;
 
-  transitprint(2, verblevel,
-               " done (From the %lith radii)\n"
-               , i);
+  transitprint(2, verblevel, " done (From the %lith radii)\n", i);
 
   fclose(fp);
 
@@ -673,16 +693,6 @@ extwn(struct transit *tr){
         ex->e[i][j] = ex->e[0][0] + nwn*(j + nnr*i);
   }
 
-  /* Have a local array which will have extinction ready to be
-     used by extradius:                                         */
-  kalt    = (PREC_RES ***)calloc(nrad,      sizeof(PREC_RES **));
-  kalt[0] = (PREC_RES  **)calloc(nrad*niso, sizeof(PREC_RES  *));
-  for(i=0; i<nrad; i++){
-    kalt[i] = kalt[0]+i*niso;
-    for(j=0; j<niso; j++)
-      kalt[i][j] = ex->e[j][i]; /* Note, swapped indices */
-  }
-  
   /* Has the extinction been computed at given radius boolean: */
   ex->computed = (_Bool *)calloc(nrad, sizeof(_Bool));
 
@@ -930,11 +940,6 @@ freemem_localextinction(){
      of extradius: */
   free(profile[0]);
   free(profile);
-
-  /* kalt[0][0] will actually be tr.ds->ex->e[0][0], which is not in
-     charge of freemem_extinction: */
-  free(kalt[0]);
-  free(kalt);
 
   /* Free auxiliar variables that were allocated to number of isotopes: */
   free(wa);

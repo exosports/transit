@@ -96,6 +96,10 @@ int main(int argc,      /* Number of variables                             */
                  "parameters according to returned flag: 0x%lx.\n",
                  fw_status);
 
+  /* Calculate opacity grid:                                               */
+  fw(opacity, <0, &transit);
+  t0 = timecheck(verblevel, itr, -4, "opacity", tv, t0);
+
   /* Compute sampling of impact parameter:                                 */
   fw(makeipsample, <0, &transit);
   t0 = timecheck(verblevel, itr,  5, "makeipsample", tv, t0);

@@ -542,7 +542,7 @@ setimol(struct transit *tr){
   for (i=0; i<iso->n_i; i++){
     //transitprint(1, verblevel, "Isotope %d is '%s', from DB %d: '%s'.\n",
     //                  i, iso->isof->n, iso->isof->d, iso->db[iso->isof->d].n);
-    /* If the database is P&S, it's a water isotope: */
+    /* If the database is P&S, it's a water isotope:                        */
     /* FINDME: This won't work for HITRAN.                                  */
     if (strcmp(iso->db[iso->isof->d].n, "Partridge & Schwenke (1997)\0")==0){
       /* Search water molecule's index:                                     */

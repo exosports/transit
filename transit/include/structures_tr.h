@@ -204,12 +204,12 @@ struct extinction{
 
 
 struct opacity{
-  char *opacity_file; /* Name of file to store the opacities                */
-  PREC_RES ****opac;  /* Opacity grid [temp][iso][rad][wav]                 */
-  prop_samp temp,     /* Opacity-grid temperature array                     */
-            rads,     /* Opacity-grid radius array                          */
-            wns;      /* Opacity-grid wavenumber array                      */
-  int *molID;         /* Opacity-grid molecules array                       */
+  char *opacity_file;    /* Name of file to store the opacities             */
+  PREC_RES ****opacity;  /* Opacity grid [temp][iso][rad][wav]              */
+  prop_samp temp,        /* Opacity-grid temperature array                  */
+            rads,        /* Opacity-grid radius array                       */
+            wns;         /* Opacity-grid wavenumber array                   */
+  int *molID;            /* Opacity-grid molecules array                    */
 };
 
 
