@@ -17,10 +17,13 @@ local_$(d)        := $(lib_$(d)) $(bin_PROGRAMS_$(d))
 
 #the following per binary
 transit_FILES_$(d)    := transitstd readlineinfo makesample    \
-                         extinction transit eclipse tau idxrefraction  \
+                         extinction transit tau idxrefraction  \
                          argum slantpath geometry observable   \
                          atmosphere/at_file atmosphere/readatm \
-			 atmosphere/at_onept cia
+			 atmosphere/at_onept                   \
+                         cia eclipse opacity
+#                         at_file readatm                       \
+
 transit_OBJS_$(d)     := $(transit_FILES_$(d):%=$(d)/%.o)
 transit_PIC_OBJS_$(d) := $(transit_FILES_$(d):%=$(d)/%_pic.o)
 transit_DEPS_$(d)     := $(transit_FILES_$(d):%=$(d)/%.o.d)    \

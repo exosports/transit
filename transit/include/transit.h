@@ -147,6 +147,7 @@ extern const eclipse_ray_solution eclipsepath;
 #include <proto_transitstd.h>
 #include <proto_makesample.h>
 #include <proto_extinction.h>
+#include <proto_opacity.h>
 #include <proto_idxrefraction.h>
 #include <proto_tau.h>
 #include <proto_argum.h>

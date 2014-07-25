@@ -121,6 +121,7 @@
 #define TRPI_MODULATION   0x002000 /* modulation()     completed */
 #define TRPI_CIA          0x004000 /* interpolatecia() completed */
 #define TRPI_GRID         0x008000 /* intens_grid()    completed */
+#define TRPI_OPACITY      0x010000 /* idxrefrac()      completed */
 
 /* flags for transiterror:  */
 #define TERR_MESSAGE      0x000000
