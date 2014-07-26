@@ -955,14 +955,14 @@ acceptgenhints(struct transit *tr){
 
 
 /*\fcnfh
-  Saves hints structure    */
+  Saves hints structure.                                                    */
 void
 savehint(FILE *out,
          struct transithint *hints){
-  /* Save main structure:  */
+  /* Save main structure:                                                   */
   fwrite(hints, sizeof(struct transithint), 1, out);
 
-  /* Save strings:         */
+  /* Save strings:                                                          */
   savestr(out, hints->f_atm);
   savestr(out, hints->f_line);
   savestr(out, hints->f_out);
@@ -973,13 +973,12 @@ savehint(FILE *out,
     savestr(out, hints->ciafile[i]);
   }
 
-  /* Save sub-structures   */
+  /* Save sub-structures:                                                   */
   savesample_arr(out, &hints->rads);
   savesample_arr(out, &hints->wavs);
   savesample_arr(out, &hints->wns);
   savesample_arr(out, &hints->ips);
 
-  saveonept_arr(out, &hints->onept);
 }
 
 /* \fcnfh
@@ -990,19 +989,19 @@ savehint(FILE *out,
             -1 if not all the expected information is read
             -2 if info read is wrong
             -3 if cannot allocate memory
-             1 if information read was suspicious                         */
+             1 if information read was suspicious                           */
 int 
 resthint(FILE *in,
          struct transithint *hint){
   int rn, res=0;
-  /* Restore main structure */
+  /* Restore main structure:                                                */
   rn = fread(hint, sizeof(struct transithint), 1, in);
   if(rn<0)
     return rn;
   else
     res+=rn;
 
-  /* Restore strings        */
+  /* Restore strings:                                                       */
   rn = reststr(in, &hint->f_atm);
   if(rn<0) return rn; else res += rn;
   rn = reststr(in, &hint->f_line);
@@ -1020,7 +1019,7 @@ resthint(FILE *in,
     if(rn<0) return rn; else res += rn;
   }
 
-  /* Restore sub-structures */
+  /* Restore sub-structures:                                                */
   restsample_arr(in, &hint->rads);
   if(rn<0) return rn; else res += rn;
   restsample_arr(in, &hint->wavs);
@@ -1028,8 +1027,6 @@ resthint(FILE *in,
   restsample_arr(in, &hint->wns);
   if(rn<0) return rn; else res += rn;
   restsample_arr(in, &hint->ips);
-  if(rn<0) return rn; else res += rn;
-  restonept_arr(in, &hint->onept);
   if(rn<0) return rn; else res += rn;
 
   return res;
@@ -1054,30 +1051,29 @@ printintro(){
 
 
 /* \fcnfh
-   Frees hints structure  */
+   Frees hints structure.                                                   */
 void
 freemem_hints(struct transithint *h){
-  /* Free strings which are copied into transit */
+  /* Free strings which are copied into transit:                            */
   free(h->f_atm);
   free(h->f_line);
   free(h->f_out);
   free(h->f_toomuch);
   free(h->f_outsample);
 
-  /* Free other strings                         */
+  /* Free other strings:                                                    */
   free(h->solname);
   if (h->ncia){
     free(h->ciafile[0]);
     free(h->ciafile);
   }
 
-  /* Free sub-structures                        */
-  freemem_onept(&h->onept);
+  /* Free sub-structures:                                                   */
   freemem_samp(&h->rads);
   freemem_samp(&h->wavs);
   freemem_samp(&h->wns);
   freemem_samp(&h->ips);
-  /* TBD: Free sve if it is ever enabled freesaves(&h->save); */
+  /* TBD: Free sve if it is ever enabled freesaves(&h->save);               */
 
   freemem_cloud(&h->cl);
   freemem_detailout(&h->det);

@@ -26,8 +26,8 @@
 
 extern char *atmfilename;
 
-#include <atmosphere/proto_at_onept.h>
-#include <atmosphere/proto_at_file.h>
-#include <atmosphere/proto_readatm.h>
+//#include <atmosphere/proto_at_onept.h>
+//#include <atmosphere/proto_at_file.h>
+#include <proto_readatm.h>
 
 #endif

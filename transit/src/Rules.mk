@@ -19,10 +19,10 @@ local_$(d)        := $(lib_$(d)) $(bin_PROGRAMS_$(d))
 transit_FILES_$(d)    := transitstd readlineinfo makesample    \
                          extinction transit tau idxrefraction  \
                          argum slantpath geometry observable   \
-                         atmosphere/at_file atmosphere/readatm \
-			 atmosphere/at_onept                   \
+                         readatm                               \
                          cia eclipse opacity
 #                         at_file readatm                       \
+#                         atmosphere/at_file atmosphere/readatm \
 
 transit_OBJS_$(d)     := $(transit_FILES_$(d):%=$(d)/%.o)
 transit_PIC_OBJS_$(d) := $(transit_FILES_$(d):%=$(d)/%_pic.o)
