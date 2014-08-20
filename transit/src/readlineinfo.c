@@ -551,7 +551,7 @@ setimol(struct transit *tr){
                       iso->isof[i].n, iso->imol[i], mol->name[iso->imol[i]]);
     }
     /* Find if current imol is already in imol array:                       */
-    if (valueinarray(iso->imol, iso->imol[i], i) == 0){
+    if (valueinarray(iso->imol, iso->imol[i], i) < 0){
       transitprint(20, verblevel, "Isotope %s (%d) is a new molecule (%s).\n",
                                   iso->isof[i].n, i, mol->name[iso->imol[i]]);
       iso->nmol++;
@@ -643,17 +643,18 @@ getisoratio(struct transit *tr){
            -3   if hinted final is shorter than smallest allowed initial
            -4   if margin value was too big                             */
 int
-checkrange(struct transit *tr,   /* General parameters and  hints    */
-           struct lineinfo *li){ /* Values returned by readinfo_tli  */
+checkrange(struct transit *tr,   /* General parameters and  hints           */
+           struct lineinfo *li){ /* Values returned by readinfo_tli         */
 
-  int res=0;                           /* Return value                   */
-  PREC_RES margin;                     /* Margin value                   */
-  struct transithint *th = tr->ds.th;  /* transithint                    */
-  prop_samp *msamp = &li->wavs;        /* transit wavelength sampling    */
-  prop_samp *hsamp = &th->wavs;        /* hint    wavelength sampling    */
-  PREC_LNDATA dbini = li->wi*TLI_WAV_UNITS, /* Minimum db wavelength     */
-              dbfin = li->wf*TLI_WAV_UNITS; /* Maximum db wavelength     */
+  int res=0;                                /* Return value                 */
+  PREC_RES margin;                          /* Margin value                 */
+  struct transithint *th = tr->ds.th;       /* transithint                  */
+  prop_samp *msamp = &li->wavs;             /* transit wavelength sampling  */
+  prop_samp *hsamp = &th->wavs;             /* hint    wavelength sampling  */
+  PREC_LNDATA dbini = li->wi*TLI_WAV_UNITS, /* Minimum DB wavelength        */
+              dbfin = li->wf*TLI_WAV_UNITS; /* Maximum DB wavelength        */
   double extra;    /* FINDME */
+  double cm_to_micron = 1e4;  /* Conversion factor to microns               */
 
   /* FINDME: hack prints: */
   //transitprint(1, verblevel, " hsamp->f: %g,  hsamp->i: %g\n",
@@ -661,28 +662,27 @@ checkrange(struct transit *tr,   /* General parameters and  hints    */
   //transitprint(1, verblevel, " hsamp->fct: %g\n", hsamp->fct);
   //transitprint(1, verblevel, " db i: %g,  db f: %g\n", dbini, dbfin);
 
-  /* Initialize modified hints: */
+  /* Initialize modified hints:                                             */
   msamp->n = -1;
   msamp->d = -1;
   msamp->v = NULL;
   msamp->fct = 1;
 
-  /* Check that factor is positive and non-zero, set it:        */
-  if(hsamp->fct<0)
+  /* Check that the hinted wavelength units factor is positive & non-zero:  */
+  if(hsamp->fct <= 0)
     transiterror(TERR_SERIOUS, "User specified wavelength factor is "
                                "negative (%g).\n", hsamp->fct);
-  /* Set lineinfo wavelength units factor equal to transithint factor: */
-  if(hsamp->fct>0)
-    msamp->fct = hsamp->fct;
 
-  /* transit lineinfo.wavs conversion factor to cgs: */
+  /* Set lineinfo wavelength units factor equal to transithint factor:      */
+  msamp->fct = hsamp->fct;
+
+  /* transit lineinfo.wavs conversion factor to cgs:                        */
   double fct = msamp->fct;
 
-  /* fct to microns conversion factor:     */
+  /* fct to microns conversion factor:                                      */
   double fct_to_microns = msamp->fct/1e-4;
 
-  // hack print:
-  // transitprint(1, verblevel, " margin: %g\n", th->margin);
+  transitprint(10, verblevel, "Margin: %g\n", th->margin);
 
   /* Check that the margin leaves a non-zero range in the line dataset,
      set it:                                                             */
@@ -706,7 +706,7 @@ checkrange(struct transit *tr,   /* General parameters and  hints    */
      the lines between 'dbini' and 'dbfin', instead they are the minimum
      and maximum wavelength of the given transitions.                     */
   if(li->asciiline){
-    if(margin==0.0)
+    if(margin == 0.0)
       transiterror(TERR_WARNING,
                    "Wavelength margin is zero in a TLI-ASCII file. "
                    "There will be no points to the left or "
@@ -716,14 +716,14 @@ checkrange(struct transit *tr,   /* General parameters and  hints    */
   else
     extra = 0;
 
-  transitDEBUG(21, verblevel,
-               "Hinted initial and final wavelengths are %g and %g cm.\n"
-               "Databse's max and min wavelength are %g and %g cm.\n",
+  transitDEBUG(10, verblevel,
+               "Hinted initial and final wavelengths are %6g and %6g cm.\n"
+               "The database max and min wavelengths are %6g and %6g cm.\n",
                hsamp->i*fct, hsamp->f*fct, dbini, dbfin);
 
   /* Set final wavelength:                                         */
   /* If invalid/not set hint final wavelength, default it to zero: */
-  if(hsamp->f<0){
+  if(hsamp->f < 0){
     hsamp->f = 0;
     transiterror(TERR_WARNING,
                  "Incorrect upper wavelength limit in hint.  Default: setting "
@@ -737,22 +737,19 @@ checkrange(struct transit *tr,   /* General parameters and  hints    */
     transitDEBUG(20, verblevel, "dbini: %g  margin: %g  sampf: %g.\n",
                  dbini, margin, hsamp->f);
     /* Check that it is not below the minimum value:               */
-    if(dbini+margin > fct*hsamp->f){
+    if(dbini+margin > hsamp->f*fct){
       transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
                    "Considering margin, final wavelength (%g * %g) is smaller "
                    "than minimum wavelength in database (%g = %g + %g).\n",
                    hsamp->f, fct, dbini+margin, dbini, margin);
       return -3;
     }
-    // hack print:
-    //transitprint(1, verblevel, " hsamp->f: %g,  margin: %g,  dbfin: %g\n", 
-    //             hsamp->f, margin, dbfin);
     /* Warn if it is above maximum value with information:         */
     if(hsamp->f*fct+margin > dbfin)
-      transiterror(TERR_WARNING,
-                   "Final requested wavelength (%g microns) is larger "
-                   "than the maximum informative value in database "
-                   "(%g microns).\n", hsamp->f, dbfin*fct_to_microns);
+      transiterror(TERR_WARNING, "Final requested wavelength (%g microns) "
+                   "is larger than the maximum informative value in database "
+                   "(%g microns).\n", hsamp->f*fct * cm_to_micron,
+                                      dbfin        * cm_to_micron);
     /* Set the final wavelength value:                             */
     msamp->f = hsamp->f;
   }
@@ -783,7 +780,8 @@ checkrange(struct transit *tr,   /* General parameters and  hints    */
       transiterror(TERR_WARNING,
                    "Initial requested wavelength (%g microns) is smaller "
                    "than the minimum informative value in database "
-                   "(%g microns).\n", hsamp->i, dbini*fct_to_microns);
+                   "(%g microns).\n", hsamp->i * fct * cm_to_micron,
+                                      dbini          * cm_to_micron);
     msamp->i = hsamp->i;
   }
 

@@ -29,7 +29,7 @@
 #include <math.h>
 #include <pu/procopt.h>
 #ifdef _USE_GSL
-# include <gsl/gsl_version.h>
+#include <gsl/gsl_version.h>
 #endif /* _USE_GSL */
 
 /* Transit ray solution:            */
@@ -119,7 +119,7 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_STARRAD,
     CLA_SOLUTION_TYPE,
     CLA_INTENS_GRID,
-    CLA_SAVEOPA,
+    CLA_OPACITYFILE,
     CLA_TEMPLOW,
     CLA_TEMPHIGH,
     CLA_TEMPDELT,
@@ -219,10 +219,10 @@ processparameters(int argc,            /* Number of command-line args  */
      "spacing",  "Wavelength spacing. It cannot be 0 or less."},
     {"wl-osamp",   CLA_WAVOSAMP,  required_argument, "100",      "integer",
      "Wavelength oversampling. It cannot be 0 or less."},
-    {"wl-fct",     CLA_WAVFCT,    required_argument, "0",        "factor",
+    {"wl-fct",     CLA_WAVFCT,    required_argument, "1",        "factor",
      "Wavelength factor. Multiplicating wavelength values by this gives "
      "centimeters. If 0 or 1 then use centimeters."},
-    {"wl-marg",    CLA_WAVMARGIN, required_argument, "0.000001", "boundary",
+    {"wl-marg",    CLA_WAVMARGIN, required_argument, "0.00000", "boundary",
      "Not trustable range at boundary of line databases. Also transitions "
      "this much away from the requested range will be considered."},
 
@@ -297,11 +297,11 @@ processparameters(int argc,            /* Number of command-line args  */
     /* Opacity grid options:                                                */
     {NULL,        0,            HELPTITLE,         NULL, NULL,
      "OPACITY GRID OPTIONS:"},
-    {"saveopa",    CLA_SAVEOPA, required_argument,   NULL,  "filename",
-     "Filename to save the opacity grid."},
+    {"opacityfile",    CLA_OPACITYFILE, required_argument,   NULL,  "filename",
+     "Filename to read/save the opacity grid."},
     {"tlow",   CLA_TEMPLOW,    required_argument,  "500",  "temperature",
      "Lower temperature sample (in kelvin)."},
-    {"tigh",  CLA_TEMPHIGH,   required_argument, "0.0",  "float",
+    {"thigh",  CLA_TEMPHIGH,   required_argument, "0.0",  "float",
      "Upper temp"},
     {"temp-delt",  CLA_TEMPDELT,   required_argument,  "100.0",  "spacing",
      "Temperature sample spacing (in kelvin)."},
@@ -411,8 +411,8 @@ processparameters(int argc,            /* Number of command-line args  */
     case CLA_SAVEEXT:  /* Extinction array    */
       hints->save.ext = strdup(optarg);
       break;
-    case CLA_SAVEOPA:  /* Opacity array file    */
-      hints->save.opa = strdup(optarg);
+    case CLA_OPACITYFILE:  /* Opacity array file                            */
+      hints->f_opa = strdup(optarg);
       break;
     /* Set detailed fields files and wavenumbers: */
     case CLA_DETCIA:   /* Detailed CIA            */
@@ -949,6 +949,62 @@ acceptgenhints(struct transit *tr){
   static struct detailout det;
   memcpy(&det, &th->det, sizeof(struct detailout));
   tr->ds.det = &det;
+
+  /* Accept line-profile arguments:                                         */
+
+  /* Check that voigtfine (oversampling factor of the profile binning)
+     is > 1, and set it's value in transit:                                 */
+  if(th->voigtfine < 1){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
+                 "Fine binning of Voigt function has to be positive: %i.\n",
+                 th->voigtfine);
+    return -1;
+  }
+  tr->voigtfine = th->voigtfine;
+
+  /* Check that timesalpha (profile half width in units of Doppler/Lorentz
+     broadening half widths) is > 1, and set it's value in transit:         */
+  if(th->timesalpha < 1){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
+                 "Times of maximum width has to be greater than one: %i\n",
+                 th->voigtfine);
+    return -1;
+  }
+  tr->timesalpha = th->timesalpha;
+
+  /* maxratio is the maximum allowed ratio change before recalculating
+     profile array:                                                         */
+  if(th->maxratio_doppler<0){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
+                 "Maximum allowed Doppler width ratio change. Has to "
+                 "be 0 or positive (%g).\n", th->maxratio_doppler);
+    return -1;
+  }
+
+  if(th->minelow < 0){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
+                 "Minimum line-transition low energy limit has to be positive:"
+                 " %i\n", th->minelow);
+    return -1;
+  }
+  tr->minelow = th->minelow;
+
+  /* Pass atmospheric flags into transit struct:                            */
+  transitacceptflag(tr->fl, th->fl, TRU_ATMBITS); /* See transit.h          */
+
+  /* Set interpolation function flag:                                       */
+  switch(tr->fl & TRU_SAMPBITS){
+  case TRU_SAMPLIN:
+    tr->interpflag = SAMP_LINEAR;
+    break;
+  case TRU_SAMPSPL:
+    tr->interpflag = SAMP_SPLINE;
+    break;
+  default:
+    transiterror(TERR_SERIOUS, "Invalid sampling function specified.\n");
+  }
+  transitprint(1, verblevel, "transit interpolation flag: %li.\n",
+                             tr->interpflag);
 
   return 0;
 }

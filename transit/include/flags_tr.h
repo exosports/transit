@@ -26,37 +26,38 @@
 
 /*****   Flags   *****/
 
-/* transithint parameters not accepted or changed: */
-/* File flags:                  */
-#define TRH_FL          0x00000001 /* Line info file        */
-#define TRH_FA          0x00000002 /* Atmospheric info file */
-#define TRH_FO          0x00000004 /* Output file           */
-/* Margin and resolution flags: */
-#define TRH_WNM         0x00000008 /* Wavenumber margin    */
-#define TRH_TR          0x00000010 /* Telescope resolution */
-#define TRH_WM          0x00000020 /* Wavelength margin    */
-/* Line broadening flags:      */
-#define TRH_VF          0x00000040 /* Voigt fine-binning */
-#define TRH_TA          0x00000080 /* Times of alpha     */
-#define TRH_DR          0x00000100 /* Max doppler ratio  */
+/* transithint parameters not accepted or changed:                          */
+/* File flags:                                                              */
+#define TRH_FL          0x00000001 /* Line info file                        */
+#define TRH_FA          0x00000002 /* Atmospheric info file                 */
+#define TRH_FO          0x00000004 /* Output file                           */
+/* Margin and resolution flags:                                             */
+#define TRH_WNM         0x00000008 /* Wavenumber margin                     */
+#define TRH_TR          0x00000010 /* Telescope resolution                  */
+#define TRH_WM          0x00000020 /* Wavelength margin                     */
+/* Line broadening flags:                                                   */
+#define TRH_VF          0x00000040 /* Voigt fine-binning                    */
+#define TRH_TA          0x00000080 /* Times of alpha                        */
+#define TRH_DR          0x00000100 /* Max doppler ratio                     */
 
-#define TRH_MASS        0x00000200 /* mass abundance? */
+#define TRH_MASS        0x00000200 /* mass abundance?                       */
 #define TRH_TOOMUCH     0x00000400 /* Limit optical depth, above this is
-                                      just set to this value. */
+                                      just set to this value.               */
 #define TRH_TAUISO      0x00000800 /* Optical depth is going to be for
                                       only this isotope. To show all of
                                       them, is it either -1, or 0 if
-                                      TRU_EXTINPERISO disabled */
-#define TRH_ST          0x00001000 /* Solution type */
+                                      TRU_EXTINPERISO disabled              */
+#define TRH_ST          0x00001000 /* Solution type                         */
 
-#define TRH_WAVO        0x01000000 /* Wavelength oversampling       */
-#define TRH_WNO         0x02000000 /* Wavenumber oversampling       */
+#define TRH_WAVO        0x01000000 /* Wavelength oversampling               */
+#define TRH_WNO         0x02000000 /* Wavenumber oversampling               */
 
-/* Sampling flags: */
-#define TRH_RAD         0x10000000 /* Radius sample specified       */
-#define TRH_WAV         0x20000000 /* Wavelength sample specified   */
-#define TRH_WN          0x40000000 /* Wavenumber sample specified   */
-#define TRH_IPRM        0x80000000 /* Impact param sample specified */
+/* Sampling flags:                                                          */
+#define TRH_RAD         0x10000000 /* Radius sample specified               */
+#define TRH_WAV         0x20000000 /* Wavelength sample specified           */
+#define TRH_WN          0x40000000 /* Wavenumber sample specified           */
+#define TRH_IPRM        0x80000000 /* Impact param sample specified         */
+#define TRH_TEMP        0x00002000 /* Temperature sample specified          */
 #define TRH_NAME(n) (n==TRH_RAD?"radius":                          \
                     (n==TRH_WAV?"wavelength":                      \
                     (n==TRH_WN?"wavenumber":                       \
@@ -67,9 +68,9 @@
 #define TRF_NOOVERSAMP  0x00000001 /* No oversampling in printsample files */ 
 #define TRF_NOVALUE     0x00000002 /* Do not print each of the values */
 
-/* Flags for interpolation mode: */
-#define TRU_SAMPLIN     0x00000001 /* Linear interpolation */
-#define TRU_SAMPSPL     0x00000002 /* Spline interpolation */
+/* Flags for interpolation mode:                                            */
+#define TRU_SAMPLIN     0x00000001 /* Linear interpolation                  */
+#define TRU_SAMPSPL     0x00000002 /* Spline interpolation                  */
 #define TRU_SAMPBITS    0x00000003 /* FINDME */
 
 #define TRU_CNVFIX      0x00000000 /* Fix width: accepts one width(float)    */
@@ -98,11 +99,11 @@
 
 #define TRU_EXTINPERISO 0x00100000 /* There won't be a calculation of
                                       extinction in a per isotope array,
-                                      all of them should be combined      */
-#define TRU_EXTBITS     0x00f00000
+                                      all of them should be combined        */
+#define TRU_EXTBITS     0x00f00000 /* FINDME                                */
 
-#define TRU_OUTTAU      0x01000000 /* Print out optical depth */
-#define TRU_TAUBITS     0x0f000000 /* FINDME */
+#define TRU_OUTTAU      0x01000000 /* Print out optical depth               */
+#define TRU_TAUBITS     0x0f000000 /* FINDME                                */
 
 /* Progress indicator flags:  */
 #define TRPI_READINFO     0x000001 /* readinfofile()   completed */

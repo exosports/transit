@@ -806,76 +806,67 @@ makewnsample(struct transit *tr){
  Calls makesample with the appropiate parameters and set the flags
 
  @returns makesample() output
-          1 Only one point value was requested                       */
+          1 Only one point value was requested                              */
 int
 makeradsample(struct transit *tr){
-  int res,    /* Return output                       */
-      i, j,   /* Auxiliary for-loop indices          */
-      iso1db; /* First isotope's index in a database */
-  struct lineinfo *li=tr->ds.li;    /* transit's lineinfo struct        */
-  struct atm_data *atms=tr->ds.at;  /* transit's atmosphere data struct */
-  struct isotopes  *iso=tr->ds.iso;
-  struct molecules *mol=tr->ds.mol;
+  int res,    /* Return output                                              */
+      i, j,   /* Auxiliary for-loop indices                                 */
+      iso1db; /* First isotope's index in a database                        */
+  struct lineinfo *li=tr->ds.li;    /* Lineinfo struct                      */
+  struct atm_data *atms=tr->ds.at;  /* Atmosphere data struct               */
+  struct isotopes  *iso=tr->ds.iso; /* Isotopes struct                      */
+  struct molecules *mol=tr->ds.mol; /* Molecules struct                     */
 
-  int nrad,            /* Number of radii to sample */
-      niso=iso->n_i,   /* Number of isotopes        */
-      ndb =iso->n_db,  /* Number of data bases      */
-      nmol=mol->nmol;  /* Number of molecules       */        
+  int nrad,            /* Number of radii to sample                         */
+      niso=iso->n_i,   /* Number of isotopes                                */
+      ndb =iso->n_db,  /* Number of data bases                              */
+      nmol=mol->nmol;  /* Number of molecules                               */
 
-  int flag;         /* Flag for interpolation function           */
-  prop_isov *isovs; /* lineinfo's isotopes information           */
-  prop_samp *rsamp = &atms->rads; /* Atmosphere's radii sampling */
+  long flag;                      /* Flag for interpolation type            */
+  prop_isov *isovs;               /* lineinfo's isotopes information        */
+  prop_samp *rsamp = &atms->rads; /* Atmosphere's radii sampling            */
 
-  prop_samp *rad   = &tr->rads;  /* Output radius sampling             */
-  prop_atm  *atmt  = &tr->atm;   /* Array to store p, t, and mm sampling */
-  prop_mol  *molec = mol->molec; /* Molecular variable information       */
+  prop_samp *rad   = &tr->rads;   /* Output radius sampling                 */
+  prop_atm  *atmt  = &tr->atm;    /* Array to store p, t, and mm sampling   */
+  prop_mol  *molec = mol->molec;  /* Molecular variable information         */
 
 
-  /* Check that getatm() and readinfo_tli() have been already called: */
+  /* Check that getatm() and readinfo_tli() have been already called:       */
   transitcheckcalled(tr->pi, "makeradsample", 2, "getatm",       TRPI_GETATM,
                                                  "readinfo_tli", TRPI_READINFO);
-  /* Check that variables are not NULL: */
+  /* Check that variables are not NULL:                                     */
   transitASSERT(atms->rads.n<1 || !ndb || !niso || !nmol,
                 "makeradsample():: called but essential variables are "
                 "missing!.\n");
 
-  /* Set interpolation function flag:  */
-  switch(tr->fl & TRU_SAMPBITS){
-  case TRU_SAMPLIN:
-    flag = SAMP_LINEAR;
-    break;
-  case TRU_SAMPSPL:
-    flag = SAMP_SPLINE;
-    break;
-  default:
-    transiterror(TERR_SERIOUS, "Invalid sampling function specified");
-  }
+  /* Set interpolation function flag:                                       */
+  flag = tr->interpflag;
+  transitprint(30, verblevel, "transit interpolation flag: %li.\n", flag);
 
   /* We need to set-up limit so that the hinted values are compatible
-     with the atmosphere */
+     with the atmosphere                                                    */
  
-  /* If there is only one atmospheric point, don't do makesample: */
+  /* If there is only one atmospheric point, don't do makesample:           */
   if(rsamp->n==1){
-    /* rad->f = rad->i = rsamp->v[0]; */ /* FINDME: commented out */
-    rad->n   = 1;
-    rad->i   = rsamp->i;
-    rad->f   = rsamp->f;
-    rad->fct = rsamp->fct;
-    rad->d = 0;
-    rad->v = (PREC_RES *)calloc(1, sizeof(PREC_RES));
+    rad->n    = 1;
+    rad->i    = rsamp->i;
+    rad->f    = rsamp->f;
+    rad->fct  = rsamp->fct;
+    rad->d    = 0;
+    rad->v    = (PREC_RES *)calloc(1, sizeof(PREC_RES));
     rad->v[0] = rsamp->v[0]; 
-    res = 0; /* makesample()-like output */
-    /* TD: warn that hinted values are going to be useless */
+    res       = 0;   /* makesample()-like output                            */
+    /* TD: warn that hinted values are going to be useless                  */
   }
-  /* If there is more than one atmospheric point: */
+  /* If there is more than one atmospheric point:                           */
   else{
-    /* If no initial value is hinted, take atmosphere's min and max: */
+    /* If no initial value is hinted, take atmosphere's min and max:        */
     //res = makesample(rad, &tr->ds.th->rads, rsamp, TRH_RAD, 0, 0);
     res = makesample0(rad, &tr->ds.th->rads, rsamp, TRH_RAD);
   }
   nrad = rad->n;
 
-  /* Allocate arrays that will receive the interpolated data: */
+  /* Allocate arrays that will receive the interpolated data:               */
   for(i=0; i<nmol; i++){
     molec[i].d = (PREC_ATM *)calloc(nrad, sizeof(PREC_ATM));
     molec[i].q = (PREC_ATM *)calloc(nrad, sizeof(PREC_ATM));
@@ -893,22 +884,20 @@ makeradsample(struct transit *tr){
   atmt->mm = (double   *)calloc(nrad, sizeof(double));
 
   resamplex(flag, rsamp->n, rsamp->v, nrad, rad->v);
-  /* Interpolate atmospheric temperature, pressure, and
-     mean molecular mass:                                       */
+  /* Interpolate the atm. temperature, pressure, and mean molecular mass:   */
   resampley(flag, 3, atms->atm.t, atmt->t,
                      atms->atm.p, atmt->p,
                      atms->mm,    atmt->mm);
 
-  /* Interpolate molecular density and abundance:               */
+  /* Interpolate molecular density and abundance:                           */
   for(i=0; i<nmol; i++)
     resampley(flag, 2, atms->molec[i].d, molec[i].d,
                        atms->molec[i].q, molec[i].q);
-  
   resample_free();
  
-  /* Interpolate isotopic partition function and cross section: */
-  for(i=0; i<ndb; i++){       /* For each database separately:        */
-    iso1db = iso->db[i].s;    /* Index of first isotope in current DB */
+  /* Interpolate isotopic partition function and cross section:             */
+  for(i=0; i<ndb; i++){       /* For each database separately:              */
+    iso1db = iso->db[i].s;    /* Index of first isotope in current DB       */
     isovs  = li->isov + iso1db;
 
     resamplex(flag, li->db[i].t, li->db[i].T, nrad, atmt->t);
@@ -960,6 +949,38 @@ makeipsample(struct transit *tr){
   res = makesample0(&tr->ips, &usamp, &rsamp, TRH_IPRM);
 
   /* Set progress indicator: */
+  if(res>=0)
+    tr->pi |= TRPI_MAKEIP;
+  return res;
+}
+
+
+/* \fcnfh
+   Calls makesample with the appropiate parameters and set the flags for
+   a temperature sampling
+
+   Return: makesample() output                                              */
+int
+maketempsample(struct transit *tr){
+  int res; /* Return output                                                 */
+  struct transithint *th = tr->ds.th; /* transithint                        */
+
+  /* Hinted temperature sample                                              */
+  prop_samp usamp = {0, th->temp.d, th->temp.i, th->temp.f,
+                     1, NULL,       1};
+  /* Reference temperature sample                                           */
+  prop_samp rsamp = {0, 0,          0,          0,
+                     1, NULL,       1};
+
+  if(usamp.f < usamp.i)
+    transiterror(TERR_SERIOUS,
+                 "Wrong specification of temperature, final value (%g) "
+                 "has to be bigger than initial (%g).\n", usamp.f, usamp.i);
+
+  /* Make the sampling:                                                     */
+  res = makesample0(&tr->temp, &usamp, &rsamp, TRH_TEMP);
+
+  /* Set progress indicator:                                                */
   if(res>=0)
     tr->pi |= TRPI_MAKEIP;
   return res;

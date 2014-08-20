@@ -59,12 +59,12 @@ printextprogress(long wi, long wnn){
 
 */
 static __inline__ double
-stateeqnford(_Bool mass, /* Abundance by mass (1) or by number (0)  */
-             double q,   /* Abundance                               */
-             double ma,  /* Mean molecular mass (in AMU)            */
-             double mi,  /* Molecular mass of the specie (in AMU)   */
-             double p,   /* Pressure                                */
-             double t){  /* Temperature                             */
+stateeqnford(_Bool mass,  /* Abundance by mass (1) or by number (0)         */
+             double q,    /* Abundance                                      */
+             double ma,   /* Mean molecular mass (in AMU)                   */
+             double mi,   /* Molecular mass of the specie (in AMU)          */
+             double p,    /* Pressure                                       */
+             double t){   /* Temperature                                    */
   const double rho = AMU * q * p / KB / t;
   if(mass)
     return rho * ma;
@@ -99,7 +99,7 @@ long fw_status;
 #define transitprint(thislevel, verblevel, ...) do{                         \
   if(thislevel <= verblevel)  fprintf(stderr, __VA_ARGS__); }while(0)
 
-/* Add flag to transit if present in hint and change hint flag value: */
+/* Add flag to transit if present in hint and change hint flag value:       */
 #define transitacceptflag(transit, hint, flag) do{                          \
         transit |= hint&flag; hint &= ~(flag); }while(0)
 
@@ -127,11 +127,12 @@ long fw_status;
 #endif
 
 extern int transit_nowarn;
-extern int verblevel;      /* Verbose level > 10 is only for debuging */
-extern int maxline;        /* Initialized in transitstd */
+extern int verblevel;      /* Verbose level > 10 is only for debuging       */
+extern int maxline;        /* Initialized in transitstd                     */
 extern int version;
 extern int revision;
 
+/* FINDME: remove isodo?                                                    */
 enum isodo {unclear=0, atmfile, ignore, fixed, factor};
 
 #include <structures_tr.h>

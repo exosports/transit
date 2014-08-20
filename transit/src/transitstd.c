@@ -145,31 +145,31 @@ int vtransiterror_fcn(int flags,
          -1 File doesn't exist
          -2 File is not of a valid kind (it is a dir or device)
          -3 File is not openable (permissions?)
-         -4 Some error happened, stat returned -1                       */
+         -4 Some error happened, stat returned -1                           */
 int
-fileexistopen(char *in,    /* Input filename                    */
-              FILE **fp){  /* Opened file pointer if successful */
+fileexistopen(char *in,    /* Input filename                                */
+              FILE **fp){  /* Opened file pointer if successful             */
   struct stat st;
   *fp = NULL;
 
   if(in){
-    /* Check if the suggested file exists. If it doesn't, use defaults: */
+    /* Check if the suggested file exists. If it doesn't, use defaults:     */
     if (stat(in, &st) == -1){
       if(errno == ENOENT)
         return -1;
       else
         return -4;
     }
-    /* Not of the valid type: */
+    /* Not of the valid type:                                               */
     else if(!(S_ISREG(st.st_mode) || S_ISFIFO(st.st_mode)))
       return -2;
-    /* Not openable: */
+    /* Not openable:                                                        */
     else if(((*fp)=fopen(in,"r")) == NULL)
       return -3;
-    /* No problem!: */
+    /* No problem!:                                                         */
     return 1;
   }
-  /* No file was requested: */
+  /* No file was requested:                                                 */
   return 0;
 }
 
@@ -404,6 +404,17 @@ linetoolong(int max,     /* Maxiumum length of an accepted line */
   exit(EXIT_FAILURE);
 }
 
+
+double
+timestart(struct timeval tv,  /* timeval structure                          */
+          char *str){         /* Time stamp                                 */ 
+  /* Get current time:                                                      */
+  gettimeofday(&tv, NULL);
+  /* Calculate time in seconds:                                             */
+  double sec = tv.tv_sec + 1e-6*tv.tv_usec;
+  transitprint(1, verblevel, "%s\n", str);
+  return sec;
+}
 
 /* Print to screen the time elapsed since time t0
    Return: current time in seconds                       */
