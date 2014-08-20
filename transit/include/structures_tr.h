@@ -87,9 +87,9 @@ typedef struct {    /* Database properties:             */
 } prop_db;
 
 
-typedef struct {    /* One item per database  */
-  unsigned int t;   /* Number of temperatures */
-  double *T;        /* Temperatures           */ 
+typedef struct {    /* One item per database                                */
+  unsigned int t;   /* Number of temperatures */ /* FINDME: rename to nt    */
+  double *T;        /* Temperatures                                         */
 } prop_dbnoext;
 
 
@@ -204,12 +204,18 @@ struct extinction{
 
 
 struct opacity{
-  char *opacity_file;    /* Name of file to store the opacities             */
-  PREC_RES ****opacity;  /* Opacity grid [temp][iso][rad][wav]              */
-  prop_samp temp,        /* Opacity-grid temperature array                  */
-            rads,        /* Opacity-grid radius array                       */
-            wns;         /* Opacity-grid wavenumber array                   */
-  int *molID;            /* Opacity-grid molecules array                    */
+  PREC_RES ****o;         /* Opacity grid [temp][iso][rad][wav]             */
+  PREC_VOIGT ****profile; /* Voigt profiles [nDop][nLor][vf][2*profsize+1]  */
+  PREC_NREC **profsize;   /* Half-size (wavenumber) of Voigt profiles       */
+  double *aDop,           /* Sample of Doppler widths [nDop]                */
+         *aLor;           /* Sample of Lorentz widths [nLor]                */
+  PREC_RES *temp,         /* Opacity-grid temperature array                 */
+           *press,        /* Opacity-grid pressure array                    */
+           *wns;          /* Opacity-grid wavenumber array                  */
+  PREC_ATM **ziso;        /* Partition function per isotope [niso][Ntemp]   */
+  int *molID;             /* Opacity-grid molecule ID array                 */
+  long Nwave, Ntemp, Nlayer, Nmol, /* Number of elements in opacity grid    */
+      nDop, nLor;         /* Number of Doppler and Lorentz-width samples    */
 };
 
 
@@ -324,7 +330,6 @@ struct extscat{
 
 struct saves{
   char *ext;   /* Extinction grid                                           */
-  char *opa;   /* Opacity    grid                                           */
 };
 
 /* Struct to store requested ext, tau, or cia detailed information:  */
@@ -348,13 +353,14 @@ struct cia{
 };
 
 /* Structure with user hinted data that should go to the 'struct
-   transit' upon approval                                         */
+   transit' upon approval                                                   */
 struct transithint{  
-  char *f_atm,          /* Atmosphere filename      */
-       *f_line,         /* TLI filename             */
-       *f_out,          /* Output (main) filename   */
-       *f_toomuch,      /* Output toomuch filename  */
-       *f_outsample;    /* Output sample filename   */
+  char *f_atm,          /* Atmosphere filename                              */
+       *f_line,         /* TLI filename                                     */
+       *f_opa,          /* Opacity filename                                 */
+       *f_out,          /* Output (main) filename                           */
+       *f_toomuch,      /* Output toomuch filename                          */
+       *f_outsample;    /* Output sample filename                           */
   PREC_NREC ot;         /* Radius index at which to print output from tau    */
   prop_samp rads, ips,  /* Sampling properties of radius, impact parameter,  */
        wavs, wns, temp; /*   wavelength, wavenumber, and temperature         */
@@ -403,16 +409,17 @@ struct transithint{
 
 };
 
-/* Main data structure */
+/* Main data structure                                                      */
 struct transit{  
-  char *f_atm,       /* Atmosphere filename      */
-       *f_line,      /* TLI filename             */
-       *f_out,       /* Output (main) filename   */
-       *f_toomuch,   /* Output toomuch filename  */
-       *f_outsample; /* Output sample filename   */
-  PREC_NREC ot;      /* Radius index at which to print output from tau       */
+  char *f_atm,       /* Atmosphere filename                                 */
+       *f_line,      /* TLI filename                                        */
+       *f_opa,       /* Opacity filename                                    */
+       *f_out,       /* Output (main) filename                              */
+       *f_toomuch,   /* Output toomuch filename                             */
+       *f_outsample; /* Output sample filename                              */
+  PREC_NREC ot;      /* Radius index at which to print output from tau      */
 
-  FILE *fp_atm, *fp_out, *fp_line; /* Pointers to files                      */
+  FILE *fp_atm, *fp_opa, *fp_out, *fp_line; /* Pointers to files            */
   float allowrq;    /* How much less than one is accepted, so that no warning
                        is issued if abundances don't ad up to that           */
   PREC_RES telres;  /* Telescope resolution                                  */
@@ -427,6 +434,12 @@ struct transit{
       wavs, wns, temp; /* wavelength, wavenumber, and temperature            */
   prop_atm atm;     /* Sampled atmospheric data                              */
   short tauiso;     /* Isotope from which to calculate the optical depth     */
+
+  int voigtfine;     /* Number of fine-bins of the Voigt function            */
+  float timesalpha;  /* Broadening profile width in number of Doppler or
+                        Lorentz half width                                   */
+  double minelow;    /* Minimum transition low energy considered (in cm-1)   */
+
   double blowex;    /* Blow extinction by this amount before computing tau,
                        this option has no physical meaning, but mostly
                        debugging                                             */
@@ -434,6 +447,7 @@ struct transit{
   int modlevel;     /* Modulation integration level of precision             */
 
   long fl;          /* flags                                                 */
+  long interpflag;  /* Interpolation flag                                    */
   long pi;          /* progress indicator                                    */
 
   transit_ray_solution *sol; /* Transit solution type                        */
@@ -449,6 +463,7 @@ struct transit{
     struct lineinfo    *li;
     struct atm_data    *at;
     struct extinction  *ex;
+    struct opacity     *op;
     struct grid        *intens;
     struct optdepth    *tau;
     struct idxref      *ir;

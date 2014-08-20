@@ -70,8 +70,6 @@ getatm(struct transit *tr){
   PREC_ZREC *f_remainder; /* Abundance fraction for remainder molecules     */
   FILE *fp = NULL;        /* Pointer to atmospheric file                    */
 
-  /* Pass atmospheric flags into transit struct:                            */
-  transitacceptflag(tr->fl, th->fl, TRU_ATMBITS); /* See transit.h          */
   at.mass     = th->mass;  /* bool: abundance by mass (1) or by number (0)  */
   tr->allowrq = th->allowrq;
 

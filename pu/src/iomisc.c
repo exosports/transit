@@ -21,33 +21,35 @@
 
 
 /* List of functions defined in this file:
-int    ncharchg (char *str, char car, char chg)
-int    nchar (char *str, char car)
-char  *readstr_sp_alloc (char *line, char **next, char fspace)
-void   freetoolongerr ()
-void   settoolongerr (void (*errfcn)(int, char *, int), char *filename,
+int     ncharchg (char *str, char car, char chg)
+int     nchar (char *str, char car)
+char   *readstr_sp_alloc (char *line, char **next, char fspace)
+void    freetoolongerr ()
+void    settoolongerr (void (*errfcn)(int, char *, int), char *filename,
                       long *currline)
 inline
- char fgetupto_err (char *line, int max, FILE *fp,
+ char   fgetupto_err (char *line, int max, FILE *fp,
                     void (*errfcn)(int, char *, int), char *name, long curr)
 inline
-  char fgetupto (char *line, int max, FILE *fp)
-int    getad (int n, char sep, char *str, double **array)
-int    getnd (int n, char sep, char *str, ...)
-int    getnl (int n, char sep, char *str, ...)
-void   fprintpad (FILE *fp, int indent, char *fmt, ...)
-double readds (FILE *fp, char *c, char *string, int maxstring)
-double getds (char *in, char *c, char *string, int maxstring) 
-long   readl (FILE *fp, char *c)
-char  *linepad (char *out, int nc, char *in)
-double askforposd (char *fmt, ...)
-long   askforposl (char *fmt, ...)
-char  *fgets_alloc (FILE *fp, int *max)
-void   splitnzero_add (char ***array, char *string, char sep)
-char **splitnzero_alloc (char *string, char sep) 
-void   splitnzero_free (char **multi)
-long   countfields (char *l, char sep)
-int    valueinarray(int *array, int value)
+  char  fgetupto (char *line, int max, FILE *fp)
+int     getad (int n, char sep, char *str, double **array)
+int     getnd (int n, char sep, char *str, ...)
+int     getnl (int n, char sep, char *str, ...)
+void    fprintpad (FILE *fp, int indent, char *fmt, ...)
+double  readds (FILE *fp, char *c, char *string, int maxstring)
+double  getds (char *in, char *c, char *string, int maxstring) 
+long    readl (FILE *fp, char *c)
+char   *linepad (char *out, int nc, char *in)
+double  askforposd (char *fmt, ...)
+long    askforposl (char *fmt, ...)
+char   *fgets_alloc (FILE *fp, int *max)
+void    splitnzero_add (char ***array, char *string, char sep)
+char  **splitnzero_alloc (char *string, char sep) 
+void    splitnzero_free (char **multi)
+long    countfields (char *l, char sep)
+int     valueinarray(int *array, int value)
+double *logspace(double min, double max, int n)
+int     binsearchapprox(double *array, double value, int lo, int hi)
 */
 
 #include <pu/iomisc.h>
@@ -1080,13 +1082,57 @@ nextfield(char *lp){
 
 
 /* Check if value is in the first arraylen elements of array:
-   Return: 1 if exists
-           0 if not                                                         */
-int valueinarray(int *array, int value, int arraylen){
+   Return: index of value, if exists
+           -1 if not                                                        */
+int
+valueinarray(int *array, int value, int arraylen){
   int i;
-  for (i=0; i<arraylen; i++)
+  for (i=0; i<arraylen; i++){
     if (array[i] == value)
-      return 1;
-  return 0;
+      return i;
+  }
+  return -1;
+}
+
+
+/* Generate a logscale array between min and max with n values:             */
+double *
+logspace(double min, double max, int n){
+  double logmin, logmax, logstep;
+  double *array;
+  int i;
+
+  /* Allocate output array:                                                 */
+  array = (double *)calloc(n, sizeof(double));
+
+  /* Calculate log10 of min, max, and stepsize:                             */
+  logmin = log10(min);
+  logmax = log10(max);
+  logstep = (logmax - logmin)/(n-1.0);
+
+  /* Generate the logscale:                                                 */
+  for (i=0; i<n; i++)
+    array[i] = pow(10, logmin+i*logstep);
+
+  return array;
+}
+
+
+/* Do a binary seach of value in an array between indices lo and hi.
+   Return index of array element closest to value:                          */
+int
+binsearchapprox(double *array, double value, int lo, int hi){
+  /* Last case, value limited between consecutive indices of array:         */
+  if (hi-lo == 1){
+    /* Return closest array index to value:                                 */
+    if (abs(array[hi]-value) < abs(array[lo]-value))
+      return hi;
+    return lo;
+  }
+  /* Compare to middle point and search in corresponding sub-array:         */
+  else if (array[(hi+lo)/2] > value)
+    return binsearchapprox(array, value, lo, (hi+lo)/2);
+  else
+    return binsearchapprox(array, value, (hi+lo)/2, hi);
 }
 

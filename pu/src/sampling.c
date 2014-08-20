@@ -60,25 +60,23 @@ resample(const short getingx, /* Axis flag: 0:y, 1:x,  2:free arrays      */
   double val;
   va_list ap;
 
-  /* Processing the x array: */
   switch(getingx){
+  /* Process the x array:                                                   */
   case 1:
-    /* Check that the number of points is greater than zero: */
-    if(nrefx<1 || noutx<1){
-      fprintf(stderr,
-              "%s :: Calling resamplex() with zero reference or data "
-              "points.\n", __FILE__);
+    /* Check that the number of points is greater than zero:                */
+    if(nrefx < 1  ||  noutx < 1){
+      fprintf(stderr, "%s :: Calling resamplex() with zero reference or data "
+                      "points.\n", __FILE__);
       return -1;
     }
 
-    /* If there is only one reference point: */
+    /* If there is only one reference point:                                */
     if(nrefx==1){
-      /* Show a warning but don't stop, set everything to that value: */
+      /* Warn but don't stop, set everything to that value:                 */
       if(noutx>1)
-        fprintf(stderr,
-                "%s :: In resamplex(), there was only one element "
-                "data array, but %li elements in the resample array.\n",
-                __FILE__, noutx);
+        fprintf(stderr, "%s :: In resamplex(), there was only one element "
+                        "data array, but %li elements in the resample array.\n",
+                        __FILE__, noutx);
       ndat = nrefx;
       nout = 1;
       return 0;
@@ -87,8 +85,7 @@ resample(const short getingx, /* Axis flag: 0:y, 1:x,  2:free arrays      */
        the range: */
     if ((outx[0]       < refx[0] || outx[noutx-1] > refx[nrefx-1]) ||
         (outx[noutx-1] < refx[0] || outx[0]       > refx[nrefx-1]) ){
-      fprintf(stderr,
-              "%s:: Data x array (%g to %g), spans outside the values "
+      fprintf(stderr, "%s :: Data x array (%g to %g), spans outside the values "
               "of reference x array (%g to %g). No extrapolation.\n",
               __FILE__, outx[0], outx[noutx-1], refx[0], refx[nrefx-1]);
       exit(EXIT_FAILURE);
@@ -157,28 +154,27 @@ resample(const short getingx, /* Axis flag: 0:y, 1:x,  2:free arrays      */
     break;
 
   case 0:
-    //check that resamplex was called before.
-    if(nout<1 || ndat<1){
-      fprintf(stderr,
-              "%s:: It seems that 'resamplex()' was not run before this "
-              "run of 'resampley()': either nout(%li) or ndat(%li) "
-              "are not positive.\n", __FILE__, nout, ndat);
+    /* Check that resamplex was called before:                              */
+    if(nout < 1  ||  ndat < 1){
+      fprintf(stderr, " %s :: 'resamplex()' was not run before 'resampley()': "
+                      "either nout(%li) or ndat(%li) are not positive.\n",
+                      __FILE__, nout, ndat);
       return -2;
     }
 
-    va_start(ap,ny);
+    va_start(ap, ny);
     while(ny--){
       y   = va_arg(ap, double *);
       out = va_arg(ap, double *);
 
       if(ndat==1){
-        for(j=0 ; j<ndat ; j++)
+        for(j=0; j<ndat; j++)
           out[j] = y[0];
         continue;
       }
 
       switch(flags&SAMP_BITS){
-      //use spline interpolation
+      /* Use spline interpolation:                                          */
       case SAMP_SPLINE:
         natcubspline(ndat, x, y, nout, indx, t, out, soutx);
         break;
@@ -262,23 +258,18 @@ lineinterpol(int ndat,                /* Length of x,y array */
    Evaluates the new values of a dataset according to the indices given
    in 'indx' and fraction 'tt' in that interval.
    It doesn't check for values within the range, that have to be done
-   before.
-*/
+   before.                                                                  */
 void 
-natcubspline(int ndat,                /* Length of (x,y) array */
-             double *x,                /* x-axis */
-             double *y,                /* y-axis */
-             int n,                /* length of output arrays
-                                   (indx,t,yout) */ 
-             long *indx,        /* Integer x-axis reference index */
-             float *t,                /* value from 0 to 1 to indicate how far
-                                   from the value at 'indx' to the next
-                                   value */
-             double *yout,        /* Answer array were the interpolated
-                                   values of x[indx]+t*dx[i] are going to
-                                   be stored */
-             double *xref)        /* Stores the reference X value */
-{
+natcubspline(int ndat,      /* Length of (x,y) array                        */
+             double *x,     /* x-axis                                       */
+             double *y,     /* y-axis                                       */
+             int n,         /* length of output arrays (indx,t,yout)        */
+             long *indx,    /* Integer x-axis reference index               */
+             float *t,      /* value from 0 to 1 to indicate how far
+                               from the value at 'indx' to the next value   */
+             double *yout,  /* Answer array were the interpolated values of
+                               x[indx]+t*dx[i] are going to be stored       */
+             double *xref){ /* Stores the reference X value                 */
   long i;
 
   if(ndat<0){

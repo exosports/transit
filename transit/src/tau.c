@@ -16,6 +16,20 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
+
+List of functions defined in tau.c:
+-----------------------------------
+int tau(struct transit *tr)
+int detailout(prop_samp *wn, prop_samp *rad, struct detailfld *det,
+              PREC_RES **arr, short flag)
+void printtoomuch(char *file, struct optdepth *tau, prop_samp *wn,
+                  prop_samp *rad)
+void printtau(struct transit *tr)
+int freemem_tau(struct optdepth *tau, long *pi)
+void outdebtauex(char *name, PREC_RES **e, prop_samp *ip, PREC_RES **t,
+                 long rn, long w)
+void outdebex(char *name, PREC_RES **e, PREC_RES *r, long rn, long wi, long wf)
+void outdebtau(char *name, prop_samp *ip, PREC_RES **t, long wi, long wf)
  */
 
 #include <transit.h>
@@ -28,111 +42,106 @@
    Calculates optical depth as a function of radii for a spherically
    symmetric planet.
 
-   Return: 0 on success   */
+   Return: 0 on success                                                     */
 int
 tau(struct transit *tr){
-  /* Different structures */
-  static struct optdepth tau;        /* Optical depth struct    */
-  tr->ds.tau     = &tau;             /* Optical depth           */
-  prop_samp *rad = &tr->rads;        /* Radius sample           */
-  prop_samp *wn  = &tr->wns;         /* Wavenumber sample       */
-  prop_samp *ip  = &tr->ips;         /* Impact parameter sample */
-  struct extinction *ex = tr->ds.ex; /* Extinction struct       */
-  PREC_RES **e = ex->e[tr->tauiso];  /* Extinction coefficient  */
-  PREC_RES (*fcn)() = tr->sol->tauperb; /* transit ray path?    */
+  /* Different structures                                                   */
+  struct transithint *th = tr->ds.th;   /* transithint struct               */
+  static struct optdepth tau;           /* Optical depth struct             */
+  tr->ds.tau     = &tau;                /* Optical depth                    */
+  prop_samp *rad = &tr->rads;           /* Radius sample                    */
+  prop_samp *wn  = &tr->wns;            /* Wavenumber sample                */
+  prop_samp *ip  = &tr->ips;            /* Impact parameter sample          */
+  struct extinction *ex = tr->ds.ex;    /* Extinction struct                */
+  PREC_RES **e = ex->e[tr->tauiso];     /* Extinction coefficient           */
+  PREC_RES (*fcn)() = tr->sol->tauperb; /* transit ray path?                */
 
-  long wi, ri; /* Indices for wavenumber, and radius */
+  long wi, ri; /* Indices for wavenumber, and radius                        */
   int rn;
 
-  /* Number of elements for each array:       */
-  long int wnn = wn->n;   /* Wavenumber       */
-  long int inn = ip->n;   /* Impact parameter */
-  long int rnn = rad->n;  /* Radius           */
-  double wfct  = wn->fct; /* Wavenumber units factor */
+  /* Number of elements for each array:                                     */
+  long int wnn = wn->n;   /* Wavenumber                                     */
+  long int inn = ip->n;   /* Impact parameter                               */
+  long int rnn = rad->n;  /* Radius                                         */
+  double wfct  = wn->fct; /* Wavenumber units factor                        */
 
-  PREC_RES *bb = ip->v;          /* Impact parameter array */
-  PREC_RES *n  = tr->ds.ir->n;   /* Index of refraction    */
-  PREC_RES *r  = rad->v;         /* radius array           */
-  PREC_RES *tau_wn;              /* optical depth          */
-  PREC_ATM *temp = tr->atm.t,    /* Temperatures           */
-           tfct  = tr->atm.tfct; /* Temperature units      */ 
+  PREC_RES *bb = ip->v;          /* Impact parameter array                  */
+  PREC_RES *n  = tr->ds.ir->n;   /* Index of refraction                     */
+  PREC_RES *r  = rad->v;         /* radius array                            */
+  PREC_RES *tau_wn;              /* optical depth                           */
+  PREC_ATM *temp = tr->atm.t,    /* Temperatures                            */
+           tfct  = tr->atm.tfct; /* Temperature units                       */ 
 
-  PREC_RES er[rnn];        /* Array of extinction per radius           */
-  int lastr = rnn-1;       /* Radius index of last computed extinction */
+  PREC_RES er[rnn];   /* Array of extinction per radius                     */
+  int lastr = rnn-1;  /* Radius index of last computed extinction           */
   int wnextout = (long)(wnn/10.0); /* (Wavenumber sample size)/10,
-                                      used for progress printing       */
+                                      used for progress printing            */
 
   /* Get a copy of the radius units factor, and  the impact
-     parameter-to-radius units factor ratio:                     */
+     parameter-to-radius units factor ratio:                                */
   double rfct = rad->fct;
   double riw  = ip->fct/rfct;
 
-  double e_s[rnn],                  /* Extinction from scattering   */
-         e_c[rnn];                  /* Extinction from clouds       */
-  PREC_CIA **e_cia = tr->ds.cia->e; /* Extinction from CIA          */
-  struct extscat *sc = tr->ds.sc;   /* Scattering extinction struct */
+  double e_s[rnn],                  /* Extinction from scattering           */
+         e_c[rnn];                  /* Extinction from clouds               */
+  PREC_CIA **e_cia = tr->ds.cia->e; /* Extinction from CIA                  */
+  struct extscat *sc = tr->ds.sc;   /* Scattering extinction struct         */
 
-  /* Check idxrefrac and extwn have been called:     */
+  /* Check idxrefrac and extwn have been called:                            */
   transitcheckcalled(tr->pi, "tau", 2, "idxrefrac", TRPI_IDXREFRAC,
                                        "extwn",     TRPI_EXTWN);
 
   /* FINDME: what's going on here? */
   transitacceptflag(tr->fl, tr->ds.th->fl, TRU_TAUBITS);
 
-  /* Get optical depth calculation parameters:                      */
-  struct transithint *th = tr->ds.th;
-  /* Filename to save/restore the extinction coefficient:           */
-  tr->save.ext = th->save.ext;
-  /* Line strength enhance factor:                                  */
-  const double blowex = tr->blowex   = th->blowex;
-  /* Use constant (taulevel=1) or variable (2) index of refraction: */
+  /* Get optical depth calculation parameters:                              */
+  tr->save.ext = th->save.ext;  /* Ext. coefficient save/restore filename   */
+  const double blowex = tr->blowex = th->blowex; /* Line strength factor    */
+  /* Use constant (taulevel=1) or variable (2) index of refraction:         */
   const int taulevel  = tr->taulevel = th->taulevel;
-  /* Set transit maximum optical depth to calculate:                */
-  tau.toomuch = 50;  /* Default value */
-  if(tr->ds.th->toomuch > 0)
-    tau.toomuch = th->toomuch; /* FINDME: Set default in argum.c */
+  if(th->toomuch > 0)
+    tau.toomuch = th->toomuch;  /* Maximum optical depth to calculate:      */
 
-  /* Radius index where tau reached toomuch: */
+  /* Radius index where tau reached toomuch:                                */
   tau.last = (long      *)calloc(wnn,       sizeof(long));
-  /* Optical depth per impact parameter:     */
+  /* Optical depth per impact parameter:                                    */
   tau.t    = (PREC_RES **)calloc(wnn,       sizeof(PREC_RES *));
   tau.t[0] = (PREC_RES  *)calloc(wnn*ip->n, sizeof(PREC_RES));
   for(wi=1; wi<wnn; wi++)
     tau.t[wi] = tau.t[0] + wi*ip->n;
 
-  /* Set cloud structure:                           */
+  /* Set cloud structure:                                                   */
   static struct extcloud cl;
-  cl.maxe = tr->ds.th->cl.maxe; /* Maximum opacity  */
-  cl.rini = tr->ds.th->cl.rini; /* Top layer radius */
-  cl.rfin = tr->ds.th->cl.rfin; /* Radius of maxe   */
+  cl.maxe = tr->ds.th->cl.maxe; /* Maximum opacity                          */
+  cl.rini = tr->ds.th->cl.rini; /* Top layer radius                         */
+  cl.rfin = tr->ds.th->cl.rfin; /* Radius of maxe                           */
   if(tr->ds.th->cl.rfct==0)
     cl.rfct = rad->fct;
   else
     cl.rfct = tr->ds.th->cl.rfct;
   tr->ds.cl = &cl;
 
-  /* Has the extinction coefficient been calculated boolean: */
+  /* Has the extinction coefficient been calculated boolean:                */
   _Bool *comp = ex->computed;
-  /* Restore extinction savefile if exists: */
+  /* Restore extinction savefile if exists:                                 */
   if(tr->save.ext)
     restfile_extinct(tr->save.ext, e, comp, rnn, wnn);
 
-  /* Compute extinction at the outermost layer: */
+  /* Compute extinction at the outermost layer:                             */
   if(!comp[rnn-1]){
     transitprint(1, verblevel, "Computing extinction in the "
                                "outermost layer.\n");
-    if((rn=computeextradius(rnn-1, tr->atm.t[rnn-1]*tr->atm.tfct, ex))!=0)
+    if((rn=computemolext(tr, rnn-1, ex->e))!=0)
       transiterror(TERR_CRITICAL,
                    "computeextradius() returned error code %i.\n", rn);
   }
 
-  /* Request at least four impact parameter samples to calculate
-     a spline interpolation:                                     */
+  /* Request at least four impact parameter samples to calculate a spline
+     interpolation:                                                         */
   if(inn<4)
-    transiterror(TERR_SERIOUS,
-                 "tau(): At least four impact parameter points are "
-                 "required (three for spline and one for the analitical "
-                 "part)!");
+    transiterror(TERR_SERIOUS, "tau(): At least four impact parameter points "
+                               "are required (three for spline and one for "
+                               "the analitical part).\n");
 
   transitprint(1, verblevel, "Calculating optical depth at various "
                              "radii ...\n");
@@ -144,11 +153,11 @@ tau(struct transit *tr){
                  "Computing only for isotope '%s', others were ignored.\n",
                  tr->ds.iso->isof[tr->tauiso].n);
 
-  /* For each wavenumber: */
+  /* For each wavenumber:                                                   */
   for(wi=0; wi<wnn; wi++){
     tau_wn = tau.t[wi];
 
-    /* Print output every 10% progress: */
+    /* Print output every 10% progress:                                     */
     if(wi>wnextout){
       transitprint(2, verblevel, "%i%%\n", (int)(100*(float)wi/wnn+0.5));
       wnextout += (long)(wnn/10.0);
@@ -185,7 +194,7 @@ tau(struct transit *tr){
                something happen: */
             transitprint(2, verblevel, "Radius %i: %.9g cm ... \n",
                                        lastr+1, r[lastr]);
-            if((rn=computeextradius(lastr, temp[lastr]*tfct, ex))!=0)
+            if((rn=computemolext(tr, lastr, ex->e))!=0)
               transiterror(TERR_CRITICAL,
                            "computeextradius() return error code %i while "
                            "computing radius #%i: %g\n", rn, r[lastr]*rfct);

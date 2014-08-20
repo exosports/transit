@@ -29,6 +29,7 @@
 #include <termios.h>
 #include <stdarg.h>
 #include <string.h>
+#include <math.h>
 
 #define __PADTO_COLUMNS 78
 
@@ -74,6 +75,8 @@ extern void getname(char *line, char *name);
 extern int findstring(char* string, char **list, int size);
 extern char *nextfield(char *lp);
 extern int valueinarray(int *array, int value, int arraylen);
+extern double *logspace(double min, double max, int n);
+extern int binsearchapprox(double *array, double value, int lo, int hi);
 #undef P_
 
 #endif /* _IOMISC_H */

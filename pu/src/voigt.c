@@ -357,10 +357,10 @@ voigtn(int m,              /* Number of fine resolution bins (deviation
     else{
       /* \linelabel{aux.ddwn} */
       ddwn = (float)(nint-1)/nwn;
-      i = (int)ddwn+1;
+      i = (int)ddwn + 1;
       if(ddwn+1 != i){
-        fprintf(stderr, "%s:: There are not an integer number(%f!=%i) of "
-                        "fine-bins(%i) for each bin(%i).\n", 
+        fprintf(stderr, "%s :: There are not an integer number(%f!=%i) of "
+                        "fine-bins (%i) for each bin (%i).\n", 
                         __FILE__, ddwn+1, i, nint-1, nwn);
         exit(EXIT_FAILURE);
       }

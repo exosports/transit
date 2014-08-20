@@ -253,7 +253,8 @@ tau_eclipse(struct transit *tr)           /* Transit structure             */
   if(!comp[rnn-1]){
     transitprint(1, verblevel,
                  "Computing extinction in the outtermost layer.\n");
-    if((rn=computeextradius(rnn-1, tr->atm.t[rnn-1]*tr->atm.tfct, ex))!=0)
+    if((rn=computemolext(tr, rnn-1, ex->e))!=0)
+    //if((rn=computeextradius(rnn-1, tr->atm.t[rnn-1]*tr->atm.tfct, ex))!=0)
       transiterror(TERR_CRITICAL,
                    "computeextradius() returned error code %i.\n", rn);
   }
@@ -359,7 +360,8 @@ tau_eclipse(struct transit *tr)           /* Transit structure             */
                something happen:                                            */
             transitprint(2, verblevel, "Radius %i: %.9g cm ... ",
                                        lastr+1, r[lastr]);
-            if((rn=computeextradius(lastr, temp[lastr]*tfct, ex))!=0)
+            if((rn=computemolext(tr, lastr, ex->e))!=0)
+            //if((rn=computeextradius(lastr, temp[lastr]*tfct, ex))!=0)
               transiterror(TERR_CRITICAL,
                            "computeextradius() return error code %i while "
                            "computing radius #%i: %g\n", rn, r[lastr]*rfct);
