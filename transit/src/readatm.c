@@ -24,9 +24,7 @@ int    getatm(struct transit *tr)
 
 double checkaddmm(double *mm, PREC_NREC r, prop_mol *molec,
                   struct molecules *mol, int n, _Bool mass)
-
 void   telldefaults(struct isotopes *iso, struct atm_data *at)
-
 int    freemem_atmosphere(struct atm_data *at, long *pi)                    */
 
 #include <readatm.h>
@@ -324,7 +322,7 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
               struct transit *tr,      /* transit structure                 */
               PREC_ZREC *f_remainder){ /* Remainder molecules' factor       */
   struct molecules *mol=tr->ds.mol;
-  char line[maxline], *lp;
+  char line[maxline], *lp, keyword[maxline];
   int nimol=0,           /* Number of molecules with abundance profile      */
       nmol=0,            /* Total number of molecules                       */
       i;                 /* Auxiliary for-loop index                        */
@@ -340,6 +338,33 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
     /* Ignore comments and blank lines:                                     */
     case '\n':
     case '#':
+      getname(line+1, keyword);
+      /* Molecule names with an abundance profile:                          */
+      if (strcmp(keyword, "FINDSPEC") == 0){
+        /* Go to next line:                                                 */
+        fgetupto_err(line, maxline, fp, &atmerr, tr->f_atm, at->begline++);
+        /* Count the number of words (molecules) in line:                   */
+        nimol = countfields(line, ' ');
+        transitprint(15, verblevel, "The number of molecules is %d.\n", nimol);
+
+        /* Allocate Molecules names:                                        */
+        mol->name    = (char **)calloc(nimol,             sizeof(char *));
+        mol->name[0] = (char  *)calloc(nimol*maxeisoname, sizeof(char));
+        for(i=1; i<nimol; i++)
+          mol->name[i] = mol->name[0] + i*maxeisoname;
+        /* Read and store the molecule names:                               */
+        transitprint(1, verblevel, "Molecules with abundance profile:\n  ");
+        lp = line;
+        /* Read and store names:                                            */
+        for (i=0; i<nimol; i++){
+          getname(lp, mol->name[i]);
+          lp = nextfield(lp);
+          if (i < nimol-1)
+            transitprint(1, verblevel, "%s, ", mol->name[i]);
+          else
+            transitprint(1, verblevel, "%s.\n", mol->name[i]);
+        }
+      }
       continue;
     case 0:     /* Throw error if EOF:                                      */
       transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
@@ -396,29 +421,6 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
 
     case 'n':  /* Name or identifier for file data:                         */
       storename(at, line+1);
-      continue;
-
-    case 'i':  /* Molecule names with an abundance profile:                 */
-      /* Count the number of wrds (molecules) in line:                      */
-      nimol = countfields(line+1, ' ');
-      transitprint(15, verblevel, "The number of molecules is %d.\n", nimol);
-
-      /* Allocate Molecules names:                                          */
-      mol->name    = (char **)calloc(nimol,             sizeof(char *));
-      mol->name[0] = (char  *)calloc(nimol*maxeisoname, sizeof(char));
-      for(i=1; i<nimol; i++)
-        mol->name[i] = mol->name[0] + i*maxeisoname;
-
-      transitprint(1, verblevel, "Molecules with abundance profile:\n  ");
-      lp = line;
-      lp = nextfield(lp); /* Skip keyword                                   */
-      /* Read and store names:                                              */
-      for (i=0; i<nimol; i++){
-        getname(lp, mol->name[i]);
-        lp = nextfield(lp);
-        transitprint(1, verblevel, "%s, ", mol->name[i]);
-      }
-      transitprint(1, verblevel, "\b\b.\n");
       continue;
 
     /* Molecules with abundance proportional to the remainder:              */
