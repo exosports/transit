@@ -409,10 +409,10 @@ processparameters(int argc,            /* Number of command-line args  */
       hints->ciafile = splitnzero_alloc(optarg, ','); /* Get files   */
       break;
     case CLA_SAVEEXT:  /* Extinction array    */
-      hints->save.ext = strdup(optarg);
+      hints->save.ext = xstrdup(optarg);
       break;
     case CLA_OPACITYFILE:  /* Opacity array file                            */
-      hints->f_opa = strdup(optarg);
+      hints->f_opa = xstrdup(optarg);
       break;
     /* Set detailed fields files and wavenumbers: */
     case CLA_DETCIA:   /* Detailed CIA            */

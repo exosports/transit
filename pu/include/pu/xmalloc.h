@@ -25,7 +25,7 @@
 #define malloc(n) xmalloc(n)
 #define realloc(p,n) xrealloc(p,n)
 #define calloc(n,s) xcalloc(n,s)
-#define strdup(p) xstrdup(p)
+//#define strdup(p) xstrdup(p)
 
 //functin definition (proto_xmalloc.h)
 #if __STDC__ || defined(__cplusplus)
