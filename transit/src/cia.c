@@ -120,7 +120,7 @@ interpolatecia(struct transit *tr){
 
   /* Copy file names from hint:   */
   for(p=0; p<npairs; p++){
-    file = st_cia.file[p] = strdup(tr->ds.th->ciafile[p]);
+    file = st_cia.file[p] = xstrdup(tr->ds.th->ciafile[p]);
 
     /* Attempt to open the files: */
     if((fp=fopen(file, "r")) == NULL)
