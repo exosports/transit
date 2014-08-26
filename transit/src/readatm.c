@@ -463,17 +463,19 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
     }
     break;
   }
-  transitprint(1, verblevel, "Molecules with abundance proportional to "
-                             "remainder:\n  ");
-  for(i=nimol; i<nmol; i++)
-    transitprint(1, verblevel, "%s, ", mol->name[i]);
-  transitprint(1, verblevel, "\b\b.\n");
+  if (ipi > 0){
+    transitprint(1, verblevel, "Molecules with abundance proportional to "
+                               "remainder:\n  ");
+    for(i=nimol; i<nmol; i++)
+      transitprint(1, verblevel, "%s, ", mol->name[i]);
+    transitprint(1, verblevel, "\b\b.\n");
+  }
 
   transitprint(3, verblevel, "Read all keywords in atmosphere file without "
                              "problems.\n");
 
   /* Set total number of molecules in atmosphere:                           */
-  mol->nmol = at->n_aiso = nmol;
+  mol->nmol = at->n_aiso = nmol = nimol + ipi;
 
   /* Check that there was at least one isotope defined and re-allocate
      array sizes to their final size:                                       */
@@ -532,7 +534,7 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
   int lines = at->begline;
   PREC_NREC r = 0;  /* Radius index (number of radii being read)            */
   char rc;          /* File reading output                                  */
-  float allowq = 1 - tr->allowrq;
+  float allowq = tr->allowrq;
   int nabundances;  /* Number of abundances in list                         */
   double sumq;      /* Sum of abundances per line                           */
   char line[maxline], *lp, *lp2;
@@ -609,13 +611,11 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
                                  __LINE__, __FILE__, i, at->n_aiso);
 
     /* Calculate mean molecular mass and check whether abundances add up
-       to one (within roundoff error):                                      */
+       to one (within allowq threshold):                                    */
     sumq = checkaddmm(at->mm+r, r, molec, mol, at->n_aiso, at->mass);
-    if((int)(sumq*ROUNDOFF+0.5)<(int)(allowq*ROUNDOFF+0.5))
-      transiterror(TERR_WARNING,
-                   "In radius %g (%i: %g in file), abundances "
-                   "don't add up to 1: %.9g\n",
-                   at->rads.v[r], r, at->rads.v[r]-zerorad, sumq);
+    if(fabs(sumq-1.0) > allowq)
+      transiterror(TERR_WARNING, "In radius %i (%g km), abundances don't add "
+                                 "up to 1.0: %.9g\n", r, at->rads.v[r], sumq);
 
     /* Calculate densities using ideal gas law:                             */
     if (r>=0){
@@ -664,7 +664,7 @@ getmoldata(struct atm_data *at, struct molecules *mol){
        **alias,     /* Alias of names given in atmfile                      */
        **amol;      /* Corresponding molecule for alias                     */
   int nalias =  2,  /* Number of listed alias names                         */
-      ndatamol = 14,  /* Number of listed molecules                         */
+      ndatamol = 19,  /* Number of listed molecules                         */
       maxlinelen = 501,
       i, j;         /* Auxiliary for-loop index                             */
 

@@ -110,10 +110,10 @@ calcopacity(struct transit *tr,
 
   /* Make logscale grid for the profile widths:                             */
   /* FINDME: Hardcoded values                                               */
-  nDop = op->nDop = 50;  //100;
-  nLor = op->nLor = 50;  //100;
+  nDop = op->nDop = 30;  //100;
+  nLor = op->nLor = 30;  //100;
   Lmin = 1e-4;
-  Lmax = 6.0; //10.0;
+  Lmax = 2.0; //10.0;
   Dmin = 1e-3;
   Dmax = 0.25;
   op->aDop = logspace(Dmin, Dmax, nDop);
@@ -155,7 +155,7 @@ calcopacity(struct transit *tr,
         op->profsize[i][j] = newprofile(profile[i][j], voigtfine, tr->wns.d,
                                op->aDop[i], op->aLor[j], timesalpha, tr->wns.n);
       }
-      transitprint(10, verblevel, "Profile[%2d][%2d] size = %4li  (D=%.3g, "
+      transitprint(5, verblevel, "Profile[%2d][%2d] size = %4li  (D=%.3g, "
                                   "L=%.3g).\n", i, j, 2*op->profsize[i][j]+1,
                                    op->aDop[i], op->aLor[j]);
     }
