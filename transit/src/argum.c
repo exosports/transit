@@ -200,11 +200,8 @@ processparameters(int argc,            /* Number of command-line args  */
      "Only has effect with --onept."},
     {"onept-interactive", CLA_ONEINT,   no_argument,       NULL, NULL,
      "Boolean; input abundances, pressure, and temperature interactively."},
-    {"allowq",            CLA_ALLOWQ,   required_argument, "0.01", "value",
-     /* FINDME: not clear */
-     "Lowest allowed cumulative isotopic abundance from atmosphere molecules."},
-     /*"How much less than one is accepted, so that no warning is issued if "
-     "abundances don't ad up to that."  */
+    {"allowq",            CLA_ALLOWQ,   required_argument, "0.00001", "value",
+     "Maximum allowed cumulative-abundance departure from 1.0."},
 
     /* Wavelength options:                    */
     {NULL,         0,             HELPTITLE,         NULL,       NULL,
@@ -301,7 +298,7 @@ processparameters(int argc,            /* Number of command-line args  */
      "Filename to read/save the opacity grid."},
     {"tlow",   CLA_TEMPLOW,    required_argument,  "500",  "temperature",
      "Lower temperature sample (in kelvin)."},
-    {"thigh",  CLA_TEMPHIGH,   required_argument, "0.0",  "float",
+    {"thigh",  CLA_TEMPHIGH,   required_argument, "3000",  "temperature",
      "Upper temp"},
     {"temp-delt",  CLA_TEMPDELT,   required_argument,  "100.0",  "spacing",
      "Temperature sample spacing (in kelvin)."},
@@ -525,7 +522,7 @@ processparameters(int argc,            /* Number of command-line args  */
       break;
 
     case CLA_ALLOWQ:
-      hints->allowrq = atoi(optarg);
+      hints->allowrq = atof(optarg);
       break;
     /* FINDME: This is not even an option! */
     case CLA_NUMBERQ: /* Bool: abundances by number (0), or by mass (1) */
