@@ -689,12 +689,12 @@ processparameters(int argc,            /* Number of command-line args  */
       hints->timesalpha = atof(optarg);
       break;
 
-    case 'v':  /* Increase verbose level                       */
-      verblevel++;
-      break;
-
     case 'q':  /* Quiet run                                    */
       verblevel = 0;
+      break;
+
+    case 'v':  /* Increase verbose level                       */
+      verblevel = strtol(optarg, NULL, 10);
       break;
 
     case 'V': /* Print version number and exit                 */

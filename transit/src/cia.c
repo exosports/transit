@@ -83,7 +83,7 @@ interpolatecia(struct transit *tr){
                                                  "makeradsample", TRPI_MAKERAD);
 
  /* Get transit temperatures and wavenumber arrays: */
- /* Invert temperature becase it increases inwards: */
+ /* Invert temperature because it increases inwards: */
  /* FINDME: What happens in the case of thermal inversion?? */
   for(i=0; i<tr->rads.n; i++)
     tmpt[i] = atm->tfct * atm->t[tr->rads.n-i-1];

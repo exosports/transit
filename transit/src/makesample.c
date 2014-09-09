@@ -834,6 +834,16 @@ makeradsample(struct transit *tr){
   /* Check that getatm() and readinfo_tli() have been already called:       */
   transitcheckcalled(tr->pi, "makeradsample", 2, "getatm",       TRPI_GETATM,
                                                  "readinfo_tli", TRPI_READINFO);
+  /* Exception for re-runs:                                                 */
+  if (tr->pi | TRPI_MAKERAD){
+    /* Free memory before re-allocating them:                               */
+    free_atm(atmt);
+    for (i=0; i<nmol; i++)
+      free_mol(mol->molec+i);
+    for (i=0; i<niso; i++)
+      free_isov(iso->isov+i);
+    tr->pi &= ~(TRPI_MAKERAD);
+  }
   /* Check that variables are not NULL:                                     */
   transitASSERT(atms->rads.n<1 || !ndb || !niso || !nmol,
                 "makeradsample():: called but essential variables are "
@@ -988,33 +998,32 @@ maketempsample(struct transit *tr){
 
 
 /* \fcnfh
-   Print sample info for a structure */
+   Print sample info for a structure                                        */
 static void
-printsample(FILE *out,        /* File pointer to write out  */
-            prop_samp *samp,  /* Sample strucuture to print */
-            char *desc,       /* Description                */
-            long fl){         /* Various flag               */
+printsample(FILE *out,        /* File pointer to write out                  */
+            prop_samp *samp,  /* Sample strucuture to print                 */
+            char *desc,       /* Description                                */
+            long fl){         /* Various flag                               */
   int i;
 
-  /* Print header:                            */
-  fprintf(out,
-          "############################\n"
-          "   %-12s Sampling\n"
-          "----------------------------\n", desc);
+  /* Print header:                                                          */
+  fprintf(out, "############################\n"
+               "   %-12s Sampling\n"
+               "----------------------------\n", desc);
 
-  /* Print units, sample limits, and spacing: */
+  /* Print units, sample limits, and spacing:                               */
   fprintf(out, "Factor to cgs units: %g\n",            samp->fct);
   fprintf(out, "Initial value: %g\nFinal value: %g\n", samp->i, samp->f);
   fprintf(out, "Spacing: %g\n",                        samp->d);
 
-  /* Print oversampling if necessary:         */
+  /* Print oversampling if necessary:                                       */
   if(!(fl&TRF_NOOVERSAMP))
     fprintf(out, "Oversample: %i\n", samp->o);
 
-  /* Print sample size:                       */
+  /* Print sample size:                                                     */
   fprintf(out, "Number of elements: %li\n", samp->n);
 
-  /* Print sample array:                      */
+  /* Print sample array:                                                    */
   if(!(fl&TRF_NOVALUE)){
     fprintf(out, "Values: ");
     for(i=0; i<samp->n; i++)
