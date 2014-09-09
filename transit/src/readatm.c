@@ -750,3 +750,54 @@ getmoldata(struct atm_data *at, struct molecules *mol){
   }
 }
 
+
+/*
+Re-load data from array into transit's atm structure.
+*/
+int
+reloadatm(struct transit *tr,
+          double *input){ /* Array with updated temp. and abund. profiles   */
+  int i, j;                        /* Auxilliary for-loop indices           */
+  struct atm_data *at=tr->ds.at;   /* Atmosphere data struct                */
+  struct molecules *mol=tr->ds.mol;  /* Molecules stucture                  */
+  int nlayers = at->rads.n,        /* Number of layers                      */
+      nmol    = mol->nmol;  /* Number of molecules                   */
+  double sumq,
+	 allowq = tr->allowrq;
+
+  transitprint(1,verblevel, "Nlayers=%d,  Nmol=%d.\n", nlayers, nmol);
+  /* Update atmfile temperature array:                                      */
+  for (i=0; i<nlayers; i++){
+    at->atm.t[i] = input[i];
+    transitprint(1, verblevel, "%.1f  ", at->atm.t[i]);
+  }
+  transitprint(1, verblevel, "\n");
+
+  /* Re-calculate radius at each pressure level:                            */
+  // radpress();
+
+  /* Update atmfile abundance arrays:                                       */
+  for (j=0; j<nmol; j++)
+    for (i=0; i<nlayers; i++)
+      at->molec[j].q[i] = input[nlayers*(j+1) + i];
+
+  /* Re-calculate the mean molecular mass and check whether abundances add up
+     to one (within allowq threshold):                                    */
+  for (i=0; i<nlayers; i++){
+    sumq = checkaddmm(at->mm+i, i, at->molec, mol, nmol, at->mass);
+    if(fabs(sumq-1.0) > allowq)
+      transiterror(TERR_WARNING, "In radius %i (%g km), abundances don't add "
+                                 "up to 1.0: %.9g\n", i, at->rads.v[i], sumq);
+    /* FINDME: Should we compensate H2 and He abundances to sum to 1.0?     */
+
+    /* Re-calculate densities:                                              */
+    for(j=0; j<nmol; j++)
+      at->molec[j].d[i] = stateeqnford(at->mass, at->molec[j].q[i], at->mm[i],
+                                       mol->mass[j], at->atm.p[i]*at->atm.pfct,
+                                                     at->atm.t[i]*at->atm.tfct);
+    i++;
+  }
+  /* Re-resample transit arrays:                                            */
+  makeradsample(tr);
+  return 0;
+}

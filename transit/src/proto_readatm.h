@@ -13,6 +13,7 @@ extern int getmnfromfile P_((FILE *fp, struct atm_data *at, struct transit *tr, 
 extern int readatmfile P_((FILE *fp, struct transit *tr, struct atm_data *at, prop_samp *rads, int nrad, PREC_ZREC *f_remainder));
 extern void storename P_((struct atm_data *at, char *line));
 extern void getmoldata P_((struct atm_data *at, struct molecules *mol));
+extern int reloadatm P_((struct transit *tr, double *input));
 #undef P_
 
 
