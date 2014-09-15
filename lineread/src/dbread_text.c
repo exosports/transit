@@ -141,7 +141,7 @@ static int
 db_open(char *dbfilenameo, 
 	char *dbaux)
 {
-  dbfilename = strdup(dbfilenameo);
+  dbfilename = xstrdup(dbfilenameo);
 
   //Open database
   if((fp = fopen(dbfilename,"r")) == NULL)

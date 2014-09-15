@@ -162,7 +162,7 @@ argum(int argc,             /* Number of arguments in call */
     switch(rn){ /* Switch to handle each input argument */
     case 'o':
       if (hint->datafile) free(hint->datafile); /* FINDME: Explain this    */
-      hint->datafile = strdup(optarg);          /* FINDME: WHAT IS optarg? */
+      hint->datafile = xstrdup(optarg);          /* FINDME: WHAT IS optarg? */
       break;
 
     case 'i':
@@ -187,7 +187,7 @@ argum(int argc,             /* Number of arguments in call */
     case LRA_DB:  /* The database filename */
       if(allocdb==hint->ndb) /* Maximum size reached, duplicate size */
         hint->db = (char **)realloc(hint->db, (allocdb<<=1)*sizeof(char *));
-      hint->db[hint->ndb++] = strdup(optarg);
+      hint->db[hint->ndb++] = xstrdup(optarg);
       break;
 
     case 'a':
@@ -202,7 +202,7 @@ argum(int argc,             /* Number of arguments in call */
         hint->dbaux = (char **)halfzero_realloc(hint->dbaux,
                                         (allocaux<<=1)*sizeof(char *));
       ptr = optarg; /* FINDME: Is this line necessary? */
-      hint->dbaux[adb-1] = strdup(optarg);
+      hint->dbaux[adb-1] = xstrdup(optarg);
       break;
 
     case 'n':
@@ -272,7 +272,7 @@ argum(int argc,             /* Number of arguments in call */
   /* Add the non-option specified data bases to hint:    */
   hint->db = (char **)realloc(hint->db, (hint->ndb+argc)*sizeof(char *));
   while(argc--)
-    hint->db[hint->ndb++] = strdup(*argv++);
+    hint->db[hint->ndb++] = xstrdup(*argv++);
 
   /* Discard extra auxiliary data-base files, reallocate 
      auxiliary file to match real data bases:            */

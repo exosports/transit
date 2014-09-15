@@ -322,12 +322,12 @@ db_part(char **name,           /* FINDME: data-base name?       */
   fpaux=NULL;
 
   /* FINDME: Fill in WHAT name?, isotopes names, and isotopes masses */
-  *name     = strdup(pands_name);
+  *name     = xstrdup(pands_name);
   *isonames = (char     **)calloc(nIso, sizeof(char *));
   *mass     = (PREC_MASS *)calloc(nIso, sizeof(PREC_MASS));
   for (int i=0; i<nIso; i++){
     (*mass)[i] = pands_mass[i];
-    (*isonames)[i] = strdup(pands_iso[i]);
+    (*isonames)[i] = xstrdup(pands_iso[i]);
   }
 
   partitionread = 1;
