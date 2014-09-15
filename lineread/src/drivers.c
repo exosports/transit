@@ -283,8 +283,8 @@ int
 setdriversnoutput(struct hints *hint){
   /* Get name of output file:                                    */
   /* FINDME: WHY COMPARE UP TO 2 CHARACTERS? */
-  outfilename = strdup(strncmp("-", hint->datafile, 2)==0 ?
-                       "Standard Output":hint->datafile);
+  outfilename = xstrdup(strncmp("-", hint->datafile, 2)==0 ?
+                        "Standard Output":hint->datafile);
 
   /* Open the database and partition function files for reading: */
   for (int i=0; i<ndb; i++)
