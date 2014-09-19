@@ -653,8 +653,6 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
 void
 getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
   int nmol = at->n_aiso;
-  /* FINDME: De-hardcode filename, put it in tr.ds.at: */
-  //char *filename = "../inputs/molecules.dat";
   FILE *elist;
 
   double *mmass,    /* Molecular mass from list                             */
