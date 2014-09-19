@@ -81,6 +81,7 @@ CPROTOFLAGS = $(INCLFLAGS) $(GSLPRM) -f 3 -m -e -i -X 0
 
 # pu/ include flag:
 PUFLAGS="-I../pu/include -L../pu"
+CFLAGS += -fPIC
 
 NODBGFLAGS  = 
 DBGFLAGS    = -g3 -gdwarf-2

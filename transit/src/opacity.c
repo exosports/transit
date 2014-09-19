@@ -110,10 +110,10 @@ calcopacity(struct transit *tr,
 
   /* Make logscale grid for the profile widths:                             */
   /* FINDME: Hardcoded values                                               */
-  nDop = op->nDop = 30;  //100;
-  nLor = op->nLor = 30;  //100;
+  nDop = op->nDop = 20;  //100;
+  nLor = op->nLor = 20;  //100;
   Lmin = 1e-4;
-  Lmax = 2.0; //10.0;
+  Lmax = 1.0; //10.0;
   Dmin = 1e-3;
   Dmax = 0.25;
   op->aDop = logspace(Dmin, Dmax, nDop);
