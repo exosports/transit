@@ -1,0 +1,2 @@
+ar rvs         transit/libtransit.a    transit/src/*.o
+gcc -shared -o transit/libtransit.so.1 transit/src/*.o
