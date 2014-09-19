@@ -360,7 +360,8 @@ struct transithint{
        *f_opa,          /* Opacity filename                                 */
        *f_out,          /* Output (main) filename                           */
        *f_toomuch,      /* Output toomuch filename                          */
-       *f_outsample;    /* Output sample filename                           */
+       *f_outsample,    /* Output sample filename                           */
+       *f_molfile;      /* Known molecular info filename                    */
   PREC_NREC ot;         /* Radius index at which to print output from tau    */
   prop_samp rads, ips,  /* Sampling properties of radius, impact parameter,  */
        wavs, wns, temp; /*   wavelength, wavenumber, and temperature         */
@@ -416,7 +417,8 @@ struct transit{
        *f_opa,       /* Opacity filename                                    */
        *f_out,       /* Output (main) filename                              */
        *f_toomuch,   /* Output toomuch filename                             */
-       *f_outsample; /* Output sample filename                              */
+       *f_outsample, /* Output sample filename                              */
+       *f_molfile;   /* Known molecular info filename                       */
   PREC_NREC ot;      /* Radius index at which to print output from tau      */
 
   FILE *fp_atm, *fp_opa, *fp_out, *fp_line; /* Pointers to files            */

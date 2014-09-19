@@ -570,7 +570,7 @@ getisoratio(struct transit *tr){
   double *iratio;      /* Isotope number-abundance ratio in list            */
   char **iname;        /* Isotope name in list                              */
   char line[maxlinelen], *lp; /* String pointers                            */
-  char *filename = "../inputs/molecules.dat";
+  //char *filename = "../inputs/molecules.dat";
   FILE *elist;
 
   iso->isoratio = (double *)calloc(iso->n_i, sizeof(double));
@@ -582,7 +582,7 @@ getisoratio(struct transit *tr){
     iname[i] = iname[0] + i*maxeisoname;
 
   /* Open Molecules file:                                                   */
-  if((elist=verbfileopen(filename, "Molecular info ")) == NULL)
+  if((elist=verbfileopen(tr->f_molfile, "Molecular info ")) == NULL)
     exit(EXIT_FAILURE);
 
   /* Skip Molecule's aliases:                                               */
