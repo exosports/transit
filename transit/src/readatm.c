@@ -118,7 +118,7 @@ getatm(struct transit *tr){
   mol.molec  = (prop_mol  *)calloc(nmol, sizeof(prop_mol));
 
   /* Get (pseudo-fixed) molecular data values from 'molecules.dat' file:    */
-  getmoldata(&at, &mol);
+  getmoldata(&at, &mol, tr->f_molfile);
 
   /* Allocate arrays for the mean molecular mass, density, and abundance:   */
   at.molec        = (prop_mol *)calloc(nmol, sizeof(prop_mol));
@@ -651,10 +651,10 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
 /* Read and store non-layer-dependent molecular data (mass, radius, ID)
    and store in mol struct.                                                 */
 void
-getmoldata(struct atm_data *at, struct molecules *mol){
+getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
   int nmol = at->n_aiso;
   /* FINDME: De-hardcode filename, put it in tr.ds.at: */
-  char *filename = "../inputs/molecules.dat";
+  //char *filename = "../inputs/molecules.dat";
   FILE *elist;
 
   double *mmass,    /* Molecular mass from list                             */

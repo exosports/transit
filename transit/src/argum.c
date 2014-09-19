@@ -123,6 +123,7 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_TEMPLOW,
     CLA_TEMPHIGH,
     CLA_TEMPDELT,
+    CLA_MOLFILE,
   };
 
   /* Generate the command-line option parser: */
@@ -161,6 +162,8 @@ processparameters(int argc,            /* Number of command-line args  */
     {"outsample",  CLA_OUTSAMPLE,  required_argument, NULL, "filename",
      "Outputs sampling information. A dash (-) indicates standard input. By "
      "default there is no such output."},
+    {"molfile",    CLA_MOLFILE,    required_argument, "../inputs/molecules.dat",
+     "filename", "Path to file with the molecular info."},
 
     /* Radius options:                        */
     {NULL,       0,           HELPTITLE,         NULL, NULL,
@@ -263,7 +266,6 @@ processparameters(int argc,            /* Number of command-line args  */
     {"per-iso",    CLA_EXTPERISO,   no_argument,       NULL,    NULL,
      "Calculate extinction per isotope (allows to display the contribution "
      "from different isotopes, but consumes more memory."},
-    /* FINDME: delete no-per-iso, redundant */
     {"blowex",     CLA_BLOWEX,      required_argument, "1",     "factor",
      "Blow extinction by factor before computing tau. No physical"
      "significance (use only for debugging)."},
@@ -453,9 +455,13 @@ processparameters(int argc,            /* Number of command-line args  */
       strcpy(hints->f_atm, optarg);
       break;
     case CLA_LINEDB:     /* Line database file name    */
-        hints->f_line = (char *)realloc(hints->f_line, strlen(optarg)+1);
-        strcpy(hints->f_line, optarg);
-        break;
+      hints->f_line = (char *)realloc(hints->f_line, strlen(optarg)+1);
+      strcpy(hints->f_line, optarg);
+      break;
+    case CLA_MOLFILE:    /* Known molecular information                     */
+      hints->f_molfile = (char *)realloc(hints->f_molfile, strlen(optarg)+1);
+      strcpy(hints->f_molfile, optarg);
+      break;
     case 'o':            /* Output file name           */
       hints->f_out = (char *)realloc(hints->f_out, strlen(optarg)+2);
       strcpy(hints->f_out, optarg);
@@ -917,6 +923,8 @@ acceptgenhints(struct transit *tr){
   /* Accept toomuch and outsample output files:    */
   tr->f_toomuch   = th->f_toomuch;
   tr->f_outsample = th->f_outsample;
+  /* FINDME: Should check if the file exists:                               */
+  tr->f_molfile   = th->f_molfile;
 
   /* Initialize solution-type, accept hinted ray-solution
      if it's name exists:                          */
@@ -1113,6 +1121,7 @@ freemem_hints(struct transithint *h){
   free(h->f_out);
   free(h->f_toomuch);
   free(h->f_outsample);
+  free(h->f_molfile);
 
   /* Free other strings:                                                    */
   free(h->solname);
