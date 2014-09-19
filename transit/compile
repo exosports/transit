@@ -1,13 +1,13 @@
-mpicc -fPIC -o MPItransit MPItransit.c \
+mpicc -fPIC -o MPItransit src/MPItransit.c \
 -ltransit                              \
 -lm                                    \
 -lpu                                   \
 -lgsl                                  \
 -lblas                                 \
 -I/usr/lib/openmpi/include             \
--Itransit/include/                     \
--Itransit/src/                         \
--Ipu/include/                          \
--Ipu/src/                              \
--Ltransit                              \
--Lpu                                
+-L.                                    \
+-Iinclude/                             \
+-Isrc/                                 \
+-I../pu/include/                       \
+-I../pu/src/                           \
+-L../pu                                
