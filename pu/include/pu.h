@@ -28,7 +28,7 @@
 #include <pu/numerical.h>
 #include <pu/profile.h>
 #include <pu/sampling.h>
-#include <pu/xmallloc.h>
+#include <pu/xmalloc.h>
 
 
 #endif /* _PU_H */
