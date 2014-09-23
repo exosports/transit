@@ -309,7 +309,7 @@ makesample0(prop_samp *samp,       /* transit sampling    */
     *v+i = samp->i + i*osd               */
 
   /* Check the final point: */
-  if(si!=0 && samp->v[samp->n-1]!=samp->f && verblevel>2)
+  if(si != 0  &&  samp->v[samp->n-1] != samp->f  &&  verblevel > 2)
     /* FINDME: Consider removig the verblevel condition */
     transiterror(TERR_WARNING,
                  "Final sampled value (%g) of the %li points doesn't coincide "
@@ -825,7 +825,6 @@ makeradsample(struct transit *tr){
   long flag;                      /* Flag for interpolation type            */
   prop_isov *isovs;               /* lineinfo's isotopes information        */
   prop_samp *rsamp = &atms->rads; /* Atmosphere's radii sampling            */
-
   prop_samp *rad   = &tr->rads;   /* Output radius sampling                 */
   prop_atm  *atmt  = &tr->atm;    /* Array to store p, t, and mm sampling   */
   prop_mol  *molec = mol->molec;  /* Molecular variable information         */
@@ -842,6 +841,8 @@ makeradsample(struct transit *tr){
       free_mol(mol->molec+i);
     for (i=0; i<niso; i++)
       free_isov(iso->isov+i);
+    /* FINDME: Free this one too, right? */
+    //free(rad);
     tr->pi &= ~(TRPI_MAKERAD);
   }
   /* Check that variables are not NULL:                                     */

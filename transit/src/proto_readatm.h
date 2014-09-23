@@ -14,6 +14,9 @@ extern int readatmfile P_((FILE *fp, struct transit *tr, struct atm_data *at, pr
 extern void storename P_((struct atm_data *at, char *line));
 extern void getmoldata P_((struct atm_data *at, struct molecules *mol, char * filename));
 extern int reloadatm P_((struct transit *tr, double *input));
+extern int radpress P_((double g, double p0, double r0, double *temp,
+                        double *mu, double *pressure, double *radius,
+                        int nlayer, double rfct));
 #undef P_
 
 

@@ -385,6 +385,8 @@ struct transithint{
                            mass or number                                    */
   long fl;              /* flags                                             */
   _Bool userefraction;  /* Whether to use variable refraction                */
+  double p0, r0;        /* Pressure and radius reference level               */
+  double gsurf;         /* Surface gravity                                   */
 
   double toomuch;       /* Optical depth values greater than this won't be
                            calculated: the extinction is assumed to be zero  */
@@ -441,6 +443,8 @@ struct transit{
   float timesalpha;  /* Broadening profile width in number of Doppler or
                         Lorentz half width                                   */
   double minelow;    /* Minimum transition low energy considered (in cm-1)   */
+  double p0, r0;     /* Pressure and radius reference level                  */
+  double gsurf;      /* Surface gravity                                      */
 
   double blowex;    /* Blow extinction by this amount before computing tau,
                        this option has no physical meaning, but mostly

@@ -124,6 +124,9 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_TEMPHIGH,
     CLA_TEMPDELT,
     CLA_MOLFILE,
+    CLA_RPRESS,
+    CLA_RRADIUS,
+    CLA_GSURF,
   };
 
   /* Generate the command-line option parser: */
@@ -186,25 +189,31 @@ processparameters(int argc,            /* Number of command-line args  */
      "ATMPOSPHERE OPTIONS:"},
     {"number-abund",      CLA_NUMBERQ,  no_argument,       NULL, NULL,
      "Boolean: 0 if the abundances are by number, 1 if by mass."},
-    {"onept",             CLA_ONEPT,    required_argument, NULL,
-     "press, temp, N_extra_iso", 
-     "Don't calculate transit spectra, just obtain spectra for a given "
-     "pressure and temperature. Unless oneabund is also specified and has the "
-     "correct number of isotopes, the abundances will be asked interactively."},
-    {"oneextra",          CLA_ONEEXTRA, required_argument, NULL,
-     "mass1name1,mass2name2,...", 
-     "List of the atomic mass and names for the extra isotopes specified "
-     "with --onept. If it doesn't have the right amount of values, the "
-     "program will ask interactively. It only has effect with --onept."},
-    {"oneabund",          CLA_ONEABUND, required_argument, NULL, "q1,...",
-     "List of the abundances of the different isotopes. If omitted or doesn't "
-     "have the right amount of values, the program will ask interactively. "
-     "Note that the order of isotopes is the same given in the TLI data file. "
-     "Only has effect with --onept."},
-    {"onept-interactive", CLA_ONEINT,   no_argument,       NULL, NULL,
-     "Boolean; input abundances, pressure, and temperature interactively."},
+    //{"onept",             CLA_ONEPT,    required_argument, NULL,
+    // "press, temp, N_extra_iso", 
+    // "Don't calculate transit spectra, just obtain spectra for a given "
+    // "pressure and temperature. Unless oneabund is also specified and has the "
+    // "correct number of isotopes, the abundances will be asked interactively."},
+    //{"oneextra",          CLA_ONEEXTRA, required_argument, NULL,
+    // "mass1name1,mass2name2,...", 
+    // "List of the atomic mass and names for the extra isotopes specified "
+    // "with --onept. If it doesn't have the right amount of values, the "
+    // "program will ask interactively. It only has effect with --onept."},
+    //{"oneabund",          CLA_ONEABUND, required_argument, NULL, "q1,...",
+    // "List of the abundances of the different isotopes. If omitted or doesn't "
+    // "have the right amount of values, the program will ask interactively. "
+    // "Note that the order of isotopes is the same given in the TLI data file. "
+    // "Only has effect with --onept."},
+    //{"onept-interactive", CLA_ONEINT,   no_argument,       NULL, NULL,
+    // "Boolean; input abundances, pressure, and temperature interactively."},
     {"allowq",            CLA_ALLOWQ,   required_argument, "0.00001", "value",
      "Maximum allowed cumulative-abundance departure from 1.0."},
+    {"refpress",          CLA_RPRESS,   required_argument, NULL, NULL,
+     "Reference pressure of the planet's 'surface'."},
+    {"refradius",         CLA_RRADIUS,  required_argument, NULL, NULL,
+     "Reference altitude of the planet's 'surface'."},
+    {"gsurf",             CLA_GSURF,    required_argument, NULL, NULL,
+     "Surface gravity in cm/s^2."},
 
     /* Wavelength options:                    */
     {NULL,         0,             HELPTITLE,         NULL,       NULL,
@@ -477,6 +486,15 @@ processparameters(int argc,            /* Number of command-line args  */
         hints->f_toomuch = (char *)calloc(strlen(optarg)+1, sizeof(char));
         strcpy(hints->f_toomuch, optarg);
       }
+      break;
+    case CLA_RPRESS:     /* Pressure reference level                        */
+      hints->p0 = atof(optarg);
+      break;
+    case CLA_RRADIUS:    /* Radius reference level                          */
+      hints->r0 = atof(optarg);
+      break;
+    case CLA_GSURF:      /* Surface gravity                                 */
+      hints->gsurf = atof(optarg);
       break;
 
     case CLA_OUTTAU:
@@ -1011,6 +1029,26 @@ acceptgenhints(struct transit *tr){
   transitprint(1, verblevel, "transit interpolation flag: %li.\n",
                              tr->interpflag);
 
+  if (th->r0 <= 0){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
+                 "Reference radius level (%g) must be positive.\n", th->r0);
+    return -1;
+  }
+  tr->r0 = th->r0;
+
+  if (th->p0 <= 0){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
+                 "Reference pressure level (%g) must be positive.\n", th->p0);
+    return -1;
+  }
+  tr->p0 = th->p0;
+
+  if (th->gsurf <= 0){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
+                "Surface gravity (%g cm s^-2) must be positive.\n", th->gsurf);
+    return -1;
+  }
+  tr->gsurf = th->gsurf;
   return 0;
 }
 
