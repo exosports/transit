@@ -29,7 +29,6 @@ int    freemem_atmosphere(struct atm_data *at, long *pi)                    */
 
 #include <readatm.h>
 
-#define ROUNDOFF 1e7
 #define ROUNDTHRESH 1e-5
 
 static double zerorad=0;
@@ -643,6 +642,9 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
     molec[i].q = (PREC_ATM *)realloc(molec[i].q, nrad*sizeof(PREC_ATM));
     molec[i].n = nrad;
   }
+  transitprint(1, verblevel, "Read %li layers between pressures %.3e and "
+                             "%.3e barye.\n", r, at->atm.p[0  ]*at->atm.pfct,
+                                                 at->atm.p[r-1]*at->atm.pfct);
 
   return nrad;
 }
@@ -750,8 +752,7 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
 
 
 /*
-Re-load data from array into transit's atm structure.
-*/
+Re-load data from array into transit's atm structure.                       */
 int
 reloadatm(struct transit *tr,
           double *input){ /* Array with updated temp. and abund. profiles   */
@@ -770,9 +771,6 @@ reloadatm(struct transit *tr,
     transitprint(1, verblevel, "%.1f  ", at->atm.t[i]);
   }
   transitprint(1, verblevel, "\n");
-
-  /* Re-calculate radius at each pressure level:                            */
-  // radpress();
 
   /* Update atmfile abundance arrays:                                       */
   for (j=0; j<nmol; j++)
@@ -795,7 +793,70 @@ reloadatm(struct transit *tr,
                                                      at->atm.t[i]*at->atm.tfct);
     i++;
   }
+
+  /* Re-calculate radius at each pressure level:                            */
+  transitprint(30, verblevel, "Old radius boundaries: [%.1f, %.1f]\n",
+                   at->rads.v[0], at->rads.v[nlayers-1]);
+  radpress(tr->gsurf, tr->p0, tr->r0, at->atm.t,
+           at->mm, at->atm.p, at->rads.v, nlayers, at->rads.fct);
+  /* Actualize other variables of at->rads:                                 */
+  at->rads.i = at->rads.v[0];
+  at->rads.f = at->rads.v[nlayers-1];
+  transitprint(30, verblevel, "New radius boundaries: [%.1f, %.1f]\n",
+                   tr->ds.at->rads.v[0], tr->ds.at->rads.v[nlayers-1]);
+
   /* Re-resample transit arrays:                                            */
   makeradsample(tr);
   return 0;
+}
+
+
+int radpress(double g,         /* Surface gravity (m/s^2)                   */
+             double p0,        /* Reference pressure                        */
+             double r0,        /* Reference height                          */
+             double *temp,     /* Temperature (K)                           */
+             double *mu,       /* Mean molecular mass (g/mol)               */
+             double *pressure, /* Pressure array                            */
+             double *radius,   /* Radius array                              */
+             int nlayer,       /* Number of layers                          */
+             double rfct){     /* Radius-array units                        */
+  double rad0;   /* Radius at reference pressure                            */
+  int i, i0=-1;  /* Indices                                                 */
+
+  /* Start from zero altitude, adjust later:                                */
+  radius[0] = 0.0;
+  for (i=1; i<nlayer; i++){
+    /* Cumulative trapezoidal integration to solve: dz = -H*dlog(p):        */
+    radius[i] = radius[i-1] - 0.5*log(pressure[i]/pressure[i-1]) *
+                              (KB/g/AMU) * (temp[i]/mu[i] + temp[i-1]/mu[i-1]);
+    /* Find index of layers around p0 such:  press[i-1] <= p0 < press[i]:   */
+    if (fabs(pressure[i-1]-p0) <  fabs(pressure[i]-pressure[i-1]))
+      if (fabs(pressure[i]-p0) <= fabs(pressure[i]-pressure[i-1]))
+        i0 = i-1;
+  }
+
+  /* Reference pressure is no in given range:                               */
+  if (i0 == -1){
+    transiterror(TERR_CRITICAL, "Reference pressure level (%.3e) not found "
+               "in range [%.3e, %.3e].\n", p0, pressure[0], pressure[nlayer-1]);
+    return 0;
+  }
+
+  /* Log-linearly interpolate to get radius at p0:                          */
+  rad0 = radius[i0] + (radius[i0+1]-radius[i0]) *
+         log(p0/pressure[i0]) / log(pressure[i0+1]/pressure[i0]);
+
+  transitprint(20, verblevel, "PRESSURE:\n");
+  for (i=0; i<nlayer; i++)
+    transitprint(20,verblevel, "%.3e, ", pressure[i]);
+  transitprint(20, verblevel, "\n");
+
+  /* Adjust radius array to force radius(p0) = r0:                          */
+  transitprint(20, verblevel, "RADIUS:\n");
+  for (i=0; i<nlayer; i++){
+    radius[i] = r0 + (radius[i] - rad0)/rfct;
+    transitprint(20, verblevel, "%.1f, ", radius[i]);
+  }
+  transitprint(20, verblevel, "\n");
+  return 1;
 }
