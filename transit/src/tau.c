@@ -172,10 +172,6 @@ tau(struct transit *tr){
     for(ri=0; ri<rnn; ri++)
       er[ri] = e[ri][wi]*blowex + e_s[ri] + e_c[ri] + e_cia[wi][ri];
 
-    /* FINDME: Explain this line: */
-    if(wi==300)
-      rn = 56;
-
     /* For each impact parameter: */
     for(ri=0; ri<inn; ri++){
       /* Compute extinction at new radius if the impact parameter is smaller
@@ -191,16 +187,24 @@ tau(struct transit *tr){
         do{
           if(!comp[--lastr]){
             /* Compute a new extinction at given radius printing error if
-               something happen: */
+               something happen:                                            */
             transitprint(2, verblevel, "Radius %i: %.9g cm ... \n",
                                        lastr+1, r[lastr]);
             if((rn=computemolext(tr, lastr, ex->e))!=0)
               transiterror(TERR_CRITICAL,
                            "computeextradius() return error code %i while "
                            "computing radius #%i: %g\n", rn, r[lastr]*rfct);
-            /* Update the value of the extinction at the right place: */
+            /* Update the value of the extinction at the right place:       */
             er[lastr] = e[lastr][wi]*blowex + e_s[lastr] +
                         e_c[lastr] + e_cia[wi][lastr];
+            /* Print extinction:                                            */
+            if (lastr == 100){
+              transitprint(100, verblevel, "Extinction [%i] = {", lastr);
+              for (int i=500; i<600; i++){
+                transitprint(100, verblevel, "%.3e, ", e[lastr][i]);
+              }
+              transitprint(100, verblevel, "}\n");
+            }
           }
         /* FINDME: a while instead of a do-while should work better, huh? */
         }while(bb[ri]*ip->fct < r[lastr]*rfct);
@@ -240,7 +244,6 @@ tau(struct transit *tr){
     }
 
   }
-
   transitprint(1, verblevel, " Done.\nOptical depth calculated up to %g.\n",
                tr->ds.tau->toomuch);
 
