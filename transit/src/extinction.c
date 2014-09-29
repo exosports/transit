@@ -502,6 +502,14 @@ computemolext(struct transit *tr, /* transit struct                         */
                (1-exp(-EXPCTE*wavn/temp))        /    /* Induced emission   */
                iso->isof[i].m                    /    /* Isotope mass       */
                iso->isov[i].z[r];                     /* Partition function */
+
+    if (r== 100 && ln >= 1 && ln <= 19){
+      transitprint(100, verblevel, "k=%.10e, d=%.4e, rat=%.4e, gf=%.4e, "
+                   "elow=%.4e, T=%.4e, w=%.4e, m=%.4e, z=%.4e\n", propto_k,
+                   mol->molec[iso->imol[i]].d[r], iso->isoratio[i], lt->gf[ln],
+                   lt->elow[ln], temp, wavn, iso->isof[i].m, iso->isov[i].z[r]);
+    }
+
     /* Set the lower and upper indices of the profile to be used:           */
     minj = ilinewn - profsize[idop[i]][ilor[i]] + 1;
     offset = minj;

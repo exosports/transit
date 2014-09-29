@@ -210,7 +210,7 @@ calcopacity(struct transit *tr,
                              "transitions.\n", Nmol);
   for (i=0, j=0; i<iso->n_i; i++){
     /* If this molecule is not yet in molID array, add it:                  */
-    if (valueinarray(iso->imol, iso->imol[i], j) < 0){
+    if (valueinarray(op->molID, iso->imol[i], j) < 0){
       op->molID[j++] = iso->imol[i];
       transitprint(10, verblevel, "Isotope's (%d) molecule ID: %d added at "
                    "position %d.\n", i, iso->imol[i], j-1);

@@ -44,7 +44,7 @@
 #include <gsl/gsl_spline.h>
 #endif
 
-#define compattliversion 4
+#define compattliversion 5
 
 #include <flags_tr.h>
 #include <constants_tr.h>

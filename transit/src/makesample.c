@@ -848,7 +848,7 @@ makeradsample(struct transit *tr){
   /* Check that variables are not NULL:                                     */
   transitASSERT(atms->rads.n<1 || !ndb || !niso || !nmol,
                 "makeradsample():: called but essential variables are "
-                "missing!.\n");
+                "missing (%d, %d, %d, %d).\n", atms->rads.n, ndb, niso, nmol);
 
   /* Set interpolation function flag:                                       */
   flag = tr->interpflag;
@@ -916,8 +916,8 @@ makeradsample(struct transit *tr){
       transitASSERT(iso1db + j > niso-1,
                     "Trying to reference an isotope (%i) outside the extended "
                     "limit (%i).\n", iso1db+j, niso-1);
-      resampley(flag, 2, isovs[j].z, iso->isov[iso1db+j].z,
-                         isovs[j].c, iso->isov[iso1db+j].c);
+      resampley(flag, 1, isovs[j].z, iso->isov[iso1db+j].z);
+      //                 isovs[j].c, iso->isov[iso1db+j].c);
     }
   }
   resample_free();

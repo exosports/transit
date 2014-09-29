@@ -80,10 +80,11 @@ typedef struct {    /* Atmospheric conditions:          */
 } prop_atm;
 
 
-typedef struct {    /* Database properties:             */
-  char *n;          /* Database name                    */
-  unsigned int i;   /* Number of isotopes               */
-  int s;            /* Cumulative first isotope's index */
+typedef struct {    /* Database properties:                                 */
+  char *n;          /* Database name                                        */
+  char *molname;    /* Molecule name                                        */
+  unsigned int i;   /* Number of isotopes                                   */
+  int s;            /* Cumulative first isotope's index                     */
 } prop_db;
 
 
