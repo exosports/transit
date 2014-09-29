@@ -32,6 +32,10 @@ class tioschwenke(dbdriver):
     # Isotopes mass:  46Ti,  47Ti,  48Ti,  49Ti,  50Ti
     self.mass = [61.94754403, 62.94667863, 63.94286193, 64.94278573,
                  65.93970673]
+    # Isotopic abundance ratio:
+    self.isoratio = [0.080, 0.073, 0.738, 0.055, 0.054]
+    # Molecule name:
+    self.molecule = "TiO"
 
   def readwl(self, dbfile, irec):
     """
@@ -155,7 +159,7 @@ class tioschwenke(dbdriver):
     gf: 1D ndarray (double)
       gf value (unitless).
     elow: 1D ndarray (double)
-      Lower-state energe (centimeter^-1).
+      Lower-state energy (cm^-1).
     isoID: 2D ndarray (integer)
       Isotope index (1, 2, 3, ...).
 
@@ -165,6 +169,7 @@ class tioschwenke(dbdriver):
     2014-03-11  patricio  Adapted to work with pylineread.
     2014-03-24  patricio  Rewritten as subclass of dbdriver.
     2014-07-06  patricio  Updated return statement.
+    2014-09-23  patricio  Updated for pylineread 5.0.
     """
  
     # Open the file:
@@ -174,7 +179,7 @@ class tioschwenke(dbdriver):
     data.seek(0, 2)                     # Set pointer at the file's end
     nlines = data.tell() / self.recsize # Number of lines (bytes/record_size)
  
-    # Rewrite wavelength limits as given in the P&S file:
+    # Rewrite wavelength limits as given in the Database file:
     iwav = iwl * c.MTC / c.NTC         # Microns to nanometer
     fwav = fwl * c.MTC / c.NTC
     iwav = np.log(iwav) / self.ratiolog
@@ -198,7 +203,7 @@ class tioschwenke(dbdriver):
     # When the wavelength surpasses the max wavelength, stop the loop
     chk = 1  # Check-point counter
     i   = 0  # Stored record index
-    wl_intvl = float((frec - irec)/20)  # Check-point interval
+    interval = float((frec - irec)/20)  # Check-point interval
 
     iw   = np.zeros(nread, int)
     ieli = np.zeros(nread, np.short)
@@ -214,7 +219,7 @@ class tioschwenke(dbdriver):
       # Print a checkpoint statement every 1/20th interval:
       if verbose > 1:
         pos = float(data.tell()/self.recsize)
-        if (pos/wl_intvl)%1 == 0.0:
+        if (pos/interval)%1 == 0.0:
           ut.lrprint(verbose-1, "checkpoint %d/20..."%chk)
           chk += 1
           ut.lrprint(verbose-3, "iwl: %d, ielow: %5d, igf: "

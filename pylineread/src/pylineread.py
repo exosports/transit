@@ -1,8 +1,4 @@
 #!/usr/bin/env python
-#Prototype code for porting lineread to python with P&S DB support
-# Multiple DB types forthcoming with rolling revisions
-# Begun on 10/21/2013 by Madison Stemm
-# Adapted from Patricio Rojo's lineread.c
 
 import numpy as np
 import scipy.constants as sc
@@ -107,18 +103,19 @@ def parseargs():
 
 if __name__ == "__main__":
   """
-    FINDME: One liner decription
+  Prototype code for porting lineread to python with P&S DB support
+  Multiple DB types forthcoming with rolling revisions
 
-    Parameters:
-    -----------
-    transDB:
- 
-    Modification History:
-    ---------------------
-    2013        madison   Initial version based on P. Rojo's lineread C code.
-                                                   madison.stemm@ucf.edu
-    2014-03-05  patricio  Added documentation and updated Madison's code.
-                                                   pcubillos@fulbrightmail.org
+  Parameters:
+  -----------
+
+  Modification History:
+  ---------------------
+  2013-10-21  madison   Initial version based on P. Rojo's lineread C code.
+                                                 madison.stemm@ucf.edu
+  2014-03-05  patricio  Added documentation and updated Madison's code.
+                                                 pcubillos@fulbrightmail.org
+  2014-07-27  patricio  Updated to version 5.0
   """
 
   # Process command-line-arguments:
@@ -166,11 +163,6 @@ if __name__ == "__main__":
   header += struct.pack("3h", c.TLI_VERSION, c.LR_VERSION, c.LR_REVISION)
   # Add initial and final wavelength boundaries:
   header += struct.pack("2d", cla.iwav, cla.fwav)
-  # Undefined string:
-  undefstring = ""
-  header += struct.pack("h", len(undefstring))
-  if len(undefstring) > 0:
-    header += struct.pack("%dc"%len(undefstring), *undefstring)
 
   # Get number of databases:
   DBnames = [] # Database names
@@ -185,16 +177,13 @@ if __name__ == "__main__":
   header += struct.pack("h", Ndb)
   TLIout.write(header)
 
-  # This could be used to eradicate the 'magic number':
-  # header = struct.pack("h%dsh" %len(endianness), endianness,
-  #                      c.TLI_VERSION, Ndb)
-
   ut.lrprint(verbose-8, "Magic number: %d\n"
                         "TLI Version:  %d\n"
                         "LR Version:   %d\n"
                         "LR Revision:  %d\n"
-                        "Initial wl (um): %7.3f\n"
-                        "Final wl (um):   %7.3f"%(struct.unpack('i', magic)[0],
+                        "Initial wavelength (um): %7.3f\n"
+                        "Final   wavelength (um): %7.3f"%(
+                         struct.unpack('i', magic)[0],
                          c.TLI_VERSION, c.LR_VERSION, c.LR_REVISION,
                          cla.iwav, cla.fwav))
   ut.lrprint(verbose-8, "There are %d databases in %d files."%(Ndb, Nfiles))
@@ -216,8 +205,9 @@ if __name__ == "__main__":
 
     # Get partition function values:
     Temp, partDB = driver[i].getpf(verbose)
-    isoNames = driver[i].isotopes
-    iso_mass = driver[i].mass
+    isoNames  = driver[i].isotopes
+    iso_mass  = driver[i].mass
+    iso_ratio = driver[i].isoratio
 
     ut.lrprint(verbose, "Isotopes mass: " + str(iso_mass))
 
@@ -228,15 +218,19 @@ if __name__ == "__main__":
 
     # Get file name (remove root and extension):
     lenDBname = len(DBnames[idb])
+    lenMolec  = len(driver[i].molecule)
 
     # Store length of database name, database name, number of temperatures,
     #  and number of isotopes in TLI file:
     TLIout.write(struct.pack("h%dc"%lenDBname,  lenDBname, *DBnames[idb]))
+    # Store the molecule name:
+    TLIout.write(struct.pack("h%dc"%lenMolec, lenMolec, *driver[i].molecule))
+    # Store the number of temperature samples and isotopes:
     TLIout.write(struct.pack("hh", Ntemp, Niso))
-    ut.lrprint(verbose-8, "Database (%d/%d): '%s'\n"
+    ut.lrprint(verbose-8, "Database (%d/%d): '%s (%s molecule)'\n"
                           "  Number of temperatures: %d\n"
                           "  Number of isotopes: %d"%(idb+1, Ndb, DBnames[idb],
-                                                     Ntemp, Niso))
+                                              driver[i].molecule, Ntemp, Niso))
 
     # Write all the temperatures in a list:
     TLIout.write(struct.pack("%dd"%Ntemp, *Temp))
@@ -253,37 +247,30 @@ if __name__ == "__main__":
       Iname = str(isoNames[j])
       TLIout.write(struct.pack("h%dc"%lenIsoname, lenIsoname, *Iname))
       TLIout.write(struct.pack("d", iso_mass[j]))
+      TLIout.write(struct.pack("d", iso_ratio[j]))
 
       # Write the partition function per isotope:
       TLIout.write(struct.pack("%dd"%Ntemp, *partDB[j]))
-      # Write the collisional cross-section per isotope:
-      cs = np.zeros(Ntemp) + c.PS_CROSS
-      TLIout.write(struct.pack("%dd"%Ntemp, *cs))
       ut.lrprint(verbose-9, "    Mass (u):        %8.4f\n"
-                            "    Part. Function:  [%.2e, %.2e, ..., %.2e]\n"
-                            "    Cross Sec. (cm): [%.2e, %.2e, ..., %.2e]"%(
-                             iso_mass[j],
-                             partDB[j,0], partDB[j,1], partDB[j,Ntemp-1],
-                             cs[0],       cs[1],       cs[Ntemp-1]))
+                            "    Isotopic ratio:  %8.4g\n"
+                            "    Part. Function:  [%.2e, %.2e, ..., %.2e]"%(
+                             iso_mass[j], iso_ratio[j],
+                             partDB[j,0], partDB[j,1], partDB[j,Ntemp-1]))
 
-    # Write database correlative number:
-    TLIout.write(struct.pack("h", idb))
     # Calculate cumulative number of isotopes per database:
     totIso += Niso
     idb += 1
     acum[idb] = totIso
 
-  # Write cumulative number of isotopes:
-  TLIout.write(struct.pack("h", totIso))
-  ut.lrprint(verbose, "Done.\n")
-
+  # Cumulative number of isotopes:
   ut.lrprint(verbose-5, "Cumulative number of isotopes per DB: " + str(acum))
+  ut.lrprint(verbose, "Done.")
 
+  ut.lrprint(verbose, "\nWriting transition info to tli file:")
   wlength = []
   gf      = []
   elow    = []
   isoID   = []
-  ut.lrprint(verbose, "Writing transition info to tli file:")
   # Read from file and write the transition info:
   for db in np.arange(Nfiles):
     # Get database index:
@@ -321,11 +308,14 @@ if __name__ == "__main__":
 
   # Pack:
   transinfo = ""
+  # Write the number of transitions:
+  TLIout.write(struct.pack("i", nTransitions))
+
   ti = time.time()
-  for i in np.arange(nTransitions):
-    # Wavelength, isotope number, lower-state energy, and gf:
-    transinfo += struct.pack("dh", wlength[i], isoID[i])
-    transinfo += struct.pack("dd", elow[i],    gf[i])
+  transinfo += struct.pack(str(nTransitions)+"d", *list(wlength))
+  transinfo += struct.pack(str(nTransitions)+"h", *list(isoID))
+  transinfo += struct.pack(str(nTransitions)+"d", *list(elow))
+  transinfo += struct.pack(str(nTransitions)+"d", *list(gf))
   tf = time.time()
   ut.lrprint(verbose-3, "Packing time: %8.3f seconds"%(tf-ti))
 
@@ -333,20 +323,6 @@ if __name__ == "__main__":
   TLIout.write(transinfo)
   tf = time.time()
   ut.lrprint(verbose-3, "Writing time: %8.3f seconds"%(tf-ti))
-
-  # FINDME: This way it's more than two times faster:
-  # Alternative packing:
-  # datawl = list(datawl)
-  # dataii = list(dataii)
-  # datael = list(datael)
-  # datagf = list(datagf)
-  # ti = time.time()
-  # transinfo += struct.pack(str(nTransitions)+"d", *datawl)
-  # transinfo += struct.pack(str(nTransitions)+"h", *dataii)
-  # transinfo += struct.pack(str(nTransitions)+"d", *datael)
-  # transinfo += struct.pack(str(nTransitions)+"d", *datagf)
-  # tf = time.time()
-  # ut.lrprint(verbose-3, "Packing(2) time: %8.3f seconds"%(tf-ti))
 
   TLIout.close()
   ut.lrprint(verbose, "Done.\n")

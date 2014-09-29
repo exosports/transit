@@ -13,6 +13,14 @@ class pands(dbdriver):
     http://kurucz.harvard.edu/molecules/h2o/h2opartfn.dat
   """
   def __init__(self, dbfile, pffile):
+    """
+    Initialize Basic data for the Database.
+
+    Modification History:
+    ---------------------
+    2014-07-27  patricio  Added Documentation. Added self.molecule with
+                          name of the molecule.
+    """
     super(pands, self).__init__(dbfile, pffile)
 
     # Database name:
@@ -21,11 +29,16 @@ class pands(dbdriver):
     self.isotopes  = ['1H1H16O',   '1H1H17O',   '1H1H18O',   '1H2H16O'] 
     # Isotopes masses:
     self.mass      = [18.01056468, 19.01478156, 20.01481046, 19.01684143]
-    
+    # Isotopic abundance ratio:
+    self.isoratio  = [0.997000,    0.000508,    0.000508,    0.001984]
+
+    # Molecule name:
+    self.molecule  = "H2O"
+
     self.ratiolog  = np.log(1 + 1/2e6)
     # Table of logarithms: 
     self.tablog = 10.0**(0.001*(np.arange(32769) - 16384))
-    self.recsize   = 8 # Record size
+    self.recsize     = 8 # Record size
     self.pf_ignore   = 5 # Lines to ignore at the begining of PF file.
     self.pf_isonames = 3 # PF line with isotopes names
 
@@ -183,7 +196,7 @@ class pands(dbdriver):
     # When the wavelength surpasses the max wavelength, stop the loop
     chk = 1  # Check-point counter
     i   = 0  # Stored record index
-    wl_intvl = float((frec - irec)/20)  # Check-point interval
+    interval = float((frec - irec)/20)  # Check-point interval
 
     iw   = np.zeros(nread, int)
     ielo = np.zeros(nread, np.short)
@@ -197,13 +210,13 @@ class pands(dbdriver):
       # Print a checkpoint statement every 1/20th interval
       if verbose > 1:
         pos = float(data.tell()/self.recsize)
-        if (pos/wl_intvl)%1 == 0.0:
+        if (pos/interval)%1 == 0.0:
           ut.lrprint(verbose-1, "checkpoint %d/20..."%chk)
           chk += 1
           ut.lrprint(verbose-3, "iwl: %d, ielow: %5d, gf: "
                                 "%6d"%(iw[i], ielo[i], igf[i]))
           ut.lrprint(verbose-2, "Wavelength: %.3f, IsoID: %d, Elow: %.5e, "
-               "log(gf): %.5e"%(np.exp(iw[i] * self.ratiolog) * c.NTC/c.MTC,
+                    "gf: %.5e"%(np.exp(iw[i] * self.ratiolog) * c.NTC/c.MTC,
                                 2*(ielo[i] < 0) + 1*(igf[i] < 0),
                                 np.abs(ielo[i]), self.tablog[np.abs(igf[i])]))
       i += 1

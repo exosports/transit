@@ -1,6 +1,7 @@
 import sys, os
 import numpy as np
 import subprocess as sp
+import scipy.constants as sc
 
 import utils as ut
 import constants as c
@@ -11,13 +12,30 @@ DBHdir = os.path.dirname(os.path.realpath(__file__))
 
 class hitran(dbdriver):
   def __init__(self, dbfile, pffile):
+    """
+    Initialize the basic database info.
+
+    Parameters:
+    -----------
+    dbfile: String
+       File with the Database info as given from HITRAN.
+    pffile: String
+       File with the partition function.
+
+    Modification History:
+    ---------------------
+    2014-08-01  patricio  Added documentation.
+    """
     super(hitran, self).__init__(dbfile, pffile)
 
     self.recsize   = 162 # Record length
     self.recwnpos  =   3 # Wavenumber     position in record
     self.recisopos =   2 # Isotope        position in record
     self.reclinpos =  15 # Line intensity position in record
+    self.recApos   =  25 # Einstein coef  position in record
+    self.recairpos =  35 # Air broadening position in record
     self.recelpos  =  45 # Low Energy     position in record
+    self.recg2pos  = 155 # Low stat weight position in record
     self.recmollen =   2 # Molecule   record length
     self.recwnlen  =  12 # Wavenumber record length
     self.reclinend =  25 # Line intensity end position
@@ -26,10 +44,10 @@ class hitran(dbdriver):
 
     self.molID = self.getMolec()
     # Get info from HITRAN configuration file:
-    molname, self.isotopes, self.mass, self.isoratio, self.gi =            \
+    self.molecule, self.isotopes, self.mass, self.isoratio, self.gi = \
                                                     self.getHITinfo(self.molID)
     # Database name: 
-    self.name = "HITRAN " + molname
+    self.name = "HITRAN " + self.molecule
 
 
   def readwl(self, dbfile, irec):
@@ -121,9 +139,6 @@ class hitran(dbdriver):
     PF = np.zeros((Niso, Ntemp), np.double)
     ut.lrprint(verbose-14, "Temperature sample:\n" + str(Temp))
     ut.lrprint(verbose-5, "Ntemp: %d, Niso: %d"%(Ntemp, Niso))
-
-    print(self.isotopes)
-    print(self.pffile)
 
     for i in np.arange(Niso):
       # Molecule ID, isotope ID, and temperature array as strings:
@@ -279,7 +294,7 @@ class hitran(dbdriver):
     gf: 1D ndarray (double)
       gf value (unitless).
     elow: 1D ndarray (double)
-      Lower-state energe (centimeter^-1).
+      Lower-state energy (cm^-1).
     isoID: 2D ndarray (integer)
       Isotope index (1, 2, 3, ...).
 
@@ -320,6 +335,10 @@ class hitran(dbdriver):
     gf      = np.zeros(irec_init-irec_fin+1, np.double)
     elow    = np.zeros(irec_init-irec_fin+1, np.double)
     isoID   = np.zeros(irec_init-irec_fin+1,       int)
+    # Einstein A coefficient:
+    A21     = np.zeros(irec_init-irec_fin+1, np.double)
+    # Lower statistical weight:
+    g2      = np.zeros(irec_init-irec_fin+1, np.double)
     # Line intensity, used to calculate gf:
     S0      = np.zeros(irec_init-irec_fin+1, np.double)
     # Wavenumber:
@@ -330,23 +349,25 @@ class hitran(dbdriver):
 
     i = 0  # Stored record index
     chk = 0
-    wl_intvl = float((irec_fin - irec_init)/20)  # Check-point interval
+    interval = float((irec_fin - irec_init)/20)  # Check-point interval
     while irec_init - i >= irec_fin:
       data.seek( (irec_init-i) * self.recsize )
       # Read in wavenumber
       line = data.read(self.recsize)
       # Get the isotope index:
-      isoID[i]   = float(line[self.recisopos:self.recwnpos])
+      isoID[i]   = float(line[self.recisopos:self.recwnpos ])
       # Get the wavenumber:
       wnumber[i] = float(line[self.recwnpos: self.reclinpos])
       # Get the line intensity:
       S0[i]      = float(line[self.reclinpos:self.reclinend])
       # Get Elow:
-      elow[i]    = float(line[self.recelpos: self.recelend])
+      elow[i]    = float(line[self.recelpos: self.recelend ])
+      A21[i]     = float(line[self.recApos:  self.recairpos])
+      g2[i]      = float(line[self.recg2pos: self.recsize  ])
       # Print a checkpoint statement every 1/20th interval
       if verbose > 1:
         pos = float(data.tell()/self.recsize)
-        if (pos/wl_intvl)%1 == 0.0:
+        if (pos/interval)%1 == 0.0:
           ut.lrprint(verbose-1, "checkpoint %d/20..."%chk)
           chk += 1
           ut.lrprint(verbose-3, "Wavenumber: %s, S0: %s, Elow: "
@@ -366,6 +387,30 @@ class hitran(dbdriver):
     gf = (S0 * c.C1 * PFzero[isoID] /  Ia[isoID] *
              np.exp( c.C2 * elow / self.T0)  /
                  (1.0-np.exp(-c.C2 * wnumber    / self.T0)) )
+    # Alternative way:
+    gf2 = A21 * g2 * c.C1 / (8.0 * np.pi * sc.c * 100.0) / wnumber**2.0
+
+    # FINDME: Delete me when gf-vs-gf2 issue solved.
+    # print(gf)
+    # print(gf2)
+    # print((gf/gf2)[:20])
+    # print(isoID[:20])
+    # print(np.amax(gf/gf2), np.amin(gf/gf2))
+    # import matplotlib.pyplot as plt
+    # plt.figure(1)
+    # plt.plot(isoID, gf/gf2, "b,")
+    # plt.ylim(0,4)
+    # plt.xlim(-0.5, 5.5)
+    # plt.savefig("gf.png")
+    # plt.figure(2)
+    # print(np.shape(self.gi), np.shape(PFzero))
+    # ggi = np.asarray(self.gi)[isoID]
+    # plt.plot(ggi, gf2/gf, "b,")
+    # plt.plot([0,12], [0,12], "r")
+    # plt.ylim(0,15)
+    # plt.xlim(-0.5, 12.5)
+    # plt.savefig("gf2.png")
+
     ut.lrprint(verbose-14, "GF values: " + str(gf))
     data.close()
-    return wlength, gf, elow, isoID
+    return wlength, gf2, elow, isoID
