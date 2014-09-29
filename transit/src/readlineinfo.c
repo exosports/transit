@@ -29,15 +29,9 @@ int readinfo_tli(struct transit *tr, struct lineinfo *li)
 
 int readtli_bin(FILE *fp, struct transit *tr, struct lineinfo *li)
 
-int readtli_ascii(FILE *fp, struct transit *tr, struct lineinfo *li)
-
-int getinifinasctli(double *ini, double *fin, FILE *fp, char *file)
-
 int checkrange(struct transit *tr, struct lineinfo *li)
 
 int readdatarng(struct transit *tr, struct lineinfo *li)
-
-static int invalidfield(char *line, char *file, int nmb, int fld, char *fldn)
 
 int freemem_isotopes(struct isotopes *iso, long *pi)
 
