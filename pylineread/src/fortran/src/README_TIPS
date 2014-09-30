@@ -1,0 +1,10 @@
+This folder contains the Total Internal Partition Sums (TIPS) code with
+minimal modification such it can be used by pylineread.
+
+TIPS_BART is a modified version of TIPS_2011_v1p0.for
+BART_BD_ISO_82_to_85.for is a modified version of BD_ISO_82_to_85.for
+
+All credits on the TIPS code goes to:
+  http://faculty.uml.edu/robert_gamache/software/index.htm
+
+2014-09-30.  Patricio Cubillos.
