@@ -339,7 +339,7 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
     case '#':
       getname(line+1, keyword);
       /* Molecule names with an abundance profile:                          */
-      if (strcmp(keyword, "FINDSPEC") == 0){
+      if (strcmp(keyword, "SPECIES") == 0){
         /* Go to next line:                                                 */
         fgetupto_err(line, maxline, fp, &atmerr, tr->f_atm, at->begline++);
         /* Count the number of words (molecules) in line:                   */
@@ -480,9 +480,8 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
      array sizes to their final size:                                       */
   if(!nimol)
     transiterror(TERR_SERIOUS, "No isotopes were found in atmosphere file, "
-                               "make sure to specify them in a line starting "
-                               "with the letter 'i'. First non-comment line "
-                               "read:\n%s\n", line);
+                               "make sure to specify them with the comment/"
+                               "header in the previous line '#SPECIES'.\n");
 
   /* Set position of beginning of data:                                     */
   at->begpos = ftell(fp) - strlen(line) - 1;
