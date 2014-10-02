@@ -174,20 +174,20 @@ processparameters(int argc,            /* Number of command-line args  */
      "the atmosphere file):"},
     //{"radius",   'r',         no_argument,       NULL, NULL,
     // "Interactively input radius parameters."},
-    {"rad-low",  CLA_RADLOW,  required_argument, "0", "radius",
+    {"radlow",  CLA_RADLOW,  required_argument, "0", "radius",
      "Lower radius.  If 0, use atmospheric data minimum."},
-    {"rad-high", CLA_RADHIGH, required_argument, "0", "radius",
+    {"radhigh", CLA_RADHIGH, required_argument, "0", "radius",
      "Higher radius.  If 0, use atmospheric data maximum."},
-    {"rad-delt", CLA_RADDELT, required_argument, ".5", "spacing",
+    {"raddelt", CLA_RADDELT, required_argument, ".5", "spacing",
      "Radius spacing.  If 0, use atmospheric data spacing."},
-    {"rad-fct",  CLA_RADFCT,  required_argument, "0",  "factor",
+    {"radfct",  CLA_RADFCT,  required_argument, "0",  "factor",
      "Radius factor. Multiplicating radius values by this gives centimeters. "
      "If 0, use atmosphere-file factor."},
 
     /* Atmosphere options:                    */
     {NULL,                0,            HELPTITLE,         NULL, NULL,
      "ATMPOSPHERE OPTIONS:"},
-    {"number-abund",      CLA_NUMBERQ,  no_argument,       NULL, NULL,
+    {"numberabund",      CLA_NUMBERQ,  no_argument,       NULL, NULL,
      "Boolean: 0 if the abundances are by number, 1 if by mass."},
     //{"onept",             CLA_ONEPT,    required_argument, NULL,
     // "press, temp, N_extra_iso", 
@@ -220,18 +220,18 @@ processparameters(int argc,            /* Number of command-line args  */
      "WAVELENGTH OPTIONS (all in fct units):"},
     //{"wavelength", 'w',           no_argument,       NULL,       NULL,
     // "Interactively input wavelength parameters."},
-    {"wl-low",     CLA_WAVLOW,    required_argument, "0",        "wavel",
+    {"wllow",     CLA_WAVLOW,    required_argument, "0",        "wavel",
      "Lower wavelength. 0 if you want to use line data minimum."},
-    {"wl-high",    CLA_WAVHIGH,   required_argument, "0",        "wavel",
+    {"wlhigh",    CLA_WAVHIGH,   required_argument, "0",        "wavel",
      "Upper wavelength. 0 if you want to use line data maximum."},
-    {"wl-delt",    CLA_WAVDELT,   required_argument, "0.00002",
+    {"wldelt",    CLA_WAVDELT,   required_argument, "0.00002",
      "spacing",  "Wavelength spacing. It cannot be 0 or less."},
-    {"wl-osamp",   CLA_WAVOSAMP,  required_argument, "100",      "integer",
+    {"wlosamp",   CLA_WAVOSAMP,  required_argument, "100",      "integer",
      "Wavelength oversampling. It cannot be 0 or less."},
-    {"wl-fct",     CLA_WAVFCT,    required_argument, "1",        "factor",
+    {"wlfct",     CLA_WAVFCT,    required_argument, "1",        "factor",
      "Wavelength factor. Multiplicating wavelength values by this gives "
      "centimeters. If 0 or 1 then use centimeters."},
-    {"wl-marg",    CLA_WAVMARGIN, required_argument, "0.00000", "boundary",
+    {"wlmarg",    CLA_WAVMARGIN, required_argument, "0.00000", "boundary",
      "Not trustable range at boundary of line databases. Also transitions "
      "this much away from the requested range will be considered."},
 
@@ -240,23 +240,23 @@ processparameters(int argc,            /* Number of command-line args  */
      "WAVENUMBER OPTIONS (all in cm-1):"},
     //{"wavenumber", 'n',            no_argument,       NULL, NULL,  
     // "Interactively input wavenumber parameters."},
-    {"wn-low",     CLA_WAVNLOW,    required_argument, "0",  "waven",
+    {"wnlow",     CLA_WAVNLOW,    required_argument, "0",  "waven",
      "Lower wavenumber. 0 if you want to use equivalent of the wavelength "
      "maximum."},
-    {"wn-high",    CLA_WAVNHIGH,   required_argument, "0",  "waven",
+    {"wnhigh",    CLA_WAVNHIGH,   required_argument, "0",  "waven",
      "Upper wavenumber. 0 if you want to use equivalent of the wavelength "
      "minimum."},
-    {"wn-delt",    CLA_WAVNDELT,   required_argument, "0",  "spacing",
+    {"wndelt",    CLA_WAVNDELT,   required_argument, "0",  "spacing",
      "Wavenumber spacing. 0 if you want to have the same number of points "
      "as in the wavelength sampling."},
-    {"wn-osamp",   CLA_WAVNOSAMP,  required_argument, "0",  "integer",
+    {"wnosamp",   CLA_WAVNOSAMP,  required_argument, "0",  "integer",
      "Wavenumber oversampling. 0 if you want the same value as for the "
      "wavelengths."},
-    {"wn-fct",     CLA_WNFCT,      required_argument, "0",  "factor",
+    {"wnfct",     CLA_WNFCT,      required_argument, "0",  "factor",
      "Output wavenumber factor. Multiplicating wavenumber values by this "
      "gives centimeters. If 0 then use wavelength's value. This only applies "
      "to output, internally wavenumbers will always be in cm-1."},
-    {"wn-marg",    CLA_WAVNMARGIN, required_argument, "0",  "boundary",
+    {"wnmarg",    CLA_WAVNMARGIN, required_argument, "0",  "boundary",
      "Not trustable range in cm-1 at boundaries. Transitions this much away "
      "from the requested range will be considered. Use the maximum of the "
      "wavelength boundaries if this value is 0."},
@@ -272,7 +272,7 @@ processparameters(int argc,            /* Number of command-line args  */
     {"maxratio",   'u',             required_argument, "0.001", "uncert",
      "Maximum allowed uncertainty in doppler width before recalculating "
      "profile."},
-    {"per-iso",    CLA_EXTPERISO,   no_argument,       NULL,    NULL,
+    {"periso",    CLA_EXTPERISO,   no_argument,       NULL,    NULL,
      "Calculate extinction per isotope (allows to display the contribution "
      "from different isotopes, but consumes more memory."},
     {"blowex",     CLA_BLOWEX,      required_argument, "1",     "factor",
@@ -311,7 +311,7 @@ processparameters(int argc,            /* Number of command-line args  */
      "Lower temperature sample (in kelvin)."},
     {"thigh",  CLA_TEMPHIGH,   required_argument, "3000",  "temperature",
      "Upper temp"},
-    {"temp-delt",  CLA_TEMPDELT,   required_argument,  "100.0",  "spacing",
+    {"tempdelt",  CLA_TEMPDELT,   required_argument,  "100.0",  "spacing",
      "Temperature sample spacing (in kelvin)."},
 
     /* Resulting ray options:                 */
@@ -346,19 +346,19 @@ processparameters(int argc,            /* Number of command-line args  */
      "GEOMETRY PARAMETERS"},
     {"starrad",     CLA_STARRAD,     required_argument, "1.125", "radius_sun",
      "Stellar radius in solar radius."},
-    {"g-orbpar",    CLA_GORBPAR,     required_argument, NULL,
+    {"gorbpar",    CLA_GORBPAR,     required_argument, NULL,
      "smaxis,time,incl,ecc,long_node,arg_per",
      "Orbital parameters. Use the above order. Default: 1, 0, 0, 0, 0, 0."},
-    {"g-orbparfct", CLA_GORBPARFCT,  required_argument, NULL,
+    {"gorbparfct", CLA_GORBPARFCT,  required_argument, NULL,
      "unitsof:smaxis,time,incl,ecc,long_node,arg_per",
      "Units convertion factors to the cgs system of the orbital parameters. "
      "Same order of g-orbpar.  Default: AU, hours, deg, 1, deg, deg."},
     {"transparent", CLA_TRANSPARENT, no_argument,       NULL,    NULL,
      "If selected, the planet will have a maximum optical depth given by "
      "toomuch, it will never be totally opaque."},
-    {"solution-type", CLA_SOLUTION_TYPE, required_argument, "eclipse",
+    {"solutiontype", CLA_SOLUTION_TYPE, required_argument, "eclipse",
      NULL, "Ray solution type (eclipse or transit)."},
-    {"ray-grid",      CLA_INTENS_GRID, required_argument, "0, 20, 40, 60, 80",
+    {"raygrid",      CLA_INTENS_GRID, required_argument, "0, 20, 40, 60, 80",
      NULL, "Intensity grid"},
     {NULL, 0, 0, NULL, NULL, NULL}
   };
@@ -1029,21 +1029,21 @@ acceptgenhints(struct transit *tr){
   transitprint(1, verblevel, "transit interpolation flag: %li.\n",
                              tr->interpflag);
 
-  if (th->r0 <= 0){
+  if (th->r0 < 0){
     transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
                  "Reference radius level (%g) must be positive.\n", th->r0);
     return -1;
   }
   tr->r0 = th->r0;
 
-  if (th->p0 <= 0){
+  if (th->p0 < 0){
     transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
                  "Reference pressure level (%g) must be positive.\n", th->p0);
     return -1;
   }
   tr->p0 = th->p0;
 
-  if (th->gsurf <= 0){
+  if (th->gsurf < 0){
     transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
                 "Surface gravity (%g cm s^-2) must be positive.\n", th->gsurf);
     return -1;
