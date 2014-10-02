@@ -797,6 +797,10 @@ reloadatm(struct transit *tr,
   /* Re-calculate radius at each pressure level:                            */
   transitprint(30, verblevel, "Old radius boundaries: [%.1f, %.1f]\n",
                    at->rads.v[0], at->rads.v[nlayers-1]);
+  /* Check that r0, p0, and gsurf were defined:                             */
+  if (tr->p0 == 0 || tr->r0 == 0 || tr->gsurf == 0)
+    transiterror(TERR_SERIOUS, "Surface gravity (%.1f) or reference pressure "
+      "(%.3e) or radius (%.1f) were not defined.\n", tr->gsurf, tr->p0, tr->r0);
   radpress(tr->gsurf, tr->p0, tr->r0, at->atm.t,
            at->mm, at->atm.p, at->rads.v, nlayers, at->rads.fct);
   /* Actualize other variables of at->rads:                                 */
