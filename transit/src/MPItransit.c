@@ -17,9 +17,8 @@ void main(int argc,      /* Number of variables                              */
   /* MPI variables:                                                         */
   int root=0, size, rank;
   double *dummy;
-
-  double *input;  /* In*/
-  /* Initialize MPI Communicator:                                          */
+  double *input;  /* Input data from MPI                                    */
+  /* Initialize MPI Communicator:                                           */
   MPI_Comm comm;
   MPI_Init(NULL, NULL);
   MPI_Comm_get_parent(&comm);
@@ -87,7 +86,7 @@ void main(int argc,      /* Number of variables                              */
   fw(readlineinfo, !=0, &transit);
   t0 = timecheck(verblevel, itr,  3, "readlineinfo", tv, t0);
 
-  /* Make radius binning and interpolate data to new value:               */
+  /* Make radius binning and interpolate data to new value:                 */
   fw(makeradsample, <0, &transit);
   t0 = timecheck(verblevel, itr,  4, "makeradsample", tv, t0);
   if(fw_status>0)
@@ -130,9 +129,6 @@ void main(int argc,      /* Number of variables                              */
                  input[0], input[1], input[2]);
     fw(reloadatm, <0, &transit, input);
 
-    transitprint(1, verblevel, "TRAN FLAG 73: The abundance factor is: %f\n",
-                               input[100]);
-
     /* Compute sampling of impact parameter:                                */
     fw(makeipsample, <0, &transit);
     t0 = timecheck(verblevel, itr,  6, "makeipsample", tv, t0);
@@ -158,17 +154,9 @@ void main(int argc,      /* Number of variables                              */
     fw(extwn, !=0, &transit);
     t0 = timecheck(verblevel, itr, 11, "extwn", tv, t0);
  
-    transitprint(1, verblevel, "TRAN FLAG 73.5: pre-transit calc\n");
-    sleep(1);
     sprintf(str_iter, "%li", itr);
-    transitprint(1, verblevel, "TRAN FLAG 73.6: pre-transit calc\n");
-    sleep(1);
     strncpy(fout+dot_pos, str_iter, 1);
-    transitprint(1, verblevel, "TRAN FLAG 73.7: pre-transit calc\n");
-    sleep(1);
     strcpy(transit.f_out, fout);
-    transitprint(1, verblevel, "TRAN FLAG 73.9: File output name: %s\n",
-                 fout);
 
     transitprint(1, verblevel, "TRAN FLAG 74: pre-transit calc\n");
     /* Ray solutions choice:                                                */
@@ -208,7 +196,6 @@ void main(int argc,      /* Number of variables                              */
     /* Calculate optical depth for transit:                                 */
     else{
       transitprint(1, verblevel, "\nCalculating transit:\n");
-      sleep(2);
       fw(tau, !=0, &transit);
       t0 = timecheck(verblevel, itr, 12, "tau", tv, t0); 
 
@@ -238,6 +225,7 @@ void main(int argc,      /* Number of variables                              */
 
     t0 = timecheck(verblevel, itr, 14, "THE END", tv, t0);
     transitprint(1, verblevel, "----------------------------\n");
+    itr++;
   }
   //freemem_isotopes(     transit.ds.iso, &transit.pi);
   //freemem_molecules(    transit.ds.mol, &transit.pi);

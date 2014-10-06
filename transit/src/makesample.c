@@ -834,7 +834,7 @@ makeradsample(struct transit *tr){
   transitcheckcalled(tr->pi, "makeradsample", 2, "getatm",       TRPI_GETATM,
                                                  "readinfo_tli", TRPI_READINFO);
   /* Exception for re-runs:                                                 */
-  if (tr->pi | TRPI_MAKERAD){
+  if (tr->pi & TRPI_MAKERAD){
     /* Free memory before re-allocating them:                               */
     free_atm(atmt);
     for (i=0; i<nmol; i++)
@@ -842,7 +842,7 @@ makeradsample(struct transit *tr){
     for (i=0; i<niso; i++)
       free_isov(iso->isov+i);
     /* FINDME: Free this one too, right? */
-    //free(rad);
+    freemem_samp(rad);
     tr->pi &= ~(TRPI_MAKERAD);
   }
   /* Check that variables are not NULL:                                     */
@@ -885,7 +885,7 @@ makeradsample(struct transit *tr){
   }
   for (i=0; i<niso; i++){
     iso->isov[i].z = (PREC_ZREC *)calloc(nrad, sizeof(PREC_ZREC));
-    iso->isov[i].c = (PREC_CS   *)calloc(nrad, sizeof(PREC_CS  ));
+    iso->isov[i].n = nrad;
   }
 
   atmt->tfct = atms->atm.tfct;

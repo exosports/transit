@@ -122,17 +122,18 @@ IonHyd     H
  106    NH3       17.03052     3.6       01         Amonia
  107    TiO       63.8664      3.45      03         Titanium Monoxide
  108    VO        66.94090     3.32      03         Vanadium Monoxide
-  11    Na        22.98976928  3.72      04         Sodium
-  19    K         39.09830     4.54      04         Potassium
  109    O2        31.99880     3.46      02         Molecular Oxygen
  110    N2        28.01340     3.64      02         Molecular Nitrogen
+ 111    C2H2      26.0373      5.26      05         Acetylene
+ 112    C2H4      28.0532      5.69      05         Ethylene
+ 113    HCN       27.02534     5.0       05         Hydrogen Cyanide
    1    H          1.007940    2.4       01         Hydrogen
    2    He         4.0026020   2.0       01         Helium
    6    C         12.0107      1.7       04         Carbon
    7    N         14.0067      1.55      04         Nitrogen
    8    O         15.9994      1.52      04         Oxigen
- 111    C2H2      26.0373      2.63      05         Acetylene
- 112    C2H4      28.0532      2.85      05         Ethylene
+  11    Na        22.98976928  3.72      04         Sodium
+  19    K         39.09830     4.54      04         Potassium
 
 
 # Isotopic ratios:
