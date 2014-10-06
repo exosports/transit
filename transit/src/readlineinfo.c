@@ -200,7 +200,7 @@ readtli_bin(FILE *fp,
     for (j=0; j<nDBiso; j++){
       /* Store isotopes'  DB index number:                                  */
       iso->isof[correliso].d = i;
-      transitprint(10, verblevel, "Correlative isotope number: %d", correliso);
+      transitprint(10, verblevel, "  Correlative isotope number: %d", correliso);
 
       /* Read isotopes' name:                                               */
       fread(&rs, sizeof(unsigned short), 1, fp);

@@ -299,11 +299,10 @@ freemem_molecules(struct molecules *mol, long *pi){
 
 /* \fcnfh
    Frees array in prop_isov, this should be called only once for all the
-   isotopes.  */
+   isotopes.                                                                */
 void
 free_isov(prop_isov *isov){
   free(isov->z);
-  free(isov->c);
 }
 
 

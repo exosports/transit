@@ -445,10 +445,6 @@ computemolext(struct transit *tr, /* transit struct                         */
       /* Line width:                                                        */
       alphal[i] += mol->molec[j].d[r]/mol->mass[j] * csdiameter * csdiameter *
                    sqrt(1/iso->isof[i].m + 1/mol->mass[j]);
-      if (i==0)
-        transitprint(20, verblevel, "AlphaL[%li] = %.3e\n", j,
-                    mol->molec[j].d[r]/mol->mass[j] * csdiameter * csdiameter *
-                    sqrt(1/iso->isof[i].m + 1/mol->mass[j]));
     }
     alphal[i] *= florentz;
 

@@ -50,10 +50,9 @@ typedef struct {    /* Sampling struct                 */
 } prop_samp;
 
 
-typedef struct {    /* Isotope's variable (per layer) information: */
-  unsigned int n;   /* Arrays' length                              */
-  double *z;        /* Partition function [radius or temp]         */
-  double *c;        /* Cross section      [radius or temp]         */
+typedef struct {    /* Isotope's variable (per layer) information:          */
+  unsigned int n;   /* Arrays' length                                       */
+  double *z;        /* Partition function [radius or temp]                  */
 } prop_isov;
 
 
