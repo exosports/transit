@@ -98,11 +98,12 @@ void main(int argc,      /* Number of variables                              */
   int fout_len = (int)strlen(transit.f_out);  /* Length of tr.f_out         */
   char *dot    = strchr(transit.f_out, '.');  /* Search for '.' char        */
   int dot_pos  = fout_len - (int)strlen(dot); /* Position of dot            */
-  char fout[fout_len+1];         /* Copy of tr.f_out                        */
-  char str_iter[3];              /* String of iteration number              */
-  strcpy(fout, transit.f_out);
-  strcpy(fout+dot_pos+1, dot);
-  strncpy(fout+dot_pos, "0", 1);
+  char fout[fout_len+4];         /* Copy of tr.f_out                        */
+  char str_iter[4+1];            /* String of iteration number              */
+  strcpy(fout, transit.f_out);   /* Copy filename into fout                 */
+  strcpy(fout+dot_pos+4, dot);   /* Copy file extension into fout           */
+  strncpy(fout+dot_pos, "0000", 1);
+
 
   /* Calculate opacity grid:                                                */
   fw(opacity, <0, &transit);
@@ -125,8 +126,8 @@ void main(int argc,      /* Number of variables                              */
     transitprint(1, verblevel, "TRAN FLAG 72: The number of layers is: %li\n"
                                "              while ntransit is:       %d\n",
                                transit.ds.at->rads.n, ntransit);
-    transitprint(1, verblevel, "TRAN FLAG 72.5: INPUT=%.1f %.1f %.1f\n",
-                 input[0], input[1], input[2]);
+    //transitprint(1, verblevel, "TRAN FLAG 72.5: INPUT=%.1f %.1f %.1f\n",
+    //             input[0], input[1], input[2]);
     fw(reloadatm, <0, &transit, input);
 
     /* Compute sampling of impact parameter:                                */
@@ -154,9 +155,11 @@ void main(int argc,      /* Number of variables                              */
     fw(extwn, !=0, &transit);
     t0 = timecheck(verblevel, itr, 11, "extwn", tv, t0);
  
-    sprintf(str_iter, "%li", itr);
-    strncpy(fout+dot_pos, str_iter, 1);
-    strcpy(transit.f_out, fout);
+    if (verblevel > 0){
+      sprintf(str_iter, "%04li", itr);    /* Iteration number as string */
+      strncpy(fout+dot_pos, str_iter, 4);
+      strcpy(transit.f_out, fout);
+    }
 
     transitprint(1, verblevel, "TRAN FLAG 74: pre-transit calc\n");
     /* Ray solutions choice:                                                */
@@ -218,7 +221,8 @@ void main(int argc,      /* Number of variables                              */
     freemem_cia      (transit.ds.cia, &transit.pi);
     freemem_outputray(transit.ds.out, &transit.pi);
 
-    /* Free no longer needed memory                                         */
+    freemem_samp(&transit.ips);
+    /* Free the no-longer-needed memory                                     */
     //freemem_idexrefrac(transit.ds.ir,        &transit.pi);
     //freemem_extinction(transit.ds.ex,        &transit.pi);
     //freemem_tau(transit.ds.tau,              &transit.pi);
@@ -236,7 +240,7 @@ void main(int argc,      /* Number of variables                              */
   transitprint(1, verblevel, "TRAN FLAG 98: End loop.\n");
   MPI_Barrier(comm);
   MPI_Comm_disconnect(&comm);
-  transitprint(1, verblevel, "TRAN FLAG 98: worker off 2\n");
-  MPI_Finalize();
+  transitprint(1, verblevel, "TRAN FLAG 99: worker off 2\n");
+  //MPI_Finalize();
 }
 
