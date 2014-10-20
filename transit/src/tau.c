@@ -140,8 +140,8 @@ tau(struct transit *tr){
      interpolation:                                                         */
   if(inn<4)
     transiterror(TERR_SERIOUS, "tau(): At least four impact parameter points "
-                               "are required (three for spline and one for "
-                               "the analitical part).\n");
+                 "(%d given) are required (three for spline and one for "
+                 "the analitical part).\n", inn);
 
   transitprint(1, verblevel, "Calculating optical depth at various "
                              "radii ...\n");
