@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import matplotlib.pyplot as plt
+
 import numpy as np
 import scipy.constants as sc
 import sys, os, time
@@ -293,24 +295,42 @@ if __name__ == "__main__":
     ut.lrprint(verbose-8, "Isotpe correlative indices: " +
                           str(np.unique(transDB[3]+acum[idb])))
 
-  # Sort the line transitions (by wavelength):
+  # Total number of transitions:
+  nTransitions = np.size(wlength)
+
+  # Sort the line transitions (by isotope, then by wavelength):
   ti = time.time()
-  wlsort = np.argsort(wlength)
+  isort = sorted(zip(np.arange(nTransitions), isoID, wlength),
+                 key=lambda x:(x[1], x[2]))
+  isort = list(zip(*isort)[0])
   tf = time.time()
   ut.lrprint(verbose-3, " Sort  time: %8.7f seconds"%(tf-ti))
-  wlength = wlength[wlsort]
-  gf      = gf     [wlsort]
-  elow    = elow   [wlsort]
-  isoID   = isoID  [wlsort]
+  wlength = wlength[isort]
+  gf      = gf     [isort]
+  elow    = elow   [isort]
+  isoID   = isoID  [isort]
 
-  nTransitions = np.size(wlength) # Total number of transitions
-  ut.lrprint(verbose-3, "Writing %d transition lines."%nTransitions)
+  # FINDME: Implement well this:
+  if False:
+    plt.figure(0)  
+    plt.clf()
+    plt.plot(isoID)
+    plt.xlabel("Line index")
+    plt.ylabel("Isotope ID")
+    plt.savefig("ID.png")
+
+    plt.clf()
+    plt.plot(wlength)
+    plt.xlabel("Line index")
+    plt.ylabel("Wavelength  (um)")
+    plt.savefig("wavelength.png")
 
   # Pack:
   transinfo = ""
   # Write the number of transitions:
   TLIout.write(struct.pack("i", nTransitions))
 
+  ut.lrprint(verbose-3, "Writing %d transition lines."%nTransitions)
   ti = time.time()
   transinfo += struct.pack(str(nTransitions)+"d", *list(wlength))
   transinfo += struct.pack(str(nTransitions)+"h", *list(isoID))
