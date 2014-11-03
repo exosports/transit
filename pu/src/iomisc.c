@@ -1136,3 +1136,26 @@ binsearchapprox(double *array, double value, int lo, int hi){
     return binsearchapprox(array, value, (hi+lo)/2, hi);
 }
 
+
+/* Find all the exact divisors of the integer n                             */
+int *
+divisors(int n,    /* Number to find the divisors of                        */
+         int *m){  /* The number of divisors found                          */
+  int i;
+  *m = 0;  /* Safety reasons                                                */
+  int *divs;
+  /* Allocate array to put the divisors:                                    */
+  divs = (int *)calloc(n, sizeof(int));
+
+  /* Find the divisors:                                                     */
+  for (i=1; i<n; i++){
+    if (n % i == 0){
+      divs[*m] = i;
+      (*m)++;
+    }
+  }
+  /* Re-set the array length to its final size:                             */
+  divs = (int *)realloc(divs, (*m)*sizeof(int));
+  return divs;
+}
+

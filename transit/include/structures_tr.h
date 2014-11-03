@@ -35,18 +35,18 @@
 struct transit;
 struct geometry;
 
-/* Type of ray solution, eclipse or transit */
+/* Type of ray solution, eclipse or transit:                                */
 typedef enum {transit, eclipse}  RaySol;
 
-/* Structure definitions */
-typedef struct {    /* Sampling struct                 */
-  PREC_NREC n;      /* Number of elements              */
-  PREC_RES d;       /* Spacing                         */
-  PREC_RES i;       /* Initial value                   */
-  PREC_RES f;       /* Final value                     */
-  int o;            /* Oversampling                    */
-  PREC_RES *v;      /* Values of the sampling          */
-  double fct;       /* v units factor to cgs           */
+/* Structure definitions:                                                   */
+typedef struct {    /* Sampling struct                                      */
+  PREC_NREC n;      /* Number of elements                                   */
+  PREC_RES d;       /* Spacing                                              */
+  PREC_RES i;       /* Initial value                                        */
+  PREC_RES f;       /* Final value                                          */
+  int o;            /* Oversampling                                         */
+  PREC_RES *v;      /* Values of the sampling                               */
+  double fct;       /* v units factor to cgs                                */
 } prop_samp;
 
 
@@ -206,6 +206,7 @@ struct extinction{
 struct opacity{
   PREC_RES ****o;         /* Opacity grid [temp][iso][rad][wav]             */
   PREC_VOIGT ****profile; /* Voigt profiles [nDop][nLor][vf][2*profsize+1]  */
+  PREC_VOIGT ***vprofile; /* Voigt profiles [nDop][nLor][2*profsize+1]      */
   PREC_NREC **profsize;   /* Half-size (wavenumber) of Voigt profiles       */
   double *aDop,           /* Sample of Doppler widths [nDop]                */
          *aLor;           /* Sample of Lorentz widths [nLor]                */
@@ -435,10 +436,13 @@ struct transit{
   long int angleIndex; /* Index of the current angle                         */
   PREC_RES *Flux;   /* Flux for eclipse                                      */
   prop_samp rads, ips, /* Sampling properties of radius, impact parameter,   */
+      owns,            /* oversampled wavenumber,                            */
       wavs, wns, temp; /* wavelength, wavenumber, and temperature            */
   prop_atm atm;     /* Sampled atmospheric data                              */
   short tauiso;     /* Isotope from which to calculate the optical depth     */
 
+  int ndivs,         /* Number of exact divisors of the oversampling factor  */
+     *odivs;         /* Exact divisors of the oversampling factor            */
   int voigtfine;     /* Number of fine-bins of the Voigt function            */
   float timesalpha;  /* Broadening profile width in number of Doppler or
                         Lorentz half width                                   */

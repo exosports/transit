@@ -167,6 +167,25 @@ integ_trasim(double dx,
   return res*dx/3.0+restrap;
 }
 
+double inline
+integ_trapz(double *x, /* Independent variable                              */
+            double *y, /* Function to integrate                             */
+            long n){   /* Number of data points                             */
+  double res=0; /* Integral value                                           */
+  long i;
+
+  if(n < 2){
+    fprintf(stderr, "%s:: integ_trasim: At least 2 points are required "
+                    "to perform the integration\n", __FILE__);
+    exit(EXIT_FAILURE);
+  }
+  /* Trapezoidal-rule sum:                                                  */
+  for(i=0; i < n-1; i++){
+    res += (x[i+1] - x[i]) * (y[i+1] + y[i]);
+  }
+  return res/2.0;
+}
+
 
 /* \fcnfh
    Interpolates a parabola in three points and return requested
@@ -279,4 +298,76 @@ fixedcmp(double d1,
   l10=d1-d2;
 
   return l10*l10<1.0;
+}
+
+
+/* Downsample an array by a integer factor of points */
+inline int
+downsample(double *input, /* Input array                           */
+           double *out,   /* Output array                          */
+           int n,         /* Number of elements in th einput array */
+           int scale){    /* Resampling factor                     */
+
+  /* - If the scaling factor (f) is an odd number, this routine simply
+       performs an averaging of the f points around the resampled value.
+     - If f is even, then the boundary points are weighted by one half and
+       distributed into the two resampled points.
+     - The x coordinates of the first and last values of the input and output
+       arrays will coincide.
+
+     The integral area under the curves (the input and output arrays) is
+     nearly conserved.
+
+     For example, if the input array is:
+       I = {I0 I1 I2 I3 I4 I5 I6}
+     The output for a scaling factor f=3 is:
+       O0 = (     I0 + I1) / [0.5(f+1)]
+       O1 = (I2 + I3 + I4) / [    f   ]
+       O2 = (I5 + I6     ) / [0.5(f+1)]
+     The output for a scaling factor f=2 is:
+       O0 = (         I0 + 0.5 I1) / [0.5(f+1)]
+       O1 = (0.5 I1 + I2 + 0.5 I3) / [    f+1 ]
+       O2 = (0.5 I3 + I4 + 0.5 I5) / [    f+1 ]
+       O3 = (0.5 I5 + I6         ) / [0.5(f+1)]                             */
+
+  int i, j;   /* for-loop indices */
+  /* Number of points in the downsampled array:                             */
+  int m = 1 + (n-1)/scale;
+  //fprintf(stderr, "m=%i\n", m);
+  /* Kernel size:                                                           */
+  int ks = 2*(scale/2) + 1;
+
+  /* Odd/even flag:                                                         */
+  int even = 1;
+  if (scale % 2 != 0)
+    even = 0;
+
+  /* First point:                                                           */
+  out[0] = 0.0;
+  for (i=0; i<ks/2+1; i++)
+    out[0] += input[i];
+  if (even == 1)
+    out[0] -= 0.5*input[ks/2];
+  out[0] /= 0.5*(scale+1);
+
+  /* Down-sampling:                                                         */
+  for (j=1; j<m-1; j++){
+    out[j] = 0.0;
+    for (i=-ks/2; i < ks/2+1; i++){
+      out[j] += input[scale*j + i];
+    }
+    if (even == 1)
+      out[j] -= 0.5*(input[scale*j-ks/2] + input[scale*j+ks/2]);
+    out[j] /= scale;
+  }
+
+  /* Last point:                                                            */
+  out[m-1] = 0.0;
+  for (i=n-1-ks/2; i<n; i++)
+    out[m-1] += input[i];
+  if (even == 1)
+    out[m-1] -= 0.5*input[n-ks/2];
+  out[m-1] /= 0.5*(scale+1);
+
+  return 0;
 }
