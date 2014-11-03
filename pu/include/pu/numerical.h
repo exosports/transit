@@ -36,8 +36,10 @@ extern inline int binsearchie P_((double *arr, long i, long f, double val));
 extern inline int binsearchei P_((double *arr, long i, long f, double val));
 extern inline int binsearch P_((double *arr, long i, long f, double val));
 extern inline double integ_trasim P_((double dx, double *y, long n));
+extern inline double integ_trapz  P_((double *x, double *y, long n));
 extern inline double interp_parab P_((double *x, double *y, double xr));
 extern inline double interp_line P_((double *x, double *y, double xr));
+extern inline int  downsample P_((double *input, double *out, int n, int scale));
 extern double powi P_((double x, int n));
 extern _Bool fixedcmp P_((double d1, double d2, int prec));
 

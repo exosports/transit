@@ -649,17 +649,17 @@ makewavsample(struct transit *tr){
    Call makesample with the appropiate parameters and set the flags
    for a wavenumber sampling
 
-   Return: makesample() output                                       */
+   Return: makesample() output                                              */
 int
 makewnsample0(struct transit *tr){
-  struct transithint *trh = tr->ds.th;
-  prop_samp *hsamp = &trh->wns;   /* Hinted wavenumber sampling    */
-  prop_samp *wlsamp = &trh->wavs; /* Hinted wavelength sampling    */
-  prop_samp rsamp;                /* Reference wavenumber sampling */
+  struct transithint *th = tr->ds.th;
+  prop_samp *hsamp  = &th->wns;          /* Hinted wavenumber sampling      */
+  prop_samp *wlsamp = &th->wavs;         /* Hinted wavelength sampling      */
+  prop_samp rsamp;                       /* Reference wavenumber sampling   */
   memset(&rsamp, 0, sizeof(prop_samp));
-  int res;                        /* Result status                 */
+  int res;                               /* Result status                   */
 
-  /* Get initial point: */
+  /* Get initial wavenumber value:                                          */
   if (hsamp->i > 0){
     if (hsamp->fct <= 0)
       transiterror(TERR_SERIOUS, "User specified wavenumber factor is "
@@ -678,7 +678,7 @@ makewnsample0(struct transit *tr){
     transiterror(TERR_SERIOUS, "Initial wavenumber (nor final wavelength) "
                                "were correctly provided by the user.\n");
 
-  /* Get final point: */
+  /* Get final wavenumber value:                                            */
   if (hsamp->f > 0){
     if (hsamp->fct < 0)
       transiterror(TERR_SERIOUS, "User specified wavenumber factor is "
@@ -695,13 +695,13 @@ makewnsample0(struct transit *tr){
     transiterror(TERR_SERIOUS, "Final wavenumber (nor initial wavelength) "
                                "were correctly provided by the user.\n");
 
-  /* Set up reference wavenumber sampling:  */
+  /* Set up reference wavenumber sampling:                                  */
   rsamp.o = hsamp->o;
 
-  /* Reference's wavenumber units are cm-1: */
+  /* Reference's wavenumber units are cm-1:                                 */
   rsamp.fct = 1;
 
-  /* Don't set the number of elements:      */
+  /* Don't set the number of elements:                                      */
   rsamp.n = 0;
 
   /* Set spacing such that the wavenumber grid has the same
@@ -712,10 +712,20 @@ makewnsample0(struct transit *tr){
                  hsamp->d);
   rsamp.d = hsamp->d;
 
-  /* Make the wavenumber sampling: */ 
-  res = makesample1(&tr->wns, &rsamp, TRH_WN);
+  /* Make the oversampled wavenumber sampling:                              */
+  res = makesample1(&tr->owns, &rsamp, TRH_WN);
+  /* Make the wavenumber sampling:                                          */
+  rsamp.o = 1;
+  res = makesample1(&tr->wns,  &rsamp, TRH_WN);
+  /* Get the exact divisors of the oversampling factor:                     */
+  tr->odivs = divisors(tr->owns.o, &tr->ndivs);
+  transitprint(20, verblevel, "There are %i divisors of the oversampling "
+                              "factor (%i):\n", tr->ndivs, tr->owns.o);
+  for (int i=0; i<tr->ndivs; i++)
+    transitprint(25, verblevel, "%5i", tr->odivs[i]);
+  transitprint(25, verblevel, "\n");
 
-  /* Set progress indicator if sampling was successful and return status: */
+  /* Set progress indicator if sampling was successful and return status:   */
   if(res >= 0)
     tr->pi |= TRPI_MAKEWN;
   return res;

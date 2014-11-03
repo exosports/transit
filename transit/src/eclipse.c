@@ -53,66 +53,65 @@ totaltau_eclipse(PREC_RES *rad,  /* Equispaced radius array: From current   */
                                  /* to outmost layer                        */
                  PREC_RES *ex,   /* Extinction[rad], all radii, one wn      */
                                  /* Often used as ex+ri than &ex[ri]        */
-                 PREC_RES angle, /* Incident ray-path angle                 */
+                 PREC_RES angle, /* Incident ray-path angle (degrees)       */
                  long nrad){     /* Number of radii between current and     */
                                  /* outmost layer                           */
 
-  PREC_RES res;         /* Optical depth divided by units of radius         */
-  PREC_RES x3[3],r3[3]; /* Interpolation variables                          */
+  PREC_RES res;          /* Optical depth divided by units of radius        */
+  PREC_RES x3[3], r3[3]; /* Interpolation variables                         */
 
-  /* Conversion to radian                                                   */
-  //printf("Jasmin aangle %lf\n", angle);
+  /* Conversion to radian:                                                  */
   PREC_RES angle_rad = angle * DEGREES;   
 
-  /* Distance between two radii. Radius array needs to be equispaced.       */
-  /* Distance depends on the point on the planet surface (angle)            */
-  const PREC_RES dr= (rad[1]-rad[0]) / cos(angle_rad);
-
-  /* Distance along the path                                                */
+  /* Distance along the path:                                               */
   PREC_RES s[nrad];
 
   /* Returns 0 if at outmost layer. No distance travelled.                  */
   if(nrad == 1)  
-    return 0.;
+    return 0.0;
 
   /* Providing three necessary points for spline integration:               */
-  const PREC_RES tmpex=*ex;
-  const PREC_RES tmprad=*rad;
-  if(nrad==2) *ex=interp_parab(rad-1,ex-1, rad[0]);
-  else *ex=interp_parab(rad,ex, rad[0]);
+  const PREC_RES tmpex  = *ex;
+  const PREC_RES tmprad = *rad;
+
+  if(nrad==2) *ex = interp_parab(rad-1, ex-1, rad[0]);
+  else        *ex = interp_parab(rad,   ex,   rad[0]);
 
   if(nrad==2){
-    x3[0]=ex[0];
-    x3[2]=ex[1];
-    x3[1]=(ex[1]+ex[0])/2.0;
-    r3[0]=rad[0];
-    r3[2]=rad[1];
-    r3[1]=(rad[0]+rad[1])/2.0;
-    *rad=tmprad;
-    *ex=tmpex;
-    rad=r3;
-    ex=x3;
+    x3[0] = ex[0];
+    x3[2] = ex[1];
+    x3[1] = (ex[1]+ex[0])/2.0;
+    r3[0] = rad[0];
+    r3[2] = rad[1];
+    r3[1] = (rad[0]+rad[1])/2.0;
+    *rad = tmprad;
+    *ex  = tmpex;
+    rad  = r3;
+    ex   = x3;
     nrad++;
   }
 
   /* Distance along the path:                                               */
-  s[0] = 0.;
-  for(int i=1; i< nrad; i++){
-    s[i]= s[i-1] + dr;          
+  s[0] = 0.0;
+  for(int i=1; i < nrad; i++){
+    s[i] = s[i-1] + (rad[i] - rad[i-1])/cos(angle_rad);
   }
 
   /* Integrate extinction along the path:                                   */
   /* Use spline if GSL is available along with at least 3 points:           */
-#ifdef _USE_GSL
-  gsl_interp_accel *acc = gsl_interp_accel_alloc();
-  gsl_interp *spl = gsl_interp_alloc(gsl_interp_cspline, nrad);
-  gsl_interp_init(spl, s, ex, nrad);
-  res = gsl_interp_eval_integ(spl, s, ex, 0, s[nrad-1], acc);    
-  gsl_interp_free(spl);
-  gsl_interp_accel_free(acc);
-#else
-#error non equispaced integration is not implemented without GSL
-#endif /* _USE_GSL */
+//#ifdef _USE_GSL
+//  gsl_interp_accel *acc = gsl_interp_accel_alloc();
+//  gsl_interp *spl = gsl_interp_alloc(gsl_interp_cspline, nrad);
+//  gsl_interp_init(spl, s, ex, nrad);
+//  res = gsl_interp_eval_integ(spl, s, ex, 0, s[nrad-1], acc);
+//  gsl_interp_free(spl);
+//  gsl_interp_accel_free(acc);
+//#else
+//#error non equispaced integration is not implemented without GSL
+//#endif /* _USE_GSL */
+
+  /* Safety mode: GSL is acting up sometimes                                */
+  res = integ_trapz(s, ex, nrad);
 
   /* Optical depth divided by units of radius:                              */
   return res;
@@ -169,8 +168,7 @@ intens_grid(struct transit *tr){
    Return: 0 on success                                                     */
 
 int
-tau_eclipse(struct transit *tr)           /* Transit structure             */
-{
+tau_eclipse(struct transit *tr){           /* Transit structure             */
 
   static struct optdepth tau;            /* Def optical depth structure   */
   tr->ds.tau = &tau;                       /* Called from transit structure */
@@ -196,6 +194,7 @@ tau_eclipse(struct transit *tr)           /* Transit structure             */
   long int rnn = rad->n;       /* Radii                                    */
   double wfct  = wn->fct;      /* Wavenumber units factor to cgs           */
 
+  struct transithint *trh = tr->ds.th;
   /* Pato Rojo explanation: 
   Consider:
   TRU_*BITS
@@ -207,16 +206,14 @@ tau_eclipse(struct transit *tr)           /* Transit structure             */
   passes all the TAU relevant flags from the user hint to 
   the main structure.  In particular, it only passes whether TRU_OUTTAU 
   was 1 or 0 as specified by the user. */
-  transitacceptflag(tr->fl,tr->ds.th->fl,TRU_TAUBITS);
+  transitacceptflag(tr->fl, tr->ds.th->fl, TRU_TAUBITS);
 
-  /* Sets maximum optical depth:                                            */
-  struct transithint *trh=tr->ds.th;
-  tau.toomuch = 10;            /* Default value if not set in conf file     */
+  /* Set maximum optical depth:                                             */
   if(tr->ds.th->toomuch > 0)   
     tau.toomuch = trh->toomuch; 
 
   /* Allocates array to store radii indices where tau reaches toomuch:      */
-  tau.last = (long      *)calloc(wnn,       sizeof(long));
+  tau.last = (long      *)calloc(wnn,        sizeof(long));
 
   /* Allocates 2D array [rad][wn]:                                          */
   tau.t    = (PREC_RES **)calloc(wnn,        sizeof(PREC_RES *));
@@ -251,8 +248,8 @@ tau_eclipse(struct transit *tr)           /* Transit structure             */
   /* Last computed layer in that case is unnecessary.                       */
   /* Compute extinction when radius is below the last computed layer:       */
   if(!comp[rnn-1]){
-    transitprint(1, verblevel,
-                 "Computing extinction in the outtermost layer.\n");
+    transitprint(1, verblevel, "Computing extinction in the outermost "
+                               "layer.\n");
     if((rn=computemolext(tr, rnn-1, ex->e))!=0)
     //if((rn=computeextradius(rnn-1, tr->atm.t[rnn-1]*tr->atm.tfct, ex))!=0)
       transiterror(TERR_CRITICAL,
@@ -270,26 +267,24 @@ tau_eclipse(struct transit *tr)           /* Transit structure             */
 
   /* Requests at least four radii to calculate a spline interpolation:      */
   if(rnn < 4)
-    transiterror(TERR_SERIOUS,
-                 "tau(): At least four radius points are "
-                 "required! (three for spline and one for the analytical "
-                 "part)");
+    transiterror(TERR_SERIOUS, "tau(): At least four radius points (%d given) "
+                 "are required. (three for spline and one for the analytical "
+                 "part)\n", rnn);
 
-  transitprint(1, verblevel,
-                  "\nCalculating optical depth at various radii for angle %2.1lf degrees.\n\n", angle);
+  transitprint(1, verblevel, "Calculating optical depth at various radii for "
+                             "angle %2.1lf degrees.\n", angle);
 
   /* Note that it works only for one isotope:                               */
   if(ex->periso)
-    transitprint(2, verblevel,
-                 "Computing only for isotope '%s', others were ignored.\n",
-                 tr->ds.iso->isof[tr->tauiso].n);
+    transitprint(2, verblevel, "Computing only for isotope '%s', others were "
+                               "ignored.\n", tr->ds.iso->isof[tr->tauiso].n);
 
   PREC_RES er[rnn];        /* Array of extinction per radius                */
 
   int lastr = rnn-1;       /* Radius index of last computed extinction      */
                            /* Starts from the outmost layer                 */
 
-  /* Tenth of wavenumber sample size,used for progress printing:            */
+  /* Tenth of wavenumber sample size, used for progress printing:           */
   int wnextout = (long)(wnn/10.0); 
 
   /* Extinction from scattering and clouds:                                 */
@@ -303,12 +298,12 @@ tau_eclipse(struct transit *tr)           /* Transit structure             */
   /* Flow of this part:
      For each wavenumber of the selected scale, the optical depth along 
      the path with a given radius is computed. 
-     The computation starts with an radius r[rnn], equal to the radius 
+     The computation starts with a radius r[rnn], equal to the radius
      of the outmost layer and descends into the atmosphere until the 
      optical depth rises above a certain user-defined limit (--toomuch). 
      Each time this procedure reaches a radius whose extinction has not 
      been computed, it calls the extinction computing routine, 
-     to compute the extinction over the whole wavenumber range .            */
+     to compute the extinction over the whole wavenumber range.             */
   
   /* For each wavenumber:                                                   */
   for(wi=0; wi < wnn; wi++){
@@ -333,19 +328,15 @@ tau_eclipse(struct transit *tr)           /* Transit structure             */
 
     /* For each radii:                                                      */
     for(ri=rnn-1; ri > -1; ri--){
+      transitprint(30, verblevel, "Radius r[%li] = %9.4g\n", ri, r[ri]);
 
-      transitprint(3, verblevel, "Radius r[%li]=%9.4g\n", ri, r[ri]);
-
-      /* Computes extinction only if radius is smaller then 
-         the radius of the last calculated extinction.                      */
-      /* It can be simplified with ri < lastr, since units factors are same.*/
-      if(r[ri]*rad->fct < r[lastr]*rfct){    
-
-        transitprint(3, verblevel, "Last Tau (r=%9.4g, wn=%9.4g): %10.4g.\n",
-                                     r[ri-1], wn->v[wi], tau_wn[ri-1]);
-
+      /* Compute extinction only if radius is smaller than the radius of
+         the last calculated extinction:                                    */
+      if(r[ri] < r[lastr]){
+        transitprint(30, verblevel, "Last Tau (r=%9.4g, wn=%9.4g): %10.4g.\n",
+                                   r[ri-1], wn->v[wi], tau_wn[ri-1]);
         if(ri)
-          transitprint(3, verblevel, "Last Tau (r=%9.4g, wn=%9.4g): %10.4g.\n",
+          transitprint(30, verblevel, "Last Tau (r=%9.4g, wn=%9.4g): %10.4g.\n",
                                      r[ri-1], wn->v[wi], tau_wn[ri-1]);
 
         /* If extinction was not computed, compute it using computextradius. 
@@ -372,10 +363,13 @@ tau_eclipse(struct transit *tr)           /* Transit structure             */
         }while(r[ri]*rad->fct < r[lastr]*rfct);
       }
 
-      /* Fills out tau_wn[ri] array until tau reaches toomuch
+      //if (wi == 1612 || wi == 1611){
+      //  transitprint(1,2, "ext(%li) = tot:%.4e -- mol:%.4e -- cia:%.4e\n",
+      //                    ri, er[ri], e[ri][wi], e_cia[wi][ri]);
+      //}
+      /* Compute tau_wn[ri] array until tau reaches toomuch
          first tau[0], starts from the outmost layer.                         
-         Also fills out tau.last array, which gives radii
-         where tau reaches toomuch for each wn.                             */ 
+         Also compute tau.last (radii where tau reaches toomuch at each wn): */
       if( (tau_wn[rnn-ri-1] = rfct * fcn(r+ri, er+ri, angle, rnn-ri)) > tau.toomuch){
         tau.last[wi] = rnn-ri-1;
 
@@ -388,12 +382,12 @@ tau_eclipse(struct transit *tr)           /* Transit structure             */
                        "file).\n", wn->v[wi], tau.toomuch, tau_wn[ri],
                        ri, r[ri]*rfct/1e5);
         }
-      /* Exit impact-parameter loop if it reached toomuch:                  */
+        /* Exit tau-calculation loop if it reached toomuch:                 */
         break;
       }
 
       /* Sets tau of the outermost layer to zero:                           */
-      tau_wn[0] = 0;   
+      tau_wn[0] = 0;
 
       transitDEBUG(22, verblevel,
                    "Tau(lambda %li=%9.07g, r=%9.4g) : %g  (toomuch: %g)\n",
@@ -447,12 +441,13 @@ tau_eclipse(struct transit *tr)           /* Transit structure             */
    Return: emergent intensity for one wavenumber                            */
 
 static PREC_RES
-eclipse_intens(struct transit *tr,  /* Transit structure                   */
-            PREC_RES *tau,           /* Optical depth array tau.c==>tau     */
-            PREC_RES w,              /* Current wavenumber value            */
-            long last,              /* Index where tau = toomuch           */
-            double toomuch,         /* Maximum optical depth calculated    */
-            prop_samp *rad){         /* Radii array                         */
+eclipse_intens(struct transit *tr,  /* Transit structure                    */
+               PREC_RES *tau,          /* Optical depth array tau.c==>tau   */
+               PREC_RES w,             /* Current wavenumber value          */
+               long last,              /* Index where tau = toomuch         */
+               double toomuch,         /* Maximum optical depth calculated  */
+               prop_samp *rad){        /* Radii array                       */
+  /* FINDME: toomuch is not needed as a parameter        */
 
   /* General variables:                                                     */
   PREC_RES res;                  /* Result                                  */
@@ -467,7 +462,7 @@ eclipse_intens(struct transit *tr,  /* Transit structure                   */
   long rnn  = rad->n;
   long i;
 
-  /* Blackbody variables:                                                   */
+  /* Blackbody function at each layer:                                      */
   PREC_RES B[rnn];
 
   /* Integration parts:                                                     */
@@ -479,14 +474,13 @@ eclipse_intens(struct transit *tr,  /* Transit structure                   */
      The order is opposite since tau starts from the top and 
      radius array starts from the bottom.                                   */
 
-  /* Plank function for wavenumbers:
-     B_wn =\frac{2.*PlankConst*wn^3*c^2}
-                {exp^(\frac{PlankConst*wn*c}{Kb*T})-1.}                     
-     Units for Plunk Function are: [erg/s/sr/cm].                           */
-  for(i=0;i <= last; i++){   
-    tauIV[i] = tau[i];  
-    B[i] =  (2. * H * w * w * w * wfct * wfct * wfct * LS * LS) 
-          / (exp(H * w * wfct * LS / (KB * temp[rnn-1-i])) - 1.);         
+  /* Planck function (erg/s/sr/cm) for wavenumbers:
+        B_\nu = 2 h {\bar\nu}^3 c^2 \frac{1}
+                {\exp(\frac{h \bar \nu c}{k_B T})-1}                        */
+  for(i=0; i <= last; i++){
+    tauIV[i] = tau[i];
+    B[i] =  (2.0 * H * w * w * w * wfct * wfct * wfct * LS * LS)
+          / (exp(H * w * wfct * LS / (KB * temp[rnn-1-i])) - 1.0);
     tauInteg[i] = B[i] * exp(-tau[i]);
   }
 
@@ -496,25 +490,24 @@ eclipse_intens(struct transit *tr,  /* Transit structure                   */
     tauInteg[i] = 0;
     /* Geometric progression is used to provide enough elements 
        for integral to work. It does not change the final outcome/result.   */
-    tauIV[i]= tauIV[i-1] + 1; 
+    tauIV[i] = tauIV[i-1] + 1;
    }
 
   /* Adding additional 0 layer, plus the last represent number of elements 
      is -1, so we need to add one more. 2 in total.                         */
-  last+=2;  
+  last += 2;
 
   /* If atmosphere is transparent, and at last level tau has not reached 
      tau.toomuch, last is set to max number of layers (rnn, instead of rnn-1
      because we added 2 on the previous step). The code requests never
      to go over it.                                                         */
   if(last > rnn)    
-    last= rnn;
+    last = rnn;
 
   /* Checks if we have enough radii to do spline, at least 3:               */
   if(last < 3)
-    transiterror(TERR_CRITICAL,
-                 "Condition failed, less than 3 items (only %i) for radial "
-                 "integration.\n", last);
+    transiterror(TERR_CRITICAL, "Less than 3 items (%i given) for radial "
+                                "integration.\n", last);
 
   /* Integrate along tau up to tau = toomuch:                               */
 #ifdef _USE_GSL
@@ -529,6 +522,26 @@ eclipse_intens(struct transit *tr,  /* Transit structure                   */
 # error computation of modulation() without GSL is not implemented
 #endif
 
+  /* GSL is stupid. I will use a trapezoidal rule for integration instead
+     (when I want to run the code in safety mode):                          */
+  //res = integ_trapz(tauIV, tauInteg, last);
+
+  //if (fabs(w-2857.00) <= 0.005){
+  //  transitprint(1, 2, "\nI(w=%.10g) = %.10g\n", w, res);
+  //  for (i=0; i<last; i++)
+  //    transitprint(1, 2, "  tau: %.10e   int:%.10e\n", tauIV[i], tauInteg[i]);
+  //  double res2 = integ_trapz(tauIV, tauInteg, last-1);
+  //  transitprint(1,2, "Trapezoidal integration: %.10e\n", res2);
+  //}
+
+  //if (res < 0){
+  //if (fabs(w-1844.59) <= 0.005){
+  //  double res2 = integ_trapz(tauIV, tauInteg, last-1);
+  //  transitprint(1,2, "Trapezoidal integration: %.10e\n", res2);
+  //  transitprint(1, 2, "\nI(w=%.10g) = %.10g\n", w, res);
+  //  for (i=0; i<last; i++)
+  //    transitprint(1, 2, "  tau: %.10e   int:%.10g\n", tauIV[i], tauInteg[i]);
+  //}
   return res;
 }
 
@@ -538,30 +551,29 @@ eclipse_intens(struct transit *tr,  /* Transit structure                   */
    ############################################################### */
 
 /* \fcnfh
-   Calculates the emergent intensity for the whole range of wavenumbers
-   at the various points on the planet
+   Calculates the emergent intensity (ergs/s/sr/cm) for the whole range
+   of wavenumbers at the various points on the planet
    Returns: emergent intensity for the whole wavenumber range               */
 
 int
-emergent_intens(struct transit *tr){  /* Transit structure                 */
-
-  static struct outputray st_out;    /* Defines output structure          */
+emergent_intens(struct transit *tr){  /* Transit structure                  */
+  static struct outputray st_out;     /* Defines output structure           */
   tr->ds.out = &st_out;
 
   /* Initial variables:                                                     */
   long w;
   prop_samp *rad = &tr->rads;          /* Radius array pointer              */
-  prop_samp *wn = &tr->wns;            /* Wavenumber array pointer          */
-  long int wnn = wn->n;               /* Wavenumbers                       */
+  prop_samp *wn  = &tr->wns;           /* Wavenumber array pointer          */
+  long int wnn   = wn->n;              /* Wavenumbers                       */
   eclipse_ray_solution *ecl = tr->ecl; /* Eclipse ray solution pointer      */
 
   /* Reads angle index from transit structure                               */
   long int angleIndex = tr->angleIndex;
 
   /* Intensity for all angles and all wn                                    */
-  PREC_RES **intens_grid = tr->ds.intens->a;   
+  PREC_RES **intens_grid = tr->ds.intens->a;
 
-  /* Allocate the intensity array for one angle all wn                      */
+  /* Intensity array for one angle all wn:                                  */
   PREC_RES *out = intens_grid[angleIndex];
 
   /* Reads the tau array from transit structure                             */
@@ -575,21 +587,32 @@ emergent_intens(struct transit *tr){  /* Transit structure                 */
 
   /* Calculates the intensity integral at each wavenumber:                  */
   for(w=0; w<wnn; w++){
+    //transitprint(1, 2, "[%li]", w);
+    //if (w == 1612 || w == 1607){
+    //  transitprint(1, 2, "\nTau (%.3f) [%li,%li]= np.array([", wn->v[w],
+    //                      rad->n, tau->last[w]);
+    //  //for (int ii=rad->n-1; ii>tau->last[w]; ii--)
+    //  for (int ii=0; ii<rad->n; ii++)
+    //    transitprint(1, 2, "%.4e, ", tau->t[w][ii]);
+    //  transitprint(1, 2, "])\n");
+    //}
+    //if (fabs(wn->v[w] - 1844.59) < 0.005)
+    //  transitprint(1, verblevel, "\nWavenumber index is: %li\n", w);
     out[w] = ecl->eclIntenWn(tr, tau->t[w], wn->v[w], tau->last[w], 
                              tau->toomuch, rad);
 
     /* Prints to screen the progress status:                                 */
-   if(w==nextw){
-     nextw += wn->n/10;
-     transitprint(2, verblevel, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
-   }
+    if(w==nextw){
+      nextw += wn->n/10;
+      transitprint(2, verblevel, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
+    }
   }
 
   transitprint(1, verblevel, "\nDone.\n");
 
   /* Sets progress indicator, and prints output:                             */
-  tr->pi &= TRPI_MODULATION;
-  printintens(tr);  
+  tr->pi &= TRPI_MODULATION; /* FINDME: this is not a modulation calculation */
+  printintens(tr);
   return 0;
 }
 
@@ -742,18 +765,16 @@ printintens(struct transit *tr)
 
   /* Prints the header:                                                      */
   fprintf(outf,
-	  "#wvl [um]%*s",6 ," ");
-  for(i = 0; i < an; i++)
+	  "#wvl [um]%*s", 6, " ");
+  for(i=0; i < an; i++)
       fprintf(outf,"I[%4.1lf deg]%*s", angles[i], 7, " ");
   fprintf(outf,"[erg/s/cm/sr] \n");
 
   /* Fills out each column with the correct output intensity                 */
   for(w=0; w<wnn; w++){
-    fprintf(outf,"%-15.5g"
-	    ,(1/(tr->wns.v[w]/tr->wns.fct))*1e4);
+    fprintf(outf,"%-15.10g", (1/(tr->wns.v[w]/tr->wns.fct))*1e4);
     for(i = 0; i < an; i++)
-      fprintf(outf,"%-18.9g"
-	    ,intens_grid[i][w]);
+      fprintf(outf,"%-18.9g", intens_grid[i][w]);
     fprintf(outf,"\n");
   }
 
@@ -821,8 +842,7 @@ printflux(struct transit *tr)
 
   /* Prints wavelength and flux:                                             */
   for(rn=0;rn<tr->wns.n;rn++)
-    fprintf(outf,"%-15.5g%-18.9g\n"
-	    ,(1/(tr->wns.v[rn]/tr->wns.fct))*1e4,
+    fprintf(outf,"%-15.10g%-18.9g\n", (1/(tr->wns.v[rn]/tr->wns.fct))*1e4,
 	    Flux[rn]);
 
   /* Closes the file:                                                        */
