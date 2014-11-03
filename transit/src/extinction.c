@@ -459,7 +459,7 @@ computemolext(struct transit *tr, /* transit struct                         */
   int nDop=op->nDop,              /* Number of Doppler samples              */
       nLor=op->nLor;              /* Number of Lorentz samples              */
 
-  PREC_NREC ilinewn, subw,
+  PREC_NREC subw,
             nlines=tr->ds.li->n_l; /* Number of line transitions            */
   PREC_RES wavn;
   double fdoppler, florentz, /* Doppler and Lorentz-broadening factors      */
@@ -481,7 +481,7 @@ computemolext(struct transit *tr, /* transit struct                         */
 
   /* Wavenumber array variables:                                            */
   PREC_RES  *wn = tr->wns.v;
-  PREC_NREC  nwn = tr->wns.n,
+  PREC_NREC // nwn = tr->wns.n,
             onwn = tr->owns.n,
             dnwn;
 
@@ -576,9 +576,6 @@ computemolext(struct transit *tr, /* transit struct                         */
                           onwn, tr->owns.v[onwn-1], tr->wns.f);
     transitprint(1000, 2, "wavn=%.3f   own[%i]=%.3f\n",
                           wavn, iown, tr->owns.v[iown]);
-    /* If it is beyond the last index, skip to next line transition:        */
-    if(ilinewn >= nwn)
-      continue;
 
     i = lt->isoid[ln]; /* Isotope ID of line                                */
 
