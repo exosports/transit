@@ -200,6 +200,7 @@ struct extinction{
                         computed [rad]                                    */
   double minelow;    /* Only use transitions with this minimum low
                         energy (in cm-1)                                  */
+  double ethresh;     /* Lower extinction-coefficient threshold              */
 };
 
 
@@ -406,6 +407,7 @@ struct transithint{
   struct extcloud cl;
   struct detailout det;
 
+  double ethresh;       /* Lower extinction-coefficient threshold            */
   double minelow;       /* Only use transitions with this minimum low
                            energy (in cm-1)                                  */
   char **ciafile;

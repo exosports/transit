@@ -226,6 +226,7 @@ restfile_extinct(char *filename,
           computeextradius()  */
 int
 extwn(struct transit *tr){
+  struct transithint *th=tr->ds.th;
   static struct extinction st_ex;
   tr->ds.ex = &st_ex;
   struct extinction *ex = &st_ex;
@@ -268,6 +269,9 @@ extwn(struct transit *tr){
                  "You are requiring a spectra of zero isotopes!.\n");
     return -5;
   }
+
+  /* Get the extinction coefficient threshold:                              */
+  ex->ethresh = th->ethresh;
 
   /* Set extinction-per-isotope boolean: */
   ex->periso = ((tr->fl&TRU_EXTINPERISO)==TRU_EXTINPERISO);
@@ -461,7 +465,7 @@ computemolext(struct transit *tr, /* transit struct                         */
 
   PREC_NREC subw,
             nlines=tr->ds.li->n_l; /* Number of line transitions            */
-  PREC_RES wavn;
+  PREC_RES wavn, next_wn;
   double fdoppler, florentz, /* Doppler and Lorentz-broadening factors      */
          csdiameter;         /* Collision diameter                          */
   double propto_k;
@@ -478,6 +482,10 @@ computemolext(struct transit *tr, /* transit struct                         */
   /* Temporal extinction array:                                             */
   double *ktmp = (double *)calloc(tr->owns.n, sizeof(double));
   int ofactor;  /* Dynamic oversampling factor                              */
+
+  long nadd  = 0, /* Number of co-added lines                               */
+       nskip = 0, /* Number of skipped lines                                */
+       neval = 0; /* Number of evaluated profiles                           */
 
   /* Wavenumber array variables:                                            */
   PREC_RES  *wn = tr->wns.v;
@@ -549,7 +557,7 @@ computemolext(struct transit *tr, /* transit struct                         */
   transitprint(100, verblevel, "Number of dynamic-sampling values:%li\n",
                                 dnwn);
 
-  /* Compute the spectra, proceed for every line:                           */
+  /* Determine the maximum and minimum extinction-coefficient in this layer */
   for(ln=0; ln<nlines; ln++){
     /* Skip lines with strength lower than minelow:                         */
     if(lt->elow[ln] < tr->minelow)
@@ -557,6 +565,8 @@ computemolext(struct transit *tr, /* transit struct                         */
 
     /* Wavenumber of line transition:                                       */
     wavn = 1.0/(lt->wl[ln]*lt->wfct);
+    /* Isotope ID of line:                                                  */
+    i = lt->isoid[ln];
 
     /* If it is beyond the lower limit, skip to next line transition:       */
     if(wavn < tr->wns.i)
@@ -564,11 +574,65 @@ computemolext(struct transit *tr, /* transit struct                         */
     if(wavn > tr->owns.v[onwn-1])
       continue;
 
+    /* Calculate the extinction coefficient except the broadening factor:   */
+    propto_k = mol->molec[iso->imol[i]].d[r]*iso->isoratio[i] *  /* Density */
+              SIGCTE     * lt->gf[ln]           *       /* Constant * gf    */
+              exp(-EXPCTE*lt->efct*lt->elow[ln]/temp) * /* Level population */
+              (1-exp(-EXPCTE*wavn/temp))        /       /* Induced emission */
+              iso->isof[i].m                    /       /* Isotope mass     */
+              iso->isov[i].z[r];                      /* Partition function */
+    if (kmax == 0){
+      kmax = kmin = propto_k;
+    } else{
+      kmax = fmax(kmax, propto_k);
+      kmin = fmin(kmin, propto_k);
+    }
+  }
+
+  /* Compute the spectra, proceed for every line:                           */
+  for(ln=0; ln<nlines; ln++){
+    wavn = 1.0/(lt->wl[ln]*lt->wfct); /* Wavenumber */
+    i    = lt->isoid[ln];             /* Isotope ID */
+
+    if(wavn < tr->wns.i)
+      continue;
+    if(wavn > tr->owns.v[onwn-1])
+      continue;
+
+    /* Extinction coefficient:                                              */
+    propto_k = mol->molec[iso->imol[i]].d[r] * iso->isoratio[i] *
+               SIGCTE * lt->gf[ln]                              *
+               exp(-EXPCTE*lt->efct*lt->elow[ln]/temp)          *
+               (1-exp(-EXPCTE*wavn/temp)) / iso->isof[i].m      /
+               iso->isov[i].z[r];
+
     /* Index of closest oversampled wavenumber:                             */
     iown = (wavn - tr->wns.i)/odwn;
     if (fabs(wavn - tr->owns.v[iown+1]) < fabs(wavn - tr->owns.v[iown]))
       iown++;
 
+    /* Check if the next line falls on the same sampling index:             */
+    while (ln != nlines && lt->isoid[ln+1] == i){
+      next_wn = 1.0/(lt->wl[ln+1]*lt->wfct);
+      if (fabs(next_wn - tr->owns.v[iown]) < odwn){
+        nadd++;
+        ln++;
+        /* Add the contribution from this line into the opacity:            */
+        propto_k += mol->molec[iso->imol[i]].d[r] * iso->isoratio[i] *
+                    SIGCTE * lt->gf[ln]                              *
+                    exp(-EXPCTE * lt->efct * lt->elow[ln] / temp)    *
+                    (1-exp(-EXPCTE*next_wn/temp)) / iso->isof[i].m   /
+                    iso->isov[i].z[r];
+      }
+      else
+        break;
+    }
+
+    /* If line is too weak, skip it:                                        */
+    if (propto_k < ex->ethresh * kmax){
+      nskip++;
+      continue;
+    }
     /* Index of closest (but not larger than) dynamic-sampling wavenumber:  */
     idwn = (wavn - tr->wns.i)/ddwn;
 
@@ -577,27 +641,11 @@ computemolext(struct transit *tr, /* transit struct                         */
     transitprint(1000, 2, "wavn=%.3f   own[%i]=%.3f\n",
                           wavn, iown, tr->owns.v[iown]);
 
-    i = lt->isoid[ln]; /* Isotope ID of line                                */
-
     /* FINDME: de-hard code this threshold                                  */
+    /* Update Doppler width according to the current wavenumber:            */
     if (alphad[i]*wavn/alphal[i] >= 1e-1){
       /* Recalculate index for Doppler width:                               */
       idop[i] = binsearchapprox(aDop, alphad[i]*wavn, 0, nDop);
-    }
-
-    /* Calculate opacity coefficient except the broadening factor
-       nor the molecular abundance:                                         */
-    propto_k = mol->molec[iso->imol[i]].d[r] * iso->isoratio[i] * /* Density */
-               SIGCTE     * lt->gf[ln]           *    /* Constant * gf      */
-               exp(-EXPCTE*lt->efct*lt->elow[ln]/temp) * /* Level population */
-               (1-exp(-EXPCTE*wavn/temp))        /    /* Induced emission   */
-               iso->isof[i].m                    /    /* Isotope mass       */
-               iso->isov[i].z[r];                     /* Partition function */
-    if (kmax == 0){
-      kmax = kmin = propto_k;
-    } else{
-      kmax = fmax(kmax, propto_k);
-      kmin = fmin(kmin, propto_k);
     }
 
     if (r== 100 && ln >= 1 && ln <= 19){
@@ -630,10 +678,17 @@ computemolext(struct transit *tr, /* transit struct                         */
                             profile[idop[i]][ilor[i]][0][ofactor*j - offset]);
       //ktmp[j] += propto_k * vprofile [idop[i]] [ilor[i]] [j-offset];
     }
+    neval++;
   }
   transitprint(10, verblevel, "Kmin: %.5e   Kmax: %.5e\n", kmin, kmax);
   /* Downsample ktmp to the final sampling size:                          */
   downsample(ktmp, kiso[i][r], dnwn, tr->owns.o/ofactor);
+  transitprint(1, verblevel, "Number of co-added lines:     %8li  (%5.2f%%)\n",
+                             nadd,  nadd*100.0/nlines);
+  transitprint(1, verblevel, "Number of skipped profiles:   %8li  (%5.2f%%)\n",
+                             nskip, nskip*100.0/nlines);
+  transitprint(1, verblevel, "Number of evaluated profiles: %8li  (%5.2f%%)\n",
+                             neval, neval*100.0/nlines);
 
   ex->computed[r] = 1;
   return 0;

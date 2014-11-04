@@ -107,6 +107,7 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_BLOWEX,
     CLA_TAUISO,
     CLA_MINELOW,
+    CLA_ETHRESH,
     CLA_CLOUDRAD,
     CLA_CLOUDFCT,
     CLA_CLOUDE,
@@ -280,6 +281,9 @@ processparameters(int argc,            /* Number of command-line args  */
      "significance (use only for debugging)."},
     {"minelow",    CLA_MINELOW,     required_argument, "0",     "low-energy",
      "Lowest limit of low energy to consider (in cm-1)."},
+    {"ethreshold", CLA_ETHRESH,   required_argument, "1e-8",    "ethreshold",
+     "Minimum extinction-coefficient ratio (w.r.t. maximum in a layer) to "
+     "consider in the calculation."},
     {"cloudrad",   CLA_CLOUDRAD,    required_argument, NULL, "radup,raddown",
      "Make a cloud appear linearly from radup to raddown. Use '--cloudfct' "
      "units; if not defined, use radfct."},
@@ -454,6 +458,9 @@ processparameters(int argc,            /* Number of command-line args  */
 
     case CLA_MINELOW:    /* Lowest limit of low energy */
       hints->minelow = atof(optarg);
+      break;
+    case CLA_ETHRESH:    /* Minimum extiction-coefficient threshold */
+      hints->ethresh = atof(optarg);
       break;
     case 's':            /* Ray-solution type name     */
       hints->solname = (char *)realloc(hints->solname, strlen(optarg)+1);
@@ -1011,6 +1018,13 @@ acceptgenhints(struct transit *tr){
     return -1;
   }
   tr->minelow = th->minelow;
+
+  if (th->ethresh <= 0){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
+                 "Extinction-coefficient threshold (%.3e) has to be "
+                 "positive.\n", th->ethresh);
+    return -1;
+  }
 
   /* Pass atmospheric flags into transit struct:                            */
   transitacceptflag(tr->fl, th->fl, TRU_ATMBITS); /* See transit.h          */
