@@ -47,7 +47,7 @@ static PREC_RES *Flux;
    at various incident angles on the planet surface, 
    between a certain layer in the atmosphere up to the top layer. 
    Returns: Optical depth divided by rad.fct:  \frac{tau}{units_{rad}}      */
-
+/* DEF */
 static PREC_RES
 totaltau_eclipse(PREC_RES *rad,  /* Equispaced radius array: From current   */
                                  /* to outmost layer                        */
@@ -126,6 +126,7 @@ totaltau_eclipse(PREC_RES *rad,  /* Equispaced radius array: From current   */
    Allocates intensity grid. 2D array of angles and wn to pack intensities
    Return: 0 on success  */
 
+/* DEF */
 int
 intens_grid(struct transit *tr){ 
 
@@ -167,6 +168,7 @@ intens_grid(struct transit *tr){
    Calculates optical depth as a function of radii and wavenumber.
    Return: 0 on success                                                     */
 
+/* DEF */
 int
 tau_eclipse(struct transit *tr){           /* Transit structure             */
 
@@ -250,8 +252,10 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
   if(!comp[rnn-1]){
     transitprint(1, verblevel, "Computing extinction in the outermost "
                                "layer.\n");
-    if((rn=computemolext(tr, rnn-1, ex->e))!=0)
-    //if((rn=computeextradius(rnn-1, tr->atm.t[rnn-1]*tr->atm.tfct, ex))!=0)
+    if (tr->fp_opa != NULL)
+      rn = interpolmolext(tr, rnn-1, ex->e);
+    else
+      if((rn=computemolext(tr, rnn-1, ex->e))!=0)
       transiterror(TERR_CRITICAL,
                    "computeextradius() returned error code %i.\n", rn);
   }
@@ -349,11 +353,13 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
           if(!comp[--lastr]){
             /* Compute a new extinction at given radius printing error if
                something happen:                                            */
-            transitprint(2, verblevel, "Radius %i: %.9g cm ... ",
+            transitprint(2, verblevel, "Radius %i: %.9g cm ...\n",
                                        lastr+1, r[lastr]);
-            if((rn=computemolext(tr, lastr, ex->e))!=0)
-            //if((rn=computeextradius(lastr, temp[lastr]*tfct, ex))!=0)
-              transiterror(TERR_CRITICAL,
+            if (tr->fp_opa != NULL)
+              rn = interpolmolext(tr, lastr, ex->e);
+            else
+              if((rn=computemolext(tr, lastr, ex->e))!=0)
+                transiterror(TERR_CRITICAL,
                            "computeextradius() return error code %i while "
                            "computing radius #%i: %g\n", rn, r[lastr]*rfct);
             /* Update the value of the extinction at the right place:       */
@@ -364,8 +370,11 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
       }
 
       //if (wi == 1612 || wi == 1611){
-      //  transitprint(1,2, "ext(%li) = tot:%.4e -- mol:%.4e -- cia:%.4e\n",
-      //                    ri, er[ri], e[ri][wi], e_cia[wi][ri]);
+      //if (wi == 1611){
+      //  transitprint(1,2, "ext(%3li) = tot:%.4e -- mol:%.4e -- cia:%.4e\n"
+      //                    "    rad: %.2f   angle: %.2f  rnn-ri: %li\n",
+      //                    ri, er[ri], e[ri][wi], e_cia[wi][ri],
+      //                    *(r+ri), angle, rnn-ri);
       //}
       /* Compute tau_wn[ri] array until tau reaches toomuch
          first tau[0], starts from the outmost layer.                         
@@ -440,6 +449,7 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
    Calculates emergent intensity.
    Return: emergent intensity for one wavenumber                            */
 
+/* DEF */
 static PREC_RES
 eclipse_intens(struct transit *tr,  /* Transit structure                    */
                PREC_RES *tau,          /* Optical depth array tau.c==>tau   */
@@ -526,7 +536,7 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
      (when I want to run the code in safety mode):                          */
   //res = integ_trapz(tauIV, tauInteg, last);
 
-  //if (fabs(w-2857.00) <= 0.005){
+  //if (fabs(w-2877.00) <= 0.5){
   //  transitprint(1, 2, "\nI(w=%.10g) = %.10g\n", w, res);
   //  for (i=0; i<last; i++)
   //    transitprint(1, 2, "  tau: %.10e   int:%.10e\n", tauIV[i], tauInteg[i]);
@@ -555,6 +565,7 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
    of wavenumbers at the various points on the planet
    Returns: emergent intensity for the whole wavenumber range               */
 
+/* DEF */
 int
 emergent_intens(struct transit *tr){  /* Transit structure                  */
   static struct outputray st_out;     /* Defines output structure           */
@@ -628,6 +639,7 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
    I_i are calculated for each angle defined in the configuration file
    Returns: zero on success                                                */
 
+/* DEF */
 int
 flux(struct transit *tr){  /* Transit structure                           */
 

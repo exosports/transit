@@ -51,7 +51,7 @@ opacity(struct transit *tr){
   /* Check if the opacity file exists:                                      */
   int fe = fileexistopen(th->f_opa, &tr->fp_opa);
   tr->f_opa = th->f_opa;  /* Set file name in transit struct                */
-  transitprint(10, verblevel, "File-exist status = %d\n", fe);
+  transitprint(10, verblevel, "Opacity-file exist status = %d\n", fe);
 
   /* If the file exists, read the opacities from it:                        */
   if(fe == 1){
@@ -63,7 +63,7 @@ opacity(struct transit *tr){
   else{
     /* Open file for writing:                                               */
     tr->fp_opa = fopen(tr->f_opa, "wb");
-    /* File given but cannot be opened:                                     */
+    /* Create file:                                                         */
     if(fe == -1 && tr->fp_opa == NULL){
         transiterror(TERR_WARNING, "Opacity filename '%s' cannot be opened for "
                                    "writing.\n", tr->f_opa);
@@ -111,10 +111,10 @@ calcopacity(struct transit *tr,
 
   /* Make logscale grid for the profile widths:                             */
   /* FINDME: Hardcoded values                                               */
-  nDop = op->nDop = 20;  //100;
-  nLor = op->nLor = 20;  //100;
+  nDop = op->nDop = 40;  //100;
+  nLor = op->nLor = 40;  //100;
   Lmin = 1e-4;
-  Lmax = 1.0; //10.0;
+  Lmax = 10.0; //10.0;
   Dmin = 1e-3;
   Dmax = 0.25;
   op->aDop = logspace(Dmin, Dmax, nDop);
@@ -279,7 +279,8 @@ calcopacity(struct transit *tr,
       transitprint(1, verblevel, "Allocation fail\n");
 
     /* Compute extinction:                                                  */
-    for (r=0;   r<Nlayer; r++){  /* For each layer:                         */
+    for (r=0;   r<Nlayer; r++){  /* For each layer:                       */
+    //for (r=0;   r<Nlayer; r++){  /* For each layer:                         */
       for (t=0; t<Ntemp;  t++){  /* For each temperature:                   */
       if((rn=extinction(tr, r, t)) != 0)
         transiterror(TERR_CRITICAL, "extinction() returned error code %i.\n",
@@ -352,11 +353,11 @@ readopacity(struct transit *tr,  /* transit struct                          */
   //                                                        sizeof(PREC_RES *));
   //op->o[0][0][0] = (PREC_RES *)calloc(op->Nmol*op->Ntemp*op->Nlayer*op->Nwave,
   //                                                        sizeof(PREC_RES));
-  //for (i=0; t<op->Nmol; i++){
+  //for     (i=0; i < op->Nmol;   i++){
   //  op->o[i] = op->o[0] + op->Ntemp*i;
-  //  for (t=0; t<op->Ntemp; t++){
+  //  for   (t=0; t < op->Ntemp;  t++){
   //    op->o[i][t] = op->o[0][0] + op->Nlayer*(t + op->Ntemp*i);
-  //    for (r=0; r<op->Nlayer; r++)
+  //    for (r=0; r < op->Nlayer; r++)
   //      op->o[i][t][r] = op->o[0][0][0] + op->Nwave*(r + op->Nlayer*(t + op->Ntemp*i));
   //  }
   //}
@@ -395,10 +396,11 @@ extinction(struct transit *tr,      /* transit struct                       */
   struct molecules *mol=tr->ds.mol; /* Molecules struct                     */
   struct atm_data  *at =tr->ds.at;  /* Atmosphere struct                    */
   struct line_transition *lt=&(tr->ds.li->lt); /* Line transition struct    */ 
+  //struct extinction *ex=tr->ds.ex;
 
   /* Voigt profile variables:                                               */
-  PREC_VOIGT ****profile=op->profile; /* Voigt profile                      */
-  PREC_NREC **profsize=op->profsize;  /* Voigt-profile half-size            */
+  PREC_VOIGT ****profile =op->profile;   /* Voigt profile                   */
+  PREC_NREC    **profsize=op->profsize;  /* Voigt-profile half-size         */
   double *aDop=op->aDop,              /* Doppler-width sample               */
          *aLor=op->aLor;              /* Lorentz-width sample               */
   int nDop=op->nDop,                  /* Number of Doppler samples          */
@@ -411,38 +413,58 @@ extinction(struct transit *tr,      /* transit struct                       */
   int i, j, m,      /* for-loop indices                                     */
       *idop, *ilor, /* Doppler and Lorentz width indices per isotope        */
       niso, nmol,   /* Number of isotopes and molecules                     */
-      nwn, neval;
+      iown, idwn;
 
-  long minj, maxj,  /* Indices of min and max wn array of line profile      */
+  PREC_NREC onwn, dnwn;
+
+  long minj, maxj, /* Indices of min and max wn array of line profile       */
        offset,      /* Index offset between profile and wn arrays           */
        ncalc;
   PREC_ATM moldensity,          /* Molecular density                        */
            temp;                /* Layer temperature                        */
+  double *kmax, *kmin;
   PREC_VOIGTP *alphal, *alphad; /* Lorentz and Doppler widths               */
-  PREC_RES *wn, dwn, wavn;      /* Wavenumber sampling info                 */
-  PREC_NREC ilinewn,  /* Wavenumber index for line transition               */
-            nlines,   /* Number of line transitions                         */
+
+  PREC_RES dwn, odwn, ddwn, /* Wavenumber sampling interval */
+           wavn, next_wn;  
+  PREC_NREC nlines,   /* Number of line transitions                         */
             ln,       /* line-transition for-loop index                     */
             subw;     /* Fine binning index for profile of line transition  */
-  int voigtfine  = tr->voigtfine;  /* Voigt profile oversampling            */  
 
   struct timeval tv;
   double t0 = timestart(tv, "\nOpacity calculation:");
   //transitprint(1, verblevel, "FLAG 210.\n");
 
-  /* Set up of variables:                                                   */
+  /* per-spectrum minimum and maximum line width:                           */
+  double minwidth=1e5, maxwidth=0.0;
+ 
+  /* Temporal extinction array (per molecule):                              */
+  double **ktmp;
+  int ofactor;  /* Dynamic oversampling factor                              */
 
-  /* Layer temperature:                                                     */
-  temp = op->temp[t];   /* DIFF */
+  long nadd =0, /* Number of co-added lines                                 */
+       nskip=0, /* Number of skipped lines                                  */
+       neval=0; /* Number of evaluated profiles                             */
+
+
+  /* Set up of variables:                                                   */
+  nlines = tr->ds.li->n_l; /* Number of line transitions                    */
 
   niso = iso->n_i;     /* Number of isotopes                                */
   nmol = mol->nmol;    /* Number of molecules in atmosphere                 */
 
-  wn  = op->wns;    /* Wavenumber array                                     */
-  nwn = op->Nwave;  /* Number of wavenumber samples                         */
-  dwn = tr->wns.d;  /* Wavenumber sampling stepsize                         */
+  /* Number of wavenumber samples:                                          */
+  onwn = tr->owns.n; /* Oversampled array                                   */
 
-  nlines = tr->ds.li->n_l; /* Number of line transitions                    */
+  /* Wavenumber sampling intervals:                                         */
+  dwn  = tr->wns.d /tr->wns.o;  /* Wavenumber array                         */
+  odwn = tr->owns.d/tr->owns.o; /* Oversampling array                       */
+
+  temp = op->temp[t];  /* Layer temperature                                 */
+
+  /* Constant factors for line widths:                                      */
+  fdoppler = sqrt(2*KB*temp/AMU) * SQRTLN2 / LS;
+  florentz = sqrt(2*KB*temp/PI/AMU) / (AMU*LS);
 
   /* Allocate alpha Lorentz and Doppler arrays:                             */
   alphal = (PREC_VOIGTP *)calloc(niso, sizeof(PREC_VOIGTP));
@@ -452,11 +474,15 @@ extinction(struct transit *tr,      /* transit struct                       */
   idop = (int *)calloc(niso, sizeof(int));
   ilor = (int *)calloc(niso, sizeof(int));
 
-  /* Constant factors for line widths:                                      */
-  fdoppler = sqrt(2*KB*temp/AMU) * SQRTLN2 / LS;
-  florentz = sqrt(2*KB*temp/PI/AMU) / (AMU*LS);
-  //transitprint(1, verblevel, "FLAG 230.\n");
+  kmax = (double *)calloc(op->Nmol, sizeof(double));
+  kmin = (double *)calloc(op->Nmol, sizeof(double));
 
+  ktmp = (double **)calloc(op->Nmol, sizeof(double *));
+  ktmp[0] = (double *)calloc(op->Nmol*tr->owns.n, sizeof(double));
+  for (i=1; i<op->Nmol; i++)
+    ktmp[i] = ktmp[0] + tr->owns.n * i;
+
+  //transitprint(1, verblevel, "FLAG 230.\n");
   /* Calculate the isotope's widths for this layer:                         */
   for(i=0; i<niso; i++){
     /* Lorentz profile width:                                               */
@@ -471,132 +497,176 @@ extinction(struct transit *tr,      /* transit struct                       */
       alphal[i] += moldensity/mol->mass[j] * csdiameter * csdiameter *
                    sqrt(1/iso->isof[i].m + 1/mol->mass[j]);
       if (i==0)
-        transitprint(20, verblevel, "AlphaL[%d] = %.3e\n", j,
-                    moldensity/mol->mass[j] * csdiameter * csdiameter *
-                    sqrt(1/iso->isof[i].m + 1/mol->mass[j]));
+        transitprint(200, verblevel, "AlphaL[%d] = %.3e\n", j,
+                     moldensity/mol->mass[j] * csdiameter * csdiameter *
+                     sqrt(1/iso->isof[i].m + 1/mol->mass[j]));
     }
     alphal[i] *= florentz;
 
     /* Doppler profile width (divided by central wavenumber):               */
-    alphad[i] = fdoppler/sqrt(iso->isof[i].m);
+    alphad[i] = fdoppler / sqrt(iso->isof[i].m);
 
     /* Print Lorentz and Doppler broadening widths:                         */
     if(i <= 0)
       transitprint(1, verblevel, "Lorentz: %.9f cm-1, Doppler: %.9f cm-1 "
-        "broadening (T=%d, r=%d).\n", alphal[i], alphad[i]*wn[0], (int)temp, r);
+        "broadening (T=%d, r=%d).\n", alphal[i], alphad[i]*tr->wns.v[0],
+                                      (int)temp, r);
+    /* Max between Doppler and Lorentz widths:                              */
+    maxwidth = fmax(alphal[i], alphad[i]*tr->wns.v[0]);
+    minwidth = fmin(minwidth, maxwidth);
 
     /* Search for aDop and aLor indices for alphal[i] and alphad[i]:        */
-    idop[i] = binsearchapprox(aDop, alphad[i]*wn[0], 0, nDop);
-    ilor[i] = binsearchapprox(aLor, alphal[i],       0, nLor);
+    idop[i] = binsearchapprox(aDop, alphad[i]*tr->wns.v[0], 0, nDop);
+    ilor[i] = binsearchapprox(aLor, alphal[i],              0, nLor);
   }
 
+  /* Set oversampling resolution:                                           */
+  for (i=1; i < tr->ndivs; i++)
+    if (tr->odivs[i]*(dwn/tr->owns.o) >= 0.5 * minwidth){
+      break;
+    }
+  ofactor = tr->odivs[i-1];         /* Dynamic-sampling oversampling factor */
+  ddwn    = odwn * ofactor;         /* Dynamic-sampling grid interval       */
+  dnwn    = 1 + (onwn-1) / ofactor; /* Number of dynamic-sampling values    */
+  transitprint(1, verblevel, "Dynamic-sampling grid interval: %.9f  "
+               "(scale factor:%i)\n", ddwn, ofactor);
+  transitprint(1, verblevel, "Number of dynamic-sampling values: %li\n",
+                                dnwn);
+
   t0 = timestart(tv, "Begin opacity calculation:");
-  neval = 4;
-  ncalc = 0;
+
   /* Compute the opacity, proceed for every line:                           */
   for(ln=0; ln<nlines; ln++){
-    /* Skip lines with strength lower than transit's minelow threshold:     */
-    if(lt->elow[ln] < tr->minelow)
-      continue;
 
     /* Wavenumber of line transition:                                       */
     wavn = 1.0 / (lt->wl[ln] * lt->wfct);
-
-    /* If it is beyond the lower limit, skip to next line transition:       */
-    if(wavn < tr->wns.i)
-      continue;
-    else
-      /* Closest wavenumber index to transition, but no larger than:        */
-      ilinewn = (wavn - tr->wns.i)/dwn;
-
-    transitDEBUG(25, verblevel, "wavn: %g,  lgf: %g.\n", wavn, lt->gf[ln]);
-
-    /* If it is beyond the last index, skip to next line transition:        */
-    if(ilinewn >= nwn)
-      continue;
-
     /* Isotope ID of line transition:                                       */
     i = lt->isoid[ln];
     /* Molecule index in opacity grid for this isotope:                     */
     m = valueinarray(op->molID, iso->imol[i], op->Nmol);
 
-    /* FINDME: de-hard code this threshold                                  */
-    if (alphad[i]*wn[ilinewn]/alphal[i] >= 1e-1){
-    neval++;
-      /* Recalculate index for Doppler width:                               */
-      idop[i] = binsearchapprox(aDop, alphad[i]*wn[ilinewn], 0, nDop);
-    }
+    /* If this line falls beyond limits, skip to next line transition:      */
+    if ((wavn < tr->wns.i) || (wavn > tr->owns.v[onwn-1]))
+      continue;
 
-    /* Calculate opacity coefficient except the broadening factor
-       and the molecular abundance:                                         */
+    /* Calculate the extinction coefficient divided by the molecular
+       abundance:                                                           */
     opac = iso->isoratio[i]                        * /* Density             */
            SIGCTE     * lt->gf[ln]                 * /* Constant * gf       */
            exp(-EXPCTE*lt->efct*lt->elow[ln]/temp) * /* Level population    */
            (1-exp(-EXPCTE*wavn/temp))              / /* Induced emission    */
            iso->isof[i].m                          / /* Isotope mass        */
-           op->ziso[i][t];                           /* Partition function  */
- 
-    transitprint(24, verblevel,
-                 "i=%i   temp=%g   Elow=%g\n"
-                 "aD=%.7g   aL=%.7g\n"
-                 "wl=%.10g  wn=%.10g\n"
-                 "k =%12.5g   // densiso[imol]\n"
-                 "  *%12.5g   // isoratio\n"
-                 "  *%12.5g   // SIGCTE\n"
-                 "  *%12.5g   // lt->gf[ln]\n"
-                 "  *%12.5g   // exp(-EXPCTE*lt->elow[ln]/temp)\n"
-                 "  *%12.5g   // (1-exp(-EXPCTE*wavn/temp))\n"
-                 "  /%12.5g   // mass[i]\n"
-                 "  /%12.5g   // ziso[i][t]\n"
-                 " = %12.5g   // extinction\n\n",
-                 i, temp, lt->elow[ln],
-                 alphad[i]*wavn, alphal[i],
-                 lt->wl[ln], 1.0 / (lt->wfct * lt->wl[ln] * tr->wavs.fct),
-                 mol->molec[iso->imol[i]].d[r],
-                 iso->isoratio[i],
-                 SIGCTE,
-                 lt->gf[ln],
-                 exp(-EXPCTE*lt->elow[ln]/temp),
-                 (1-exp(-EXPCTE*wavn/temp)),
-                 iso->isof[i].m,
-                 op->ziso[i][t],
-                 opac);
+           op->ziso[i][t];
 
-    /* profsize is (number of points in the profile)/2.                     */
+    if (kmax[m] == 0)
+      kmax[m] = kmin[m] = opac;
+    else{
+      kmax[m] = fmax(kmax[m], opac);
+      kmin[m] = fmin(kmin[m], opac);
+    }
+  }
 
-    /* profsize-ilinewn-1 is the starting point of the wavenumber array with
-       respect to the starting index of the profile.                        */
-    /* Set profwn such that the index mimic wavenumber's array:             */
+  transitprint(1, verblevel, "Half way through\n");
+  /* Compute the opacity for each molecule:                                 */
+  for(ln=0; ln<nlines; ln++){
+    wavn = 1.0/(lt->wl[ln]*lt->wfct); /* Wavenumber  */
+    i    = lt->isoid[ln];             /* Isotope ID  */
+    /* Molecule index in opacity grid for this isotope:                     */
+    m = valueinarray(op->molID, iso->imol[i], op->Nmol);
 
-    //transitprint(1, 2, "FLAG 279: idop=%d,  ilor=%d\n", idop[i], ilor[i]);
-    //transitprint(1, 2, "FLAG 280: profsize=%li\n", profsize[idop[i]][ilor[i]]);
+    if((wavn < tr->wns.i) || (wavn > tr->owns.v[onwn-1]))
+      continue;
 
+    opac = iso->isoratio[i] * SIGCTE * lt->gf[ln]        *
+           exp(-EXPCTE * lt->efct * lt->elow[ln] / temp) *
+           (1-exp(-EXPCTE*wavn/temp)) / iso->isof[i].m / op->ziso[i][t];
+
+    /* Index of closest oversampled wavenumber:                             */
+    iown = (wavn - tr->wns.i)/odwn;
+    if (fabs(wavn - tr->owns.v[iown+1]) < fabs(wavn - tr->owns.v[iown]))
+      iown++;
+
+    /* Check if the next line falls on the same sampling index:             */
+    while (ln != nlines-1 && lt->isoid[ln+1] == i){
+      next_wn = 1.0 / (lt->wl[ln+1] * lt->wfct);
+      if (fabs(next_wn - tr->owns.v[iown]) < odwn){
+        nadd++;
+        ln++;
+        /* Add the contribution from this line into the opacity:            */
+        opac += iso->isoratio[i] * SIGCTE * lt->gf[ln] *
+                exp(-EXPCTE * lt->efct * lt->elow[ln] / temp)  *
+                (1-exp(-EXPCTE*next_wn/temp)) / iso->isof[i].m /
+                iso->isov[i].z[r];
+      }
+      else
+        break;
+    }
+
+    //if (opac < ex->ethresh * kmax[imol]){
+    if (opac < tr->ds.th->ethresh * kmax[m]){
+      nskip++;
+      continue;
+    }
+
+    /* Index of closest (but not larger than) dynamic-sampling wavenumber:  */
+    idwn = (wavn - tr->wns.i)/ddwn;
+
+    /* FINDME: de-hard code this threshold                                  */
+    if (alphad[i]*wavn/alphal[i] >= 1e-1){
+      /* Recalculate index for Doppler width:                               */
+      idop[i] = binsearchapprox(aDop, alphad[i]*wavn, 0, nDop);
+      ncalc++;
+    }
+
+    /* Sub-sampling offset between center of line and dyn-sampled wn:       */
+    subw = iown - idwn*ofactor;
+    /* Offset between the profile and the wavenumber-array indices:         */
+    offset = ofactor*idwn - profsize[idop[i]][ilor[i]] + subw;
+    /* Range that contributes to the opacity:                               */
     /* Set the lower and upper indices of the profile to be used:           */
-    minj = ilinewn - profsize[idop[i]][ilor[i]] + 1;
-    offset = minj;
-    if(minj < 0)
+    minj = idwn - (profsize[idop[i]][ilor[i]] - subw) / ofactor;
+    maxj = idwn + (profsize[idop[i]][ilor[i]] + subw) / ofactor;
+    if (minj < 0)
       minj = 0;
-    maxj = ilinewn + profsize[idop[i]][ilor[i]] + 1;
-    if(maxj > nwn)
-      maxj = nwn;
+    if (maxj > dnwn)
+      maxj = dnwn;
 
-    /* Distance from center of line to sampled wavenumber by 'ilinewn',
-       in number of fine bins:                                              */
-    subw = voigtfine*(wavn - ilinewn*dwn - tr->wns.i)/dwn;
 
     /* Add the contribution from this line to the opacity spectrum:         */
     for(j=minj; j<maxj; j++){
       //transitprint(1, 2, "%li  ", j-offset);
       //transitprint(1, 2, "j=%d, p[%li]=%.2g   ", j, j-offset,
       //                    profile[idop[i]][ilor[i]][subw][j-offset]);
-      op->o[m][t][r][j] += opac * profile[idop[i]][ilor[i]][subw][j-offset];
+      ktmp[m][j] += opac * profile[idop[i]][ilor[i]][0][ofactor*j - offset];
+      //op->o[m][t][r][j] += opac * profile[idop[i]][ilor[i]][subw][j-offset];
     }
-    ncalc++;
+    neval++;
   }
 
+  transitprint(1, verblevel, "Almost there!\n");
+
+  /* Downsample ktmp to the final sampling size:                            */
+  for (m=0; m < op->Nmol; m++)
+    downsample(ktmp[m], op->o[m][t][r], dnwn, tr->owns.o/ofactor);
+
   t0 = timecheck(verblevel, t, r, "End opacity calculation", tv, t0);
-  transitprint(1, verblevel, "There were %d profile evaluations,\n"
-               "       and %li line profiles calculated.\n", neval, ncalc);
+
+  transitprint(9, verblevel, "Number of co-added lines:     %8li  (%5.2f%%)\n",
+                             nadd,  nadd *100.0/nlines);
+  transitprint(9, verblevel, "Number of skipped profiles:   %8li  (%5.2f%%)\n",
+                             nskip, nskip*100.0/nlines);
+  transitprint(9, verblevel, "Number of evaluated profiles: %8li  (%5.2f%%)\n",
+                             neval, neval*100.0/nlines);
+
+  /* Free allocated memory:                                                 */
+  free(alphal);
+  free(alphad);
+  free(idop);
+  free(ilor);
+  free(kmax);
+  free(kmin);
+  free(ktmp[0]);
+  free(ktmp);
 
   transitprint(2, verblevel, "Done.\n");
   return 0;

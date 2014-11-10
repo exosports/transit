@@ -23,4 +23,5 @@ extern int restextinct P_((FILE *in, long nrad, short niso, long nwn,
                            struct extinction *ex));
 extern void freemem_localextinction P_((void));
 extern int computemolext P_((struct transit *tr, PREC_NREC r, PREC_RES ***kiso));
+extern int interpolmolext P_((struct transit *tr, PREC_NREC r, PREC_RES ***kiso));
 #undef P_

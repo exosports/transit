@@ -168,40 +168,38 @@ vmperror_fcn(int flags,
   the opened file pointer \vr{fp}. Otherwise a NULL is returned and a
   status of why the opening failed is returned.
 
-  @returns 1 on success in opening
+  Return:  1 on success in opening
            0 if no file was given
           -1 File doesn't exist
           -2 File is not of a valid kind (it is a dir or device)
           -3 File is not openable (permissions?)
-          -4 Some error happened, stat returned -1
-*/
+          -4 Some error happened, stat returned -1                          */
 int
-fileexistopen(char *in,   /* Input filename */
-              FILE **fp){ /* Opened file pointer if successful */
+fileexistopen(char *in,    /* Input filename                                */
+              FILE **fp){  /* Opened file pointer if successful             */
 
   struct stat st;
   *fp = NULL;
 
   if(in){
-    //Check whether the suggested file exists, if it doesn't, then use
-    //defaults.
+    /* Check whether the input file exists:                                 */
     if (stat(in, &st) == -1){
       if(errno == ENOENT)
         return -1;
       else
         return -4;
     }
-    //Not of the valid type
-    else if(!(S_ISREG(st.st_mode)||S_ISFIFO(st.st_mode)))
+    /* Invalid type:                                                        */
+    else if(!(S_ISREG(st.st_mode) || S_ISFIFO(st.st_mode)))
       return -2;
-    //Not openable
+    /* Not openable:                                                        */
     else if(((*fp)=fopen(in, "r")) == NULL)
       return -3;
-    //No problem!
+    /* No problems:                                                         */
     return 1;
   }
 
-  //No file was requested
+  /* No file was requested:                                                 */
   return 0;
 }
 

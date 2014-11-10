@@ -169,44 +169,26 @@ processparameters(int argc,            /* Number of command-line args  */
     {"molfile",    CLA_MOLFILE,    required_argument, "../inputs/molecules.dat",
      "filename", "Path to file with the molecular info."},
 
-    /* Radius options:                        */
+    /* Radius options:                                                      */
     {NULL,       0,           HELPTITLE,         NULL, NULL,
      "RADIUS OPTIONS (0-valued defaults would mean to use the values given by "
      "the atmosphere file):"},
-    //{"radius",   'r',         no_argument,       NULL, NULL,
-    // "Interactively input radius parameters."},
+    {"raddelt", CLA_RADDELT, required_argument, "-1", "spacing",
+     "Radius spacing.  If set, resample the atmospheric layers to a "
+     "radius-equidistant sampling array."},
     {"radlow",  CLA_RADLOW,  required_argument, "0", "radius",
      "Lower radius.  If 0, use atmospheric data minimum."},
     {"radhigh", CLA_RADHIGH, required_argument, "0", "radius",
      "Higher radius.  If 0, use atmospheric data maximum."},
-    {"raddelt", CLA_RADDELT, required_argument, ".5", "spacing",
-     "Radius spacing.  If 0, use atmospheric data spacing."},
     {"radfct",  CLA_RADFCT,  required_argument, "0",  "factor",
      "Radius factor. Multiplicating radius values by this gives centimeters. "
      "If 0, use atmosphere-file factor."},
 
-    /* Atmosphere options:                    */
+    /* Atmosphere options:                                                  */
     {NULL,                0,            HELPTITLE,         NULL, NULL,
      "ATMPOSPHERE OPTIONS:"},
     {"numberabund",      CLA_NUMBERQ,  no_argument,       NULL, NULL,
      "Boolean: 0 if the abundances are by number, 1 if by mass."},
-    //{"onept",             CLA_ONEPT,    required_argument, NULL,
-    // "press, temp, N_extra_iso", 
-    // "Don't calculate transit spectra, just obtain spectra for a given "
-    // "pressure and temperature. Unless oneabund is also specified and has the "
-    // "correct number of isotopes, the abundances will be asked interactively."},
-    //{"oneextra",          CLA_ONEEXTRA, required_argument, NULL,
-    // "mass1name1,mass2name2,...", 
-    // "List of the atomic mass and names for the extra isotopes specified "
-    // "with --onept. If it doesn't have the right amount of values, the "
-    // "program will ask interactively. It only has effect with --onept."},
-    //{"oneabund",          CLA_ONEABUND, required_argument, NULL, "q1,...",
-    // "List of the abundances of the different isotopes. If omitted or doesn't "
-    // "have the right amount of values, the program will ask interactively. "
-    // "Note that the order of isotopes is the same given in the TLI data file. "
-    // "Only has effect with --onept."},
-    //{"onept-interactive", CLA_ONEINT,   no_argument,       NULL, NULL,
-    // "Boolean; input abundances, pressure, and temperature interactively."},
     {"allowq",            CLA_ALLOWQ,   required_argument, "0.00001", "value",
      "Maximum allowed cumulative-abundance departure from 1.0."},
     {"refpress",          CLA_RPRESS,   required_argument, NULL, NULL,
@@ -216,11 +198,9 @@ processparameters(int argc,            /* Number of command-line args  */
     {"gsurf",             CLA_GSURF,    required_argument, NULL, NULL,
      "Surface gravity in cm/s^2."},
 
-    /* Wavelength options:                    */
+    /* Wavelength options:                                                  */
     {NULL,         0,             HELPTITLE,         NULL,       NULL,
      "WAVELENGTH OPTIONS (all in fct units):"},
-    //{"wavelength", 'w',           no_argument,       NULL,       NULL,
-    // "Interactively input wavelength parameters."},
     {"wllow",     CLA_WAVLOW,    required_argument, "0",        "wavel",
      "Lower wavelength. 0 if you want to use line data minimum."},
     {"wlhigh",    CLA_WAVHIGH,   required_argument, "0",        "wavel",

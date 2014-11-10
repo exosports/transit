@@ -252,7 +252,7 @@ voigtf(int nwn,            /* Number of wavenumber bins where the function is
 inline int 
 voigtn(int m,              /* Number of fine resolution bins (deviation
                               of line center from bin center)             */
-       int nwn,            /* Number of wavenumber bins of the profile    */
+       int nwn,            /* Number of wavenumber sample of the profile  */
        PREC_VOIGTP dwn,    /* Wavenumber half-width sample                */
        PREC_VOIGTP alphaL, /* Lorentz width                               */
        PREC_VOIGTP alphaD, /* Doppler width                               */
@@ -378,6 +378,123 @@ voigtn(int m,              /* Number of fine resolution bins (deviation
 
   /* On success return 1.  So far, it is the only answer this function is
      giving. */
+  return 1;
+}
+
+
+inline int
+voigtn2(int nwn,            /* Number of wavenumber sample of the profile   */
+        PREC_VOIGTP dwn,    /* Wavenumber half-width sample                 */
+        PREC_VOIGTP alphaL, /* Lorentz width                                */
+        PREC_VOIGTP alphaD, /* Doppler width                                */
+        PREC_VOIGT *vpro,  /* Array (m by nwn) where to store the profile  */
+        PREC_VOIGTP eps,    /* Precision to which the profile is to be
+                               calculated. If negative, a fixed number of
+                               iterations are performed.                    */
+        int flags){         /* Miscellaneous flags, so far there is support
+                               for: 'VOIGT_QUICK' that performs a quick
+                               integration, i.e., the height multiplied
+                               by the bin width                             */
+
+  /* The calculation is done filling the array from the centerpoint
+     outwards.  The wavenumber value of each bin is considered to be the
+     lower value of the bin (not the center as usual).                    */
+
+  double y,      /* Normalized width:    y = sqrt(ln 2) * alphaL/alphaD   */
+         x,      /* Normalized position: x = sqrt(ln 2) * |nu-nu0|/alphaD */
+         ddwn;   /* Centershift spacing                                   */
+  int i;
+
+  /* The following variables are used to make sure that we are
+     obtaining a fine integrated value for each bin:
+     dint is the maximum spacing thus implied by the value of nint */
+  int nint;    /* Minimum number of points calculated per Doppler width */
+  double dint; /* Maximum spacing (?) */
+  PREC_VOIGT *aint; /* Auxiliary array to put the fine-spaced profile  */
+
+  /* Initialization:  */
+  y    = SQRTLN2 * alphaL / alphaD;
+  ddwn = 2.0 * dwn / (nwn - 1);
+  nint = 50;
+  dint = alphaD / (nint - 1);
+
+  /* If only a quick integration is requested, no need to have more than
+     the requested bin.  Note that this may cause a binning smaller than
+     the minimum. Or the same will happen if the requested spacing is
+     smaller than integration minimum.
+     If so, we need to allocate aint only to one item bigger
+     than what was given in order to calculate the last point needed
+     for integration. Also is important to set the \vr{flags} so that the
+     program knows later that it has to do 2 point simple trapezoid
+     integration. Set the fine-binned values to the given
+     ones. Temporarily enlarge by one the array in order to be able to
+     integrate the last bin. */
+  if (ddwn < dint || (flags & VOIGT_QUICK) ){
+    dint = ddwn;
+    nint = nwn + 1;
+  }
+
+  /* If integration is required then calculate binning so that for each
+     wavenumber bin there is an odd number of fine-integration bins (in
+     order to be able to make simpson integration.
+     Note that \vr{nint} includes a set of (int)(\vr{ddwn}/\vr{dint})
+     fine-points for every wavenumber point and one extra point for the
+     one required to close the last bin.  */
+  else{
+    nint = (int)(ddwn / dint) + 1;
+    if(nint & 1)
+      nint++;
+    nint = nwn * nint + 1;
+    dint = 2.0 * dwn / (nint - 1);
+  }
+
+  /* Initialize aint array:                                                 */
+  if((aint=(PREC_VOIGT *)calloc(nint, sizeof(PREC_VOIGT)))==NULL){
+    fprintf(stderr, "\nUnable to allocate memory in voigtxy for %i double "
+                    "elements (%.3g MB).\n", nint,
+                    (sizeof(PREC_VOIGT)*nint)/1024.0/1024.0);
+    fprintf(stderr, "nwn: %i\n", nwn);
+    exit(EXIT_FAILURE);
+  }
+
+  /* Even though Voigt is symmetric, a symmetric filling of the answer
+     array is not possible because the center of
+     the profile won't always coincide with the center of the array;
+     only when \vr{m}=0. Then, for each element of the array.          */
+  for(i=0; i<nint; i++){
+    x = SQRTLN2*fabs(dint*i-dwn)/alphaD;
+    voigtxy(x, y, aint+i, eps, alphaD);
+  }
+
+  /* Integration:                                                           */
+  /* If user wants a quick integration, return the value at the
+     beginning of each bin:                                                 */
+  if(flags & VOIGT_QUICK){
+    for(i=0; i<nwn; i++)
+      vpro[i] = aint[i];
+  }
+  /* If a slow integration is preferred, then calculate the number of
+     fine-point per regular points, note that is one more than the ratio.   */
+  else{
+    /* \linelabel{aux.ddwn} */
+    ddwn = (float)(nint-1)/nwn;
+    i = (int)ddwn + 1;
+    if(ddwn+1 != i){
+      fprintf(stderr, "%s :: There are not an integer number(%f!=%i) of "
+                      "fine-bins (%i) for each bin (%i).\n",
+                      __FILE__, ddwn+1, i, nint-1, nwn);
+      exit(EXIT_FAILURE);
+    }
+
+    /* Is this number an odd number?
+       If so, use Simpson's integration, otherwise use trapezoidal:         */
+    if (i & 1)
+      meanintegSimp(aint, vpro, nint, nwn, i, dint);
+    else
+      meanintegTrap(aint, vpro, nint, nwn, i, dint);
+  }
+  free(aint);
+
   return 1;
 }
 

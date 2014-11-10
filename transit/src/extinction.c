@@ -612,7 +612,7 @@ computemolext(struct transit *tr, /* transit struct                         */
       iown++;
 
     /* Check if the next line falls on the same sampling index:             */
-    while (ln != nlines && lt->isoid[ln+1] == i){
+    while (ln != nlines-1 && lt->isoid[ln+1] == i){
       next_wn = 1.0/(lt->wl[ln+1]*lt->wfct);
       if (fabs(next_wn - tr->owns.v[iown]) < odwn){
         nadd++;
@@ -683,13 +683,71 @@ computemolext(struct transit *tr, /* transit struct                         */
   transitprint(10, verblevel, "Kmin: %.5e   Kmax: %.5e\n", kmin, kmax);
   /* Downsample ktmp to the final sampling size:                          */
   downsample(ktmp, kiso[i][r], dnwn, tr->owns.o/ofactor);
-  transitprint(1, verblevel, "Number of co-added lines:     %8li  (%5.2f%%)\n",
+  transitprint(9, verblevel, "Number of co-added lines:     %8li  (%5.2f%%)\n",
                              nadd,  nadd*100.0/nlines);
-  transitprint(1, verblevel, "Number of skipped profiles:   %8li  (%5.2f%%)\n",
+  transitprint(9, verblevel, "Number of skipped profiles:   %8li  (%5.2f%%)\n",
                              nskip, nskip*100.0/nlines);
-  transitprint(1, verblevel, "Number of evaluated profiles: %8li  (%5.2f%%)\n",
+  transitprint(9, verblevel, "Number of evaluated profiles: %8li  (%5.2f%%)\n",
                              neval, neval*100.0/nlines);
 
   ex->computed[r] = 1;
   return 0;
 }
+
+
+/* Obtain the molecular extinction by interpolating the opacity grid at
+   the specified atmospheric layer:                                         */
+int
+interpolmolext(struct transit *tr, /* transit struct                        */
+               PREC_NREC r,        /* Radius index                          */
+               PREC_RES ***kiso){  /* Extinction coefficient array          */
+
+  struct opacity    *op=tr->ds.op;  /* Opacity struct                       */
+  struct molecules *mol=tr->ds.mol;
+  struct extinction *ex=tr->ds.ex;
+
+  long Nmol, Ntemp, Nwave;
+  PREC_RES *gtemp;
+  int       *gmol;
+  int itemp,
+      i, m;   /* for-loop indices                                           */
+  double ext; /* Interpolated extinction coefficient                        */
+
+  double *ktmp = (double *)calloc(tr->owns.n, sizeof(double));
+  /* Layer temperature:                                                     */
+  //transitprint(1,2,"\n Radius index: %li\n", r);
+  PREC_ATM temp = tr->atm.t[r] * tr->atm.tfct;
+  /* Gridded temperatures:                                                  */  
+  gtemp = op->temp;
+  Ntemp = op->Ntemp;
+  /* Gridded molecules list:                                                */
+  gmol = op->molID;
+  Nmol = op->Nmol;
+  /* Wavenumber array size:                                                 */
+  Nwave = op->Nwave;
+
+  /* Interpolate:         */
+  /* Find index of grid-temperature immediately lower than temp:            */
+  itemp = binsearchapprox(gtemp, temp, 0, Ntemp);
+  if (gtemp[itemp] < temp)
+    itemp--;
+  //transitprint(1, 2, "Temperature: T[%i]=%.0f < %.2f < T[%.i]=%.0f\n",
+  //                   itemp, gtemp[itemp], temp, itemp+1, gtemp[itemp+1]);
+
+  for (i=0; i < Nwave; i++){
+    /* Add contribution from each molecule:                                 */
+    for (m=0; m < Nmol; m++){
+      /* Linear interpolation of the extinction coefficient:                */
+      ext = (op->o[m][itemp  ][r][i] * (gtemp[itemp+1]-temp) + 
+             op->o[m][itemp+1][r][i] * (temp - gtemp[itemp]) ) /
+                                                 (gtemp[itemp+1]-gtemp[itemp]);
+      /* FINDME: first index is the isotope ID.  Remove it                  */
+      kiso[0][r][i] += mol->molec[gmol[m]].d[r] * ext;
+    }
+  }
+  free(ktmp);
+  ex->computed[r] = 1;
+  return 0;
+}
+
+
