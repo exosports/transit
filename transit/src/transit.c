@@ -101,6 +101,39 @@ int main(int argc,      /* Number of variables                             */
                  "parameters according to returned flag: 0x%lx.\n",
                  fw_status);
 
+  // // Compare atmopheric samplings:
+  // // radius
+  // transitprint(1, 2, "Radius sampling size: %li\n", transit.rads.n);
+  // for (itr = 0; itr < transit.rads.n; itr++)
+  //   transitprint(1, 2, "%.3e ", transit.rads.v[itr] - transit.ds.at->rads.v[itr]);
+  // // pressure
+  // transitprint(1,2,"\nPressure sampling:\n");
+  // for (itr = 0; itr < transit.rads.n; itr++)
+  //   transitprint(1, 2, "%.3e ", transit.atm.p[itr] - transit.ds.at->atm.p[itr]);
+  // // temp
+  // transitprint(1,2,"\nTemperature sampling:\n");
+  // for (itr = 0; itr < transit.rads.n; itr++)
+  //   transitprint(1, 2, "%.3e ", transit.atm.t[itr] - transit.ds.at->atm.t[itr]);
+  // // mm
+  // transitprint(1,2,"\nMmm sampling:\n");
+  // for (itr = 0; itr < transit.rads.n; itr++)
+  //   transitprint(1, 2, "%.3e ", transit.atm.mm[itr] - transit.ds.at->mm[itr]);
+  // // q
+  // transitprint(1,2,"\nAbundance sampling:\n");
+  // for (itr = 0; itr < transit.rads.n; itr++)
+  //   transitprint(1, 2, "%.3e ", transit.ds.mol->molec[0].q[itr] - transit.ds.at->molec[0].q[itr]);
+  // // d
+  // transitprint(1,2,"\nDensity sampling:\n");
+  // for (itr = 0; itr < transit.rads.n; itr++)
+  //   transitprint(1, 2, "%.3e ", transit.ds.mol->molec[1].d[itr] - transit.ds.at->molec[1].d[itr]);
+  // // Z
+  // transitprint(1,2,"\nPartition-function sampling:\n");
+  // for (itr = 0; itr < transit.rads.n; itr++)
+  //   transitprint(1, 2, "%.3e ", transit.ds.iso->isov[0].z[itr] -
+  //                               transit.ds.li->isov[0].z[itr]);
+  // transitprint(1,2,"\n");
+
+  // return 0;
   /* Calculate opacity grid:                                               */
   fw(opacity, <0, &transit);
   t0 = timecheck(verblevel, itr,  5, "opacity", tv, t0);

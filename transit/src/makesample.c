@@ -162,56 +162,54 @@ makesample1(prop_samp *samp,       /* transit sampling    */
              the referenced
           -6 Not valid oversampling was given by ref when requested      */
 int
-makesample0(prop_samp *samp,       /* transit sampling    */
-            prop_samp *hint,       /* hint    sampling    */
-            prop_samp *ref,        /* reference sampling  */
-            const long fl){        /* Sampling flag       */
+makesample0(prop_samp *samp,  /* transit sampling                           */
+            prop_samp *hint,  /* hint    sampling                           */
+            prop_samp *ref,   /* reference sampling                         */
+            const long fl){   /* Sampling flag                              */
 
-  int res=0;              /* Return output             */
-  PREC_RES *v;            /* The sampling values       */
-  double osd,             /* Oversampled delta         */
-         si;              /* Sample initial value      */
-  _Bool dhint=hint->d!=0; /* True if hint.d is defined */
+  int res=0;              /* Return output                                  */
+  PREC_RES *v;            /* The sampling values                            */
+  double osd,             /* Oversampled delta                              */
+         si;              /* Sample initial value                           */
+  _Bool dhint=hint->d!=0; /* True if hint.d is defined                      */
   /* Acceptable ratio exceeding final value without truncating the last bin: */
   double okfinalexcess = 1e-8;
 
-  /* Get units factor: */
+  /* Get units factor:                                                      */
   if(hint->fct<=0)
     samp->fct = ref->fct;
   else
     samp->fct = hint->fct;
 
-  /* Set initial value: */
-  /* If hint unset, use reference: */
+  /* Set initial value:                                                     */
+  /* If hint unset, use reference:                                          */
   if(hint->i <= 0){
     samp->i = ref->i;
     transitprint(4, verblevel,
                  "Using ref sampling %g [cgs] for initial value of %s.\n",
                  samp->i*samp->fct, TRH_NAME(fl));
-    res |= 0x1; /* Turn on modification flag for return output */
+    res |= 0x1;  /* Turn on modification flag for return output             */
   }
   else
     samp->i = hint->i;
 
-  /* Set final value:              */
-  /* If hint unset, use reference: */
-  if(hint->f <= 0){
+  /* Set final value (if hint unset, use reference):                        */
+  if (hint->f <= 0){
     samp->f = ref->f;
     transitprint(4, verblevel,
                  "Using ref sampling %g [cgs] for final value of %s.\n",
                   samp->f*samp->fct, TRH_NAME(fl));
-    res |= 0x2; /* Turn on modification flag for return output */
-  }
-  else
+    res |= 0x2; /* Turn on modification flag for return output              */
+  } else
     samp->f = hint->f;
 
-  /* Progress report: print flag, spacing, and number of points from hint: */
+  /* Print flag, spacing, and number of points from hint:                   */
   transitprint(21, verblevel, "Flags: 0x%lx    hint.d: %g   hint.n: %li\n",
                               fl, hint->d, hint->n);
 
-  /* If dhint has not been hinted then use ref's:  */
+  /* If dhint has not been hinted then use ref's:                           */
   if(!dhint){
-    /* If none of the ref exists then throw error: */
+    /* If none of the ref exists then throw error:                          */
     if((ref->d==0 && ref->n<=0)){
       transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
                    "Spacing (%g) and number of elements (%i) were either both "
@@ -219,7 +217,7 @@ makesample0(prop_samp *samp,       /* transit sampling    */
                    "were hinted.\n", ref->d, ref->n, TRH_NAME(fl));
       return -5;
     }
-    /* If spacing exists then trust it: */
+    /* If spacing exists then trust it:                                     */
     if(ref->d!=0){
       samp->d = ref->d;
     }
@@ -877,12 +875,22 @@ makeradsample(struct transit *tr){
     rad->v    = (PREC_RES *)calloc(1, sizeof(PREC_RES));
     rad->v[0] = rsamp->v[0]; 
     res       = 0;   /* makesample()-like output                            */
-    /* TD: warn that hinted values are going to be useless                  */
+    /* FINDME: warn that hinted values are going to be useless              */
   }
-  /* If there is more than one atmospheric point:                           */
+  /* Keep atmospheric-file sampling:                                        */
+  else if (tr->ds.th->rads.d == -1){
+    rad->n    = rsamp->n;
+    rad->i    = rsamp->i;
+    rad->f    = rsamp->f;
+    rad->fct  = rsamp->fct;
+    rad->d    = 0;
+    rad->v    = (PREC_RES *)calloc(rad->n, sizeof(PREC_RES));
+    for (i=0; i < rad->n; i++)
+      rad->v[i] = rsamp->v[i];
+    res       = 0;
+  }
+  /* Resample to equidistant radius array:                                  */
   else{
-    /* If no initial value is hinted, take atmosphere's min and max:        */
-    //res = makesample(rad, &tr->ds.th->rads, rsamp, TRH_RAD, 0, 0);
     res = makesample0(rad, &tr->ds.th->rads, rsamp, TRH_RAD);
   }
   nrad = rad->n;
@@ -927,12 +935,11 @@ makeradsample(struct transit *tr){
                     "Trying to reference an isotope (%i) outside the extended "
                     "limit (%i).\n", iso1db+j, niso-1);
       resampley(flag, 1, isovs[j].z, iso->isov[iso1db+j].z);
-      //                 isovs[j].c, iso->isov[iso1db+j].c);
     }
   }
   resample_free();
 
-  /* Set progress indicator and return: */
+  /* Set progress indicator and return:                                     */
   if(res>=0)
     tr->pi |= TRPI_MAKERAD;
   return res;
