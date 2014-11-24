@@ -382,7 +382,10 @@ processparameters(int argc,            /* Number of command-line args  */
 
   struct optcfg var_cfg;
   memset(&var_cfg, 0, sizeof(var_cfg));
-  var_cfg.contact = "Patricio Rojo <pato@das.uchile.cl>";
+  var_cfg.contact ="\n  Joseph Harrington <jh@physics.ucf.edu>\n"
+                     "  Patricio Cubillos <pcubillos@fulbrightmail.org>\n"
+                     "  Jasmina Blecic    <jasmina@physics.ucf.edu>";
+
   var_cfg.files   = DOTCFGFILE PREPEXTRACFGFILES;
   var_cfg.columns = 70;
 
