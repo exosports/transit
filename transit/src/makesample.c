@@ -982,32 +982,44 @@ makeradsample(struct transit *tr){
    Calls makesample with the appropiate parameters and set the flags for
    an impact parameter sampling
 
-   @returns makesample() output                                     */
+   @returns makesample() output                                             */
 int
 makeipsample(struct transit *tr){
-  int res; /* Return output */
-
-  /* An array of ip cannot be specified it has to be equispaced: */
   struct transithint *th = tr->ds.th;
+  int res; /* Return output */
+  int i;
 
-  /* Hinted ip sample:    */
-  prop_samp usamp = {0, -th->ips.d,    th->ips.f,                th->ips.i, 
-                     th->ips.o,        NULL,                     th->ips.fct};
-  /* Reference ip sample: */
-  prop_samp rsamp = {0, -tr->rads.d,   tr->rads.v[tr->rads.n-1], tr->rads.v[0],
-                     tr->rads.o,       NULL,                     tr->rads.fct};
+  /* Case when I used the atmospheric radius sampling:                      */
+  if (th->rads.d == -1){
+    tr->ips.n = tr->rads.n;
+    tr->ips.d = 0;
+    tr->ips.i = tr->rads.f;
+    tr->ips.f = tr->rads.i;
+    tr->ips.v = (PREC_RES *)calloc(tr->ips.n, sizeof(PREC_RES));
+    for(i=0; i < tr->ips.n; i++)
+      tr->ips.v[i] = tr->rads.v[tr->ips.n-i-1];
+    tr->ips.o = 0;
+    tr->ips.fct = tr->rads.fct;
+  }
+  /* FINDME: This is not even an option                                     */
+  else{
+    /* Hinted ip sample:                                                    */
+    prop_samp usamp = {0, -th->ips.d,    th->ips.f,              th->ips.i,
+                       th->ips.o,        NULL,                   th->ips.fct};
+    /* Reference ip sample (inverse radius sample):                         */
+    prop_samp rsamp = {0, -tr->rads.d,  tr->rads.v[tr->rads.n-1],
+                       tr->rads.v[0],   tr->rads.o,   NULL,     tr->rads.fct};
 
-  if(usamp.f < usamp.i)
-    transiterror(TERR_SERIOUS,
+    if(usamp.f < usamp.i)
+      transiterror(TERR_SERIOUS,
                  "Wrong specification of impact parameter, final value (%g) "
                  "has to be bigger than initial (%g).\n", usamp.f, usamp.i);
 
-  transitcheckcalled(tr->pi, "makeipsample", 1, "makeradsample", TRPI_MAKERAD);
+    transitcheckcalled(tr->pi, "makeipsample", 1, "makeradsample",TRPI_MAKERAD);
 
-  /* Make the sampling taking as reference the radius sampling: */
-  //res = makesample(&tr->ips, &usamp, &rsamp, TRH_IPRM, 0, 0);
-  res = makesample0(&tr->ips, &usamp, &rsamp, TRH_IPRM);
-
+    /* Make the sampling taking as reference the radius sampling: */
+    res = makesample0(&tr->ips, &usamp, &rsamp, TRH_IPRM);
+  }
   /* Set progress indicator: */
   if(res>=0)
     tr->pi |= TRPI_MAKEIP;

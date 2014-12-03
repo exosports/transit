@@ -192,7 +192,7 @@ processparameters(int argc,            /* Number of command-line args  */
      " (-) indicates alternative input."},
     {"linedb",     CLA_LINEDB,     required_argument, "NULL",
      "linedb", "File containing line information (TLI format, as given by "
-               "'lineread'."},
+               "'pylineread'."},
     {"outtoomuch", CLA_OUTTOOMUCH, required_argument, NULL, "filename",
      "Ouputs depth where toomuch optical depth has been attained as a function"
      " of wavelength."},
@@ -204,17 +204,16 @@ processparameters(int argc,            /* Number of command-line args  */
 
     /* Radius options:                                                      */
     {NULL,       0,           HELPTITLE,         NULL, NULL,
-     "RADIUS OPTIONS (0-valued defaults would mean to use the values given by "
-     "the atmosphere file):"},
+     "RADIUS OPTIONS (defaults adopt the values from the atmosphere file):"},
     {"raddelt", CLA_RADDELT, required_argument, "-1", "spacing",
-     "Radius spacing.  If set, resample the atmospheric layers to a "
-     "radius-equidistant sampling array."},
+     "Radius spacing.  If set, resample the atmospheric layers to an "
+     "equi-distant radius sampling."},
     {"radlow",  CLA_RADLOW,  required_argument, "0", "radius",
      "Lower radius.  If 0, use atmospheric data minimum."},
     {"radhigh", CLA_RADHIGH, required_argument, "0", "radius",
      "Higher radius.  If 0, use atmospheric data maximum."},
     {"radfct",  CLA_RADFCT,  required_argument, "0",  "factor",
-     "Radius factor. Multiplicating radius values by this gives centimeters. "
+     "Radius factor.  Multiplicating radius values by this gives centimeters. "
      "If 0, use atmosphere-file factor."},
 
     /* Atmosphere options:                                                  */
