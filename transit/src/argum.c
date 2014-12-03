@@ -187,11 +187,11 @@ processparameters(int argc,            /* Number of command-line args  */
      "INPUT/OUTPUT OPTIONS:"},
     {"output",     'o',            required_argument, "-",  "outfile",
      "Change output file name, a dash (-) directs to standard output."},
-    {"atm",        CLA_ATMOSPHERE, required_argument, "-",  "atmfile",
+    {"atm",        CLA_ATMOSPHERE, required_argument, "NULL",  "atmfile",
      "File containing atmospheric info (Radius, pressure, temperature). A dash"
      " (-) indicates alternative input."},
-    {"linedb",     CLA_LINEDB,     required_argument, "./res/lineread.tli",
-     "linedb", "File containing line information (TLI format, as given by"
+    {"linedb",     CLA_LINEDB,     required_argument, "NULL",
+     "linedb", "File containing line information (TLI format, as given by "
                "'lineread'."},
     {"outtoomuch", CLA_OUTTOOMUCH, required_argument, NULL, "filename",
      "Ouputs depth where toomuch optical depth has been attained as a function"
@@ -219,7 +219,7 @@ processparameters(int argc,            /* Number of command-line args  */
 
     /* Atmosphere options:                                                  */
     {NULL,                0,            HELPTITLE,         NULL, NULL,
-     "ATMPOSPHERE OPTIONS:"},
+     "ATMOSPHERE OPTIONS:"},
     {"numberabund",      CLA_NUMBERQ,  no_argument,       NULL, NULL,
      "Boolean: 0 if the abundances are by number, 1 if by mass."},
     {"allowq",            CLA_ALLOWQ,   required_argument, "0.00001", "value",
@@ -233,16 +233,16 @@ processparameters(int argc,            /* Number of command-line args  */
 
     /* Wavelength options:                                                  */
     {NULL,         0,             HELPTITLE,         NULL,       NULL,
-     "WAVELENGTH OPTIONS (all in fct units):"},
-    {"wllow",     CLA_WAVLOW,    required_argument, "0",        "wavel",
+     "WAVELENGTH OPTIONS (in fct units):"},
+    {"wllow",     CLA_WAVLOW,    required_argument, NULL,        "wavel",
      "Lower wavelength. 0 if you want to use line data minimum."},
-    {"wlhigh",    CLA_WAVHIGH,   required_argument, "0",        "wavel",
+    {"wlhigh",    CLA_WAVHIGH,   required_argument, NULL,        "wavel",
      "Upper wavelength. 0 if you want to use line data maximum."},
     {"wldelt",    CLA_WAVDELT,   required_argument, "0.00002",
      "spacing",  "Wavelength spacing. It cannot be 0 or less."},
     {"wlosamp",   CLA_WAVOSAMP,  required_argument, "100",      "integer",
      "Wavelength oversampling. It cannot be 0 or less."},
-    {"wlfct",     CLA_WAVFCT,    required_argument, "1",        "factor",
+    {"wlfct",     CLA_WAVFCT,    required_argument, "1e-4",      "factor",
      "Wavelength factor. Multiplicating wavelength values by this gives "
      "centimeters. If 0 or 1 then use centimeters."},
     {"wlmarg",    CLA_WAVMARGIN, required_argument, "0.00000", "boundary",
@@ -251,19 +251,17 @@ processparameters(int argc,            /* Number of command-line args  */
 
     /* Wavenumber options:                    */
     {NULL,         0,              HELPTITLE,         NULL, NULL,
-     "WAVENUMBER OPTIONS (all in cm-1):"},
-    //{"wavenumber", 'n',            no_argument,       NULL, NULL,  
-    // "Interactively input wavenumber parameters."},
-    {"wnlow",     CLA_WAVNLOW,    required_argument, "0",  "waven",
+     "WAVENUMBER OPTIONS (in fct units):"},
+    {"wnlow",     CLA_WAVNLOW,    required_argument, NULL,  "waven",
      "Lower wavenumber. 0 if you want to use equivalent of the wavelength "
      "maximum."},
-    {"wnhigh",    CLA_WAVNHIGH,   required_argument, "0",  "waven",
+    {"wnhigh",    CLA_WAVNHIGH,   required_argument, NULL,  "waven",
      "Upper wavenumber. 0 if you want to use equivalent of the wavelength "
      "minimum."},
     {"wndelt",    CLA_WAVNDELT,   required_argument, "0",  "spacing",
      "Wavenumber spacing. 0 if you want to have the same number of points "
      "as in the wavelength sampling."},
-    {"wnosamp",   CLA_WAVNOSAMP,  required_argument, "0",  "integer",
+    {"wnosamp",   CLA_WAVNOSAMP,  required_argument, "2160",  "integer",
      "Wavenumber oversampling. 0 if you want the same value as for the "
      "wavelengths."},
     {"wnfct",     CLA_WNFCT,      required_argument, "0",  "factor",
@@ -280,7 +278,7 @@ processparameters(int argc,            /* Number of command-line args  */
      "EXTINCTION CALCULATION OPTIONS:"},
     {"finebin",    'f',             required_argument, "5",     "integer",
      "Number of fine-bins to calculate the Voigt function."},
-    {"nwidth",     'a',             required_argument, "50",    "number",
+    {"nwidth",     'a',             required_argument, "20",    "number",
      "Number of the max-widths (the greater of Voigt or Doppler widths) that "
      "need to be contained in a calculated profile."},
     {"maxratio",   'u',             required_argument, "0.001", "uncert",
@@ -336,7 +334,7 @@ processparameters(int argc,            /* Number of command-line args  */
      "RESULTING RAY OPTIONS:"},
     {"solution",  's',          required_argument, "Slant Path", "sol_name",
      "Name of the kind of output solution ('slant path'is currently the only "
-     "availabale alternative)."},
+     "available alternative)."},
     {"toomuch",   CLA_TOOMUCH,  required_argument, "20", "optdepth",
      "If optical depth for a particular path is larger than optdepth, then do "
      "not proceed to lower radius."},
@@ -526,6 +524,7 @@ processparameters(int argc,            /* Number of command-line args  */
       hints->ot = atoi(optarg)-1;
       break;
     /* Interactive radius, wavelength, and wavenumber inputs: */
+    /* FINDME: Remove this block                                            */
     case 'r':
       samp = &hints->rads;
       fprintpad(stderr, 1, "In units of planetary radius ...\n");
@@ -537,6 +536,7 @@ processparameters(int argc,            /* Number of command-line args  */
         fprintpad(stderr, 1, "In nanometers ...\n");
         strcpy(name, "wavelength");
       }
+    /* FINDME: Remove this block                                            */
     case 'n':
       if(rn=='n'){
         samp = &hints->wns;

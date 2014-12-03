@@ -93,7 +93,7 @@ def parseargs():
                            formatter_class=argparse.RawDescriptionHelpFormatter)
   # Add config file option:
   cparser.add_argument("-c", "--config_file",
-                       help="Specify config file", metavar="FILE")
+                       help="Configuration filename (string).", metavar="FILE")
   # remaining_argv contains all other command-line-arguments:
   args, remaining_argv = cparser.parse_known_args()
 
@@ -121,35 +121,36 @@ def parseargs():
 
   # General Options:
   parser.add_argument("-v", "--verbose-level", action="store",
-                       help="Verbosity level (integer) [default: %(default)s]",
+                       help="Verbosity level (integer) [default: %(default)s].",
                        dest="verb", type=int, default=2)
   parser.add_argument("-q", "--quiet",         action="store_false",
                        help="Set verbosity level to 0.",
                        dest="verb")
   # Database Options:
   group = parser.add_argument_group("Database Options")
-  group.add_argument("-o", "--output",
-                     action  = "store",
-                     help    = "Output filename [default: '%(default)s']",
-                     dest    = "output",
-                     default = "output.tli")
+  group.add_argument("-o", "--output",         action  = "store",
+                     help    = "Output filename (string) [default: "
+                               "'%(default)s'].",
+                     dest    = "output",       default = "output.tli")
   group.add_argument("-d", "--database",       action="append",
-                     help="Database filename",
+                     help="Database filename (string).",
                      dest="db_list")
   group.add_argument("-p", "--partition",      action="append",
-                     help="Auxiliary partition function filename",
+                     help="Auxiliary partition function filename (string).",
                      dest="part_list")
   group.add_argument("-t", "--dbtype",         action="append",
-                     help="Database type, select: [pands, hit]",
+                     help="Database type (string). Select from: "
+                          "[ps, hit, ts].",
                      dest="dbtype")
   # Wavelength Options:
   group = parser.add_argument_group("Wavelength Options")
-  group.add_argument("-i", "--wav-init",       action="store",
-                     help="Initial wavelength (microns) [default: %(default)s]",
+  group.add_argument("-i", "--wl-init",       action="store",
+                     help="Initial wavelength (microns) [default: "
+                          "%(default)s].",
                      dest="iwav", type=float, default=1.0)
-  group.add_argument("-f", "--wav-final",      action="store",
-                     help="Final wavelength (microns) [default: %(default)s]",
-                     dest="fwav", type=float, default=1.1)
+  group.add_argument("-f", "--wl-final",      action="store",
+                     help="Final wavelength (microns) [default: %(default)s].",
+                     dest="fwav", type=float, default=2.0)
   parser.set_defaults(**defaults)
   args = parser.parse_args(remaining_argv)
 
