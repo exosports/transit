@@ -435,8 +435,8 @@ printtoomuch(char *file,           /* Filename to save the info */
 
 
 /* \fcnfh
-   Print (to file or stdout) the optical depth at an specified radius
-   (asked interactively)                                                */
+  Print (to file or stdout) the optical depth at an specified radius
+  (asked interactively).                                                    */
 void
 printtau(struct transit *tr){
   int rn;
@@ -450,14 +450,14 @@ printtau(struct transit *tr){
   transitcheckcalled(tr->pi, "printtau", 1, "tau", TRPI_TAU);
   tr->ot = tr->ds.th->ot;
 
-  /* Open file if it was specified: */
+  /* Open file if it was specified:                                         */
   if(tr->f_out && tr->f_out[0] != '-')
     out = fopen(tr->f_out, "w");
   if(!out)
-    transiterror(TERR_WARNING,
-                 "Cannot open '%s' for writing optical depth.\n",
-                 out==stdout?"STDOUT":tr->f_out);
+    transiterror(TERR_WARNING, "Cannot open '%s' for writing optical depth.\n",
+                               out==stdout?"STDOUT":tr->f_out);
 
+  /* FINDME: This makes no sense.                                           */
   if(tr->ot < 0){
     rad = askforposl("Radius at which you want to print the optical "
                      "depth (%li - %li): ", 1, rads->n) - 1;
@@ -467,23 +467,20 @@ printtau(struct transit *tr){
     }
   }
   else
-    rad=tr->ot;
+    rad = tr->ot;
 
-  transitprint(1, verblevel,
-               "\nPrinting in '%s'.\n"
-               "Optical depth for radius %li (at %g cm)\n",
-               tr->f_out?tr->f_out:"standard output",
-               rad+1, rads->fct*rads->v[rad]);
+  transitprint(1, verblevel, "\nPrinting in '%s'.\nOptical depth for radius "
+               "%li (at %g cm)\n", tr->f_out? tr->f_out:"standard output",
+                rad+1, rads->fct*rads->v[rad]);
 
-  transitprint(2, verblevel,
-               "Optical depth calculated up to %g cm-1.\n", toomuch);
+  transitprint(2, verblevel, "Optical depth calculated up to %g cm-1.\n",
+                             toomuch);
 
-  /* Print the wavenumber, wavelength, and optical depth: */
-  fprintf(out, "#Wavenumber [cm-1]\tWavelength [nm]\tOptical depth [cm-1]\n");
-  for(rn=0; rn<tr->wns.n; rn++)
-    fprintf(out, "%12.6f%14.6f%17.7g\n", tr->wns.fct*tr->wns.v[rn],
-                 1/tr->wavs.fct/tr->wns.v[rn]/tr->wns.fct,
-                 rad>last[rn]?toomuch:t[rn][rad]);
+  /* Print the wavelength, and optical depth:                               */
+  fprintf(out, "#Wavelength [um]      Optical depth [cm-1]\n");
+  for(rn=0; rn < tr->wns.n; rn++)
+    fprintf(out, "%14.6f%17.7g\n", 1e4/(tr->wns.v[rn] * tr->wns.fct),
+                                   rad > last[rn]? toomuch:t[rn][rad]);
 
   exit(EXIT_SUCCESS);
 }

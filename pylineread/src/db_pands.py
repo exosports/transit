@@ -92,7 +92,7 @@ class pands(dbdriver):
     # Table of logarithms: 
     self.tablog = 10.0**(0.001*(np.arange(32769) - 16384))
     self.recsize     = 8 # Record size
-    self.pf_ignore   = 5 # Lines to ignore at the begining of PF file.
+    self.pf_ignore   = 6 # Lines to ignore at the begining of PF file.
     self.pf_isonames = 3 # PF line with isotopes names
 
 
