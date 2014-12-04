@@ -167,19 +167,20 @@ processparameters(int argc,            /* Number of command-line args  */
   struct optdocs var_docs[]={
     /* General options:                       */
     {NULL,       0,   HELPTITLE,    NULL, NULL,
-     "GENERAL OPTIONS:"},
+     "General Arguments:"},
     {"version",  'V', no_argument,  NULL, NULL,
-     "Prints version number and exit."},
+     "Display Transit's version number."},
     {"help",     'h', no_argument,  NULL, NULL,
-     "Prints list of possible parameters."},
-    {"defaults", 'd', no_argument,  NULL, NULL,
-     "Prints default values of the different variable."},
+     "Display the list of command-line arguments."},
+    /* FINDME: defaults not implemented                                     */
+    //{"defaults", 'd', no_argument,  NULL, NULL,
+    // "Prints default values of the different variable."},
     {"quiet",    'q', no_argument,  NULL, NULL,
-     "Decrease the verbose level to the minimum."},
-    {"verb",     'v', required_argument,  "2", "Integer",
-     "Set the verbosity level."},
-    {"paramf",   'p', ADDPARAMFILE, NULL, "filename",
-     "Use filename to read parameters in addition to default file(s):"
+     "Set the verbosity level to the minimum."},
+    {"verb",     'v', required_argument,  "2", "verb",
+     "Set the verbosity level (integer) to <verb>."},
+    {"config_file",   'c', ADDPARAMFILE, NULL, "file",
+     "Read command-line arguments from <file>."
      " '" DOTCFGFILENM PREPEXTRACFGFILES"'."},
 
     /* Input and output options:              */
@@ -219,8 +220,8 @@ processparameters(int argc,            /* Number of command-line args  */
     /* Atmosphere options:                                                  */
     {NULL,                0,            HELPTITLE,         NULL, NULL,
      "ATMOSPHERE OPTIONS:"},
-    {"numberabund",      CLA_NUMBERQ,  no_argument,       NULL, NULL,
-     "Boolean: 0 if the abundances are by number, 1 if by mass."},
+    //{"numberabund",      CLA_NUMBERQ,  no_argument,       NULL, NULL,
+    // "Boolean: 0 if the abundances are by number, 1 if by mass."},
     {"allowq",            CLA_ALLOWQ,   required_argument, "0.00001", "value",
      "Maximum allowed cumulative-abundance departure from 1.0."},
     {"refpress",          CLA_RPRESS,   required_argument, NULL, NULL,
@@ -237,16 +238,16 @@ processparameters(int argc,            /* Number of command-line args  */
      "Lower wavelength. 0 if you want to use line data minimum."},
     {"wlhigh",    CLA_WAVHIGH,   required_argument, NULL,        "wavel",
      "Upper wavelength. 0 if you want to use line data maximum."},
-    {"wldelt",    CLA_WAVDELT,   required_argument, "0.00002",
-     "spacing",  "Wavelength spacing. It cannot be 0 or less."},
-    {"wlosamp",   CLA_WAVOSAMP,  required_argument, "100",      "integer",
-     "Wavelength oversampling. It cannot be 0 or less."},
+    //{"wldelt",    CLA_WAVDELT,   required_argument, "0.00002",
+    // "spacing",  "Wavelength spacing. It cannot be 0 or less."},
+    //{"wlosamp",   CLA_WAVOSAMP,  required_argument, "100",      "integer",
+    // "Wavelength oversampling. It cannot be 0 or less."},
     {"wlfct",     CLA_WAVFCT,    required_argument, "1e-4",      "factor",
      "Wavelength factor. Multiplicating wavelength values by this gives "
      "centimeters. If 0 or 1 then use centimeters."},
-    {"wlmarg",    CLA_WAVMARGIN, required_argument, "0.00000", "boundary",
-     "Not trustable range at boundary of line databases. Also transitions "
-     "this much away from the requested range will be considered."},
+    //{"wlmarg",    CLA_WAVMARGIN, required_argument, "0.00000", "boundary",
+    // "Not trustable range at boundary of line databases. Also transitions "
+    // "this much away from the requested range will be considered."},
 
     /* Wavenumber options:                    */
     {NULL,         0,              HELPTITLE,         NULL, NULL,
@@ -267,10 +268,10 @@ processparameters(int argc,            /* Number of command-line args  */
      "Output wavenumber factor. Multiplicating wavenumber values by this "
      "gives centimeters. If 0 then use wavelength's value. This only applies "
      "to output, internally wavenumbers will always be in cm-1."},
-    {"wnmarg",    CLA_WAVNMARGIN, required_argument, "0",  "boundary",
-     "Not trustable range in cm-1 at boundaries. Transitions this much away "
-     "from the requested range will be considered. Use the maximum of the "
-     "wavelength boundaries if this value is 0."},
+    //{"wnmarg",    CLA_WAVNMARGIN, required_argument, "0",  "boundary",
+    // "Not trustable range in cm-1 at boundaries. Transitions this much away "
+    // "from the requested range will be considered. Use the maximum of the "
+    // "wavelength boundaries if this value is 0."},
 
     /* Extinction calculation options:        */
     {NULL,         0,               HELPTITLE,         NULL,    NULL,
@@ -280,17 +281,17 @@ processparameters(int argc,            /* Number of command-line args  */
     {"nwidth",     'a',             required_argument, "20",    "number",
      "Number of the max-widths (the greater of Voigt or Doppler widths) that "
      "need to be contained in a calculated profile."},
-    {"maxratio",   'u',             required_argument, "0.001", "uncert",
-     "Maximum allowed uncertainty in doppler width before recalculating "
-     "profile."},
+    //{"maxratio",   'u',             required_argument, "0.001", "uncert",
+    // "Maximum allowed uncertainty in doppler width before recalculating "
+    // "profile."},
     {"periso",    CLA_EXTPERISO,   no_argument,       NULL,    NULL,
      "Calculate extinction per isotope (allows to display the contribution "
      "from different isotopes, but consumes more memory."},
-    {"blowex",     CLA_BLOWEX,      required_argument, "1",     "factor",
-     "Blow extinction by factor before computing tau. No physical"
-     "significance (use only for debugging)."},
-    {"minelow",    CLA_MINELOW,     required_argument, "0",     "low-energy",
-     "Lowest limit of low energy to consider (in cm-1)."},
+    //{"blowex",     CLA_BLOWEX,      required_argument, "1",     "factor",
+    // "Blow extinction by factor before computing tau. No physical"
+    // "significance (use only for debugging)."},
+    //{"minelow",    CLA_MINELOW,     required_argument, "0",     "low-energy",
+    // "Lowest limit of low energy to consider (in cm-1)."},
     {"ethreshold", CLA_ETHRESH,   required_argument, "1e-8",    "ethreshold",
      "Minimum extinction-coefficient ratio (w.r.t. maximum in a layer) to "
      "consider in the calculation."},
