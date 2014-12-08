@@ -276,7 +276,7 @@ processparameters(int argc,            /* Number of command-line args  */
     /* Extinction calculation options:        */
     {NULL,         0,               HELPTITLE,         NULL,    NULL,
      "EXTINCTION CALCULATION OPTIONS:"},
-    {"finebin",    'f',             required_argument, "5",     "integer",
+    {"finebin",    'f',             required_argument, "1",     "integer",
      "Number of fine-bins to calculate the Voigt function."},
     {"nwidth",     'a',             required_argument, "20",    "number",
      "Number of the max-widths (the greater of Voigt or Doppler widths) that "
