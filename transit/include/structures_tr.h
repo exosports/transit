@@ -385,6 +385,7 @@ struct transithint{
   int verbnoise;        /* Noisiest verbose level in a non debugging run     */ 
   _Bool mass;           /* Whether the abundances read by getatm are by
                            mass or number                                    */
+  _Bool opabreak;       /* Break after opacity calculation flag              */
   long fl;              /* flags                                             */
   _Bool userefraction;  /* Whether to use variable refraction                */
   double p0, r0;        /* Pressure and radius reference level               */
@@ -442,7 +443,7 @@ struct transit{
       wavs, wns, temp; /* wavelength, wavenumber, and temperature            */
   prop_atm atm;     /* Sampled atmospheric data                              */
   short tauiso;     /* Isotope from which to calculate the optical depth     */
-
+  _Bool opabreak;    /* Break after opacity calculation                      */
   int ndivs,         /* Number of exact divisors of the oversampling factor  */
      *odivs;         /* Exact divisors of the oversampling factor            */
   int voigtfine;     /* Number of fine-bins of the Voigt function            */
