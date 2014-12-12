@@ -104,46 +104,34 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_RADLOW,
     CLA_RADHIGH,
     CLA_RADDELT,
+    CLA_RADFCT,
     CLA_WAVLOW,
     CLA_WAVHIGH,
-    CLA_WAVDELT,
-    CLA_WAVOSAMP,
-    CLA_WAVMARGIN,
+    CLA_WAVFCT,
     CLA_WAVNLOW,
     CLA_WAVNHIGH,
     CLA_WAVNDELT,
     CLA_WAVNOSAMP,
-    CLA_WAVNMARGIN,
-    CLA_ONEPT,
-    CLA_ONEABUND,
-    CLA_ONEINT,
-    CLA_ONEEXTRA,
-    CLA_NUMBERQ,
+    CLA_WNFCT,
     CLA_ALLOWQ,
     CLA_EXTPERISO,
-    CLA_NOEXTPERISO,
     CLA_GORBPAR,
     CLA_GORBPARFCT,
-    CLA_GTIME,
-    CLA_GTIMEFCT,
-    CLA_GMASSRAD,
-    CLA_GMASSRADFCT,
+    //CLA_GTIME,        /* FINDME: Ask Pato what was the purpose of these   */
+    //CLA_GTIMEFCT,
+    //CLA_GMASSRAD,
+    //CLA_GMASSRADFCT,
     CLA_OUTTAU,
     CLA_TOOMUCH,
     CLA_OUTTOOMUCH,
-    CLA_RADFCT,
-    CLA_WAVFCT,
-    CLA_WNFCT,
     CLA_OUTSAMPLE,
     CLA_TAULEVEL,
     CLA_MODLEVEL,
-    CLA_BLOWEX,
     CLA_TAUISO,
-    CLA_MINELOW,
     CLA_ETHRESH,
     CLA_CLOUDRAD,
-    CLA_CLOUDFCT,
-    CLA_CLOUDE,
+    CLA_CLOUDFCT,   /* FINDME: Delete?              */
+    CLA_CLOUDE,     /* FINDME: Stack with cloudrad? */
     CLA_TRANSPARENT,
     CLA_DETEXT,
     CLA_DETCIA,
@@ -161,6 +149,7 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_RPRESS,
     CLA_RRADIUS,
     CLA_GSURF,
+    CLA_OPABREAK,
   };
 
   /* Generate the command-line option parser: */
@@ -220,8 +209,6 @@ processparameters(int argc,            /* Number of command-line args  */
     /* Atmosphere options:                                                  */
     {NULL,                0,            HELPTITLE,         NULL, NULL,
      "ATMOSPHERE OPTIONS:"},
-    //{"numberabund",      CLA_NUMBERQ,  no_argument,       NULL, NULL,
-    // "Boolean: 0 if the abundances are by number, 1 if by mass."},
     {"allowq",            CLA_ALLOWQ,   required_argument, "0.00001", "value",
      "Maximum allowed cumulative-abundance departure from 1.0."},
     {"refpress",          CLA_RPRESS,   required_argument, NULL, NULL,
@@ -238,16 +225,9 @@ processparameters(int argc,            /* Number of command-line args  */
      "Lower wavelength. 0 if you want to use line data minimum."},
     {"wlhigh",    CLA_WAVHIGH,   required_argument, NULL,        "wavel",
      "Upper wavelength. 0 if you want to use line data maximum."},
-    //{"wldelt",    CLA_WAVDELT,   required_argument, "0.00002",
-    // "spacing",  "Wavelength spacing. It cannot be 0 or less."},
-    //{"wlosamp",   CLA_WAVOSAMP,  required_argument, "100",      "integer",
-    // "Wavelength oversampling. It cannot be 0 or less."},
     {"wlfct",     CLA_WAVFCT,    required_argument, "1e-4",      "factor",
      "Wavelength factor. Multiplicating wavelength values by this gives "
      "centimeters. If 0 or 1 then use centimeters."},
-    //{"wlmarg",    CLA_WAVMARGIN, required_argument, "0.00000", "boundary",
-    // "Not trustable range at boundary of line databases. Also transitions "
-    // "this much away from the requested range will be considered."},
 
     /* Wavenumber options:                    */
     {NULL,         0,              HELPTITLE,         NULL, NULL,
@@ -268,10 +248,6 @@ processparameters(int argc,            /* Number of command-line args  */
      "Output wavenumber factor. Multiplicating wavenumber values by this "
      "gives centimeters. If 0 then use wavelength's value. This only applies "
      "to output, internally wavenumbers will always be in cm-1."},
-    //{"wnmarg",    CLA_WAVNMARGIN, required_argument, "0",  "boundary",
-    // "Not trustable range in cm-1 at boundaries. Transitions this much away "
-    // "from the requested range will be considered. Use the maximum of the "
-    // "wavelength boundaries if this value is 0."},
 
     /* Extinction calculation options:        */
     {NULL,         0,               HELPTITLE,         NULL,    NULL,
@@ -281,17 +257,9 @@ processparameters(int argc,            /* Number of command-line args  */
     {"nwidth",     'a',             required_argument, "20",    "number",
      "Number of the max-widths (the greater of Voigt or Doppler widths) that "
      "need to be contained in a calculated profile."},
-    //{"maxratio",   'u',             required_argument, "0.001", "uncert",
-    // "Maximum allowed uncertainty in doppler width before recalculating "
-    // "profile."},
     {"periso",    CLA_EXTPERISO,   no_argument,       NULL,    NULL,
      "Calculate extinction per isotope (allows to display the contribution "
      "from different isotopes, but consumes more memory."},
-    //{"blowex",     CLA_BLOWEX,      required_argument, "1",     "factor",
-    // "Blow extinction by factor before computing tau. No physical"
-    // "significance (use only for debugging)."},
-    //{"minelow",    CLA_MINELOW,     required_argument, "0",     "low-energy",
-    // "Lowest limit of low energy to consider (in cm-1)."},
     {"ethreshold", CLA_ETHRESH,   required_argument, "1e-8",    "ethreshold",
      "Minimum extinction-coefficient ratio (w.r.t. maximum in a layer) to "
      "consider in the calculation."},
@@ -328,6 +296,8 @@ processparameters(int argc,            /* Number of command-line args  */
      "Upper temp"},
     {"tempdelt",  CLA_TEMPDELT,   required_argument,  "100.0",  "spacing",
      "Temperature sample spacing (in kelvin)."},
+    {"justOpacity",      CLA_OPABREAK,  no_argument, NULL, NULL,
+     "If set, End execution after the opacity-grid calculation."},
 
     /* Resulting ray options:                 */
     {NULL,        0,            HELPTITLE,         NULL, NULL,
@@ -341,7 +311,7 @@ processparameters(int argc,            /* Number of command-line args  */
     {"tauiso",    CLA_TAUISO,   required_argument, "0",  "isoid",
      "Compute tau only for isotope indexed in isoid (index which can actually "
      "be different from what you expect)."},
-    /* FINDME: Explain me */
+    /* FINDME: Explain me tauiso */
     {"outtau",    CLA_OUTTAU,   required_argument, "0",  "#radius",
      "Output is optical depth instead of modulation. It will be asked which "
      "radius to plot."},
@@ -401,11 +371,8 @@ processparameters(int argc,            /* Number of command-line args  */
 
   int rn,  /* optdocs' short option */ 
       i;   /* Auxilliary index      */
-  prop_samp *samp = NULL;
-  char name[20], rc, *lp; /* FINDME */
+  char name[20];
   /* For interactive rad, wavelength, and wavenumber sample inputs: */
-  char *sampv[] = {"Initial", "Final", "Spacing", "Oversampling integer for"};
-  double rf; /* FINDME */
 
   /* Preset names for detailed output in transithint: */
   struct detailfld *det = &hints->det.tau;
@@ -470,9 +437,6 @@ processparameters(int argc,            /* Number of command-line args  */
                      "wavenumbers\n", det->name);
       break;
 
-    case CLA_MINELOW:    /* Lowest limit of low energy */
-      hints->minelow = atof(optarg);
-      break;
     case CLA_ETHRESH:    /* Minimum extiction-coefficient threshold */
       hints->ethresh = atof(optarg);
       break;
@@ -521,197 +485,57 @@ processparameters(int argc,            /* Number of command-line args  */
     case CLA_OUTTAU:
       if(atoi(optarg))
         hints->fl |= TRU_OUTTAU;
-      hints->ot = atoi(optarg)-1;
+      hints->ot = atoi(optarg) - 1;
       break;
     /* Interactive radius, wavelength, and wavenumber inputs: */
-    /* FINDME: Remove this block                                            */
-    case 'r':
-      samp = &hints->rads;
-      fprintpad(stderr, 1, "In units of planetary radius ...\n");
-      strcpy(name, "radius");
-    case 'w':
-      if(rn=='w'){
-        samp = &hints->wavs;
-        /* FINDME: should it be CGS units? */
-        fprintpad(stderr, 1, "In nanometers ...\n");
-        strcpy(name, "wavelength");
-      }
-    /* FINDME: Remove this block                                            */
-    case 'n':
-      if(rn=='n'){
-        samp = &hints->wns;
-        fprintpad(stderr, 1, "In cm-1 ...\n");
-        strcpy(name, "wavenumber");
-      }
-      /* Ask for initial, final, spacing, and oversampling: */
-      for(i=0; i<4; i++){
-        if(i==3 && samp==&hints->rads) /* Skip radius oversampling */
-          break;
-        while(rn){
-          /* Read from standard input (screen): */
-          fprintf(stderr, "- %s %s: ", sampv[i], name);
-          /* FINDME: This will probably break */
-          samp->i = readd(stdin, &rc);
-          if(!rc)
-            break;
-          switch(rc){
-            /*
-              case '?':
-              fprintpad(stderr,1,"%s\n",var_docs[longidx].doc);
-            */
-          default:
-            fprintf(stderr, "Try again.\n");
-          }
-        }
-        rn = 1;
-        /*        longidx++;*/
-      }
-      break;
 
     case CLA_ALLOWQ:
       hints->allowrq = atof(optarg);
       break;
-    /* FINDME: This is not even an option! */
-    case CLA_NUMBERQ: /* Bool: abundances by number (0), or by mass (1) */
-      hints->mass = 0;
-      break;
-    case CLA_ONEPT: /* Single P-T calculation: */
-      /* getnd defined in /pu/src/iomisc.c */
-      if((rn=getnd(3, ',', optarg, &hints->onept.p, &hints->onept.t, &rf))!=3){
-        if(rn>0)
-          transiterror(TERR_SERIOUS,
-                       "At least one of the values given for the floats "
-                       "pressure (%g), temperature (%g), or integer number of "
-                       "extra isotopes (%g), was not a correct value.\n",
-                       hints->onept.p, hints->onept.t, rf);
-        else
-          transiterror(TERR_SERIOUS,
-                       "There were %i comma-separated fields instead of 3 \n"
-                       "for '--onept' option", -rn);
-      }
-      hints->onept.ne = (int)rf; /* Number of extra isotopes: */
-      if(rf != hints->onept.ne)  /* rf is not an integer      */
-        transiterror(TERR_SERIOUS,
-                     "A non-integer (%g) number of extra isotopes was given "
-                     "with the option --onept\n", rf);
-      hints->onept.one = 1;
+    case CLA_OPABREAK: /* Bool: End after opacity calculation               */
+      hints->opabreak = 1;
       break;
 
-    case CLA_ONEABUND:
-      /* Get number and values of input abundances: */
-      if((hints->onept.nq = getad(0, ',', optarg, &hints->onept.q))<1)
-        transiterror(TERR_SERIOUS,
-                     "None of the given isotope abundances were "
-                     "accepted %s\n", optarg);
-      transitprint(2, verblevel, "%i abundance isotopes were correctly "
-                                 "given: %s\n", hints->onept.nq, optarg);
-      break;
-
-    case CLA_ONEEXTRA:
-      /* Count instances of ',' and replace with '\0': */
-      rn = ncharchg(optarg, ',', '\0')+1;
-      if(hints->onept.n){
-        free(hints->onept.n);
-        free(hints->onept.n[0]);
-        free(hints->onept.m);
-      }
-      /* Allocate pointer to array of extra isotopes names and masses: */
-      hints->onept.n    = (char     **)calloc(rn,            sizeof(char *));
-      /* FINDME: Where maxeisoname comes from? */
-      hints->onept.n[0] = (char      *)calloc(rn*maxeisoname,sizeof(char));
-      hints->onept.m    = (PREC_ZREC *)calloc(rn,            sizeof(PREC_ZREC));
-      for(i=0; i<rn; i++){
-        /* Set pointer at the correct position to write the name: */
-        hints->onept.n[i] = hints->onept.n[0] + i*maxeisoname;
-        /* Get mass, set pointer lp right after:                  */
-        hints->onept.m[i] = strtod(optarg, &lp);
-        if(lp==optarg)
-          transiterror(TERR_SERIOUS,
-                       "Bad format in the field #%i of --oneextra. It doesn't "
-                       "have a valid value for mass. The field should be "
-                       "<mass1><name1> with only an optional dash betweeen "
-                       "the mass and name:\n %s\n", i+1, optarg);
-        /* If there is a dash, ignore it:   */
-        if(*lp=='-') lp++;
-        /* Get name:                        */
-        strncpy(hints->onept.n[i], lp, maxeisoname);
-        optarg = lp;
-        /* Set last name character to '\0': */
-        hints->onept.n[i][maxeisoname-1] = '\0';
-        /* FINDME: Explain this while: */
-        while(*optarg++);
-        if(lp==optarg)
-          transiterror(TERR_SERIOUS,
-                       "Bad format in the field #%i of --oneextra. It doesn't "
-                       "have a valid isotope name. The field should be "
-                       "<mass1><name1> with only an optional dash betweeen "
-                       "the mass and name:\n %s\n", i+1, optarg);
-      }
-      /* Number of extra mass-name isotope pairs: */
-      hints->onept.nm = rn;
-      break;
-
-    case CLA_ONEINT:
-      /* Set flags ... FINDME: try to understand */
-      hints->fl = (hints->fl & ~TRU_ATM1PBITS) | TRU_ATMASK1P;
-      break;
-    /* Radius parameters:             */
-    case CLA_RADLOW:  /* Lower limit  */
+    /* Radius parameters:                                                   */
+    case CLA_RADLOW:  /* Lower limit                                        */
       hints->rads.i = atof(optarg);
       break;
-    case CLA_RADHIGH: /* Higher limit */
+    case CLA_RADHIGH: /* Higher limit                                       */
       hints->rads.f = atof(optarg);
       break;
-    case CLA_RADDELT: /* Spacing      */
+    case CLA_RADDELT: /* Spacing                                            */
       hints->rads.d = atof(optarg);
       break;
-    case CLA_RADFCT: /* Units factor  */
+    case CLA_RADFCT: /* Units factor                                        */
       hints->rads.fct = atof(optarg);
       break;
-    /* Wavelength parameters:                        */
-    case CLA_WAVLOW:    /* Lower limit               */
+
+    /* Wavelength parameters:                                               */
+    case CLA_WAVLOW:    /* Lower limit                                      */
       hints->wavs.i = atof(optarg);
       break;
-    case CLA_WAVHIGH:   /* Higher limit              */
+    case CLA_WAVHIGH:   /* Higher limit                                     */
       hints->wavs.f = atof(optarg);
       break;
-    case CLA_WAVDELT:  /* Spacing                    */
-      hints->wavs.d = atof(optarg);
-      if(hints->wavs.d<=0)
-        transiterror(TERR_SERIOUS,
-                     "Wavelength spacing has to be greater than zero, "
-                     "instead of %g.\n", hints->wavs.d);
-      hints->wavs.n = 0;
-      hints->wavs.v = NULL;
-      break;
-    case CLA_WAVFCT:    /* Units factor              */
+    case CLA_WAVFCT:    /* Units factor                                     */
       hints->wavs.fct = atof(optarg);
       break;
-    case CLA_WAVOSAMP:  /* Oversampling              */
-      hints->wavs.o = atof(optarg);
-      break;
-    case CLA_WAVMARGIN: /* Trustable margin at edges */
-      hints->margin = atof(optarg);
-      break;
-    /* Wavenumber parameters:                 */
-    case CLA_WAVNLOW:    /* Lower limit       */
+    /* Wavenumber parameters:                                               */
+    case CLA_WAVNLOW:    /* Lower limit                                     */
       hints->wns.i = atof(optarg);
       break;
-    case CLA_WAVNHIGH:   /* Higher limit      */
+    case CLA_WAVNHIGH:   /* Higher limit                                    */
       hints->wns.f = atof(optarg);
       break;
-    case CLA_WAVNDELT:   /* Spacing           */
+    case CLA_WAVNDELT:   /* Spacing                                         */
       hints->wns.d = atof(optarg);
       hints->wns.n = 0;
       hints->wns.v = NULL;
       break;
-    case CLA_WAVNOSAMP:  /* Oversampling      */
+    case CLA_WAVNOSAMP:  /* Oversampling                                    */
       hints->wns.o = atof(optarg);
       break;
-    case CLA_WAVNMARGIN: /* Wavenumber margin */
-      hints->wnm = atof(optarg);
-      break;
-    case CLA_WNFCT:      /* Units factor      */
+    case CLA_WNFCT:      /* Units factor                                    */
       hints->wns.fct = atof(optarg);
       break;
 
@@ -726,9 +550,6 @@ processparameters(int argc,            /* Number of command-line args  */
       hints->temp.d = atof(optarg);
       break;
 
-    case 'u':  /* Maximum accepted Doppler-width ratio         */
-      hints->maxratio_doppler = atof(optarg);
-      break;
     case 'f':  /* Number of fine-binning for Voigt calculation */
       hints->voigtfine = atoi(optarg);
       break;
@@ -771,12 +592,6 @@ processparameters(int argc,            /* Number of command-line args  */
       break;
     case CLA_EXTPERISO:   /* Calculate extinction per isotope     */
       hints->fl |= TRU_EXTINPERISO;
-      break;
-    case CLA_NOEXTPERISO: /* FINDME: Redundant, deprecate         */
-      hints->fl &= ~TRU_EXTINPERISO;
-      break;
-    case CLA_BLOWEX:      /* Multiplicating factor for extinction */
-      hints->blowex = atof(optarg);
       break;
 
     case CLA_STARRAD:     /* Stellar radius                       */
@@ -1044,6 +859,9 @@ acceptgenhints(struct transit *tr){
 
   /* Pass atmospheric flags into transit struct:                            */
   transitacceptflag(tr->fl, th->fl, TRU_ATMBITS); /* See transit.h          */
+
+  /* Pass flag to break after the opacity-grid calculation:                 */
+  tr->opabreak = th->opabreak;
 
   /* Set interpolation function flag:                                       */
   switch(tr->fl & TRU_SAMPBITS){
