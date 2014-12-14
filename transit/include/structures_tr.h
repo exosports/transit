@@ -437,7 +437,6 @@ struct transit{
   PREC_RES wnmi;    /* Amount of cm-1 not trusted at the beginning           */
   PREC_RES wnmf;    /* Amount of cm-1 not trusted at the end                 */
   long int angleIndex; /* Index of the current angle                         */
-  PREC_RES *Flux;   /* Flux for eclipse                                      */
   prop_samp rads, ips, /* Sampling properties of radius, impact parameter,   */
       owns,            /* oversampled wavenumber,                            */
       wavs, wns, temp; /* wavelength, wavenumber, and temperature            */
