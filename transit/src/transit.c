@@ -52,24 +52,23 @@ Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
 /* Revision        January 23rd, 2014 Jasmina Blecic
-                   implemented eclipse                                     */
+                   implemented eclipse                                      */
 /* Revision        March 19th,   2014 Jasmina Blecic
-                   implemented switch eclipse/transit                      */
+                   implemented switch eclipse/transit                       */
 /* Revision        April 26th,   2014 Jasmina Blecic
-                   implemented intensity grid and flux                     */
+                   implemented intensity grid and flux                      */
 
 /* TBD: calloc checks */
 
 #include <transit.h>
 
-/* \fcnfh                                                                  */
-int main(int argc,      /* Number of variables                             */
-         char **argv){  /* Variables                                       */
+/* \fcnfh                                                                   */
+int main(int argc,      /* Number of variables                              */
+         char **argv){  /* Variables                                        */
 
-  /* FINDME: What is s_lt?                                                 */
   /* Initialization of data structure's pointers. Note that s_lt is not
      assigned because the array that is going to point has not been
-     initialized yet.                                                      */
+     initialized yet.                                                       */
   struct transit transit;
   long itr=0;
   struct timeval tv;
@@ -78,20 +77,20 @@ int main(int argc,      /* Number of variables                             */
   memset(&transit, 0, sizeof(struct transit));
   verblevel=2;
 
-  /* Process the command line arguments:                                   */
+  /* Process the command line arguments:                                    */
   fw(processparameters, !=0, argc, argv, &transit);
   t0 = timecheck(verblevel, itr,  0, "processparameters", tv, t0);
 
-  /* Accept all general hints:                                             */
+  /* Accept all general hints:                                              */
   fw(acceptgenhints, !=0, &transit);
-  /* Presentation:                                                         */
+  /* Presentation:                                                          */
   printintro();
 
-  /* No program warnings if verblevel is 0 or 1:                           */
+  /* No program warnings if verblevel is 0 or 1:                            */
   if(verblevel<2)
     transit_nowarn = 1;
 
-  /* Make wavenumber binning:                                              */
+  /* Make wavenumber binning:                                               */
   fw(makewnsample0, <0, &transit);
   t0 = timecheck(verblevel, itr,  1, "makewnsample0", tv, t0);
   if(fw_status>0)
@@ -105,22 +104,20 @@ int main(int argc,      /* Number of variables                             */
   transitprint(10, verblevel, "Oversampled wavenumber [%li]: dwn=%.6f\n",
                               transit.owns.n, (transit.owns.d/transit.owns.o));
 
-  /* Read Atmosphere information:                                          */
+  /* Read Atmosphere information:                                           */
   fw(getatm, !=0, &transit);
   t0 = timecheck(verblevel, itr,  2, "getatm", tv, t0);
 
-  /* Read line info:                                                       */
+  /* Read line info:                                                        */
   fw(readlineinfo, !=0, &transit);
   t0 = timecheck(verblevel, itr,  3, "readlineinfo", tv, t0);
 
-  /* Make radius binning and interpolate data to new value:                */
+  /* Make radius binning and interpolate data to new value:                 */
   fw(makeradsample, <0, &transit);
   t0 = timecheck(verblevel, itr,  4, "makeradsample", tv, t0);
   if(fw_status>0)
-    transitprint(7, verblevel,
-                 "makeradsample() modified some of the hinted "
-                 "parameters according to returned flag: 0x%lx.\n",
-                 fw_status);
+    transitprint(7, verblevel, "makeradsample() modified some of the hinted "
+                               "parameters. Flag: 0x%lx.\n", fw_status);
 
   // // Compare atmopheric samplings:
   // // radius
@@ -155,23 +152,23 @@ int main(int argc,      /* Number of variables                             */
   // transitprint(1,2,"\n");
 
   // return 0;
-  /* Calculate opacity grid:                                               */
+  /* Calculate opacity grid:                                                */
   fw(opacity, <0, &transit);
   t0 = timecheck(verblevel, itr,  5, "opacity", tv, t0);
 
   if (transit.opabreak){
-    /* Free memory:                                                        */
+    /* FINDME: Free memory                                                  */
     return EXIT_SUCCESS;
   }
 
-  /* Compute sampling of impact parameter:                                 */
+  /* Compute sampling of impact parameter:                                  */
   fw(makeipsample, <0, &transit);
   t0 = timecheck(verblevel, itr,  6, "makeipsample", tv, t0);
   if (fw_status>0)
     transitprint(7, verblevel, "makeipsample() modified some of the hinted "
-                 "parameters according to returned flag: 0x%lx.\n", fw_status);
+                               "parameters. Flag: 0x%lx.\n", fw_status);
 
-  /* Print sampling info:                                                  */
+  /* Print sampling info:                                                   */
   fw(outsample, !=0, &transit);
   t0 = timecheck(verblevel, itr,  7, "outsample", tv, t0);
 
@@ -190,7 +187,7 @@ int main(int argc,      /* Number of variables                             */
   /* Ray solutions choice:                                               */
   RaySol path = transit.ds.th->path;
 
-  /* Calculates optical depth for eclipse                                */
+  /* Calculate optical depth for eclipse:                                */
   if(path == eclipse){
     transitprint(1,verblevel, "\nCalculating eclipse:\n");
 
