@@ -65,9 +65,6 @@ Thank you for using transit!
 
 /* Defines static variables                                                 */
 static PREC_RES *area_grid;
-static PREC_RES *sum_surfFlux;
-static PREC_RES *Flux;
-
 
 /* #########################################################
     CALCULATES OPTICAL DEPTH AT VARIOUS POINTS ON THE PLANET
@@ -672,65 +669,48 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
 
 /* DEF */
 int
-flux(struct transit *tr){  /* Transit structure                           */
-
-  /* Reads angles and number of angles from transithint structure          */
+flux(struct transit *tr){  /* Transit structure                             */
   struct transithint *trh=tr->ds.th;
-  PREC_RES *angles = trh->angles;         /* Angles                         */
-  long int an = trh->ann;                /* Number of angles               */
+  static struct outputray st_out;
+  tr->ds.out = &st_out;
+
+  /* Get angles and number of angles from transithint:                      */
+  PREC_RES *angles = trh->angles;     /* Angles                             */
+  long int an = trh->ann;             /* Number of angles                   */
 
   /* Intensity for all angles and all wn                                    */
   PREC_RES **intens_grid = tr->ds.intens->a; 
 
-  /* Declaring indexes:                                                     */
-  long int i;                             /* For counting angles           */
-  long int w;                             /* For counting wn               */
+  long int i, w;  /* for-loop indices                                       */
+  PREC_RES area,  /* Projected area                                         */
+           *out;  /* Output flux array (per wavenumber)                     */
 
-  /* Wavenumber sample                                                      */
-  prop_samp *wn  = &tr->wns;              
-  long int wnn = wn->n;                   /* Number of wavenumbers         */
+  prop_samp *wn  = &tr->wns; /* Wavenumber sample                           */
+  long int wnn = wn->n;      /* Number of wavenumbers                       */
 
-  /* Allocates area grid                                                    */
+  /* Allocate area grid and set its first and last value:                   */
   area_grid = (PREC_RES *)calloc(an+1, sizeof(PREC_RES));
-
-  /* Sets the first and the last member of the area grid:                   */
-  area_grid[0]  = 0.  * DEGREES;
-  area_grid[an] = 90. * DEGREES;
+  area_grid[ 0] =  0.0 * DEGREES;
+  area_grid[an] = 90.0 * DEGREES;
 
   /* Fills out area grid array. Converts to radians.
      Limits of each area defined in the middle of the angles given:         */
   for(i = 1; i < an; i++)
-    area_grid[i] = (angles[i-1] + angles[i]) * DEGREES / 2.;
+    area_grid[i] = (angles[i-1] + angles[i]) * DEGREES / 2.0;
 
   /* Control code, to check areas:                                          */
   //for(i=0; i<an+1; i++)
   //  printf("Area grid [%ld] = %lf\n", i, area_grid[i]/DEGREES);  
 
-  /* Allocates the sum of the surface fluxes                                */
-  sum_surfFlux = (PREC_RES *)calloc(wnn, sizeof(PREC_RES));
+  /* Allocates array for the emergent flux:                                 */
+  out = st_out.o = (PREC_RES *)calloc(wnn, sizeof(PREC_RES));
 
-  /* Declares variables:                                                    */
-  PREC_RES area;
-  PREC_RES a;
-  PREC_RES b;
-
-  /* Fills out flux                                                         */
+  /* Add weighted Intensity to get the flux:                                */
   for(i = 0; i < an; i++){
-    a = sin(area_grid[i]);
-    b = sin(area_grid[i+1]);
-    area = (b*b - a*a); 
-      for(w = 0; w < wnn; w++)
-        sum_surfFlux[w] += intens_grid[i][w] * area;
+    area = pow(sin(area_grid[i+1]), 2.0) - pow(sin(area_grid[i]), 2.0);
+    for(w=0; w < wnn; w++)
+      out[w] += PI * intens_grid[i][w] * area;
   }
-
-  /* Allocates array for flux 
-     and connects it with the transit structure                            */
-  Flux = (PREC_RES *)calloc(wnn, sizeof(PREC_RES));
-  tr->Flux = Flux;
-
-  /* Fills out flux array for each wn                                       */
-  for(w = 0; w < wnn; w++)
-    Flux[w] = PI * sum_surfFlux[w];
 
   /* Free memory that is no longer needed                                   */
   freemem_localeclipse();
@@ -782,9 +762,8 @@ printintens(struct transit *tr)
   if(tr->f_out&&tr->f_out[0]!='-')
     outf=fopen(our_fileName,"w");
 
-  transitprint(1,verblevel,
-	       "\nPrinting intensity for requested conditions in '%s'\n"
-	       ,tr->f_out?tr->f_out:"standard output");
+  transitprint(1, verblevel, "\nPrinting intensity in '%s'\n",
+               tr->f_out ? tr->f_out:"standard output");
 
   /* Prints:                                                                */
   char wlu[20],wnu[20];                       /* Wavelength units name     */
@@ -807,17 +786,16 @@ printintens(struct transit *tr)
   else sprintf(wlu,"%8.1g cm",tr->wavs.fct);
 
   /* Prints the header:                                                      */
-  fprintf(outf,
-	  "#wvl [um]%*s", 6, " ");
+  fprintf(outf, "#wvl [um]%*s", 6, " ");
   for(i=0; i < an; i++)
-      fprintf(outf,"I[%4.1lf deg]%*s", angles[i], 7, " ");
-  fprintf(outf,"[erg/s/cm/sr] \n");
+      fprintf(outf, "I[%4.1lf deg]%*s", angles[i], 7, " ");
+  fprintf(outf, "[erg/s/cm/sr]\n");
 
   /* Fills out each column with the correct output intensity                 */
   for(w=0; w<wnn; w++){
-    fprintf(outf,"%-15.10g", (1/(tr->wns.v[w]/tr->wns.fct))*1e4);
+    fprintf(outf, "%-15.10g", 1e4/(tr->wns.v[w]/tr->wns.fct));
     for(i = 0; i < an; i++)
-      fprintf(outf,"%-18.9g", intens_grid[i][w]);
+      fprintf(outf, "%-18.9g", intens_grid[i][w]);
     fprintf(outf,"\n");
   }
 
@@ -833,34 +811,30 @@ printintens(struct transit *tr)
 
 /* \fcnfh
    Print (to file or stdout) the emergent intensity as function of wavenumber 
-   (and wavelength)                                                          */
+   (and wavelength)                                                         */
 
 void
-printflux(struct transit *tr)
-{
+printflux(struct transit *tr){
   FILE *outf=stdout;
-  /* Flux for all wn  taken from transit structure                          */
-  PREC_RES *Flux = tr->Flux; 
-
+  /* The flux per wavenumber array:                                         */
+  PREC_RES *Flux = tr->ds.out->o; 
   int rn;
 
-  /* Adds string to the output files to differentiate between outputs        */
+  /* Adds string to the output files to differentiate between outputs:      */
   char our_fileName[512];
   strncpy(our_fileName, tr->f_out, 512);
   strcat(our_fileName, ".-Flux");
 
-
   /* Opens a file:                                                          */
-  if(tr->f_out&&tr->f_out[0]!='-')
-    outf=fopen(our_fileName,"w");
+  if(tr->f_out && tr->f_out[0] != '-')
+    outf=fopen(our_fileName, "w");
 
-  transitprint(1,verblevel,
-	       "\nPrinting intensity for requested conditions in '%s'\n"
-	       ,tr->f_out?tr->f_out:"standard output");
+  transitprint(1, verblevel, "\nPrinting flux in '%s'\n",
+               tr->f_out ? our_fileName:"standard output");
 
   /* Prints:                                                                */
-  char wlu[20],wnu[20];         /* Wavelength units name                   */
-  long nsd=(long)(1e6);        /* Wavenumber units name                    */
+  char wlu[20], wnu[20];         /* Wavelength units name                   */
+  long nsd=(long)(1e6);        /* Wavenumber units name                     */
 
   /* Get wavenumber units name:                                             */
   if((long)(nsd*tr->wns.fct)==nsd) strcpy(wnu,"cm");
@@ -868,9 +842,9 @@ printflux(struct transit *tr)
   else if((long)(nsd*1e-4*tr->wns.fct)==nsd) strcpy(wnu,"um");
   else if((long)(nsd*1e-7*tr->wns.fct)==nsd) strcpy(wnu,"nm");
   else if((long)(nsd*1e-8*tr->wns.fct)==nsd) strcpy(wnu,"a");
-  else sprintf(wnu,"%6.1g cm",1/tr->wns.fct);
+  else sprintf(wnu, "%6.1g cm", 1/tr->wns.fct);
 
-  /* Get wavenumber units name:                                              */
+  /* Get wavenumber units name:                                             */
   if((long)(nsd*tr->wavs.fct)==nsd) strcpy(wlu,"cm");
   else if((long)(nsd*1e1*tr->wavs.fct)==nsd) strcpy(wlu,"mm");
   else if((long)(nsd*1e4*tr->wavs.fct)==nsd) strcpy(wlu,"um");
@@ -878,17 +852,15 @@ printflux(struct transit *tr)
   else if((long)(nsd*1e8*tr->wavs.fct)==nsd)  strcpy(wlu,"a");
   else sprintf(wlu,"%8.1g cm",tr->wavs.fct);
 
-  /* Prints the header:                                                      */
-  fprintf(outf,
-	  "#wvl [um]%*sFlux [erg/s/cm]\n"
-	  ,6 ," ");
+  /* Prints the header:                                                     */
+  fprintf(outf, "#wvl [um]%*sFlux [erg/s/cm]\n", 6, " ");
 
-  /* Prints wavelength and flux:                                             */
-  for(rn=0;rn<tr->wns.n;rn++)
-    fprintf(outf,"%-15.10g%-18.9g\n", (1/(tr->wns.v[rn]/tr->wns.fct))*1e4,
-	    Flux[rn]);
+  /* Prints wavelength and flux:                                            */
+  for(rn=0; rn < tr->wns.n; rn++)
+    fprintf(outf, "%-15.10g%-18.9g\n", 1e4/(tr->wns.v[rn]/tr->wns.fct),
+            Flux[rn]);
 
-  /* Closes the file:                                                        */
+  /* Closes the file:                                                       */
   fclose(outf);
   return;
 }
@@ -898,11 +870,8 @@ printflux(struct transit *tr)
    Frees eclipse pointer arrays. Data array should already be free           */
 void
 freemem_localeclipse(){
-
   /* Free auxiliar variables:                                                */
   free(area_grid);
-  free(sum_surfFlux);
-  free(Flux);
 }
 
 

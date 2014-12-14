@@ -566,6 +566,9 @@ computemolext(struct transit *tr, /* transit struct                         */
     if(i <= 0)
       transitprint(1, verblevel, "Lorentz: %.9f, Doppler: %.9f broadening "
               "(T=%d, r=%li).\n", alphal[i], alphad[i]*wn[0], (int)temp, r);
+              //"Doppler2: %.9f (T=%d, p=%.4e, wn0: %.6f, wnf: %.6f).\n",
+              //alphal[i], alphad[i]*wn[0], alphad[i]*wn[tr->wns.n-1],
+              //(int)temp, tr->atm.p[r]*tr->atm.pfct, wn[0], wn[tr->wns.n-1]);
 
     maxwidth = fmax(alphal[i], alphad[i]*wn[0]); /* Max between Dop and Lor */
     minwidth = fmin(minwidth, maxwidth);
@@ -761,10 +764,10 @@ interpolmolext(struct transit *tr, /* transit struct                        */
   /* Interpolate:         */
   /* Find index of grid-temperature immediately lower than temp:            */
   itemp = binsearchapprox(gtemp, temp, 0, Ntemp);
-  if (gtemp[itemp] < temp)
+  if (temp < gtemp[itemp])
     itemp--;
-  //transitprint(1, 2, "Temperature: T[%i]=%.0f < %.2f < T[%.i]=%.0f\n",
-  //                   itemp, gtemp[itemp], temp, itemp+1, gtemp[itemp+1]);
+  transitprint(30, verblevel, "Temperature: T[%i]=%.0f < %.2f < T[%.i]=%.0f\n",
+               itemp, gtemp[itemp], temp, itemp+1, gtemp[itemp+1]);
 
   for (i=0; i < Nwave; i++){
     /* Add contribution from each molecule:                                 */
