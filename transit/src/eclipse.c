@@ -650,7 +650,7 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
   transitprint(1, verblevel, "\nDone.\n");
 
   /* Sets progress indicator, and prints output:                             */
-  tr->pi &= TRPI_MODULATION; /* FINDME: this is not a modulation calculation */
+  tr->pi |= TRPI_MODULATION; /* FINDME: this is not a modulation calculation */
   printintens(tr);
   return 0;
 }
