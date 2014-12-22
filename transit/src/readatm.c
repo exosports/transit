@@ -695,7 +695,7 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
        **alias,     /* Alias of names given in atmfile                      */
        **amol;      /* Corresponding molecule for alias                     */
   int nalias =  2,  /* Number of listed alias names                         */
-      ndatamol = 19,  /* Number of listed molecules                         */
+      ndatamol = 23, /* Number of listed molecules                         */
       maxlinelen = 501,
       i, j;         /* Auxiliary for-loop index                             */
 
