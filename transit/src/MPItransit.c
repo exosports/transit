@@ -88,9 +88,6 @@ void main(int argc,      /* Number of variables                              */
   t0 = timecheck(verblevel, itr,  0, "processparameters", tv, t0);
 
   transitprint(1, verblevel, "verblevel: %d\n", verblevel);
-  /* Silence threads with rank > 0:                                         */
-  if (rank != 0)
-    verblevel = 0;
 
   /* Accept all general hints:                                              */
   fw(acceptgenhints, !=0, &transit);
@@ -188,7 +185,7 @@ void main(int argc,      /* Number of variables                              */
     t0 = timecheck(verblevel, itr,  6, "makeipsample", tv, t0);
     if(fw_status>0)
       transitprint(7, verblevel, "makeipsample() modified some of the hinted "
-                   "parameters. Flag: 0x%lx.\n", fw_status);
+                                 "parameters. Flag: 0x%lx.\n", fw_status);
  
     /* Print sampling info:                                                 */
     if (niter == 0){
@@ -209,14 +206,14 @@ void main(int argc,      /* Number of variables                              */
     t0 = timecheck(verblevel, itr, 11, "extwn", tv, t0);
  
     if (verblevel > 0){
-      sprintf(str_iter, "%04li", itr);    /* Iteration number as string */
-      strncpy(fout+dot_pos, str_iter, 4);
+      sprintf(str_iter, "%04li", itr);    /* Iteration number as string     */
+      strncpy(fout+dot_pos, str_iter, 4); /* Attach number to fout          */
       strcpy(transit.f_out, fout);
     }
 
     transitprint(1, verblevel, "TRAN FLAG 74: pre-transit calc\n");
     /* Ray solutions choice:                                                */
-    RaySol path=transit.ds.th->path;
+    RaySol path = transit.ds.th->path;
 
     /* Calculates optical depth for eclipse                                 */
     if(path == eclipse){
@@ -271,20 +268,17 @@ void main(int argc,      /* Number of variables                              */
 
     /* Free arrays allocated inside the loop:                               */
     free(transit.save.ext);
-    freemem_cia      (transit.ds.cia, &transit.pi);
-    freemem_outputray(transit.ds.out, &transit.pi);
-
     freemem_samp(&transit.ips);
-    /* Free the no-longer-needed memory                                     */
-    //freemem_idexrefrac(transit.ds.ir,        &transit.pi);
-    //freemem_extinction(transit.ds.ex,        &transit.pi);
-    //freemem_tau(transit.ds.tau,              &transit.pi);
+    freemem_cia(       transit.ds.cia, &transit.pi);
+    freemem_idexrefrac(transit.ds.ir,  &transit.pi);
+    freemem_extinction(transit.ds.ex,  &transit.pi);
+    freemem_tau(       transit.ds.tau, &transit.pi);
+    freemem_outputray( transit.ds.out, &transit.pi);
 
     t0 = timecheck(verblevel, itr, 14, "THE END", tv, t0);
     transitprint(1, verblevel, "----------------------------\n");
     itr++;
   }
-  //freemem_isotopes(     transit.ds.iso, &transit.pi);
   //freemem_molecules(    transit.ds.mol, &transit.pi);
   //freemem_atmosphere(   transit.ds.at,  &transit.pi);
   //freemem_lineinfotrans(transit.ds.li,  &transit.pi);

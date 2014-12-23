@@ -867,26 +867,26 @@ printflux(struct transit *tr){
 
 
 /* \fcnfh
-   Frees eclipse pointer arrays. Data array should already be free           */
+   Frees eclipse pointer arrays. Data array should already be free          */
 void
 freemem_localeclipse(){
-  /* Free auxiliar variables:                                                */
+  /* Free auxiliar variables:                                               */
   free(area_grid);
 }
 
 
 /* \fcnfh
    Free intensity grid structure arrays
-   Return 0 on success */
+   Return 0 on success                                                      */
 int
-freemem_intensityGrid(struct grid *intens,   /* grid structure               */
-                      long *pi){             /* progress indicator flag      */
+freemem_intensityGrid(struct grid *intens,   /* grid structure              */
+                      long *pi){             /* progress indicator flag     */
                    
-  /* Free arrays: */
+  /* Free arrays:                                                           */
   free(intens->a[0]);
   free(intens->a);
 
-  /* Update indicator and return:                                            */
+  /* Update indicator and return:                                           */
   *pi &= ~(TRPI_GRID);
   return 0;
 }

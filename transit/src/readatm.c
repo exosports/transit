@@ -695,7 +695,7 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
        **alias,     /* Alias of names given in atmfile                      */
        **amol;      /* Corresponding molecule for alias                     */
   int nalias =  2,  /* Number of listed alias names                         */
-      ndatamol = 23, /* Number of listed molecules                         */
+      ndatamol = 23, /* Number of listed molecules                          */
       maxlinelen = 501,
       i, j;         /* Auxiliary for-loop index                             */
 
@@ -795,7 +795,7 @@ reloadatm(struct transit *tr,
   double sumq,
 	 allowq = tr->allowrq;
 
-  transitprint(1,verblevel, "Nlayers=%d,  Nmol=%d.\n", nlayers, nmol);
+  transitprint(1, verblevel, "Nlayers=%d,  Nmol=%d.\n", nlayers, nmol);
   /* Update atmfile temperature array:                                      */
   for (i=0; i<nlayers; i++){
     at->atm.t[i] = input[i];
