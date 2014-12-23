@@ -881,7 +881,6 @@ makeradsample(struct transit *tr){
       free_mol(mol->molec+i);
     for (i=0; i<niso; i++)
       free_isov(iso->isov+i);
-    /* FINDME: Free this one too, right? */
     freemem_samp(rad);
     tr->pi &= ~(TRPI_MAKERAD);
   }
@@ -1017,11 +1016,11 @@ makeipsample(struct transit *tr){
 
     transitcheckcalled(tr->pi, "makeipsample", 1, "makeradsample",TRPI_MAKERAD);
 
-    /* Make the sampling taking as reference the radius sampling: */
+    /* Make the sampling taking as reference the radius sampling:           */
     res = makesample0(&tr->ips, &usamp, &rsamp, TRH_IPRM);
   }
-  /* Set progress indicator: */
-  if(res>=0)
+  /* Set progress indicator:                                                */
+  if(res >= 0)
     tr->pi |= TRPI_MAKEIP;
   return res;
 }
@@ -1180,7 +1179,7 @@ outsample(struct transit *tr){
       return 1;
     }
 
-  transitprint(1, verblevel, "\nPrinting sampling information in '%s'.\n\n",
+  transitprint(1, verblevel, "Printing sampling information in '%s'.\n\n",
                filename);
 
   /* Print each sample: */
