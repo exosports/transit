@@ -78,148 +78,143 @@ int freemem_cia(struct cia *cia, long *pi)
 
 #include <transit.h>
 
-
 /* \fcnfh
    Read CIA info from tabulated files.
-
-   Return: 0 on success                           */
+   Return: 0 on success                                                     */
 int
-interpolatecia(struct transit *tr){
-  FILE *fp;       /* Pointer to CIA file */
-  char *file,     /* CIA file name       */
-       *colname1=0, *colname2=0; /* CIA isotope names */
-  double **a,     /* CIA cross sections sample        */
-         *t=NULL, /* CIA sampled temperature array    */
-         *wn;     /* CIA sampled wavenumber array     */
+readcia(struct transit *tr){
+  FILE *fp;       /* Pointer to CIA file                                    */
+  char *file,     /* CIA file name                                          */
+       *colname;  /* CIA isotope names                                      */
+  PREC_CIA **a,   /* CIA cross sections sample                              */
+           *wn;   /* CIA sampled wavenumber array                           */
 
-  static struct cia st_cia;  /*  CIA structure */
+  static struct cia st_cia;  /* CIA structure                               */
   tr->ds.cia = &st_cia;
-  int npairs = tr->ds.cia->n = tr->ds.th->ncia; /* Number of CIA files */
-  int p;      /* Auxiliary wavenumber index */
-  long nwn,   /* Number of wavenumber  samples in CIA file */
-       nt=0;  /* Number of temperature samples in CIA file */
+  int npairs = tr->ds.cia->nfiles = tr->ds.th->ncia; /* Number of CIA files */
+  int p;                /* Auxiliary wavenumber index                       */
+  long nt, wa;          /* Number of temperature, wn samples in CIA file    */
   char rc;
-  char *lp, *lpa;       /* Pointers in file              */
-  int maxline=300, n;   /* Max length of line. Counter   */
-  long lines;           /* Lines read counter            */
-  long i, j;            /* Auxiliary for indices         */
-  char line[maxline+1]; /* Array to hold line being read */
-  double *tmpw = malloc(tr->wns.n  * sizeof(double)); /* temperatures array */
-  double *tmpt = malloc(tr->rads.n * sizeof(double)); /* wavenumber array   */
-  prop_atm *atm = &tr->atm;
-  double *densiso1, *densiso2, amagat2; /* Density arrays and square amagat */
+  char *lp, *lpa;       /* Pointers in file                                 */
+  int maxline=300, n;   /* Max length of line. Counter                      */
+  long lines, ni;       /* Lines read counter                               */
+  long i;               /* Auxiliary for indices                            */
+  char line[maxline+1]; /* Array to hold line being read                    */
   struct molecules *mol=tr->ds.mol;
 
-  /* Assure that radius and wavenumber samples exist: */
+  /* Make sure that radius and wavenumber samples exist:                    */
   transitcheckcalled(tr->pi, "interpolatecia", 2, "makewnsample", TRPI_MAKEWN,
-                                                 "makeradsample", TRPI_MAKERAD);
+                                               "makeradsample", TRPI_MAKERAD);
 
- /* Get transit temperatures and wavenumber arrays:                         */
- /* Invert temperature because it increases inwards:                        */
- /* FINDME: What happens in the case of thermal inversion??  */
-  for(i=0; i<tr->rads.n; i++)
-    tmpt[i] = atm->tfct * atm->t[tr->rads.n-i-1];
-  for(i=0; i<tr->wns.n; i++)
-    tmpw[i] = tr->wns.fct * tr->wns.v[i];
+  /* Allocate (output) transit extinction array (in cm-1):                  */
+  st_cia.e    = (PREC_CIA **)calloc(tr->wns.n,            sizeof(PREC_CIA *));
+  st_cia.e[0] = (PREC_CIA  *)calloc(tr->wns.n*tr->rads.n, sizeof(PREC_CIA));
+  for(p=1; p < tr->wns.n; p++)
+    st_cia.e[p] = st_cia.e[0] + p*tr->rads.n;
+  memset(st_cia.e[0], 0, tr->wns.n*tr->rads.n*sizeof(double));
 
-  /* If there are no files, allocate tr.ds.cia.e (extinction) and return: */
+  /* If there are no files, allocate tr.ds.cia.e (extinction) and return:   */
   if(!npairs){
-    st_cia.e    = (PREC_CIA **)calloc(tr->wns.n,            sizeof(PREC_CIA *));
-    st_cia.e[0] = (PREC_CIA  *)calloc(tr->wns.n*tr->rads.n, sizeof(PREC_CIA));
-    for(p=1; p<tr->wns.n; p++)
-      st_cia.e[p] = st_cia.e[0] + p*tr->rads.n;
     return 0;
   }
   transitprint(1, verblevel, "Computing CIA opacities for %i database%s ...\n",
-               npairs, npairs>1?"s":"");
+               npairs, npairs>1 ? "s":"");
 
-  /* Prepare and read each datafile: */
-  st_cia.file = (char **)calloc(npairs, sizeof(char *));
+  /* Allocate string for molecule names:                                    */
+  colname = (char *)calloc(maxline, sizeof(char));
 
-  /* Allocate extinction array (in cm-1 amagat-2): */
-  double **e;
-  e    = (double **)calloc(tr->wns.n,            sizeof(double *));
-  e[0] = (double  *)calloc(tr->wns.n*tr->rads.n, sizeof(double));
-  for(p=1; p<tr->wns.n; p++)
-    e[p] = e[0] + p*tr->rads.n;
-  memset(e[0], 0, tr->wns.n*tr->rads.n*sizeof(double));
+  /* Allocate molecules' ID:                                                */
+  st_cia.mol1 = (int   *)calloc(npairs, sizeof(int));
+  st_cia.mol2 = (int   *)calloc(npairs, sizeof(int));
+  /* Number of temperature and wavenumber samples per file:                 */
+  st_cia.ntemp = (int  *)calloc(npairs, sizeof(int));
+  st_cia.nwave = (int  *)calloc(npairs, sizeof(int));
+  /* CIA, temperature and wavenumber samples:                               */
+  st_cia.cia  = (PREC_CIA ***)calloc(npairs, sizeof(PREC_CIA **));
+  st_cia.temp = (PREC_CIA  **)calloc(npairs, sizeof(PREC_CIA  *));
+  st_cia.wn   = (PREC_CIA  **)calloc(npairs, sizeof(PREC_CIA  *));
 
-  /* Allocate transit extinction array (in cm-1): */
-  st_cia.e    = (PREC_CIA **)calloc(tr->wns.n,            sizeof(PREC_CIA *));
-  st_cia.e[0] = (PREC_CIA  *)calloc(tr->wns.n*tr->rads.n, sizeof(PREC_CIA));
-  for(p=1; p<tr->wns.n; p++)
-    st_cia.e[p] = st_cia.e[0] + p*tr->rads.n;
+  for(p=0; p < npairs; p++){
+    /* Copy file names from hint:                                           */
+    file = xstrdup(tr->ds.th->ciafile[p]);
 
-  /* Copy file names from hint:   */
-  for(p=0; p<npairs; p++){
-    file = st_cia.file[p] = xstrdup(tr->ds.th->ciafile[p]);
-
-    /* Attempt to open the files: */
+    /* Attempt to open the files:                                           */
     if((fp=fopen(file, "r")) == NULL)
-      transiterror(TERR_SERIOUS,
-                   "Cannot read file '%s' for CIA information.\n", file);
-    lines = 0; /* lines read counter */
+      transiterror(TERR_SERIOUS, "Cannot read CIA file '%s'.\n", file);
+    lines = 0; /* lines read counter                                        */
     lpa   = 0;
-    /* The following loop will stop right after reading the 't' line
-       (ignoring blanks and comments): */
+    /* Read the file headers:                                               */
     while(1){
-      /* Skip comments, blanks and read next line: */
+      /* Skip comments, blanks and read next line:                          */
       while((rc=fgetupto_err(lp=line, maxline, fp, &ciaerr, file, lines++))
              =='#' || rc=='\n');
-      /* If it is end of file, stop loop: */
+      /* If it is end of file, stop loop:                                   */
       if(!rc)
-        transiterror(TERR_SERIOUS,
-                     "File '%s' finished before opacity CIA info.\n", file);
+        transiterror(TERR_SERIOUS, "File '%s' finished before opacity info.\n",
+                     file);
 
       switch(rc){
-      case 'i': /* Read the name of the isotopes:             */
+      case 'i': /* Read the name of the isotopes:                           */
         while(isblank(*++lp));
-        long ni = countfields(lp, ',');
-        if(ni!=2) /* Check there are only two isotopes:       */
+        ni = countfields(lp, ',');
+        /* Check that there are exactly two isotopes:                       */
+        if(ni != 2)
           transiterror(TERR_SERIOUS,
                        "Wrong line %i in CIA file '%s', if it begins with a "
                        "'i', it should have the comma-separated fields with "
                        "the names of the isotopes in collision. Rest of "
                        "line:\n %s\n", lines, file, lp);
-        /* Allocate and copy the name of the first isotope:   */
+        /* Allocate and copy the name of the first moleculee:               */
         ni = 0;
-        while(lp[ni++] != ','); /* Store in ni the position of the comma */
-        colname1 = (char *)calloc(ni, sizeof(char));
-        strncpy(colname1, lp, ni-1);
+        while(lp[ni++] != ','); /* Store in ni the position of the comma    */
+        strncpy(colname, lp, ni-1);
+        colname[ni] = '\0';
         lp += ni-1;
-        /* Allocate and store the name of the second isotope: */
+        /* Find the ID of the first molecule:                               */
+        st_cia.mol1[p] = st_cia.mol2[p] = -1;
+        for(i=0; i<mol->nmol; i++)
+          if(strcmp(mol->name[i], colname)==0)
+            st_cia.mol1[p] = i;
+        /* If the molecule is not in the atmosphere file:                   */
+        if(st_cia.mol1[p] == -1)
+          transiterror(TERR_SERIOUS, "CIA molecule '%s' from file '%s' does "
+                    "not match any in the atmsopheric file.\n", colname, file);
+
+        /* Allocate and store the name of the second isotope:               */
         ni = 0;
         while(isblank(*lp++));
-        while(lp[ni++]); /* Read until the end of the line    */
-        if((--ni)<=0)
-          transiterror(TERR_SERIOUS, "Inexistent second isotope name in "
-                                      "CIA file '%s'.\n", file);
-        colname2 = (char *)calloc(ni+1, sizeof(char));
-        strncpy(colname2, lp, ni);
+        while(lp[ni++]); /* Read until the end of the line                  */
+        strncpy(colname, lp, ni);
+        colname[ni] = '\0';
+        for(i=0; i < mol->nmol; i++)
+          if(strcmp(mol->name[i], colname)==0)
+            st_cia.mol2[p] = i;
+        if(st_cia.mol1[p] == -1)
+          transiterror(TERR_SERIOUS, "CIA molecule '%s' from file '%s' does "
+                    "not match any in the atmsopheric file.\n", colname, file);
         continue;
 
-      case 't': /* Read the sampling temperatures array:      */
+      case 't': /* Read the sampling temperatures array:                    */
         while(isblank(*++lp));
-        nt = countfields(lp, ' '); /* Number of temperatures    */
+        nt = st_cia.ntemp[p] = countfields(lp, ' '); /* Number of temps.    */
         if(!nt)
           transiterror(TERR_SERIOUS,
                        "Wrong line %i in CIA file '%s', if it begins with "
                        "a 't' then it should have the blank-separated "
                        "fields with the temperatures. Rest of line: "
                        "%s.\n", lines, file, lp);
-        /* Allocate and store the temperatures array:         */
-        t = (double *)calloc(nt, sizeof(double));
-        n = 0;    /* Count temperatures per line  */
-        lpa = lp; /* Pointer in line              */
-        while(n<nt){
+        /* Allocate and store the temperatures array:                       */
+        st_cia.temp[p] = (PREC_CIA *)calloc(nt, sizeof(PREC_CIA));
+        n = 0;    /* Count temperatures per line                            */
+        lpa = lp; /* Pointer in line                                        */
+        while(n < nt){
           while(isblank(*lpa++));
-          t[n] = strtod(--lpa, &lp); /* Get value */
+          st_cia.temp[p][n] = strtod(--lpa, &lp); /* Get value */
           if(lp==lpa)
-            transiterror(TERR_CRITICAL,
-                         "Less fields (%i) than expected (%i) were read "
-                         "for temperature in the CIA file '%s'.\n",
+            transiterror(TERR_CRITICAL, "Less fields (%i) than expected (%i) "
+                         "were read for temperature in the CIA file '%s'.\n",
                          n, nt, file);
-          if((lp[0]|0x20) == 'k') lp++; /* FINDME: what's going on here? */
+          if((lp[0]|0x20) == 'k') lp++; /* FINDME: what's going on here?    */
           lpa = lp;
           n++;
         }
@@ -230,117 +225,123 @@ interpolatecia(struct transit *tr){
       break;
     }
 
-    /* Break if something failed: */
-    if(!colname2 || nt==0)
-      transiterror(TERR_SERIOUS,
-                   "There is either a temperature 't' or isotope name 'i' "
-                   " missing in CIA file '%s'.\n", file);
+    /* Break if something failed:                                           */
+    if(!colname)
+      transiterror(TERR_SERIOUS, "There is either a temperature 't' or "
+                   "isotope name 'i' missing in CIA file '%s'.\n", file);
 
-    /* Set an initial value for allocated wavenumber fields: */
-    long wa = 32;
-    wn   = (double  *)calloc(wa,    sizeof(double  ));
-    a    = (double **)calloc(wa,    sizeof(double *));
-    a[0] = (double  *)calloc(wa*nt, sizeof(double  ));
+    /* Set an initial value for allocated wavenumber fields:                */
+    wa = 32;
+
+    /* Allocate wavenumber array:                                           */
+    wn = (PREC_CIA  *)calloc(wa, sizeof(PREC_CIA));
+    /* Allocate input extinction array (in cm-1 amagat-2):                  */
+    a    = (PREC_CIA **)calloc(wa,    sizeof(PREC_CIA *));
+    a[0] = (PREC_CIA  *)calloc(wa*nt, sizeof(PREC_CIA));
     for(i=1; i<wa; i++)
       a[i] = a[0] + i*nt;
 
     n=0;
-    /* Read information for each wavenumber sample: */
+    /* Read information for each wavenumber sample:                         */
     while(1){
-      /* Skip comments and blanks; read next line:  */
+      /* Skip comments and blanks; read next line:                          */
       if (n)
         while((rc=fgetupto_err(lp=line, maxline, fp, &ciaerr, file, lines++))
               =='#'||rc=='\n');
-      /* Stop, if it is end of file: */
+      /* Stop, if it is end of file:                                        */
       if(!rc)
         break;
 
-      /* Re-allocate (double the size) if necessary: */
+      /* Re-allocate (double the size) if necessary:                        */
       if(n==wa){
-        wn   = (double  *)realloc(wn,   sizeof(double)*(wa<<=1));
-        a    = (double **)realloc(a,    sizeof(double)*wa);
-        a[0] = (double  *)realloc(a[0], sizeof(double)*wa*nt);
+        wn   = (PREC_CIA  *)realloc(wn,   sizeof(PREC_CIA)*(wa<<=1));
+        a    = (PREC_CIA **)realloc(a,    sizeof(PREC_CIA)*wa);
+        a[0] = (PREC_CIA  *)realloc(a[0], sizeof(PREC_CIA)*wa*nt);
         for(i=1; i<wa; i++)
           a[i] = a[0] + i*nt;
       }
 
-      /* Store new line: wavenumber first, then loop over cross sections: */
+      /* Store new line: wavenumber first, then loop over cross sections:   */
       while(isblank(*lp++));
-      wn[n] = strtod(lp-1, &lpa);  /* Store wavenumber */
+      wn[n] = strtod(lp-1, &lpa);  /* Store wavenumber                      */
       if(lp==lpa+1)
-        transiterror(TERR_CRITICAL,
-                     "Invalid fields for the %ith wavenumber in the CIA "
-                     "file '%s'.\n", n+1, file);
+        transiterror(TERR_CRITICAL, "Invalid fields for the %ith wavenumber "
+                                    "in the CIA file '%s'.\n", n+1, file);
       i = 0;
       while(i<nt){
-        a[n][i] = strtod(lpa, &lp); /* Store cross section */
+        a[n][i] = strtod(lpa, &lp); /* Store cross section                  */
         if(lp==lpa)
-          transiterror(TERR_CRITICAL,
-                       "Less fields (%i) than expected (%i) were read "
-                       "for the %ith wavenumber in the CIA file '%s'.\n",
-                       i, nt, n+1, file);
-        lpa=lp;
+          transiterror(TERR_CRITICAL, "Less fields (%i) than expected (%i) "
+                       "were read for the %ith wavenumber in the CIA "
+                       "file '%s'.\n", i, nt, n+1, file);
+        lpa = lp;
         i++;
       }
       n++;
     }
 
-    /* Re-allocate arrays to their final sizes: */
+    /* Re-allocate arrays to their final sizes:                             */
     if(n<wa){
-      wn   = (double *)realloc(wn,   sizeof(double)*n);
-      a[0] = (double *)realloc(a[0], sizeof(double)*n*nt);
+      st_cia.wn[p] = (PREC_CIA *)realloc(wn,   n*   sizeof(PREC_CIA));
+      a[0]         = (PREC_CIA *)realloc(a[0], n*nt*sizeof(PREC_CIA));
       for(i=1; i<n; i++)
-        a[i] = a[0]+i*nt;
+        a[i] = a[0] + i*nt;
     }
-    nwn = n;
-
-    /* Interpolate data to transit's wavenumber and temperature sampling: */
-    bicubicinterpolate(e, a, wn, nwn, t, nt, tmpw, tr->wns.n, tmpt, tr->rads.n);
-    /* FINDME: TD: Linearly adding CIA when there is more than 1 such
-               database. Check that this is really OK.                */
-
-    /* Get density profile of isotopes from atmosphere-file isotopes: */
-    densiso1 = densiso2 = 0;
-    for(i=0; i<mol->nmol; i++){
-      if(strcmp(mol->name[i], colname1)==0)
-        densiso1 = mol->molec[i].d;
-      if(strcmp(mol->name[i], colname2)==0)
-        densiso2 = mol->molec[i].d;
-    }
-
-    /* If either isotope name was not found in atmosphere file: */
-    if(!densiso1 || !densiso2)
-      transiterror(TERR_SERIOUS,
-                   "One or both name(s) of the molecules in CIA (%s, %s) "
-                   "file '%s' do not match any in the atmsopheric "
-                   "database '%s'.\n", colname1, colname2, file, tr->f_atm);
-
-    nt = tr->rads.n; /* Reset nt to the transit number of samples */
-    /* Calculate absorption coefficients in cm-1 units: */
-    for(i=0; i<nt; i++){
-      amagat2 = densiso1[i]*densiso2[i]/RHOSTP/RHOSTP;
-      for(j=0; j<tr->wns.n; j++)
-        st_cia.e[j][i] += e[j][nt-i-1]*amagat2;
-    }
-
-    /* Free allocated variables: */
-    free(a[0]);
-    free(a);
-    free(wn);
-    free(t);
-    free(colname1);
-    free(colname2);
+    st_cia.cia[p] = a;
+    st_cia.nwave[p] = n;
     fclose(fp);
   }
+  free(colname);
+  transitprint(1, verblevel, "Done.\n");
+  tr->pi |= TRPI_CIA;
+  return 0;
+}
 
+
+int
+interpolatecia(struct transit *tr){
+  struct molecules *mol=tr->ds.mol;
+  struct cia       *cia=tr->ds.cia;
+  prop_atm *atm = &tr->atm;
+  PREC_CIA **e; /* Temporary interpolated cia                               */
+  double *tmpw = malloc(tr->wns.n  * sizeof(double)); /* temperatures array */
+  double *tmpt = malloc(tr->rads.n * sizeof(double)); /* wavenumber array   */
+  double *densiso1, *densiso2, amagat2; /* Density arrays and square amagat */
+  int i, j, n;
+
+  e    = (PREC_CIA **)calloc(tr->wns.n,            sizeof(PREC_CIA *));
+  e[0] = (PREC_CIA  *)calloc(tr->wns.n*tr->rads.n, sizeof(PREC_CIA));
+  for(i=1; i < tr->wns.n; i++)
+    e[i] = e[0] + i*tr->rads.n;
+
+ /* Get transit temperatures and wavenumber arrays:                         */
+  for(i=0; i<tr->rads.n; i++)
+    tmpt[i] = atm->tfct * atm->t[i];
+  for(i=0; i<tr->wns.n; i++)
+    tmpw[i] = tr->wns.fct * tr->wns.v[i];
+
+  for (n=0; n<cia->nfiles; n++){
+    /* Interpolate data to transit's wavenumber and temperature sampling:   */
+    bicubicinterpolate(e, cia->cia[n], cia->wn[n],   cia->nwave[n],
+                                       cia->temp[n], cia->ntemp[n],
+                                       tmpw, tr->wns.n, tmpt, tr->rads.n);
+
+    /* Get density profile of isotopes from atmosphere-file isotopes:       */
+    densiso1 = mol->molec[cia->mol1[n]].d;
+    densiso2 = mol->molec[cia->mol2[n]].d;
+
+    /* Calculate absorption coefficients in cm-1 units:                     */
+    for(i=0; i < tr->rads.n; i++){
+      amagat2 = densiso1[i]*densiso2[i]/RHOSTP/RHOSTP;
+      for(j=0; j < tr->wns.n; j++)
+        cia->e[j][i] += e[j][i]*amagat2;
+    }
+  }
   free(e[0]);
   free(e);
   free(tmpw);
   free(tmpt);
 
-  transitprint(1, verblevel, "Done.\n");
-
-  tr->pi |= TRPI_CIA;
   return 0;
 }
 
@@ -380,11 +381,14 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
      (i.e., do not extrapolate):                                            */
   while(t1[fi++]<fx1);
   fi--;
+
   for(i=0; i<li; i++)
     if(t1[i]>lx1)
       li = i;
+
   while(t2[fj++]<fx2);
   fj--;
+
   for(j=0; j<lj; j++)
     if(t2[j]>lx2)
       lj = j;
@@ -424,11 +428,11 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
 
   
 /* \fcnfh
-   Error printing function for lines longer than maxline in the CIA file  */
+   Error printing function for lines longer than maxline in the CIA file    */
 void 
-ciaerr(int max,    /* Max line length */
-       char *name, /* CIA file name   */
-       int line){  /* Line number     */
+ciaerr(int max,    /* Max line length                                       */
+       char *name, /* CIA file name                                         */
+       int line){  /* Line number                                           */
   transiterror(TERR_SERIOUS,
                "Line %i of CIA file '%s' is longer than %i characters ...\n"
                " hard coded values in file '%s' need to be changed.\n",
@@ -438,20 +442,32 @@ ciaerr(int max,    /* Max line length */
 
 /* \fcnfh
    Free cia structure 
-
-   Return: 0 on success  */
+   Return: 0 on success                                                     */
 int
 freemem_cia(struct cia *cia,
             long *pi){
-  /* Free arrays */
+  int i=0;
+  /* Free arrays                                                            */
   free(cia->e[0]);
   free(cia->e);
-  for (int i=0; i<cia->n; i++)
-    free(cia->file[i]);
-  if(cia->n)
-    free(cia->file);
+  for (i=0; i<cia->nfiles; i++){
+    free(cia->cia[i][0]);
+    free(cia->cia[i]);
+    free(cia->wn[i]);
+    free(cia->temp[i]);
+  }
+  if(cia->nfiles){
+    free(cia->cia);
+    free(cia->wn);
+    free(cia->temp);
 
-  /* Unset appropiate flags: */
+    free(cia->mol1);
+    free(cia->mol2);
+    free(cia->nwave);
+    free(cia->ntemp);
+  }
+
+  /* Unset appropiate flags:                                                */
   *pi &= ~(TRPI_CIA);
   return 0;
 }

@@ -159,6 +159,12 @@ void main(int argc,      /* Number of variables                              */
   fw(opacity, <0, &transit);
   t0 = timecheck(verblevel, itr,  5, "opacity", tv, t0);
 
+  /* Initialize CIA:                                                        */
+  fw(readcia, !=0, &transit);
+  /* HACK */
+  //fw(interpolatecia, !=0, &transit);
+  t0 = timecheck(verblevel, itr,  6, "readcia", tv, t0);
+
   /* The array received from MPI:                                           */
   input = (double *)calloc(ntransit, sizeof(double));
 
@@ -193,7 +199,7 @@ void main(int argc,      /* Number of variables                              */
       t0 = timecheck(verblevel, itr,  7, "outsample", tv, t0);
     }
 
-    /* Initialize CIA:                                                      */
+    /* Interpolate CIA:                                                     */
     fw(interpolatecia, !=0, &transit);
     t0 = timecheck(verblevel, itr,  9, "interpolatecia", tv, t0);
  
