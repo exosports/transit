@@ -349,9 +349,14 @@ struct detailout{
 
 
 struct cia{
-  PREC_CIA **e;   /* Extinction from all CIA sources [wn][tmp] */
-  char **file;
-  int n;
+  int nfiles;       /* Number of CIA files                                  */
+  PREC_CIA **e;     /* Extinction from all CIA sources [wn][temp]           */
+  PREC_CIA ***cia;  /* Tabulated CIA extinction [nfiles][nwave][ntemp]      */
+  PREC_CIA **wn;    /* Tabulated wavenumber  arrays [nfiles][nwave]         */
+  PREC_CIA **temp;  /* Tabulated temperature arrays [nfiles][ntemp]         */
+  int *nwave;       /* Number of wavenumber samples [nfiles]                */
+  int *ntemp;       /* Number of temperature samples [nfiles]               */
+  int *mol1, *mol2; /* Pairs of molecule's ID [nfiles]                      */
 };
 
 /* Structure with user hinted data that should go to the 'struct
