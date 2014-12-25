@@ -309,6 +309,10 @@ interpolatecia(struct transit *tr){
   double *densiso1, *densiso2, amagat2; /* Density arrays and square amagat */
   int i, j, n;
 
+  /* Reset CIA opacity to zero:                                             */
+  memset(cia->e[0], 0, tr->wns.n*tr->rads.n*sizeof(double));
+
+  /* Allocate temporary array for opacity:                                  */
   e    = (PREC_CIA **)calloc(tr->wns.n,            sizeof(PREC_CIA *));
   e[0] = (PREC_CIA  *)calloc(tr->wns.n*tr->rads.n, sizeof(PREC_CIA));
   for(i=1; i < tr->wns.n; i++)
