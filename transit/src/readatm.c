@@ -799,9 +799,9 @@ reloadatm(struct transit *tr,
   /* Update atmfile temperature array:                                      */
   for (i=0; i<nlayers; i++){
     at->atm.t[i] = input[i];
-    transitprint(1, verblevel, "%.1f  ", at->atm.t[i]);
+    transitprint(20, verblevel, "%8.3f  ", at->atm.t[i]);
   }
-  transitprint(1, verblevel, "\n");
+  transitprint(20, verblevel, "\n");
 
   /* Update atmfile abundance arrays:                                       */
   for (j=0; j<nmol; j++)
