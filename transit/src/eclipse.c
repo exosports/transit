@@ -157,7 +157,6 @@ totaltau_eclipse(PREC_RES *rad,  /* Equispaced radius array: From current   */
 /* DEF */
 int
 intens_grid(struct transit *tr){ 
-
   prop_samp *wn = &tr->wns;                /* Wavenumber sample             */
   long int wnn = wn->n;                   /* Wavenumbers                   */
 
@@ -167,6 +166,22 @@ intens_grid(struct transit *tr){
   /* Reads number of angles from transithint structure                      */
   struct transithint *trh=tr->ds.th;
   long int an = trh->ann;                   
+
+  /* Initialize tau structure:                                              */
+  static struct optdepth tau;
+  tr->ds.tau = &tau;
+
+  /* Set maximum optical depth:                                             */
+  if(tr->ds.th->toomuch > 0)
+    tau.toomuch = trh->toomuch;
+
+  /* Allocates array to store radii indices where tau reaches toomuch:      */
+  tau.last = (long      *)calloc(wnn,        sizeof(long));
+  /* Allocates 2D array [rad][wn]:                                          */
+  tau.t    = (PREC_RES **)calloc(wnn,        sizeof(PREC_RES *));
+  tau.t[0] = (PREC_RES  *)calloc(wnn*tr->rads.n, sizeof(PREC_RES  ));
+  for(i=1; i < wnn; i++)
+    tau.t[i] = tau.t[0] + i*tr->rads.n;
 
   /* Allocates intensity grid structure                                     */
   static struct grid intens; 
@@ -200,8 +215,8 @@ intens_grid(struct transit *tr){
 int
 tau_eclipse(struct transit *tr){           /* Transit structure             */
 
-  static struct optdepth tau;            /* Def optical depth structure   */
-  tr->ds.tau = &tau;                       /* Called from transit structure */
+  struct optdepth *tau=tr->ds.tau;        /* Def optical depth structure   */
+  //tr->ds.tau = &tau;                     /* Called from transit structure */
   prop_samp *rad = &tr->rads;              /* Radius sample                 */
   prop_samp *wn  = &tr->wns;               /* Wavenumber sample             */
   struct extinction *ex = tr->ds.ex;      /* Def extinction structure      */
@@ -238,20 +253,18 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
   was 1 or 0 as specified by the user. */
   transitacceptflag(tr->fl, tr->ds.th->fl, TRU_TAUBITS);
 
-  /* Set maximum optical depth:                                             */
-  if(tr->ds.th->toomuch > 0)   
-    tau.toomuch = trh->toomuch; 
+  ///* Set maximum optical depth:                                             */
+  //if(tr->ds.th->toomuch > 0)   
+  //  tau.toomuch = trh->toomuch; 
 
-  /* Allocates array to store radii indices where tau reaches toomuch:      */
-  tau.last = (long      *)calloc(wnn,        sizeof(long));
-
-  /* Allocates 2D array [rad][wn]:                                          */
-  tau.t    = (PREC_RES **)calloc(wnn,        sizeof(PREC_RES *));
-  tau.t[0] = (PREC_RES  *)calloc(wnn*rad->n, sizeof(PREC_RES  ));
-
-  /* Connects tau.t with correct wn and rad:                                */
-  for(wi=1; wi < wnn; wi++)
-    tau.t[wi] = tau.t[0] + wi*rad->n;
+  ///* Allocates array to store radii indices where tau reaches toomuch:      */
+  //tau.last = (long      *)calloc(wnn,        sizeof(long));
+  ///* Allocates 2D array [rad][wn]:                                          */
+  //tau.t    = (PREC_RES **)calloc(wnn,        sizeof(PREC_RES *));
+  //tau.t[0] = (PREC_RES  *)calloc(wnn*rad->n, sizeof(PREC_RES  ));
+  ///* Connects tau.t with correct wn and rad:                                */
+  //for(wi=1; wi < wnn; wi++)
+  //  tau.t[wi] = tau.t[0] + wi*rad->n;
 
   /* Set cloud structure:                                                   */
   /* Linear for rini to rfin, grey opacity from 0 to maxe.                  */
@@ -341,7 +354,7 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
   for(wi=0; wi < wnn; wi++){
 
     /* Pointing to the declared tau array. All radii for one wn.            */
-    tau_wn = tau.t[wi];
+    tau_wn = tau->t[wi];
 
     /* Print output every 10\% that is ready:                               */
     if(wi > wnextout){
@@ -356,7 +369,7 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
 
     /* Calculate extinction for all radii if extinction exists:             */
     for(ri=0; ri < rnn; ri++)
-      er[ri] = e[ri][wi] + e_s[ri] + e_c[ri] + e_cia[wi][ri];
+      er[ri] = e[ri][wi] + e_cia[wi][ri] + e_s[ri] + e_c[ri];
 
     /* For each radii:                                                      */
     for(ri=rnn-1; ri > -1; ri--){
@@ -391,8 +404,8 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
                            "computeextradius() return error code %i while "
                            "computing radius #%i: %g\n", rn, r[lastr]*rfct);
             /* Update the value of the extinction at the right place:       */
-            er[lastr] = e[lastr][wi] + e_s[lastr] +
-                        e_c[lastr] + e_cia[wi][lastr];
+            er[lastr] = e[lastr][wi] + e_s[lastr] + e_c[lastr] +
+                        e_cia[wi][lastr];
           }
         }while(r[ri]*rad->fct < r[lastr]*rfct);
       }
@@ -407,8 +420,9 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
       /* Compute tau_wn[ri] array until tau reaches toomuch
          first tau[0], starts from the outmost layer.                         
          Also compute tau.last (radii where tau reaches toomuch at each wn): */
-      if( (tau_wn[rnn-ri-1] = rfct * fcn(r+ri, er+ri, angle, rnn-ri)) > tau.toomuch){
-        tau.last[wi] = rnn-ri-1;
+
+      if( (tau_wn[rnn-ri-1] = rfct * fcn(r+ri, er+ri, angle, rnn-ri)) > tau->toomuch){
+        tau->last[wi] = rnn-ri-1;
 
         if (ri < 3){
           transitprint(1, verblevel,
@@ -416,7 +430,7 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
                        "value (%g) was exceeded with tau=%g at the radius "
                        "level %li (%g km), this should have "
                        "happened in a deeper layer (check IP sampling or ATM "
-                       "file).\n", wn->v[wi], tau.toomuch, tau_wn[ri],
+                       "file).\n", wn->v[wi], tau->toomuch, tau_wn[ri],
                        ri, r[ri]*rfct/1e5);
         }
         /* Exit tau-calculation loop if it reached toomuch:                 */
@@ -426,9 +440,9 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
       /* Sets tau of the outermost layer to zero:                           */
       tau_wn[0] = 0;
 
-      transitDEBUG(22, verblevel,
-                   "Tau(lambda %li=%9.07g, r=%9.4g) : %g  (toomuch: %g)\n",
-                   wi, wn->v[wi], r[ri], tau_wn[ri], tau.toomuch);
+      transitDEBUG(22, verblevel, "Tau(lambda %li=%9.07g, r=%9.4g) : %g "
+                                  "(toomuch: %g)\n", wi, wn->v[wi], r[ri],
+                                  tau_wn[ri], tau->toomuch);
     }
 
     if(ri==rnn){
@@ -436,8 +450,8 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
                    "WARNING: At wavenumber %g cm-1, the bottom of the "
                    "atmosphere was reached before obtaining the critical TAU "
                    "value of %g.\nMaximum TAU reached: %g.\n",
-                   wn->v[wi], tau.toomuch, tau_wn[ri]);
-      tau.last[wi] = ri-1;
+                   wn->v[wi], tau->toomuch, tau_wn[ri]);
+      tau->last[wi] = ri-1;
     }
   }
 
@@ -446,7 +460,7 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
 
   /* Print detailed output if requested:                                    */
   if(tr->ds.det->tau.n)
-    detailout(&tr->wns, &tr->rads,  &tr->ds.det->tau, tau.t, 0);
+    detailout(&tr->wns, &tr->rads,  &tr->ds.det->tau, tau->t, 0);
   if(tr->ds.det->ext.n)
     detailout(&tr->wns, &tr->rads, &tr->ds.det->ext, e, CIA_RADFIRST);
   if(tr->ds.det->cia.n)
@@ -716,7 +730,9 @@ flux(struct transit *tr){  /* Transit structure                             */
   freemem_localeclipse();
 
   /* prints output                                                          */
-  printflux(tr);  
+  /* HACK: */
+  if (verblevel > 0)
+    printflux(tr);
   return 0;
 }
 
