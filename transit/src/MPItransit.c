@@ -161,13 +161,12 @@ void main(int argc,      /* Number of variables                              */
 
   /* Initialize CIA:                                                        */
   fw(readcia, !=0, &transit);
-  /* HACK */
-  //fw(interpolatecia, !=0, &transit);
   t0 = timecheck(verblevel, itr,  6, "readcia", tv, t0);
 
   /* The array received from MPI:                                           */
   input = (double *)calloc(ntransit, sizeof(double));
 
+  /* :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
   /* MCMC Main loop:                                                        */
   for (; niter >= 0; niter--){
     t0 = timecheck(verblevel, itr,  8, "Start loop", tv, t0);
@@ -275,7 +274,6 @@ void main(int argc,      /* Number of variables                              */
     /* Free arrays allocated inside the loop:                               */
     free(transit.save.ext);
     freemem_samp(&transit.ips);
-    freemem_cia(       transit.ds.cia, &transit.pi);
     freemem_idexrefrac(transit.ds.ir,  &transit.pi);
     freemem_extinction(transit.ds.ex,  &transit.pi);
     freemem_tau(       transit.ds.tau, &transit.pi);
@@ -289,6 +287,7 @@ void main(int argc,      /* Number of variables                              */
   //freemem_atmosphere(   transit.ds.at,  &transit.pi);
   //freemem_lineinfotrans(transit.ds.li,  &transit.pi);
   //freemem_transit(&transit);
+  freemem_cia(       transit.ds.cia, &transit.pi);
 
   transitprint(1, verblevel, "TRAN FLAG 98: End loop.\n");
   MPI_Barrier(comm);
