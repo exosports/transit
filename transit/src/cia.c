@@ -97,7 +97,7 @@ readcia(struct transit *tr){
   char rc;
   char *lp, *lpa;       /* Pointers in file                                 */
   int maxline=300, n;   /* Max length of line. Counter                      */
-  long lines, ni;       /* Lines read counter                               */
+  long lines;           /* Lines read counter                               */
   long i;               /* Auxiliary for indices                            */
   char line[maxline+1]; /* Array to hold line being read                    */
   struct molecules *mol=tr->ds.mol;
@@ -156,22 +156,17 @@ readcia(struct transit *tr){
       switch(rc){
       case 'i': /* Read the name of the isotopes:                           */
         while(isblank(*++lp));
-        ni = countfields(lp, ',');
         /* Check that there are exactly two isotopes:                       */
-        if(ni != 2)
+        if(countfields(lp, ' ') != 2)
           transiterror(TERR_SERIOUS,
                        "Wrong line %i in CIA file '%s', if it begins with a "
-                       "'i', it should have the comma-separated fields with "
-                       "the names of the isotopes in collision. Rest of "
-                       "line:\n %s\n", lines, file, lp);
-        /* Allocate and copy the name of the first moleculee:               */
-        ni = 0;
-        while(lp[ni++] != ','); /* Store in ni the position of the comma    */
-        strncpy(colname, lp, ni-1);
-        colname[ni] = '\0';
-        lp += ni-1;
-        /* Find the ID of the first molecule:                               */
+                       "'i', it should have the species separated by blank "
+                       "spaces.  Rest of line:\n'%s'\n", lines, file, lp);
+
         st_cia.mol1[p] = st_cia.mol2[p] = -1;
+        /* Allocate and copy the name of the first moleculee:               */
+        getname(lp, colname);
+        /* Find the ID of the first molecule:                               */
         for(i=0; i<mol->nmol; i++)
           if(strcmp(mol->name[i], colname)==0)
             st_cia.mol1[p] = i;
@@ -181,11 +176,8 @@ readcia(struct transit *tr){
                     "not match any in the atmsopheric file.\n", colname, file);
 
         /* Allocate and store the name of the second isotope:               */
-        ni = 0;
-        while(isblank(*lp++));
-        while(lp[ni++]); /* Read until the end of the line                  */
-        strncpy(colname, lp, ni);
-        colname[ni] = '\0';
+        lp = nextfield(lp);
+        getname(lp, colname);
         for(i=0; i < mol->nmol; i++)
           if(strcmp(mol->name[i], colname)==0)
             st_cia.mol2[p] = i;
@@ -198,11 +190,10 @@ readcia(struct transit *tr){
         while(isblank(*++lp));
         nt = st_cia.ntemp[p] = countfields(lp, ' '); /* Number of temps.    */
         if(!nt)
-          transiterror(TERR_SERIOUS,
-                       "Wrong line %i in CIA file '%s', if it begins with "
-                       "a 't' then it should have the blank-separated "
-                       "fields with the temperatures. Rest of line: "
-                       "%s.\n", lines, file, lp);
+          transiterror(TERR_SERIOUS, "Wrong line %i in CIA file '%s', if it "
+                       "begins with a 't' then it should have the "
+                       "blank-separated fields with the temperatures. Rest "
+                       "of line: %s.\n", lines, file, lp);
         /* Allocate and store the temperatures array:                       */
         st_cia.temp[p] = (PREC_CIA *)calloc(nt, sizeof(PREC_CIA));
         n = 0;    /* Count temperatures per line                            */
@@ -214,7 +205,7 @@ readcia(struct transit *tr){
             transiterror(TERR_CRITICAL, "Less fields (%i) than expected (%i) "
                          "were read for temperature in the CIA file '%s'.\n",
                          n, nt, file);
-          if((lp[0]|0x20) == 'k') lp++; /* FINDME: what's going on here?    */
+          if((lp[0]|0x20) == 'k') lp++; /* Remove trailing K if exists      */
           lpa = lp;
           n++;
         }
