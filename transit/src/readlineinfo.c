@@ -322,9 +322,8 @@ setimol(struct transit *tr){
 
 
 /* \fcnfh
-   Initialize wavelength sample struct.  Set margin.  
+   Initialize wavelength sample struct.
    Set initial and final wavelengths to use.  
-   Check that margin leaves a non-zero wavelength range.
 
    Return:  0   if all hinted values were accepted, else
            (positive if something was changed):
@@ -333,21 +332,19 @@ setimol(struct transit *tr){
            (negative: If something bad happen):
            -1   if hinted initial wavelength is larger than sug. final
            -2   if hinted initial is larger than largest allowed final
-           -3   if hinted final is shorter than smallest allowed initial
-           -4   if margin value was too big                             */
+           -3   if hinted final is shorter than smallest allowed initial    */
 int
 checkrange(struct transit *tr,   /* General parameters and  hints           */
            struct lineinfo *li){ /* Values returned by readinfo_tli         */
 
   int res=0;                                /* Return value                 */
-  PREC_RES margin;                          /* Margin value                 */
   struct transithint *th = tr->ds.th;       /* transithint                  */
   prop_samp *msamp = &li->wavs;             /* transit wavelength sampling  */
   prop_samp *hsamp = &th->wavs;             /* hint    wavelength sampling  */
   PREC_LNDATA dbini = li->wi*TLI_WAV_UNITS, /* Minimum DB wavelength        */
               dbfin = li->wf*TLI_WAV_UNITS; /* Maximum DB wavelength        */
-  double extra;    /* FINDME */
-  double cm_to_micron = 1e4;  /* Conversion factor to microns               */
+  double cm_to_micron = 1e4,                /* Conversion factor to microns */
+         fct;
 
   /* FINDME: hack prints: */
   //transitprint(1, verblevel, " hsamp->f: %g,  hsamp->i: %g\n",
@@ -370,30 +367,7 @@ checkrange(struct transit *tr,   /* General parameters and  hints           */
   msamp->fct = hsamp->fct;
 
   /* transit lineinfo.wavs conversion factor to cgs:                        */
-  double fct = msamp->fct;
-
-  /* fct to microns conversion factor:                                      */
-  double fct_to_microns = msamp->fct/1e-4;
-
-  transitprint(10, verblevel, "Margin: %g\n", th->margin);
-
-  /* Check that the margin leaves a non-zero range in the line dataset,
-     set it:                                                             */
-  /* FINDME: The range of the lineinfo should not interfere with the 
-     transit's wavelength sampling. There should be a warning note if the
-     database limits are smaller than the transit range, though.         */
-  if(2*th->margin*fct > (dbfin - dbini)){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Margin value (%g microns) is too big for this dataset "
-                 "whose range is %g to %g microns. Factor to convert user "
-                 "margin (%g) to centimeters is %g.\n",
-                 th->margin*fct_to_microns, li->wi*tli_to_microns,
-                 li->wf*tli_to_microns, th->margin, msamp->fct);
-    return -4;
-  }
-  /* Set transit margin in cgs units: */
-  margin = tr->margin = th->margin*msamp->fct;
-  extra = 0;
+  fct = msamp->fct;
 
   transitDEBUG(10, verblevel,
                "Hinted initial and final wavelengths are %6g and %6g cm.\n"
@@ -408,71 +382,56 @@ checkrange(struct transit *tr,   /* General parameters and  hints           */
                  "Incorrect upper wavelength limit in hint.  Default: setting "
                  "to %g before extraction.\n", hsamp->f*fct);
   }
-  /* If hint is 0, set it to max db wavelength:                    */
+  /* If hint is 0, set it to max db wavelength:                             */
   if(hsamp->f <= 0){
-      msamp->f = (dbfin + extra)/fct;
+      msamp->f = dbfin/fct;
   }
-  else{  /* Else, hinted f is a positive value:                    */
-    transitDEBUG(20, verblevel, "dbini: %g  margin: %g  sampf: %g.\n",
-                 dbini, margin, hsamp->f);
-    /* Check that it is not below the minimum value:               */
-    if(dbini+margin > hsamp->f*fct){
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                   "Considering margin, final wavelength (%g * %g) is smaller "
-                   "than minimum wavelength in database (%g = %g + %g).\n",
-                   hsamp->f, fct, dbini+margin, dbini, margin);
+  else{  /* Else, hinted f is a positive value:                             */
+    transitDEBUG(20, verblevel, "dbini: %g  sampf: %g.\n",
+                 dbini, hsamp->f);
+    /* Check that it is not below the minimum value:                        */
+    if(dbini > hsamp->f * fct){
+      transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Final wavelength (%g * %g) "
+                   "is smaller than minimum wavelength in database (%g).\n",
+                   hsamp->f, fct, dbini);
       return -3;
     }
-    /* Warn if it is above maximum value with information:         */
-    if(hsamp->f*fct+margin > dbfin)
+    /* Warn if it is above maximum value with information:                  */
+    if(hsamp->f * fct > dbfin)
       transiterror(TERR_WARNING, "Final requested wavelength (%g microns) "
                    "is larger than the maximum informative value in database "
                    "(%g microns).\n", hsamp->f*fct * cm_to_micron,
                                       dbfin        * cm_to_micron);
-    /* Set the final wavelength value:                             */
+    /* Set the final wavelength value:                                      */
     msamp->f = hsamp->f;
   }
-  /* Set initial wavelength:                                       */
-  /* If invalid value, default it to 0: */ 
+  /* Set initial wavelength:                                                */
+  /* If invalid value, default it to 0:                                     */ 
   if(hsamp->i < 0){
     hsamp->i = 0;
-    transiterror(TERR_WARNING,
-                 "Setting hinted lower wavelength limit before "
-                 "extraction as %g cgs. It was not user-hinted.\n",
+    transiterror(TERR_WARNING, "Setting hinted lower wavelength limit "
+                 "before extraction as %g cgs. It was not user-hinted.\n",
                  hsamp->i*fct);
   }
-  /* If default value, set it to min db wavelength:                */
+  /* If default value, set it to min db wavelength:                         */
   if(hsamp->i<=0)
-    msamp->i = (dbini - extra)/fct;
+    msamp->i = dbini/fct;
   else{
-    transitDEBUG(20, verblevel, "dbfin: %g  margin: %g  sampi: %g.\n",
-                 dbfin, margin, fct*hsamp->i);
-    /* Check that it is not larger than the maximum db wavelength: */
-    if(dbfin < margin+fct*hsamp->i){
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                   "Initial wavelength (%g cm) is larger than maximum "
-                   "wavelength in database (%g cm = %g + %g cm).\n",
-                   fct*hsamp->i, dbfin-margin, dbfin, margin);
+    transitDEBUG(20, verblevel, "dbfin: %g  sampi: %g.\n",
+                 dbfin, fct*hsamp->i);
+    /* Check that it is not larger than the maximum db wavelength:          */
+    if(dbfin < fct * hsamp->i){
+      transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Initial wavelength (%g cm) "
+                   "is larger than maximum wavelength in database (%g cm).\n",
+                   fct*hsamp->i, dbfin);
       return -2;
     }
-    if(fct*hsamp->i-margin < dbini)
-      transiterror(TERR_WARNING,
-                   "Initial requested wavelength (%g microns) is smaller "
-                   "than the minimum informative value in database "
+    if(fct * hsamp->i < dbini)
+      transiterror(TERR_WARNING, "Initial requested wavelength (%g microns) "
+                   "is smaller than the minimum informative value in database "
                    "(%g microns).\n", hsamp->i * fct * cm_to_micron,
                                       dbini          * cm_to_micron);
     msamp->i = hsamp->i;
-  }
-
-  /* Check that we still have a non-zero wavelength range remaining: */
-  if(2*margin > (msamp->f-msamp->i)*fct){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Usable final (%g cm) has to be larger than usable initial "
-                 "wavelength (%g cm). Note that those values could have been "
-                 "modified according to the database range (%g - %g cm) and "
-                 "margin (%g cm).\n", fct*msamp->i+margin,
-                 fct*msamp->f-margin, dbini, dbfin, margin);
-    return -1;
   }
 
   /* Set progress indicator and return status:                     */
@@ -712,7 +671,7 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
        - Check that strtok doesn't overwrite first string */
 
 /* \fcnfh
-    Driver function to read TLI: read isotopes info, check margin
+    Driver function to read TLI: read isotopes info, check
     and ranges, and read line transition information.
 
     Return: 0 on success.                                              */
@@ -739,11 +698,10 @@ readlineinfo(struct transit *tr){
   /* FINDME: Move this out of readline later.                               */
   rn = setimol(tr);
 
-  /* Check the remainder (margin and range) of the hinted values
+  /* Check the remainder range of the hinted values
      related to line database reading:                                      */
   if((rn=checkrange(tr, &li)) < 0)
-    transiterror(TERR_SERIOUS,
-                 "checkrange() returned error code %i.\n", rn);
+    transiterror(TERR_SERIOUS, "checkrange() returned error code %i.\n", rn);
   /* Output status so far if the verbose level is enough:                   */
   if(rn>0 && verblevel>1)
     transiterror(TERR_WARNING, "checkrange() modified the suggested "
@@ -763,15 +721,10 @@ readlineinfo(struct transit *tr){
   transitprint(1, verblevel, "Done.\n\n");
 
   /* Status so far:                                                         */
-  transitprint(2, verblevel,
-               "Status so far:\n"
+  transitprint(2, verblevel, "Status so far:\n"
                " * I read %li records from the datafile.\n"
-               " * The wavelength range read was %.8g to %.8g microns.\n"
-               " * Usable range is thus %.8g to %.8g microns.\n",
-               li.n_l,
-               li.wavs.i*fct_to_microns, li.wavs.f*fct_to_microns,
-               li.wavs.i*fct_to_microns + tr->margin*1e4,
-               li.wavs.f*fct_to_microns - tr->margin*1e4);
+               " * The wavelength range read was %.8g to %.8g microns.\n",
+               li.n_l, li.wavs.i*fct_to_microns, li.wavs.f*fct_to_microns);
 
 /* FINDME: Why this indentation? */
 #ifndef NODEBUG_TRANSIT

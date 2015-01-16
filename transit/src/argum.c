@@ -812,15 +812,6 @@ acceptgenhints(struct transit *tr){
   }
   tr->timesalpha = th->timesalpha;
 
-  /* maxratio is the maximum allowed ratio change before recalculating
-     profile array:                                                         */
-  if(th->maxratio_doppler<0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Maximum allowed Doppler width ratio change. Has to "
-                 "be 0 or positive (%g).\n", th->maxratio_doppler);
-    return -1;
-  }
-
   if (th->ethresh <= 0){
     transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
                  "Extinction-coefficient threshold (%.3e) has to be "

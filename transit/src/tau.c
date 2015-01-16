@@ -131,7 +131,6 @@ tau(struct transit *tr){
 
   /* Get optical depth calculation parameters:                              */
   tr->save.ext = th->save.ext;  /* Ext. coefficient save/restore filename   */
-  const double blowex = tr->blowex = th->blowex; /* Line strength factor    */
   /* Use constant (taulevel=1) or variable (2) index of refraction:         */
   const int taulevel  = tr->taulevel = th->taulevel;
   if(th->toomuch > 0)
@@ -198,7 +197,7 @@ tau(struct transit *tr){
     /* Put the extinction values in a new array, the values may be
        temporarily overwritten by (fnc)(), but they should be restored: */
     for(ri=0; ri<rnn; ri++)
-      er[ri] = e[ri][wi]*blowex + e_s[ri] + e_c[ri] + e_cia[wi][ri];
+      er[ri] = e[ri][wi] + e_s[ri] + e_c[ri] + e_cia[wi][ri];
 
     /* For each impact parameter: */
     for(ri=0; ri<inn; ri++){
@@ -223,7 +222,7 @@ tau(struct transit *tr){
                            "computeextradius() return error code %i while "
                            "computing radius #%i: %g\n", rn, r[lastr]*rfct);
             /* Update the value of the extinction at the right place:       */
-            er[lastr] = e[lastr][wi]*blowex + e_s[lastr] +
+            er[lastr] = e[lastr][wi] + e_s[lastr] +
                         e_c[lastr] + e_cia[wi][lastr];
             /* Print extinction:                                            */
             if (lastr == 100){

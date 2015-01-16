@@ -53,7 +53,7 @@ Thank you for using transit!
 
 #include <transit.h>
 
-/* \fcnfh
+/* \fcnfh DEF
    Create a sampling array. Take values from hint or else from a 
    reference sampling.
 
@@ -172,7 +172,7 @@ makesample1(prop_samp *samp,       /* transit sampling    */
 }
 
 
-/* \fcnfh
+/* \fcnfh  DEF
    Create a sampling array. Take values from hint or else from a 
    reference sampling.
 
@@ -194,10 +194,10 @@ makesample1(prop_samp *samp,       /* transit sampling    */
              the referenced
           -6 Not valid oversampling was given by ref when requested      */
 int
-makesample0(prop_samp *samp,  /* transit sampling                           */
-            prop_samp *hint,  /* hint    sampling                           */
-            prop_samp *ref,   /* reference sampling                         */
-            const long fl){   /* Sampling flag                              */
+makesample(prop_samp *samp,  /* transit sampling                            */
+           prop_samp *hint,  /* hint    sampling                            */
+           prop_samp *ref,   /* reference sampling                          */
+           const long fl){   /* Sampling flag                               */
 
   int res=0;              /* Return output                                  */
   PREC_RES *v;            /* The sampling values                            */
@@ -279,9 +279,8 @@ makesample0(prop_samp *samp,  /* transit sampling                           */
   }
   /* Else if spacing was hinted, then it has to be positive at this point: */
   else if(dhint){
-    transitASSERT(hint->d <= 0,
-                  "Error: Logic test 1 failed in %s's makesample()\n",
-                  TRH_NAME(fl));
+    transitASSERT(hint->d <= 0, "Error: Logic test 1 failed in %s's "
+                                "makesample()\n", TRH_NAME(fl));
     samp->d = hint->d;
   }
   else{
@@ -352,336 +351,13 @@ makesample0(prop_samp *samp,  /* transit sampling                           */
 }
 
 
-/* \fcnfh
-   Create a sampling array. Take values from hint or else from a 
-   reference sampling.
-
-   Get units factor.  Get inital and final values.
-   Check that there is a non-zero interval.
-   Check that only the spacing or the number of points have been defined.
-   If numpoints was provided, use the given array of values and ommit
-   oversampling.  If spacing was provided, calculate numpoints, oversample,
-   and fill in values.
-
-   Return: 1 for modified initial value
-           2 for modified final   value
-           0 if nothing was changed but there is a sampled array
-          -1 if hinted initial is bigger than maximum allowed
-          -2 if hinted final is smaller than minimum allowed
-          -3 if accepted initial value is greater or equal to final one
-          -4 if both spacing and number of elements were hinted
-          -5 if none or both of spacing or number of elements were in
-             the referenced
-          -6 Not valid oversampling was given by ref when requested      */
-int
-makesample(prop_samp *samp,       /* transit sampling             */
-           prop_samp *hint,       /* hint    sampling             */
-           prop_samp *ref,        /* transit's reference sampling */
-           const long fl,         /* Sampling flag                */
-           const float margini,   /* Sampling initial margin      */
-           const float marginf){  /* Sampling final   margin      */
-
-  int res=0;              /* Return output             */
-  PREC_RES *v;            /* The sampling values       */
-  double osd,             /* Oversampled delta         */
-         si;              /* Sample initial value      */
-  _Bool nhint=hint->n> 0, /* True if hint.n is defined */
-        dhint=hint->d!=0; /* True if hint.d is defined */
-  /* Acceptable ratio exceeding final value without truncating the last bin: */
-  double okfinalexcess = 1e-8;
-
-  /* Get units factor: */
-  if(hint->fct<=0)
-    samp->fct = ref->fct;
-  else
-    samp->fct = hint->fct;
-
-  /* Check initial value: */
-  /* If unset hint->i or if hint is less than reference+margin: */
-  if(hint->i<=0 || (margini!=0 && hint->i < ref->i+margini)){
-    samp->i = ref->i + margini;
-    transitprint(4, verblevel,
-                 "Using ref sampling %g [cgs] (w/margin %g [cgs]) for initial "
-                 "value of %s.\n", samp->i*samp->fct, margini*samp->fct,
-                 TRH_NAME(fl));
-    res |= 0x1; /* Turn on modification flag for return output */
-  }
-  /* Initial value is larger than final value: */
-  /* FINDME: This should be done after assessing samp.f */
-  else if(hint->i > ref->f-marginf){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Hinted initial value for %s sampling (%g) is larger than "
-                 "maximum allowed final value %.8g. Consider final margin "
-                 "%.8g\n", TRH_NAME(fl), hint->i, ref->f-marginf, marginf);
-    return -1;
-  }
-  else
-    samp->i = hint->i;
-  si = samp->i;  /* FINDME: delete si and keep using samp->i */
-
-  /* Check final value: */
-  /* If default value or if hint is larger than ref-margin: */
-  if(hint->f<=0 || (marginf!=0 && hint->f > ref->f-marginf)){
-    samp->f = ref->f-marginf;
-    transitprint(4, verblevel,
-                 "Using ref sampling %g [cgs] (w/margin %g [cgs]) for final "
-                 "value of %s.\n", samp->f*samp->fct, marginf*samp->fct,
-                 TRH_NAME(fl));
-    res |= 0x2; /* Turn on modification flag for return output */
-  }
-  else if(hint->f < ref->i+margini){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Hinted final value for %s sampling (%g) is smaller than "
-                 "minimum allowed initial value %.8g. Consider initial margin "
-                 "%.8g\n", TRH_NAME(fl), hint->f, ref->i+margini, margini);
-    return -2;
-  }
-  else
-    samp->f = hint->f;
-
-  /* Check non-zero interval and FINDME: */
-  if(samp->f<=si && ref->d>=0 && hint->d>=0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Initial accepted sampling value (%g) is greater or equal "
-                 "than final accepted sample value (%g). %s was being "
-                 "hinted.\n", si, samp->f, TRH_NAME(fl));
-    return -3;
-  }
-
-  /* Progress report: print flag, spacing, and number of points from hint: */
-  transitprint(21, verblevel,
-               "Flags: 0x%lx    hint.d: %g   hint.n: %li\n",
-               fl, hint->d, hint->n);
-  /* Check that only one of spacing or number of elements field have been
-     hinted: */
-  if(nhint && dhint){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Both spacing (%g) and number of elements (%i) have been "
-                 "hinted. That doesn't makes sense!. %s was being sampled.\n",
-                 hint->d, hint->n, TRH_NAME(fl));
-    return -4;
-  }
-
-  /* If none has been hinted then use ref's:       */
-  if(!nhint && !dhint){
-    /* If none of the ref exists then throw error: */
-    if((ref->d==0 && ref->n<=0)){
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                   "Spacing (%g) and number of elements (%i) were either both "
-                   "or none in the reference for %s sampling. And yes, none "
-                   "were hinted.\n", ref->d, ref->n, TRH_NAME(fl));
-      return -5;
-    }
-    /* If spacing exists then trust it: */
-    if(ref->d!=0){
-      samp->d = ref->d;
-      samp->n = 0;
-    }
-    /* Else, use set array: */
-    else{
-      /* If initial or final value were modified, then print out a warning: */
-      if(res){
-        transiterror(TERR_WARNING,
-                     "Array of length %i was given as reference for %s "
-                     "sampling, but the initial (%g -> %g) or final "
-                     "(%g -> %g) values MIGHT have been modified.\n",
-                     ref->n, TRH_NAME(fl), ref->i, si, ref->f, samp->f);
-      }
-      samp->n = ref->n;
-      samp->d = 0;
-      samp->v = (PREC_RES *)calloc(samp->n, sizeof(PREC_RES));
-      memcpy(samp->v, ref->v, samp->n*sizeof(PREC_RES));
-      if(ref->o != 0)
-        transiterror(TERR_WARNING,
-                     "Fixed sampling array of length %i was referenced. " 
-                     "But also oversampling was given (%li), ignoring it "
-                     "in %s sampling.\n", samp->n, ref->o, TRH_NAME(fl));
-
-      /* Return any possible modification: */
-      return res;
-    }
-  }
-  /* Else if spacing was hinted, then it has to be positive at this point: */
-  else if(dhint){
-    transitASSERT(hint->d <= 0,
-                  "Error: Logic test 1 failed in %s's makesample()\n",
-                  TRH_NAME(fl));
-    samp->d = hint->d;
-  }
-  /* Else, we have a hinted n: */
-  else{
-    transitASSERT(hint->n==0,
-                  "Error: Logic test 2 failed in %s's makesample()\n",
-                  TRH_NAME(fl));
-    samp->n = hint->n;
-    samp->d = -1; /* FINDME: will be used later? Differs from ref default */
-    samp->v = (PREC_RES *)calloc(samp->n, sizeof(PREC_RES));
-    memcpy(samp->v, hint->v, samp->n*sizeof(PREC_RES));
-    if(hint->o != 0)
-      transiterror(TERR_WARNING,
-                   "Fixed sampling array of length %li was hinted. "
-                   "But also oversampling was given (%li). Ignoring in "
-                   "%s sampling.\n", samp->n, hint->o, TRH_NAME(fl));
-    return res;
-  }
-
-  /* Make sampling based on spacing:       */
-  if(samp->d<0) okfinalexcess = -okfinalexcess; /* FINDME: can d be < 0 ?*/
-  /* Define number of points:              */
-  samp->n = ((1.0+okfinalexcess)*samp->f - si)/samp->d+1;
-  if(samp->n<0)  /* FINDME: Explain how can this happen */
-    samp->n = -samp->n;
-
-  /* Check for hinted oversampling:        */
-  if(hint->o<=0){
-    /* If not, check for ref oversampling: */
-    if(ref->o<=0){  /* If not, throw error */
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                   "Not valid oversampling in the reference for "
-                   "%s sampling.\n", TRH_NAME(fl));
-      return -6;
-    }
-    samp->o = ref->o;
-  }
-  else
-    samp->o = hint->o;
-
-  /* Oversampled number of points:      */
-  samp->n = (samp->n-1)*samp->o+1;
-  /* Oversampled delta:                 */
-  osd = samp->d/(double)samp->o;
-
-  /* Allocate and fill sampling values: */
-  v = samp->v = (PREC_RES *)calloc(samp->n, sizeof(PREC_RES));
-  /* Fill-in values:                    */
-  PREC_NREC n = samp->n;
-  *v = si;
-  v += --n;
-  while(n)
-    *v-- = si + n--*osd;
-  /* FINDME: Why so complicated? This is far easier:
-  for (i=0; i<samp->n; i++)
-    *v+i = samp->i + i*osd               */
-
-  /* Check the final point: */
-  if(si!=0 && samp->v[samp->n-1]!=samp->f && verblevel>2)
-    /* FINDME: Consider removig the verblevel condition */
-    transiterror(TERR_WARNING,
-                 "Final sampled value (%g) of the %li points doesn't coincide "
-                 "exactly with required value (%g). %s sampling with "
-                 "pre-oversampling spacing of %g.\n", samp->v[samp->n-1],
-                 samp->n, samp->f, TRH_NAME(fl), samp->d);
-
-  /* Return the flags of accepted values: */
-  return res;
-}
-
-
-/* \fcnfh
-   Call makesample to create transit's wavelet sampling using
-   lineinfo.wavs as reference.
-
- Return: makesample's output or,
-         -10 if neither the spacing nor the number of elements was hinted   * /
-int
-makewavsample0(struct transit *tr){
-  int res;  / * Return output * /
-  prop_samp *hsamp = &tr->ds.th->wavs; / * transithint's wavelength sampling * /
-  prop_samp rsamp;
-
-
-  / * Check that checkrange has been already called: * /
-  transitcheckcalled(tr->pi, "makewavsample", 1, "checkrange", TRPI_CHKRNG);
-
-  / * Check that factor is positive and non-zero, set it:        * /
-  if(hsamp->fct < 0)
-    transiterror(TERR_SERIOUS, "Input wavelength units factor is "
-                               "negative (%g).\n", hsamp->fct);
-  else
-    rsamp.fct = hsamp->fct;
-
-  / * Check that wavelength's spacing and number are defined in hint: * /
-  if(hsamp->d<=0 && hsamp->n<=0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Spacing or number must be hinted for wavelength, "
-                 "cannot just guess them.\n");
-    return -10;
-  }
-
-  / * Create the sampling, use lineinfo's wavs as reference: * /
-  res = makesample0(&tr->wavs, rsamp, TRH_WAV);
-
-  transitDEBUG(22, verblevel,
-               "Made following wavelength sampling:\n"
-               " Initial/Final/FCT : %g/%g/%g\n"
-               " Nsample/Delta     : %li/%g\n",
-               tr->wavs.i, tr->wavs.f, tr->wavs.fct, tr->wavs.n, tr->wavs.d);
-
-  / * Set progress indicator if sampling was successful and return status: * /
-  if(res>=0)
-    tr->pi |= TRPI_MAKEWAV;
-  return res;
-} */
-
-
-/* \fcnfh
-   Call makesample to create transit's wavelet sampling using
-   lineinfo.wavs as reference.
-
- Return: makesample's output or,
-         -10 if neither the spacing nor the number of elements was hinted    */
-int
-makewavsample(struct transit *tr){
-  int res;  /* Return output */
-  prop_samp *samp = &tr->ds.th->wavs;   /* transithint's wavelength sampling */
-  prop_samp *lin = &(tr->ds.li->wavs);  /* lineinfo's    wavelength sampling */
-
-  /* Check that checkrange has been already called: */
-  transitcheckcalled(tr->pi, "makewavsample", 1, "checkrange", TRPI_CHKRNG);
-
-  /* Check that wavelength's spacing and number are defined in hint: */
-  if(samp->d<=0 && samp->n<=0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Spacing or number must be hinted for wavelength, "
-                 "cannot just guess them.\n");
-    return -10;
-  }
-
-  /* TD: Fix the mess if user chooses a factor different from the TLI's
-     (then margin given to makesample won't make sense) */
-
-  /* Make the sampling: */
-  transitDEBUG(22, verblevel,
-               "Making wavelength sampling:\n"
-               " Margin: %g (factor: %g)   \n"
-               " Number of points: ref: %li (user: %li)\n"
-               " Delta: ref: %g (user: %g).\n",
-               tr->margin, tr->wavs.fct, lin->n, samp->n, lin->d, samp->d);
-
-  /* Create the sampling, use lineinfo's wavs as reference: */
-  //res = makesample(&tr->wavs, samp, lin, TRH_WAV, tr->margin/lin->fct,
-  //                 tr->margin/lin->fct);
-  res = makesample0(&tr->wavs, samp, lin, TRH_WAV);
-  transitDEBUG(22, verblevel,
-               "Made following wavelength sampling:\n"
-               " Initial/Final/FCT : %g/%g/%g\n"
-               " Nsample/Delta     : %li/%g\n",
-               tr->wavs.i, tr->wavs.f, tr->wavs.fct, tr->wavs.n, tr->wavs.d);
-
-  /* Set progress indicator if sampling was successful and return status: */
-  if(res>=0)
-    tr->pi |= TRPI_MAKEWAV;
-  return res;
-}
-
-
-/* \fcnfh
+/* \fcnfh  DEF
    Call makesample with the appropiate parameters and set the flags
    for a wavenumber sampling
 
    Return: makesample() output                                              */
 int
-makewnsample0(struct transit *tr){
+makewnsample(struct transit *tr){
   struct transithint *th = tr->ds.th;
   prop_samp *hsamp  = &th->wns;          /* Hinted wavenumber sampling      */
   prop_samp *wlsamp = &th->wavs;         /* Hinted wavelength sampling      */
@@ -762,87 +438,7 @@ makewnsample0(struct transit *tr){
 }
 
 
-/* \fcnfh
-   Calls makesample with the appropiate parameters and set the flags
-   for a wavenumber sampling
-
-   Return: makesample() output                                       */
-int
-makewnsample(struct transit *tr){
-  int res;            /* Result status                 */
-  prop_samp fromwav;  /* Reference wavenumber sampling */
-  memset(&fromwav, 0, sizeof(prop_samp));
-  struct transithint *trh = tr->ds.th;
-  prop_samp *wsamp = &tr->wavs;
-
-  /* Check that makewavsample has been already called: */
-  transitcheckcalled(tr->pi, "makewnsample", 1, "makewavsample", TRPI_MAKEWAV);
-
-  /* Set up reference wavenumber sampling:  */
-  /* Copy wavelength's oversampling and multiplicative factor: */
-  fromwav.o = wsamp->o;
-  /* Reference's wavenumber units are cm-1: */
-  fromwav.fct = 1;
-
-  /* Wavenumber to wavelength units ratio: */
-  double wnu_o_wlu = fromwav.fct/wsamp->fct;
-
-  /* Get initial wavenumber from wavelength maximum: */
-  fromwav.i = wnu_o_wlu/wsamp->f;
-  /* Get final   wavenumber from wavelength minimum: */
-  fromwav.f = wnu_o_wlu/wsamp->i;
-
-  /* Set margin. If not given, take it from wavelength's: */
-  if(trh->wnm>0)
-    tr->wnmf = tr->wnmi = trh->wnm;
-  else{
-    /* FINDME: why like this? */
-    tr->wnmf = tr->margin * fromwav.f*fromwav.f * fromwav.fct*fromwav.fct;
-    tr->wnmi = tr->margin * fromwav.i*fromwav.i * fromwav.fct*fromwav.fct;
-  }
-
-  /* Don't set the number of elements: */
-  fromwav.n = 0;
-
-  /* Set spacing such that the wavenumber grid has the same number of
-     points as the wavelength grid. Then change reference initial and
-     final point to include margin: */
-  if(wsamp->n<2 && trh->wns.d<=0)
-    transiterror(TERR_SERIOUS,
-                 "Wavelength spacing (%g) is too big, "
-                 "unusable as reference for wavenumber spacing.\n", wsamp->d);
-  fromwav.d = (fromwav.f-fromwav.i)/((wsamp->n-1)/wsamp->o);
-  fromwav.f -= tr->wnmf;
-  fromwav.i += tr->wnmi;
-
-  /* Make the wavenumber sampling: */ 
-  //res = makesample(&tr->wns, &trh->wns, &fromwav, TRH_WN, 0, 0);
-  res = makesample0(&tr->wns, &trh->wns, &fromwav, TRH_WN);
-
-  /* Check that wavenumber's range lies within the wavelength's range: */
-  if ((1.0/(tr->wns.i*tr->wns.fct) > tr->wavs.f*tr->wavs.fct) || 
-      (1.0/(tr->wns.f*tr->wns.fct) < tr->wavs.i*tr->wavs.fct))
-    transiterror(TERR_SERIOUS,
-                 "Wavenumber range (%g-%g cm-1), where extinction is "
-                 "going to be computed, is beyond wavelength range "
-                 "(%g-%g cm), where line info was read. "
-                 "Conversion factor: %g. Wavenumber margin: %g, %g "
-                 "Given wavn: (%g-%g cm-1). "
-                 "Wavelength check (low: %i, high: %i).\n",
-                 tr->wns.i*tr->wns.fct,   tr->wns.f*tr->wns.fct,
-                 tr->wavs.i*tr->wavs.fct, tr->wavs.f*tr->wavs.fct,
-                 wnu_o_wlu, tr->wnmi, tr->wnmf, fromwav.i, fromwav.f,
-                 (1.0/(tr->wns.i*tr->wns.fct) > tr->wavs.f*tr->wavs.fct),
-                 (1.0/(tr->wns.f*tr->wns.fct) < tr->wavs.i*tr->wavs.fct));
-
-  /* Set progress indicator if sampling was successful and return status: */
-  if(res>=0)
-    tr->pi |= TRPI_MAKEWN;
-  return res;
-}
-
-
-/* \fcnfh
+/* \fcnfh  DEF
  Calls makesample with the appropiate parameters and set the flags
 
  @returns makesample() output
@@ -922,7 +518,7 @@ makeradsample(struct transit *tr){
   }
   /* Resample to equidistant radius array:                                  */
   else{
-    res = makesample0(rad, &tr->ds.th->rads, rsamp, TRH_RAD);
+    res = makesample(rad, &tr->ds.th->rads, rsamp, TRH_RAD);
   }
   nrad = rad->n;
 
@@ -977,7 +573,7 @@ makeradsample(struct transit *tr){
 }
 
 
-/* \fcnfh
+/* \fcnfh  DEF
    Calls makesample with the appropiate parameters and set the flags for
    an impact parameter sampling
 
@@ -1017,7 +613,7 @@ makeipsample(struct transit *tr){
     transitcheckcalled(tr->pi, "makeipsample", 1, "makeradsample",TRPI_MAKERAD);
 
     /* Make the sampling taking as reference the radius sampling:           */
-    res = makesample0(&tr->ips, &usamp, &rsamp, TRH_IPRM);
+    res = makesample(&tr->ips, &usamp, &rsamp, TRH_IPRM);
   }
   /* Set progress indicator:                                                */
   if(res >= 0)
@@ -1026,7 +622,7 @@ makeipsample(struct transit *tr){
 }
 
 
-/* \fcnfh
+/* \fcnfh  DEF
    Calls makesample with the appropiate parameters and set the flags for
    a temperature sampling
 
@@ -1036,29 +632,26 @@ maketempsample(struct transit *tr){
   int res; /* Return output                                                 */
   struct transithint *th = tr->ds.th; /* transithint                        */
 
-  /* Hinted temperature sample                                              */
-  prop_samp usamp = {0, th->temp.d, th->temp.i, th->temp.f,
-                     1, NULL,       1};
-  /* Reference temperature sample                                           */
-  prop_samp rsamp = {0, 0,          0,          0,
-                     1, NULL,       1};
+  /* Hinted temperature sample:                                             */
+  prop_samp usamp = {0, th->temp.d, th->temp.i, th->temp.f, 1, NULL, 1};
+  /* Reference temperature sample:                                          */
+  prop_samp rsamp = {0, 0,          0,          0,          1, NULL, 1};
 
-  if(usamp.f < usamp.i)
-    transiterror(TERR_SERIOUS,
-                 "Wrong specification of temperature, final value (%g) "
-                 "has to be bigger than initial (%g).\n", usamp.f, usamp.i);
+  if (usamp.f < usamp.i)
+    transiterror(TERR_SERIOUS, "Wrong specification of temperature, final "
+        "value (%g) has to be bigger than initial (%g).\n", usamp.f, usamp.i);
 
   /* Make the sampling:                                                     */
-  res = makesample0(&tr->temp, &usamp, &rsamp, TRH_TEMP);
+  res = makesample(&tr->temp, &usamp, &rsamp, TRH_TEMP);
 
   /* Set progress indicator:                                                */
-  if(res>=0)
+  if (res >= 0)
     tr->pi |= TRPI_MAKEIP;
   return res;
 }
 
 
-/* \fcnfh
+/* \fcnfh  DEF
    Print sample info for a structure                                        */
 static void
 printsample(FILE *out,        /* File pointer to write out                  */
@@ -1094,7 +687,7 @@ printsample(FILE *out,        /* File pointer to write out                  */
 }
 
 
-/* \fcnfh
+/* \fcnfh  DEF
    Saves in binary the sample structure               */
 void
 savesample(FILE *out,        /* File pointer to write */
@@ -1104,7 +697,7 @@ savesample(FILE *out,        /* File pointer to write */
 }
 
 
-/* \fcnfh
+/* \fcnfh  DEF
    Saves in binary the sample structure's arrays */
 void
 savesample_arr(FILE *out,        /* File pointer to write */
@@ -1114,7 +707,7 @@ savesample_arr(FILE *out,        /* File pointer to write */
 }
 
 
-/* \fcnfh
+/* \fcnfh  DEF
    Restore a binary sample structure
 
    Return: 0 on success, else
@@ -1131,7 +724,7 @@ restsample(FILE *in,         /* File pointer to read */
 }
 
 
-/* \fcnfh
+/* \fcnfh  DEF
    Restore a binary sample structure
 
    Return: 0 on success, else
@@ -1157,7 +750,7 @@ restsample_arr(FILE *in,         /* File pointer to read */
 }
 
 
-/* \fcnfh
+/* \fcnfh  DEF
    Print the sample data to file.
 
    Return: 0 on success, else
@@ -1194,7 +787,7 @@ outsample(struct transit *tr){
 }
 
 
-/* \fcnfh
+/* \fcnfh  DEF
  Frees the sampling structure */
 void
 freemem_samp(prop_samp *samp){
