@@ -148,6 +148,12 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_RRADIUS,
     CLA_GSURF,
     CLA_OPABREAK,
+    CLA_NDOP,
+    CLA_NLOR,
+    CLA_DMIN,
+    CLA_DMAX,
+    CLA_LMIN,
+    CLA_LMAX,
   };
 
   /* Generate the command-line option parser: */
@@ -247,14 +253,29 @@ processparameters(int argc,            /* Number of command-line args  */
      "gives centimeters. If 0 then use wavelength's value. This only applies "
      "to output, internally wavenumbers will always be in cm-1."},
 
-    /* Extinction calculation options:        */
+    /* Voigt profile options:                                               */
+    {NULL, 0, HELPTITLE, NULL, NULL, "Voigt profile options:"},
+    {"ndop",    CLA_NDOP, required_argument, "40",   "integer",
+    "Number of Doppler-broadening width samples."},
+    {"nlor",    CLA_NLOR, required_argument, "40",   "integer",
+    "Number of Lorentz-broadening width samples."},
+    {"dmin",    CLA_DMIN, required_argument, "1e-3", "float",
+    "Minimum Doppler-broadening width (in cm-1)."},
+    {"dmax",    CLA_DMAX, required_argument, "0.25", "float",
+    "Maximum Doppler-broadening width (in cm-1)."},
+    {"lmin",    CLA_LMIN, required_argument, "1e-4", "float",
+    "Minimum Lorentz-broadening width (in cm-1)."},
+    {"lmax",    CLA_LMAX, required_argument, "10.0", "float",
+    "Maximum Lorentz-broadening width (in cm-1)."},
+    {"finebin", 'f',      required_argument, "1",    "integer",
+     "Number of fine-bins to calculate the Voigt function."},
+    {"nwidth",  'a',      required_argument, "20",   "number",
+     "Number of the max-widths (the greater of Voigt or Doppler widths) "
+     "that needs to be contained in a calculated profile."},
+
+    /* Extinction calculation options:                                      */
     {NULL,         0,               HELPTITLE,         NULL,    NULL,
      "EXTINCTION CALCULATION OPTIONS:"},
-    {"finebin",    'f',             required_argument, "1",     "integer",
-     "Number of fine-bins to calculate the Voigt function."},
-    {"nwidth",     'a',             required_argument, "20",    "number",
-     "Number of the max-widths (the greater of Voigt or Doppler widths) that "
-     "need to be contained in a calculated profile."},
     {"ethreshold", CLA_ETHRESH,   required_argument, "1e-8",    "ethreshold",
      "Minimum extinction-coefficient ratio (w.r.t. maximum in a layer) to "
      "consider in the calculation."},
@@ -545,8 +566,26 @@ processparameters(int argc,            /* Number of command-line args  */
     case 'a':  /* Number of half-widths in a profile:            */
       hints->timesalpha = atof(optarg);
       break;
+    case CLA_NDOP:
+      hints->nDop = atoi(optarg);
+      break;
+    case CLA_NLOR:
+      hints->nLor = atoi(optarg);
+      break;
+    case CLA_DMIN:
+      hints->dmin = atof(optarg);
+      break;
+    case CLA_DMAX:
+      hints->dmax = atof(optarg);
+      break;
+    case CLA_LMIN:
+      hints->lmin = atof(optarg);
+      break;
+    case CLA_LMAX:
+      hints->lmax = atof(optarg);
+      break;
 
-    case 'q':  /* Quiet run:                                     */
+    case 'q':  /* Quiet run:                                                */
       verblevel = 0;
       break;
 
