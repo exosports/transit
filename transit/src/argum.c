@@ -821,14 +821,6 @@ acceptgenhints(struct transit *tr){
     return -1;
   }
 
-  if(th->minelow < 0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Minimum line-transition low energy limit has to be positive:"
-                 " %i\n", th->minelow);
-    return -1;
-  }
-  tr->minelow = th->minelow;
-
   if (th->ethresh <= 0){
     transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
                  "Extinction-coefficient threshold (%.3e) has to be "
