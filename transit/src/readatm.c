@@ -171,21 +171,6 @@ getatm(struct transit *tr){
   rads->o = 1;
   rads->d = 0;
 
-  /* 'tauiso' is the isotope index which tau() will calculate afterwards.
-      Check that it is between boundaries. */
-  //tr->tauiso = 0;
-  //if(th->tauiso >= 0  &&  th->tauiso < iso->n_i){
-  //  if(iso->isodo[th->tauiso] == ignore  &&  tr->ds.ex->periso){
-  //    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-  //                 "Selected isotope to compute tau (#%i: %s) was actually "
-  //                 "ignored according to the atmospheric info\n",
-  //                 th->tauiso, tr->ds.iso->isof[th->tauiso]);
-  //    return -5;
-  //  }
-  //  else
-  //    tr->tauiso = th->tauiso;
-  //}
-
   /* Return succes and set progress indicator:                              */
   tr->pi |= TRPI_GETATM;
   return 0;

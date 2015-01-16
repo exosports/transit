@@ -31,7 +31,7 @@
 
 /*  Structures  */
 
-/* Forward declarations */
+/* Forward declarations:                                                    */
 struct transit;
 struct geometry;
 
@@ -188,19 +188,15 @@ struct atm_data{     /* Atmospheric file parameters:                    */
 
 
 struct extinction{
-  PREC_RES ***e;     /* Extinction value [iso:][rad][wav]                 */
-  float maxratio;    /* Maximum Doppler width ratio between current and
-                        last calculated profile.  If the value is greater
-                        than this, then recalculate                       */
-  int vf;            /* Number of fine-bins of the Voigt function         */
+  PREC_RES **e;      /* Extinction value [rad][wav]                         */
+  int vf;            /* Number of fine-bins of the Voigt function           */
   float ta;          /* Number of alphas that have to be contained in
-                        the profile                                       */
-  _Bool periso;      /* Extinction per isotope                            */
+                        the profile                                         */
   _Bool *computed;   /* Whether the extinction at the given radius was
-                        computed [rad]                                    */
+                        computed [rad]                                      */
   double minelow;    /* Only use transitions with this minimum low
-                        energy (in cm-1)                                  */
-  double ethresh;     /* Lower extinction-coefficient threshold              */
+                        energy (in cm-1)                                    */
+  double ethresh;    /* Lower extinction-coefficient threshold              */
 };
 
 
@@ -398,8 +394,6 @@ struct transithint{
 
   double toomuch;       /* Optical depth values greater than this won't be
                            calculated: the extinction is assumed to be zero  */
-  short tauiso;         /* Whether user want to calculate optical depth for
-                           all or some isotopes, TRU_EXTPERISO has to be on. */
   double blowex;        /* Blow extinction by this amount before computing
                            tau, this option has no physical meaning, but
                            mostly debugging                                  */
@@ -434,48 +428,47 @@ struct transit{
 
   FILE *fp_atm, *fp_opa, *fp_out, *fp_line; /* Pointers to files            */
   float allowrq;    /* How much less than one is accepted, so that no warning
-                       is issued if abundances don't ad up to that           */
-  PREC_RES telres;  /* Telescope resolution                                  */
+                       is issued if abundances don't ad up to that          */
+  PREC_RES telres;  /* Telescope resolution                                 */
   PREC_RES margin;  /* Wavelength amount not trusted at the boundaries in
                        cgs units, also how much out of requested range it
-                       have to look for transitions                          */
-  PREC_RES wnmi;    /* Amount of cm-1 not trusted at the beginning           */
-  PREC_RES wnmf;    /* Amount of cm-1 not trusted at the end                 */
-  long int angleIndex; /* Index of the current angle                         */
-  prop_samp rads, ips, /* Sampling properties of radius, impact parameter,   */
-      owns,            /* oversampled wavenumber,                            */
-      wavs, wns, temp; /* wavelength, wavenumber, and temperature            */
-  prop_atm atm;     /* Sampled atmospheric data                              */
-  short tauiso;     /* Isotope from which to calculate the optical depth     */
-  _Bool opabreak;    /* Break after opacity calculation                      */
-  int ndivs,         /* Number of exact divisors of the oversampling factor  */
-     *odivs;         /* Exact divisors of the oversampling factor            */
-  int voigtfine;     /* Number of fine-bins of the Voigt function            */
+                       have to look for transitions                         */
+  PREC_RES wnmi;    /* Amount of cm-1 not trusted at the beginning          */
+  PREC_RES wnmf;    /* Amount of cm-1 not trusted at the end                */
+  long int angleIndex; /* Index of the current angle                        */
+  prop_samp rads, ips, /* Sampling properties of radius, impact parameter,  */
+      owns,            /* oversampled wavenumber,                           */
+      wavs, wns, temp; /* wavelength, wavenumber, and temperature           */
+  prop_atm atm;      /* Sampled atmospheric data                            */
+  _Bool opabreak;    /* Break after opacity calculation                     */
+  int ndivs,         /* Number of exact divisors of the oversampling factor */
+     *odivs;         /* Exact divisors of the oversampling factor           */
+  int voigtfine;     /* Number of fine-bins of the Voigt function           */
   float timesalpha;  /* Broadening profile width in number of Doppler or
-                        Lorentz half width                                   */
-  double minelow;    /* Minimum transition low energy considered (in cm-1)   */
-  double p0, r0;     /* Pressure and radius reference level                  */
-  double gsurf;      /* Surface gravity                                      */
+                        Lorentz half width                                  */
+  double minelow;    /* Minimum transition low energy considered (in cm-1)  */
+  double p0, r0;     /* Pressure and radius reference level                 */
+  double gsurf;      /* Surface gravity                                     */
 
   double blowex;    /* Blow extinction by this amount before computing tau,
                        this option has no physical meaning, but mostly
-                       debugging                                             */
-  int taulevel;     /* Tau integration level of precision                    */
-  int modlevel;     /* Modulation integration level of precision             */
+                       debugging                                            */
+  int taulevel;     /* Tau integration level of precision                   */
+  int modlevel;     /* Modulation integration level of precision            */
 
-  long fl;          /* flags                                                 */
-  long interpflag;  /* Interpolation flag                                    */
-  long pi;          /* progress indicator                                    */
+  long fl;          /* flags                                                */
+  long interpflag;  /* Interpolation flag                                   */
+  long pi;          /* progress indicator                                   */
 
-  transit_ray_solution *sol; /* Transit solution type                        */
-  eclipse_ray_solution *ecl; /* Eclipse solution type                        */
+  transit_ray_solution *sol; /* Transit solution type                       */
+  eclipse_ray_solution *ecl; /* Eclipse solution type                       */
   PREC_RES *outpret; /* Output dependent on wavelength only as it travels
-                        to Earth before telescope                            */
+                        to Earth before telescope                           */
 
-  struct saves save; /* Saves indicator of program stats                     */
+  struct saves save; /* Saves indicator of program stats                    */
 
   struct {          /* Data structures pointers, this is data that is not
-                       required for the final computation                    */
+                       required for the final computation                   */
     struct transithint *th;
     struct lineinfo    *li;
     struct atm_data    *at;

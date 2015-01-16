@@ -228,9 +228,9 @@ calcopacity(struct transit *tr,
       //transitprint(1,2, "%.5e, %.5e\n", op->vprofile[i][j][0], op->vprofile[i][j][1]);
 
       /* Print profile to screen:                                           */
-      //if (i == 0 && j <1 ){
+      //if ((i==7 && j==0) || (i==7 && j==11) || (i==8 && j==18) || (i==8 && j==25)){
       //  for (k=0; k<2*op->profsize[i][j]+1; k++){
-      //    transitprint(1,2, "%.5e, ", profile[i][j][0][k]);
+      //    transitprint(1,2, "%.3e, ", profile[i][j][0][k]);
       //  }
       //  transitprint(1, 2, "\n");
       //}
@@ -483,7 +483,6 @@ extinction(struct transit *tr,      /* transit struct                       */
 
   struct timeval tv;
   double t0 = timestart(tv, "\nOpacity calculation:");
-  //transitprint(1, verblevel, "FLAG 210.\n");
 
   /* per-spectrum minimum and maximum line width:                           */
   double minwidth=1e5, maxwidth=0.0;
@@ -498,19 +497,16 @@ extinction(struct transit *tr,      /* transit struct                       */
 
 
   /* Set up of variables:                                                   */
-  nlines = tr->ds.li->n_l; /* Number of line transitions                    */
+  nlines = tr->ds.li->n_l;      /* Number of line transitions               */
 
-  niso = iso->n_i;     /* Number of isotopes                                */
-  nmol = mol->nmol;    /* Number of molecules in atmosphere                 */
+  niso = iso->n_i;              /* Number of isotopes                       */
+  nmol = mol->nmol;             /* Number of molecules in atmosphere        */
 
-  /* Number of wavenumber samples:                                          */
-  onwn = tr->owns.n; /* Oversampled array                                   */
+  dwn  = tr->wns.d /tr->wns.o;  /* Wavenumber sampling interval             */
+  odwn = tr->owns.d/tr->owns.o; /* Wavenumber oversampling interval         */
+  onwn = tr->owns.n;            /* Wavenumber oversampling array size       */
 
-  /* Wavenumber sampling intervals:                                         */
-  dwn  = tr->wns.d /tr->wns.o;  /* Wavenumber array                         */
-  odwn = tr->owns.d/tr->owns.o; /* Oversampling array                       */
-
-  temp = op->temp[t];  /* Layer temperature                                 */
+  temp = op->temp[t];           /* Layer temperature                        */
 
   /* Constant factors for line widths:                                      */
   fdoppler = sqrt(2*KB*temp/AMU) * SQRTLN2 / LS;
@@ -532,7 +528,6 @@ extinction(struct transit *tr,      /* transit struct                       */
   for (i=1; i<op->Nmol; i++)
     ktmp[i] = ktmp[0] + tr->owns.n * i;
 
-  //transitprint(1, verblevel, "FLAG 230.\n");
   /* Calculate the isotope's widths for this layer:                         */
   for(i=0; i<niso; i++){
     /* Lorentz profile width:                                               */
