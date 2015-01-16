@@ -99,8 +99,8 @@ void main(int argc,      /* Number of variables                              */
     transit_nowarn = 1;
 
   /* Make wavenumber binning:                                               */
-  fw(makewnsample0, <0, &transit);
-  t0 = timecheck(verblevel, itr,  1, "makewnsample0", tv, t0);
+  fw(makewnsample, <0, &transit);
+  t0 = timecheck(verblevel, itr,  1, "makewnsample", tv, t0);
   if(fw_status>0)
     transitprint(7, verblevel,
                  "makewnsample() modified some of the hinted "

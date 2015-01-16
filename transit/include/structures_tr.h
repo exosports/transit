@@ -145,17 +145,17 @@ struct atm_isoprop{    /* Proportional-abundance isotopic parameters: */
 };
 
 
-struct line_transition{  /* Line transition parameters:         */
-  PREC_LNDATA *wl;       /* Wavelength                          */
-  PREC_LNDATA *elow;     /* Lower energy level                  */
-  PREC_LNDATA *gf;       /* gf value                            */
-  short *isoid;          /* Isotope ID (Assumed to be in range) */
-  double wfct;           /* wl units factor to cgs              */
-  double efct;           /* elow units factor to cgs            */
+struct line_transition{  /* Line transition parameters:                     */
+  PREC_LNDATA *wl;       /* Wavelength                                      */
+  PREC_LNDATA *elow;     /* Lower-state energy                              */
+  PREC_LNDATA *gf;       /* gf value                                        */
+  short *isoid;          /* Isotope ID (Assumed to be in range)             */
+  double wfct;           /* wl units factor to cgs                          */
+  double efct;           /* elow units factor to cgs                        */
 };
 
 
-struct lineinfo{             /* Line information parameters:    */
+struct lineinfo{             /* Line information parameters:                */
   struct line_transition lt; /* Line transitions                            */
   unsigned short tli_ver;    /* TLI version                                 */
   unsigned short lr_ver;     /* lineread version                            */
@@ -216,19 +216,7 @@ struct opacity{
 
 
 struct idxref{
-  PREC_RES *n;       /* Index of refraction [rad] */
-};
-
-
-struct onept{
-  double p, t;   /* Pressure and temperature        */
-  int ne;        /* Number of extra isotopes        */
-  _Bool one;     /* One PT required?                */
-  double *q;     /* Isotopes abundances             */
-  int nq;        /* Number of input abundances      */
-  char **n;      /* Names of extra isotopes         */
-  PREC_ZREC *m;  /* Mass of extra isotopes          */
-  int nm;        /* Number of input mass-name pairs */
+  PREC_RES *n;   /* Index of refraction [rad]                               */
 };
 
 
@@ -242,47 +230,46 @@ struct savefiles {
 
 
 struct optdepth{
-  PREC_RES **t;     /* Optical depth [wn][ip]                             */
-  long *last;       /* Index of the lowest impact parameter value, lower
-                       than this the optical depth is greater than
-                       '.toomuch'.  It is naturally assumed that optical 
-                       depth increases inward the planet. [wn]            */
+  PREC_RES **t;     /* Optical depth [wn][ip]                               */
+  long *last;       /* Index of the lowest impact parameter, where the
+                       optical depth is greater than 'toomuch' (assumed that
+                       optical depth increases inwards)  [wn]               */
   double toomuch;   /* Optical depth values greater than this won't be
-                       calculated: the extinction is assumed to be zero.  */
+                       calculated: the extinction is assumed to be zero.    */
 };
+
 
 struct grid{
-  PREC_RES **a;      /* Intensity grid, 2D, [an][wnn]                      */
+  PREC_RES **a;      /* Intensity grid, 2D, [an][wnn]                       */
 };
-
 
 
 struct geometry{
-  float smaxis;       /* Semimajor axis                                    */
-  double smaxisfct;   /* 'smaxis' times this gives cgs units.              */
-  double time;        /* this value is 0 when in the middle of the eclipse */
-  double timefct;     /* 'time' times this gives cgs units                 */
+  float smaxis;       /* Semimajor axis                                     */
+  double smaxisfct;   /* 'smaxis' times this gives cgs units.               */
+  double time;        /* this value is 0 when in the middle of the eclipse  */
+  double timefct;     /* 'time' times this gives cgs units                  */
   float incl;         /* inclination of the planetary orbit with respect
-                         to the observer, 90 degrees is edge on            */
-  float inclfct;      /* Units to convert inclination to radians           */
-  double ecc;         /* eccentricty                                       */
-  double eccfct;      /* eccentricity's units                              */
-  double lnode;       /* longitud of the ascending node                    */
-  double lnodefct;    /* longitud of the ascending node units              */
-  double aper;        /* argument of the pericenter                        */
-  double aperfct;     /* argument of the pericenter units                  */
+                         to the observer, 90 degrees is edge on             */
+  float inclfct;      /* Units to convert inclination to radians            */
+  double ecc;         /* eccentricty                                        */
+  double eccfct;      /* eccentricity's units                               */
+  double lnode;       /* longitud of the ascending node                     */
+  double lnodefct;    /* longitud of the ascending node units               */
+  double aper;        /* argument of the pericenter                         */
+  double aperfct;     /* argument of the pericenter units                   */
 
-  double starmass;    /* Mass of the star                                  */
-  double starmassfct; /* 'starmass' times this gives cgs units.            */
+  double starmass;    /* Mass of the star                                   */
+  double starmassfct; /* 'starmass' times this gives cgs units.             */
 
-  double starrad;     /* Star's radius                                     */
-  double starradfct;  /* 'starrad' times this gives cgs units.             */
+  double starrad;     /* Star's radius                                      */
+  double starradfct;  /* 'starrad' times this gives cgs units.              */
 
   double x, y;        /* Coordinates of the center of the planet with
                          respect to the star. 'fct' to convert to cgs is
-                         found in rads.fct. These fields are not hinted.   */
+                         found in rads.fct. These fields are not hinted.    */
 
-  _Bool transpplanet; /* If true, set maximum optical depth to toomuch     */
+  _Bool transpplanet; /* If true, set maximum optical depth to toomuch      */
 };
 
 
@@ -345,13 +332,14 @@ struct detailout{
 struct cia{
   int nfiles;       /* Number of CIA files                                  */
   PREC_CIA **e;     /* Extinction from all CIA sources [wn][temp]           */
-  PREC_CIA ***cia;  /* Tabulated CIA extinction [nfiles][nwave][ntemp]      */
-  PREC_CIA **wn;    /* Tabulated wavenumber  arrays [nfiles][nwave]         */
-  PREC_CIA **temp;  /* Tabulated temperature arrays [nfiles][ntemp]         */
-  int *nwave;       /* Number of wavenumber samples [nfiles]                */
+  PREC_CIA ***cia;  /* Tabulated CIA extinction      [nfiles][nwave][ntemp] */
+  PREC_CIA **wn;    /* Tabulated wavenumber  arrays  [nfiles][nwave]        */
+  PREC_CIA **temp;  /* Tabulated temperature arrays  [nfiles][ntemp]        */
+  int *nwave;       /* Number of wavenumber samples  [nfiles]               */
   int *ntemp;       /* Number of temperature samples [nfiles]               */
-  int *mol1, *mol2; /* Pairs of molecule's ID [nfiles]                      */
+  int *mol1, *mol2; /* Pairs of molecule's ID        [nfiles]               */
 };
+
 
 /* Structure with user hinted data that should go to the 'struct
    transit' upon approval                                                   */
@@ -363,20 +351,14 @@ struct transithint{
        *f_toomuch,      /* Output toomuch filename                          */
        *f_outsample,    /* Output sample filename                           */
        *f_molfile;      /* Known molecular info filename                    */
-  PREC_NREC ot;         /* Radius index at which to print output from tau    */
-  prop_samp rads, ips,  /* Sampling properties of radius, impact parameter,  */
-       wavs, wns, temp; /*   wavelength, wavenumber, and temperature         */
-  RaySol  path;         /* Eclipse or transit ray solution.                  */
-  long int ann;         /* Number of angles                                  */
-  PREC_RES angles[10];  /* Angles                                            */
+  PREC_NREC ot;         /* Radius index at which to print output from tau   */
+  prop_samp rads, ips,  /* Sampling properties of radius, impact parameter, */
+       wavs, wns, temp; /*   wavelength, wavenumber, and temperature        */
+  RaySol  path;         /* Eclipse or transit ray solution.                 */
+  long int ann;         /* Number of angles                                 */
+  PREC_RES angles[10];  /* Angles                                           */
   float allowrq;        /* How much less than one is accepted, and no warning
-                           is issued if abundances don't ad up to that       */
-  PREC_RES margin;      /* Amount not trusted at the boundaries (uses
-                           .wavs.fct to convert to cgs), also how much out of
-                           requested range it have to look for transitions   */
-  PREC_RES wnm;         /* Same as above, but for wavenumbers                */
-  float maxratio_doppler; /* Maximum doppler width deformation ratio before
-                             recalculate profile                             */
+                           is issued if abundances don't ad up to that      */
   float timesalpha;     /* Number of alphas that have to be contained in a
                            calculated profile, one side only                 */
   int voigtfine;        /* Fine-binning for Voigt function in kapwl(), if
@@ -392,14 +374,10 @@ struct transithint{
 
   double toomuch;       /* Optical depth values greater than this won't be
                            calculated: the extinction is assumed to be zero  */
-  double blowex;        /* Blow extinction by this amount before computing
-                           tau, this option has no physical meaning, but
-                           mostly debugging                                  */
   int taulevel;         /* Tau integration level of precision                */
   int modlevel;         /* Modulation integration level of precision         */
   char *solname;        /* Name of the type of solution                      */
   struct geometry sg;   /* System geometry                                   */
-  struct onept onept;   /* Parameters for onept atmosphere                   */
   struct saves save;    /* Saves indicator of program stats                  */
 
   struct extcloud cl;
@@ -426,11 +404,6 @@ struct transit{
   float allowrq;    /* How much less than one is accepted, so that no warning
                        is issued if abundances don't ad up to that          */
   PREC_RES telres;  /* Telescope resolution                                 */
-  PREC_RES margin;  /* Wavelength amount not trusted at the boundaries in
-                       cgs units, also how much out of requested range it
-                       have to look for transitions                         */
-  PREC_RES wnmi;    /* Amount of cm-1 not trusted at the beginning          */
-  PREC_RES wnmf;    /* Amount of cm-1 not trusted at the end                */
   long int angleIndex; /* Index of the current angle                        */
   prop_samp rads, ips, /* Sampling properties of radius, impact parameter,  */
       owns,            /* oversampled wavenumber,                           */
@@ -445,9 +418,6 @@ struct transit{
   double p0, r0;     /* Pressure and radius reference level                 */
   double gsurf;      /* Surface gravity                                     */
 
-  double blowex;    /* Blow extinction by this amount before computing tau,
-                       this option has no physical meaning, but mostly
-                       debugging                                            */
   int taulevel;     /* Tau integration level of precision                   */
   int modlevel;     /* Modulation integration level of precision            */
 
