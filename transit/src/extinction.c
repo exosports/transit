@@ -546,10 +546,6 @@ computemolext(struct transit *tr, /* transit struct                         */
 
   /* Determine the maximum and minimum extinction-coefficient in this layer */
   for(ln=0; ln<nlines; ln++){
-    /* Skip lines with strength lower than minelow:                         */
-    if(lt->elow[ln] < tr->minelow)
-      continue;
-
     /* Wavenumber of line transition:                                       */
     wavn = 1.0 / (lt->wl[ln] * lt->wfct);
     /* Isotope ID of line:                                                  */
@@ -563,11 +559,11 @@ computemolext(struct transit *tr, /* transit struct                         */
 
     /* Calculate the extinction coefficient except the broadening factor:   */
     propto_k = mol->molec[iso->imol[i]].d[r]*iso->isoratio[i] *  /* Density */
-              SIGCTE     * lt->gf[ln]           *       /* Constant * gf    */
-              exp(-EXPCTE*lt->efct*lt->elow[ln]/temp) * /* Level population */
-              (1-exp(-EXPCTE*wavn/temp))        /       /* Induced emission */
-              iso->isof[i].m                    /       /* Isotope mass     */
-              iso->isov[i].z[r];                      /* Partition function */
+            SIGCTE     * lt->gf[ln]           *       /* Constant * gf      */
+            exp(-EXPCTE*lt->efct*lt->elow[ln]/temp) * /* Level population   */
+            (1-exp(-EXPCTE*wavn/temp))        /       /* Induced emission   */
+            iso->isof[i].m                    /       /* Isotope mass       */
+            iso->isov[i].z[r];                        /* Partition function */
     if (kmax == 0){
       kmax = kmin = propto_k;
     } else{

@@ -194,8 +194,6 @@ struct extinction{
                         the profile                                         */
   _Bool *computed;   /* Whether the extinction at the given radius was
                         computed [rad]                                      */
-  double minelow;    /* Only use transitions with this minimum low
-                        energy (in cm-1)                                    */
   double ethresh;    /* Lower extinction-coefficient threshold              */
 };
 
@@ -408,8 +406,6 @@ struct transithint{
   struct detailout det;
 
   double ethresh;       /* Lower extinction-coefficient threshold            */
-  double minelow;       /* Only use transitions with this minimum low
-                           energy (in cm-1)                                  */
   char **ciafile;
   int ncia;
 
@@ -446,7 +442,6 @@ struct transit{
   int voigtfine;     /* Number of fine-bins of the Voigt function           */
   float timesalpha;  /* Broadening profile width in number of Doppler or
                         Lorentz half width                                  */
-  double minelow;    /* Minimum transition low energy considered (in cm-1)  */
   double p0, r0;     /* Pressure and radius reference level                 */
   double gsurf;      /* Surface gravity                                     */
 
