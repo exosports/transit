@@ -363,6 +363,8 @@ struct transithint{
                            calculated profile, one side only                 */
   int voigtfine;        /* Fine-binning for Voigt function in kapwl(), if
                            accepted it goes to tr.ds.op.vf                   */
+  int nDop, nLor;       /* Number of broadening width samples                */
+  float dmin, dmax, lmin, lmax; /* Broadening-width samples boundaries       */
   int verbnoise;        /* Noisiest verbose level in a non debugging run     */ 
   _Bool mass;           /* Whether the abundances read by getatm are by
                            mass or number                                    */

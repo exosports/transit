@@ -140,6 +140,7 @@ opacity(struct transit *tr){
 int
 calcopacity(struct transit *tr,
             FILE *fp){
+  struct transithint *th = tr->ds.th; /* transithint struct                 */
   struct opacity *op=tr->ds.op;     /* Opacity struct                       */
   struct isotopes  *iso=tr->ds.iso; /* Isotopes struct                      */
   struct lineinfo *li=tr->ds.li;    /* Lineinfo struct                      */
@@ -160,13 +161,13 @@ calcopacity(struct transit *tr,
   /* Run transitcheckcalled: TBD                                            */
 
   /* Make logscale grid for the profile widths:                             */
-  /* FINDME: Hardcoded values                                               */
-  nDop = op->nDop = 40;  //100;
-  nLor = op->nLor = 40;  //100;
-  Lmin = 1e-4;
-  Lmax = 10.0; //10.0;
-  Dmin = 1e-3;
-  Dmax = 0.25;
+  /* FINDME: Add check that these numbers make sense                        */
+  nDop = op->nDop = th->nDop;
+  nLor = op->nLor = th->nLor;
+  Dmin = th->dmin;
+  Dmax = th->dmax;
+  Lmin = th->lmin;
+  Lmax = th->lmax;
   op->aDop = logspace(Dmin, Dmax, nDop);
   op->aLor = logspace(Lmin, Lmax, nLor);
 
