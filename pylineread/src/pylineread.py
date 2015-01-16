@@ -129,18 +129,21 @@ def parseargs():
   # Database Options:
   group = parser.add_argument_group("Database Options")
   group.add_argument("-o", "--output",         action  = "store",
-                     help    = "Output filename (string) [default: "
-                               "'%(default)s'].",
-                     dest    = "output",       default = "output.tli")
+                     help="Output filename (string) [default: '%(default)s'].",
+                     dest= "output",           default = "output.tli")
   group.add_argument("-d", "--database",       action="append",
-                     help="Database filename (string).",
+                     help="Path (string) to the input line-transition "
+                          "database file(s).",
                      dest="db_list")
   group.add_argument("-p", "--partition",      action="append",
-                     help="Auxiliary partition function filename (string).",
+                     help="Path (string) to the auxiliary partition-function "
+                          "file(s).",
                      dest="part_list")
   group.add_argument("-t", "--dbtype",         action="append",
-                     help="Database type (string). Select from: "
-                          "[ps, hit, ts].",
+                     help="Database type (string).  'ps' for Partridge & "
+                          "Schwenke's H2O; 'hit' for HITRAN and HITEMP; or "
+                          "'ts' for Schwenke's TiO.",
+                     choices=('ps', 'hit', 'ts'),
                      dest="dbtype")
   # Wavelength Options:
   group = parser.add_argument_group("Wavelength Options")
