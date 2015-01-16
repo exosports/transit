@@ -114,7 +114,6 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_WAVNOSAMP,
     CLA_WNFCT,
     CLA_ALLOWQ,
-    CLA_EXTPERISO,
     CLA_GORBPAR,
     CLA_GORBPARFCT,
     //CLA_GTIME,        /* FINDME: Ask Pato what was the purpose of these   */
@@ -127,7 +126,6 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_OUTSAMPLE,
     CLA_TAULEVEL,
     CLA_MODLEVEL,
-    CLA_TAUISO,
     CLA_ETHRESH,
     CLA_CLOUDRAD,
     CLA_CLOUDFCT,   /* FINDME: Delete?              */
@@ -257,9 +255,6 @@ processparameters(int argc,            /* Number of command-line args  */
     {"nwidth",     'a',             required_argument, "20",    "number",
      "Number of the max-widths (the greater of Voigt or Doppler widths) that "
      "need to be contained in a calculated profile."},
-    {"periso",    CLA_EXTPERISO,   no_argument,       NULL,    NULL,
-     "Calculate extinction per isotope (allows to display the contribution "
-     "from different isotopes, but consumes more memory."},
     {"ethreshold", CLA_ETHRESH,   required_argument, "1e-8",    "ethreshold",
      "Minimum extinction-coefficient ratio (w.r.t. maximum in a layer) to "
      "consider in the calculation."},
@@ -308,10 +303,6 @@ processparameters(int argc,            /* Number of command-line args  */
     {"toomuch",   CLA_TOOMUCH,  required_argument, "20", "optdepth",
      "If optical depth for a particular path is larger than optdepth, then do "
      "not proceed to lower radius."},
-    {"tauiso",    CLA_TAUISO,   required_argument, "0",  "isoid",
-     "Compute tau only for isotope indexed in isoid (index which can actually "
-     "be different from what you expect)."},
-    /* FINDME: Explain me tauiso */
     {"outtau",    CLA_OUTTAU,   required_argument, "0",  "#radius",
      "Output is optical depth instead of modulation. It will be asked which "
      "radius to plot."},
@@ -366,8 +357,6 @@ processparameters(int argc,            /* Number of command-line args  */
   st_trh.fl |= TRU_ATMASK1P | TRU_SAMPSPL | TRH_MASS;
   st_trh.verbnoise = 4;
   st_trh.mass = 1;
-  /* TBD: have this option user selectable */
-  st_trh.tauiso = 0;
 
   int rn,  /* optdocs' short option */ 
       i;   /* Auxilliary index      */
@@ -550,106 +539,96 @@ processparameters(int argc,            /* Number of command-line args  */
       hints->temp.d = atof(optarg);
       break;
 
-    case 'f':  /* Number of fine-binning for Voigt calculation */
+    case 'f':  /* Number of fine-binning for Voigt calculation:  */
       hints->voigtfine = atoi(optarg);
       break;
-    case 'a':  /* Number of half-widths in a profile            */
+    case 'a':  /* Number of half-widths in a profile:            */
       hints->timesalpha = atof(optarg);
       break;
 
-    case 'q':  /* Quiet run                                    */
+    case 'q':  /* Quiet run:                                     */
       verblevel = 0;
       break;
 
-    case 'v':  /* Increase verbose level                       */
+    case 'v':  /* Increase verbose level:                                   */
       verblevel = strtol(optarg, NULL, 10);
       break;
 
-    case 'V': /* Print version number and exit                 */
+    case 'V':  /* Print version number and exit:                            */
       if(version_rc>0) snprintf(name, 20, "-rc%i", version_rc);
       else name[0] = '\0';
       printf("This is 'transit' version %i.%i%s\n\n", version, revision, name);
       exit(EXIT_SUCCESS);
       break;
 
-    case 'd':  /* Show defaults. TBD */
+    case 'd':  /* Show defaults. TBD                                        */
       break;
     case '?':
       rn = optopt;
-      transiterror(TERR_SERIOUS,
-                   "Unknown, unsupported, or missing parameter to option of "
-                   "code %i (%s) passed as argument, use '-h' to see "
-                   "accepted options.\n", rn, (char)rn);
+      transiterror(TERR_SERIOUS, "Unknown, unsupported, or missing parameter "
+                   "to option of code %i (%s) passed as argument, use '-h' "
+                   "to see the available options.\n", rn, (char)rn);
       break;
-    default:   /* Ask for syntax help */
-      transiterror(TERR_CRITICAL,
-                   "Even though option of code %i(%c) had a valid structure "
-                   "element, it had no switch control statement. Code need to "
-                   "be revised.\n", rn, (char)rn);
+    default:   /* Ask for syntax help:                                      */
+      transiterror(TERR_CRITICAL, "Even though option of code %i (%c) had a "
+                   "valid structure element, it had no switch control "
+                   "statement.\n", rn, (char)rn);
       break;
-    case 'h': /* Print out doc-string help */
+    case 'h':  /* Print out doc-string help:                                */
       prochelp(EXIT_SUCCESS);
       break;
-    case CLA_EXTPERISO:   /* Calculate extinction per isotope     */
-      hints->fl |= TRU_EXTINPERISO;
-      break;
 
-    case CLA_STARRAD:     /* Stellar radius                       */
+    case CLA_STARRAD:     /* Stellar radius                                 */
       hints->sg.starrad = atof(optarg);
       break;
-    case CLA_GORBPAR:     /* Orbital parameters                   */
+    case CLA_GORBPAR:     /* Orbital parameters                             */
       getnd(6, ',', optarg,
-            &hints->sg.smaxis, &hints->sg.time,  &hints->sg.incl, 
+            &hints->sg.smaxis, &hints->sg.time,  &hints->sg.incl,
             &hints->sg.ecc,    &hints->sg.lnode, &hints->sg.aper);
       break;
-    case CLA_GORBPARFCT:  /* Orbital parameters units factors     */
+    case CLA_GORBPARFCT:  /* Orbital parameters units factors               */
       getnd(6, ',', optarg,
             &hints->sg.smaxisfct, &hints->sg.timefct,  &hints->sg.inclfct,
             &hints->sg.eccfct,    &hints->sg.lnodefct, &hints->sg.aperfct);
       break;
-    case CLA_TRANSPARENT: /* Set maximum optical depth to toomuch */
+    case CLA_TRANSPARENT: /* Set maximum optical depth to toomuch           */
       hints->sg.transpplanet = 1;
       break;
 
-    case CLA_TOOMUCH:    /* Maximum optical depth to make calculation */
+    case CLA_TOOMUCH:    /* Maximum optical depth to make calculation       */
       hints->toomuch = atof(optarg);
       break;
-    case CLA_TAUISO:     /* Single isotope index to calculate tau */
-      hints->tauiso = atoi(optarg);
-      break;
-    case CLA_TAULEVEL:   /* Optical depth integration level       */
+    case CLA_TAULEVEL:   /* Optical depth integration level                 */
       hints->taulevel = atoi(optarg);
       break;
-    case CLA_MODLEVEL:   /* Modulation integration level          */
+    case CLA_MODLEVEL:   /* Modulation integration level                    */
       hints->modlevel = atoi(optarg);
       break;
 
-    case CLA_CLOUDRAD:   /* Lower and higher limits of a cloud    */
+    case CLA_CLOUDRAD:   /* Lower and higher limits of a cloud              */
       hints->cl.rini = strtod(optarg, &optarg);
       if(*optarg!=',' || optarg[1]=='\0')
-        transiterror(TERR_SERIOUS,
-                     "Syntax error in option '--cloudrad', parameters need "
-                     "to be radup,raddown.\n");
+        transiterror(TERR_SERIOUS, "Syntax error in option '--cloudrad', "
+                     "parameters need to be radup,raddown.\n");
       hints->cl.rfin = strtod(optarg+1, NULL);
       if(hints->cl.rini<hints->cl.rfin ||
          (hints->cl.rfin<=0 && hints->cl.rini!=0))
-        transiterror(TERR_SERIOUS,
-                     "Syntax error in option '--cloudrad', radup(%g) needs to "
-                     "be bigger than raddown (%g) and both greater than "
-                     "zero.\n", hints->cl.rini, hints->cl.rfin);
+        transiterror(TERR_SERIOUS, "Syntax error in '--cloudrad', radup(%g) "
+                     "needs to be bigger than raddown (%g) and both greater "
+                     "than zero.\n", hints->cl.rini, hints->cl.rfin);
       break;
-    case CLA_CLOUDFCT:  /* Cloud limits units factor              */
+    case CLA_CLOUDFCT:       /* Cloud limits units factor                   */
       hints->cl.rfct = atof(optarg);
       break;
-    case CLA_CLOUDE:    /* Maximum cloud opacity                  */
+    case CLA_CLOUDE:         /* Maximum cloud opacity                       */
       hints->cl.maxe = atof(optarg);
       break;
-    case CLA_SOLUTION_TYPE:     /* Ray-solution type              */
+    case CLA_SOLUTION_TYPE:  /* Ray-solution type                           */
       hints->path = eclipse;
       if(strncasecmp(optarg,"transit",7)==0)
         hints->path = transit;
       break;
-    case CLA_INTENS_GRID:      /* Intensity grid                  */
+    case CLA_INTENS_GRID:    /* Intensity grid                              */
       parseAngles(hints, optarg);
       break;
     }

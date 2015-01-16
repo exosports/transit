@@ -158,10 +158,10 @@ totaltau_eclipse(PREC_RES *rad,  /* Equispaced radius array: From current   */
 int
 intens_grid(struct transit *tr){ 
   prop_samp *wn = &tr->wns;                /* Wavenumber sample             */
-  long int wnn = wn->n;                   /* Wavenumbers                   */
+  long int wnn = wn->n;                    /* Wavenumbers                   */
 
-  /* Declaring indexes:                                                     */
-  long int i;                             /* For counting angles           */
+  /* Declaring indices:                                                     */
+  long int i;                              /* For counting angles           */
 
   /* Reads number of angles from transithint structure                      */
   struct transithint *trh=tr->ds.th;
@@ -215,16 +215,14 @@ intens_grid(struct transit *tr){
 int
 tau_eclipse(struct transit *tr){           /* Transit structure             */
 
-  struct optdepth *tau=tr->ds.tau;        /* Def optical depth structure   */
+  struct optdepth *tau=tr->ds.tau;         /* Def optical depth structure   */
   //tr->ds.tau = &tau;                     /* Called from transit structure */
   prop_samp *rad = &tr->rads;              /* Radius sample                 */
   prop_samp *wn  = &tr->wns;               /* Wavenumber sample             */
-  struct extinction *ex = tr->ds.ex;      /* Def extinction structure      */
-  PREC_RES **e = ex->e[tr->tauiso];        /* 2D extinction array           */
-                                           /* One isotope, [rad][wn]        */
-  PREC_RES (*fcn)() = tr->ecl->tauEclipse; /* Defines function fcn          */
-                                           /* Calls totaltau_eclipse        */
-                                           /* See structure_tr.h line 91    */
+  struct extinction *ex = tr->ds.ex;       /* Def extinction structure      */
+  PREC_RES **e = ex->e;                    /* Extinction array [rad][wn]    */
+  PREC_RES (*fcn)() = tr->ecl->tauEclipse; /* Function for totaltau_eclipse */
+                                           /* See structure_tr.h line ~91   */
 
   long wi, ri; /* Indices for wavenumber, and radius                       */
   int rn;      /* Returns error code from computeextradiaus=>exstradis     */
@@ -319,15 +317,10 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
   transitprint(1, verblevel, "Calculating optical depth at various radii for "
                              "angle %2.1lf degrees.\n", angle);
 
-  /* Note that it works only for one isotope:                               */
-  if(ex->periso)
-    transitprint(2, verblevel, "Computing only for isotope '%s', others were "
-                               "ignored.\n", tr->ds.iso->isof[tr->tauiso].n);
-
   PREC_RES er[rnn];        /* Array of extinction per radius                */
 
   int lastr = rnn-1;       /* Radius index of last computed extinction      */
-                           /* Starts from the outmost layer                 */
+                           /* from the outmost layer inwards                */
 
   /* Tenth of wavenumber sample size, used for progress printing:           */
   int wnextout = (long)(wnn/10.0); 
@@ -606,7 +599,6 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
    Calculates the emergent intensity (ergs/s/sr/cm) for the whole range
    of wavenumbers at the various points on the planet
    Returns: emergent intensity for the whole wavenumber range               */
-
 /* DEF */
 int
 emergent_intens(struct transit *tr){  /* Transit structure                  */

@@ -175,7 +175,6 @@ savefile_extinct(char *filename,
                  _Bool *c,
                  long nrad,
                  long nwav){
-
   FILE *fp;
 
   if((fp=fopen(filename, "w")) == NULL){
@@ -262,7 +261,7 @@ extwn(struct transit *tr){
   static struct extinction st_ex;
   tr->ds.ex = &st_ex;
   struct extinction *ex = &st_ex;
-  int i, j;
+  int i;
 
   /* Check these routines have been called: */
   transitcheckcalled(tr->pi, "extwn", 4,
@@ -305,28 +304,14 @@ extwn(struct transit *tr){
   /* Get the extinction coefficient threshold:                              */
   ex->ethresh = th->ethresh;
 
-  /* Set extinction-per-isotope boolean: */
-  ex->periso = ((tr->fl&TRU_EXTINPERISO)==TRU_EXTINPERISO);
+  /* Declare extinction-coefficient array:                                  */
+  ex->e        = (PREC_RES **)calloc(nrad,     sizeof(PREC_RES *));
+  if((ex->e[0] = (PREC_RES  *)calloc(nrad*nwn, sizeof(PREC_RES)))==NULL)
+    transiterror(TERR_CRITICAL|TERR_ALLOC, "Unable to allocate %li = %li*%li "
+                 "for the extinction coefficient.\n", nrad*nwn, nrad, nwn);
 
-  /* Arrange the extinctions so that the order is [iso][rad][wn] */
-  int nni = ex->periso ? niso:1;
-  int nnr = ex->periso ? nrad:0;
-
-  /* FINDME: Should this be nni instead of niso? */
-  ex->e           = (PREC_RES ***)calloc(niso,         sizeof(PREC_RES **));
-  ex->e[0]        = (PREC_RES  **)calloc(nni*nrad,     sizeof(PREC_RES *));
-  if((ex->e[0][0] = (PREC_RES   *)calloc(nni*nrad*nwn, sizeof(PREC_RES)))==NULL)
-    transiterror(TERR_CRITICAL|TERR_ALLOC,
-                 "Unable to allocate %li = %li*%li*%li to calculate "
-                 "extinction for every radii, %stry to shorten the  "
-                 "wavenumber range.\n", nrad*nni*nwn, nrad, nni, nwn,
-                 ex->periso?"try disabling exctinction per isotope "
-                               "(option --no-per-iso), or ":"");
-  for(i=0; i<niso; i++){
-    ex->e[i] = ex->e[0] + i*nnr;
-    if(!i || ex->periso)
-      for(j=0; j<nrad; j++)
-        ex->e[i][j] = ex->e[0][0] + nwn*(j + nnr*i);
+  for(i=1; i<nrad; i++){
+    ex->e[i] = ex->e[0] + i*nwn;
   }
 
   /* Has the extinction been computed at given radius boolean: */
@@ -345,7 +330,7 @@ extwn(struct transit *tr){
 
 
 /* \fcnfh
-   Printout for one P,T conditions                                          */
+   Printout for one P, T conditions                                         */
 void
 printone(struct transit *tr){
   int rn;
@@ -357,7 +342,7 @@ printone(struct transit *tr){
 
   transitprint(1, verblevel, "\nPrinting extinction for one radius (at %gcm) "
                              "in '%s'\n", tr->rads.v[0],
-                             tr->f_out?tr->f_out:"standard output");
+                             tr->f_out ? tr->f_out:"standard output");
 
   /* Print:                                                                 */
   fprintf(out, "#wavenumber[cm-1]   wavelength[nm]   extinction[cm-1]   "
@@ -365,8 +350,8 @@ printone(struct transit *tr){
   for(rn=0; rn < tr->wns.n; rn++)
     fprintf(out, "%12.6f%14.6f%17.7g%17.7g\n", tr->wns.fct*tr->wns.v[rn],
             1/(tr->wavs.fct * tr->wns.v[rn] * tr->wns.fct),
-            tr->ds.ex->e[0][0][rn],
-            AMU*tr->ds.ex->e[0][0][rn] *
+            tr->ds.ex->e[0][rn],
+            AMU*tr->ds.ex->e[0][rn] *
             tr->ds.iso->isof[0].m/tr->ds.mol->molec[tr->ds.iso->imol[0]].d[0]);
 
   exit(EXIT_SUCCESS);
@@ -375,13 +360,11 @@ printone(struct transit *tr){
 
 /* \fcnfh
    Free extinction coefficient structure arrays
-
    Return 0 on success */
 int
 freemem_extinction(struct extinction *ex, /* Extinciton struct       */
                    long *pi){             /* progress indicator flag */
   /* Free arrays: */
-  free(ex->e[0][0]);
   free(ex->e[0]);
   free(ex->e);
   free(ex->computed);
@@ -395,13 +378,11 @@ freemem_extinction(struct extinction *ex, /* Extinciton struct       */
 /* \fcnfh
    Restore hints structure, the structure needs to have been allocated
    before
-
-   @returns 0 on success
-            -1 if not all the expected information is read
-            -2 if info read is wrong
-            -3 if cannot allocate memory
-            1 if information read was suspicious
-*/
+   Returns 0 on success
+          -1 if not all the expected information is read
+          -2 if info read is wrong
+          -3 if cannot allocate memory
+           1 if information read was suspicious                             */
 int
 restextinct(FILE *in,
             PREC_NREC nrad,
@@ -424,49 +405,20 @@ restextinct(FILE *in,
      niso>10000||nrad>10000000||nwn>10000000)
     return -2;
 
-  int nni=ex->periso?niso:1;
-
-  if((ex->e      =(PREC_RES ***)calloc(niso        ,sizeof(PREC_RES **)))
-     ==NULL)
+  if((ex->e    = (PREC_RES **)calloc(nrad,     sizeof(PREC_RES * ))) == NULL)
     return -3;
-  if((ex->e[0]   =(PREC_RES **) calloc(nni*nrad    ,sizeof(PREC_RES * )))
-     ==NULL)
-    return -3;
-  if((ex->e[0][0]=(PREC_RES *)  calloc(nrad*nni*nwn,sizeof(PREC_RES   )))
-     ==NULL)
+  if((ex->e[0] = (PREC_RES  *)calloc(nrad*nwn, sizeof(PREC_RES   ))) == NULL)
     return -3;
 
-  rn=fread(ex->e[0][0],sizeof(PREC_RES),nwn*nni*nrad,in);
-  if(rn!=nwn*nni*nrad) return -1;
-  rn=fread(ex->computed,sizeof(PREC_RES),nrad,in);
+  rn = fread(ex->e[0], sizeof(PREC_RES), nwn*nrad,in);
+  if(rn!=nwn*nrad) return -1;
+  rn = fread(ex->computed, sizeof(PREC_RES), nrad, in);
   if(rn!=nrad) return -1;
 
-  int nnr = ex->periso?nrad:0;
-  for(i=0;i<niso;i++){
-    ex->e[i]=ex->e[0]+i*nnr;
-    if(!i||ex->periso)
-      for(nr=0;nr<nrad;nr++)
-        ex->e[i][nr]=ex->e[0][0] + nwn*( nr + nni*i );
+  for(i=1; i<nrad; i++){
+    ex->e[i] = ex->e[0] + i*nwn;
   }
-
   return 0;
-}
-
-
-/* \fcnfh
-   Frees voigt profile pointer arrays. Data array should already be free  */
-void
-freemem_localextinction(){
-  /* profile[0][0] will always be freed after a succesfull completion
-     of extradius: */
-  //free(profile[0]);
-  //free(profile);
-
-  /* Free auxiliar variables that were allocated to number of isotopes: */
-  //free(wa);
-  //free(alphal);
-  //free(ziso);
-  //free(densiso);
 }
 
 
@@ -474,7 +426,7 @@ freemem_localextinction(){
 int
 computemolext(struct transit *tr, /* transit struct                         */
               PREC_NREC r,        /* Radius index                           */
-              PREC_RES ***kiso){  /* Extinction coefficient array           */
+              PREC_RES **kiso){   /* Extinction coefficient array           */
 
   struct opacity *op=tr->ds.op;
   struct isotopes  *iso=tr->ds.iso; /* Isotopes struct                      */
@@ -599,7 +551,7 @@ computemolext(struct transit *tr, /* transit struct                         */
       continue;
 
     /* Wavenumber of line transition:                                       */
-    wavn = 1.0/(lt->wl[ln]*lt->wfct);
+    wavn = 1.0 / (lt->wl[ln] * lt->wfct);
     /* Isotope ID of line:                                                  */
     i = lt->isoid[ln];
 
@@ -717,7 +669,7 @@ computemolext(struct transit *tr, /* transit struct                         */
   }
   transitprint(10, verblevel, "Kmin: %.5e   Kmax: %.5e\n", kmin, kmax);
   /* Downsample ktmp to the final sampling size:                          */
-  downsample(ktmp, kiso[i][r], dnwn, tr->owns.o/ofactor);
+  downsample(ktmp, kiso[r], dnwn, tr->owns.o/ofactor);
   transitprint(9, verblevel, "Number of co-added lines:     %8li  (%5.2f%%)\n",
                              nadd,  nadd*100.0/nlines);
   transitprint(9, verblevel, "Number of skipped profiles:   %8li  (%5.2f%%)\n",
@@ -735,7 +687,7 @@ computemolext(struct transit *tr, /* transit struct                         */
 int
 interpolmolext(struct transit *tr, /* transit struct                        */
                PREC_NREC r,        /* Radius index                          */
-               PREC_RES ***kiso){  /* Extinction coefficient array          */
+               PREC_RES **kiso){   /* Extinction coefficient array          */
 
   struct opacity    *op=tr->ds.op;  /* Opacity struct                       */
   struct molecules *mol=tr->ds.mol;
@@ -776,13 +728,10 @@ interpolmolext(struct transit *tr, /* transit struct                        */
       ext = (op->o[m][itemp  ][r][i] * (gtemp[itemp+1]-temp) + 
              op->o[m][itemp+1][r][i] * (temp - gtemp[itemp]) ) /
                                                  (gtemp[itemp+1]-gtemp[itemp]);
-      /* FINDME: first index is the isotope ID.  Remove it                  */
-      kiso[0][r][i] += mol->molec[gmol[m]].d[r] * ext;
+      kiso[r][i] += mol->molec[gmol[m]].d[r] * ext;
     }
   }
   free(ktmp);
   ex->computed[r] = 1;
   return 0;
 }
-
-

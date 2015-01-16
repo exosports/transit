@@ -88,7 +88,7 @@ tau(struct transit *tr){
   prop_samp *wn  = &tr->wns;            /* Wavenumber sample                */
   prop_samp *ip  = &tr->ips;            /* Impact parameter sample          */
   struct extinction *ex = tr->ds.ex;    /* Extinction struct                */
-  PREC_RES **e = ex->e[tr->tauiso];     /* Extinction coefficient           */
+  PREC_RES **e = ex->e;                 /* Extinction coefficient           */
   PREC_RES (*fcn)() = tr->sol->tauperb; /* transit ray path?                */
 
   long wi, ri; /* Indices for wavenumber, and radius                        */
@@ -180,13 +180,6 @@ tau(struct transit *tr){
 
   transitprint(1, verblevel, "Calculating optical depth at various "
                              "radii ...\n");
-
-  /* FINDME: If periso is True, it will calculate only one istope's
-     optical depth? This is different to what was advertised in argum.c ! */
-  if(ex->periso)
-    transitprint(2, verblevel,
-                 "Computing only for isotope '%s', others were ignored.\n",
-                 tr->ds.iso->isof[tr->tauiso].n);
 
   /* For each wavenumber:                                                   */
   for(wi=0; wi<wnn; wi++){
@@ -294,16 +287,11 @@ tau(struct transit *tr){
   if(tr->save.ext)
     savefile_extinct(tr->save.ext, e, comp, rnn, wnn);
 
-  /* Print lowest impact parameter before optical depth gets too big: */
+  /* Print lowest impact parameter before optical depth gets too big:       */
   if(tr->f_toomuch)
     printtoomuch(tr->f_toomuch, tr->ds.tau, &tr->wns, &tr->ips);
 
-  /* Free memory that is no longer needed: */
-  //freemem_lineinfotrans(tr->ds.li, &tr->pi);
-  freemem_localextinction();
-
-  /* Set progress indicator and output tau if requested, otherwise return
-     success: */
+  /* Set progress indicator and output tau if requested:                    */
   tr->pi |= TRPI_TAU;
   if(tr->fl & TRU_OUTTAU)
     printtau(tr);
