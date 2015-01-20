@@ -181,7 +181,7 @@ readcia(struct transit *tr){
         for(i=0; i < mol->nmol; i++)
           if(strcmp(mol->name[i], colname)==0)
             st_cia.mol2[p] = i;
-        if(st_cia.mol1[p] == -1)
+        if(st_cia.mol2[p] == -1)
           transiterror(TERR_SERIOUS, "CIA molecule '%s' from file '%s' does "
                     "not match any in the atmsopheric file.\n", colname, file);
         continue;
@@ -309,13 +309,13 @@ interpolatecia(struct transit *tr){
   for(i=1; i < tr->wns.n; i++)
     e[i] = e[0] + i*tr->rads.n;
 
- /* Get transit temperatures and wavenumber arrays:                         */
+  /* Get transit temperatures and wavenumber arrays:                        */
   for(i=0; i<tr->rads.n; i++)
     tmpt[i] = atm->tfct * atm->t[i];
   for(i=0; i<tr->wns.n; i++)
     tmpw[i] = tr->wns.fct * tr->wns.v[i];
 
-  for (n=0; n<cia->nfiles; n++){
+  for (n=0; n < cia->nfiles; n++){
     /* Interpolate data to transit's wavenumber and temperature sampling:   */
     bicubicinterpolate(e, cia->cia[n], cia->wn[n],   cia->nwave[n],
                                        cia->temp[n], cia->ntemp[n],
