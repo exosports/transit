@@ -253,7 +253,7 @@ class hitran(dbdriver):
 
     """
     # Read HITRAN configuration file from inputs folder:
-    hfile = open(DBHdir + '/../inputs/hitran.config', 'r')
+    hfile = open(DBHdir + '/../inputs/hitran.dat', 'r')
     lines = hfile.readlines()
     hfile.close()
   
