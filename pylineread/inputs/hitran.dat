@@ -1,9 +1,10 @@
-# ID:         HITRAN molecule ID
-# Molecule:   Molecule name
-# Iso:        Isotope AFGL code
-# gi:         State-independent Statistical weight
-# Iso ratio:  Isotopic ratio
-# Iso mass:   Isotopic mass (amu)  / From Lide
+# Column      Data                             Source
+# ID          HITRAN molecule ID               --
+# Molecule    Molecule name                    --
+# Iso         Isotope ID                       AFGL code
+# gi          State-independent stat. weight   Simekova et al. (2006)
+# Iso ratio   Isotopic ratio                   Simekova et al. (2006)
+# Iso mass    Isotopic mass (amu)              Lide (2008) Handbook of chem.
 
 # ID Molecule Iso        gi         Iso ratio    Iso mass
  1   H2O      161         1         9.973e-01    18.0105646
