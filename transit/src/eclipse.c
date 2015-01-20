@@ -466,11 +466,11 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
 /* DEF */
 static PREC_RES
 eclipse_intens(struct transit *tr,  /* Transit structure                    */
-               PREC_RES *tau,       /* Optical depth array tau.c==>tau      */
+               PREC_RES *tau,       /* Optical depth array                  */
                PREC_RES w,          /* Current wavenumber value             */
                long last,           /* Index where tau == toomuch           */
                double toomuch,      /* Maximum optical depth calculated     */
-               prop_samp *rad){     /* Radii array                          */
+               prop_samp *rad){     /* Radius array                         */
   /* FINDME: toomuch is not needed as a parameter                           */
 
   /* General variables:                                                     */
@@ -622,6 +622,8 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
     //}
     //if (fabs(wn->v[w] - 1844.59) < 0.005)
     //  transitprint(1, verblevel, "\nWavenumber index is: %li\n", w);
+
+    /* This is a call to: eclipse_intens:                                   */
     out[w] = ecl->eclIntenWn(tr, tau->t[w], wn->v[w], tau->last[w], 
                              tau->toomuch, rad);
 
