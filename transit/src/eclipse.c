@@ -157,45 +157,37 @@ totaltau_eclipse(PREC_RES *rad,  /* Equispaced radius array: From current   */
 /* DEF */
 int
 intens_grid(struct transit *tr){ 
-  prop_samp *wn = &tr->wns;                /* Wavenumber sample             */
-  long int wnn = wn->n;                    /* Wavenumbers                   */
+  struct transithint *th=tr->ds.th;  /* Transit hint structure              */
+  prop_samp *wn = &tr->wns;          /* Wavenumber sample                   */
+  long int wnn = wn->n;              /* Wavenumbers                         */
+  long int i;                        /* For counting angles                 */
+  long int an = th->ann;             /* Number of angles                    */
+  static struct optdepth tau;        /* Optical depth                       */
+  static struct grid     intens;     /* Intensity grid                      */
 
-  /* Declaring indices:                                                     */
-  long int i;                              /* For counting angles           */
-
-  /* Reads number of angles from transithint structure                      */
-  struct transithint *trh=tr->ds.th;
-  long int an = trh->ann;                   
-
-  /* Initialize tau structure:                                              */
-  static struct optdepth tau;
-  tr->ds.tau = &tau;
+  /* Initialize new structures:                                             */
+  tr->ds.tau    = &tau;
+  tr->ds.intens = &intens;
+  memset(&intens, 0, sizeof(struct grid));
 
   /* Set maximum optical depth:                                             */
-  if(tr->ds.th->toomuch > 0)
-    tau.toomuch = trh->toomuch;
+  if(th->toomuch > 0)
+    tau.toomuch = th->toomuch;
 
-  /* Allocates array to store radii indices where tau reaches toomuch:      */
-  tau.last = (long      *)calloc(wnn,        sizeof(long));
-  /* Allocates 2D array [rad][wn]:                                          */
-  tau.t    = (PREC_RES **)calloc(wnn,        sizeof(PREC_RES *));
+  /* Allocate array with layer index where tau reaches toomuch:             */
+  tau.last = (long      *)calloc(wnn,            sizeof(long));
+  /* Allocate optical-depth array [rad][wn]:                                */
+  tau.t    = (PREC_RES **)calloc(wnn,            sizeof(PREC_RES *));
   tau.t[0] = (PREC_RES  *)calloc(wnn*tr->rads.n, sizeof(PREC_RES  ));
   for(i=1; i < wnn; i++)
     tau.t[i] = tau.t[0] + i*tr->rads.n;
 
-  /* Allocates intensity grid structure                                     */
-  static struct grid intens; 
-  memset(&intens, 0, sizeof(struct grid));  
-  /* Connects the intensity gird structure to the transit structure         */
-  tr->ds.intens = &intens;                 
+  /* Allocate 2D array of intensities [angle][wn]:                         */
+  intens.a    = (PREC_RES **)calloc(an,     sizeof(PREC_RES *));
+  intens.a[0] = (PREC_RES  *)calloc(an*wnn, sizeof(PREC_RES  ));
+  for(i=1; i<an; i++)
+    intens.a[i] = intens.a[0] + i*wnn;
 
-  /* Allocates 2D array of intensities [angle][wn]:                         */
-  intens.a    = (PREC_RES **)calloc(an   ,  sizeof(PREC_RES *));
-  intens.a[0] = (PREC_RES  *)calloc(wnn*an, sizeof(PREC_RES  ));
-
-  /* Connects intensity array with correct an and wn:                       */
-  for(i = 1; i < an; i++)
-    intens.a[i] = intens.a[0] + i * wnn;
   return 0;
 }
 
@@ -250,19 +242,6 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
   the main structure.  In particular, it only passes whether TRU_OUTTAU 
   was 1 or 0 as specified by the user. */
   transitacceptflag(tr->fl, tr->ds.th->fl, TRU_TAUBITS);
-
-  ///* Set maximum optical depth:                                             */
-  //if(tr->ds.th->toomuch > 0)   
-  //  tau.toomuch = trh->toomuch; 
-
-  ///* Allocates array to store radii indices where tau reaches toomuch:      */
-  //tau.last = (long      *)calloc(wnn,        sizeof(long));
-  ///* Allocates 2D array [rad][wn]:                                          */
-  //tau.t    = (PREC_RES **)calloc(wnn,        sizeof(PREC_RES *));
-  //tau.t[0] = (PREC_RES  *)calloc(wnn*rad->n, sizeof(PREC_RES  ));
-  ///* Connects tau.t with correct wn and rad:                                */
-  //for(wi=1; wi < wnn; wi++)
-  //  tau.t[wi] = tau.t[0] + wi*rad->n;
 
   /* Set cloud structure:                                                   */
   /* Linear for rini to rfin, grey opacity from 0 to maxe.                  */
@@ -487,12 +466,12 @@ tau_eclipse(struct transit *tr){           /* Transit structure             */
 /* DEF */
 static PREC_RES
 eclipse_intens(struct transit *tr,  /* Transit structure                    */
-               PREC_RES *tau,          /* Optical depth array tau.c==>tau   */
-               PREC_RES w,             /* Current wavenumber value          */
-               long last,              /* Index where tau = toomuch         */
-               double toomuch,         /* Maximum optical depth calculated  */
-               prop_samp *rad){        /* Radii array                       */
-  /* FINDME: toomuch is not needed as a parameter        */
+               PREC_RES *tau,       /* Optical depth array tau.c==>tau      */
+               PREC_RES w,          /* Current wavenumber value             */
+               long last,           /* Index where tau == toomuch           */
+               double toomuch,      /* Maximum optical depth calculated     */
+               prop_samp *rad){     /* Radii array                          */
+  /* FINDME: toomuch is not needed as a parameter                           */
 
   /* General variables:                                                     */
   PREC_RES res;                  /* Result                                  */
@@ -602,7 +581,7 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
 /* DEF */
 int
 emergent_intens(struct transit *tr){  /* Transit structure                  */
-  static struct outputray st_out;     /* Defines output structure           */
+  static struct outputray st_out;     /* Output structure                   */
   tr->ds.out = &st_out;
 
   /* Initial variables:                                                     */
@@ -646,7 +625,7 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
     out[w] = ecl->eclIntenWn(tr, tau->t[w], wn->v[w], tau->last[w], 
                              tau->toomuch, rad);
 
-    /* Prints to screen the progress status:                                 */
+    /* Prints to screen the progress status:                                */
     if(w==nextw){
       nextw += wn->n/10;
       transitprint(2, verblevel, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
