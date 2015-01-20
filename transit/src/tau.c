@@ -298,6 +298,48 @@ tau(struct transit *tr){
 }
 
 
+/* Initialize the optical depth structure (regardless of transit or
+   eclipse) geometry                                                        */
+int
+init_optdepth(struct transit *tr){
+  struct transithint *th=tr->ds.th;  /* Transit hint structure              */
+  long int nwn  = tr->wns.n;         /* Number of wavenumbers               */
+  long int nrad = tr->rads.n;        /* Number of impact parameter          */
+  long int i;                        /* For counting angles                 */
+  long int an = th->ann;             /* Number of angles                    */
+  static struct optdepth tau;        /* Optical depth                       */
+  static struct grid     intens;     /* Intensity grid                      */
+
+  /* Initialize tau (optical depth) structure:                              */
+  tr->ds.tau    = &tau;
+  /* Set maximum optical depth:                                             */
+  if(th->toomuch > 0)
+    tau.toomuch = th->toomuch;
+
+  /* Allocate array with layer index where tau reaches toomuch:             */
+  tau.last = (long      *)calloc(nwn,      sizeof(long));
+  /* Allocate optical-depth array [rad][wn]:                                */
+  tau.t    = (PREC_RES **)calloc(nwn,      sizeof(PREC_RES *));
+  tau.t[0] = (PREC_RES  *)calloc(nwn*nrad, sizeof(PREC_RES  ));
+  for(i=1; i<nwn; i++)
+    tau.t[i] = tau.t[0] + i*nrad;
+
+  /* Eclipse-only structures:                                               */
+  if (th->path == eclipse){
+    /* Initialize intensity grid structure:                                 */
+    tr->ds.intens = &intens;
+    memset(&intens, 0, sizeof(struct grid));
+
+    /* Allocate 2D array of intensities [angle][wn]:                        */
+    intens.a    = (PREC_RES **)calloc(an,     sizeof(PREC_RES *));
+    intens.a[0] = (PREC_RES  *)calloc(an*nwn, sizeof(PREC_RES  ));
+    for(i=1; i<an; i++)
+      intens.a[i] = intens.a[0] + i*nwn;
+  }
+
+  return 0;
+}
+
 /* \fcnfh
    Print to file the optical depth, cia, or extinction at the requested
    wavenumbers
