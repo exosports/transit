@@ -97,7 +97,6 @@ newprofile(PREC_VOIGT **pr,  /* Output 2D profile                           */
   /* Allocate profile array:                                                */
   //transitprint(1, verblevel, "size = %d.\n", nvgt*vf);
   *pr = (PREC_VOIGT *)calloc(nvgt*vf, sizeof(PREC_VOIGT));
-  //transitprint(1, verblevel, "FLAG alloc.\n");
   for(j=0; j<vf; j++)
     pr[j] = pr[0] + j*nvgt;
 
@@ -692,7 +691,7 @@ interpolmolext(struct transit *tr, /* transit struct                        */
   long Nmol, Ntemp, Nwave;
   PREC_RES *gtemp;
   int       *gmol;
-  int itemp,
+  int itemp, imol,
       i, m;   /* for-loop indices                                           */
   double ext; /* Interpolated extinction coefficient                        */
 
@@ -709,7 +708,7 @@ interpolmolext(struct transit *tr, /* transit struct                        */
   /* Wavenumber array size:                                                 */
   Nwave = op->Nwave;
 
-  /* Interpolate:         */
+  /* Interpolate:                                                           */
   /* Find index of grid-temperature immediately lower than temp:            */
   itemp = binsearchapprox(gtemp, temp, 0, Ntemp);
   if (temp < gtemp[itemp])
@@ -724,7 +723,8 @@ interpolmolext(struct transit *tr, /* transit struct                        */
       ext = (op->o[m][itemp  ][r][i] * (gtemp[itemp+1]-temp) + 
              op->o[m][itemp+1][r][i] * (temp - gtemp[itemp]) ) /
                                                  (gtemp[itemp+1]-gtemp[itemp]);
-      kiso[r][i] += mol->molec[gmol[m]].d[r] * ext;
+      imol = valueinarray(mol->ID, gmol[m], mol->nmol);
+      kiso[r][i] += mol->molec[imol].d[r] * ext;
     }
   }
   free(ktmp);

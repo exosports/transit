@@ -12,7 +12,7 @@ the same name written by Patricio Rojo (Univ. de Chile, Santiago) when
 he was a graduate student at Cornell University under Joseph
 Harrington.
 
-Copyright (C) 2014 University of Central Florida.  All rights reserved.
+Copyright (C) 2015 University of Central Florida.  All rights reserved.
 
 This is a test version only, and may not be redistributed to any third
 party.  Please refer such requests to us.  This program is distributed
@@ -143,6 +143,7 @@ calcopacity(struct transit *tr,
   struct transithint *th = tr->ds.th; /* transithint struct                 */
   struct opacity *op=tr->ds.op;     /* Opacity struct                       */
   struct isotopes  *iso=tr->ds.iso; /* Isotopes struct                      */
+  struct molecules *mol=tr->ds.mol; /* Molecules struct                     */
   struct lineinfo *li=tr->ds.li;    /* Lineinfo struct                      */
   long Nmol, Ntemp, Nlayer, Nwave,  /* Opacity-grid  dimension sizes        */
        flag;                        /* Interpolation flag                   */
@@ -298,11 +299,12 @@ calcopacity(struct transit *tr,
   transitprint(1, verblevel, "There are %li molecules with line "
                              "transitions.\n", Nmol);
   for (i=0, j=0; i<iso->n_i; i++){
-    /* If this molecule is not yet in molID array, add it:                  */
-    if (valueinarray(op->molID, iso->imol[i], j) < 0){
-      op->molID[j++] = iso->imol[i];
-      transitprint(10, verblevel, "Isotope's (%d) molecule ID: %d added at "
-                   "position %d.\n", i, iso->imol[i], j-1);
+    /* If this molecule is not yet in molID array, add it's universal ID:   */
+    if (valueinarray(op->molID, mol->ID[iso->imol[i]], j) < 0){
+      op->molID[j++] = mol->ID[iso->imol[i]];
+      transitprint(10, verblevel, "Isotope's (%d) molecule ID: %d (%s) "
+                   "added at position %d.\n", i, op->molID[j-1],
+                   mol->name[iso->imol[i]], j-1);
     }
   }
 
@@ -589,7 +591,7 @@ extinction(struct transit *tr,      /* transit struct                       */
     /* Isotope ID of line transition:                                       */
     i = lt->isoid[ln];
     /* Molecule index in opacity grid for this isotope:                     */
-    m = valueinarray(op->molID, iso->imol[i], op->Nmol);
+    m = valueinarray(op->molID, mol->ID[iso->imol[i]], op->Nmol);
 
     /* If this line falls beyond limits, skip to next line transition:      */
     if ((wavn < tr->wns.i) || (wavn > tr->owns.v[onwn-1]))
@@ -618,7 +620,7 @@ extinction(struct transit *tr,      /* transit struct                       */
     wavn = 1.0/(lt->wl[ln]*lt->wfct); /* Wavenumber  */
     i    = lt->isoid[ln];             /* Isotope ID  */
     /* Molecule index in opacity grid for this isotope:                     */
-    m = valueinarray(op->molID, iso->imol[i], op->Nmol);
+    m = valueinarray(op->molID, mol->ID[iso->imol[i]], op->Nmol);
 
     if((wavn < tr->wns.i) || (wavn > tr->owns.v[onwn-1]))
       continue;
@@ -648,7 +650,6 @@ extinction(struct transit *tr,      /* transit struct                       */
         break;
     }
 
-    //if (opac < ex->ethresh * kmax[imol]){
     if (opac < tr->ds.th->ethresh * kmax[m]){
       nskip++;
       continue;
@@ -677,14 +678,12 @@ extinction(struct transit *tr,      /* transit struct                       */
     if (maxj > dnwn)
       maxj = dnwn;
 
-
     /* Add the contribution from this line to the opacity spectrum:         */
     for(j=minj; j<maxj; j++){
       //transitprint(1, 2, "%li  ", j-offset);
       //transitprint(1, 2, "j=%d, p[%li]=%.2g   ", j, j-offset,
       //                    profile[idop[i]][ilor[i]][subw][j-offset]);
       ktmp[m][j] += opac * profile[idop[i]][ilor[i]][0][ofactor*j - offset];
-      //op->o[m][t][r][j] += opac * profile[idop[i]][ilor[i]][subw][j-offset];
     }
     neval++;
   }

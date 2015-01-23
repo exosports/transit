@@ -133,9 +133,9 @@ int main(int argc,      /* Number of variables                              */
   // for (itr = 0; itr < transit.rads.n; itr++)
   //   transitprint(1, 2, "%.3e ", transit.atm.t[itr] - transit.ds.at->atm.t[itr]);
   // // mm
-  transitprint(1,2,"\nMmm sampling:\n");
-  for (itr = 0; itr < transit.rads.n; itr++)
-    transitprint(1, 2, "%.3e ", transit.ds.at->mm[itr]);
+  // transitprint(1,2,"\nMmm sampling:\n");
+  // for (itr = 0; itr < transit.rads.n; itr++)
+  //   transitprint(1, 2, "%.3e ", transit.ds.at->mm[itr]);
     //transitprint(1, 2, "%.3e ", transit.atm.mm[itr] - transit.ds.at->mm[itr]);
   // // q
   // transitprint(1,2,"\nAbundance sampling:\n");
