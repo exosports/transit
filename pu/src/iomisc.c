@@ -1072,14 +1072,18 @@ countfields(char *lp,  /* Input string    */
 
 
 /* Reads characters from current position of line until it reaches a blank
-   space or line-break, store string in name.                               */
+   space, line-break, or null-character.  Store string in name.             */
 void
 getname(char *line,
         char *name){
-  /* Copy characters from line into name: */
-  while (*line != ' ' && *line != '\n')
+  /* Copy characters from line into name:                                   */
+  while (*line != ' ' && *line != '\n' && *line != '\0'){
     *name++ = *line++;
+  }
+  /* Append the terminating null-character:                                 */
+  *name = '\0';
 }
+
 
 /* Search for given string in a list.
    Return: the index in list if found,

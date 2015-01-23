@@ -353,6 +353,7 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
                         at->begline++)){
     /* Ignore comments and blank lines:                                     */
     case '\n':
+      continue;
     case '#':
       getname(line+1, keyword);
       /* Molecule names with an abundance profile:                          */

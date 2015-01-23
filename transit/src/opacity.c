@@ -373,16 +373,17 @@ readopacity(struct transit *tr,  /* transit struct                          */
   struct opacity *op=tr->ds.op;  /* opacity struct                          */
   int i, t, r;  /* for-loop indices                                         */
 
-  transitprint(1, verblevel, "Reading opacity file:\n");
   /* Read file dimension sizes:                                             */
   fread(&op->Nmol,   sizeof(long), 1, fp);
   fread(&op->Ntemp,  sizeof(long), 1, fp);
   fread(&op->Nlayer, sizeof(long), 1, fp);
   fread(&op->Nwave,  sizeof(long), 1, fp);
-  transitprint(1, verblevel, "Opacity grid size: Nmol=%li   Ntemp=%li   "
-               "Nlayer=%li   Nwave=%li.\n", op->Nmol, op->Ntemp, op->Nlayer,
-                                            op->Nwave);
-  transitprint(10, verblevel, "ftell=%li\n", ftell(fp));
+  transitprint(1, verblevel, "Opacity grid size: Nmolecules    = %5li\n"
+                             "                   Ntemperatures = %5li\n"
+                             "                   Nlayers       = %5li\n"
+                             "                   Nwavenumbers  = %5li\n",
+                             op->Nmol, op->Ntemp, op->Nlayer, op->Nwave);
+  transitprint(20, verblevel, "ftell = %li\n", ftell(fp));
 
   /* Allocate and read arrays:                                              */
   op->molID = (int      *)calloc(op->Nmol,   sizeof(int));
@@ -395,9 +396,28 @@ readopacity(struct transit *tr,  /* transit struct                          */
   fread(op->wns,   sizeof(PREC_RES), op->Nwave,  fp);
 
   /* DEBUGGING: Print temperature array                                     */
-  for (i=0; i<op->Ntemp; i++)
-    transitprint(10, verblevel, "T[%d]=%4d  ", i, (int)op->temp[i]);
-  transitprint(10, verblevel, "\n");
+  transitprint(10, verblevel, "Molecule IDs = [");
+  for (i=0; i < op->Nmol; i++)
+    transitprint(10, verblevel, "%3d, ", op->molID[i]);
+  transitprint(10, verblevel, "\b\b]\n\n");
+
+  transitprint(10, verblevel, "Temperatures (K)  =  [");
+  for (i=0; i < op->Ntemp; i++)
+    transitprint(10, verblevel, "%6d, ", (int)op->temp[i]);
+  transitprint(10, verblevel, "\b\b] \n\n");
+
+  transitprint(10, verblevel, "Pressures (bar) = [ ");
+  for (i=0; i < op->Nlayer; i++)
+    transitprint(10, verblevel, "%.2e, ", 1e-6*op->press[i]);
+  transitprint(10, verblevel, "\b\b] \n\n");
+
+  transitprint(10, verblevel, "Wavenumber (cm-1) = [");
+  for (i=0; i < 4; i++)
+    transitprint(10, verblevel, "%7.2f, ", op->wns[i]);
+  transitprint(10, verblevel, "..., ");
+  for (i=op->Nwave-4; i < op->Nwave; i++)
+    transitprint(10, verblevel, "%7.2f, ", op->wns[i]);
+  transitprint(10, verblevel, "\b\b]\n\n");
 
   /* Allocate and read the opacity grid:                                    */
   //op->o      = (PREC_RES ****)calloc(op->Nmol,          sizeof(PREC_RES ***));
@@ -406,31 +426,31 @@ readopacity(struct transit *tr,  /* transit struct                          */
   //                                                        sizeof(PREC_RES *));
   //op->o[0][0][0] = (PREC_RES *)calloc(op->Nmol*op->Ntemp*op->Nlayer*op->Nwave,
   //                                                        sizeof(PREC_RES));
-  //for     (i=0; i < op->Nmol;   i++){
+  //for     (i=1; i < op->Nmol;   i++){
   //  op->o[i] = op->o[0] + op->Ntemp*i;
-  //  for   (t=0; t < op->Ntemp;  t++){
+  //  for   (t=1; t < op->Ntemp;  t++){
   //    op->o[i][t] = op->o[0][0] + op->Nlayer*(t + op->Ntemp*i);
-  //    for (r=0; r < op->Nlayer; r++)
+  //    for (r=1; r < op->Nlayer; r++)
   //      op->o[i][t][r] = op->o[0][0][0] + op->Nwave*(r + op->Nlayer*(t + op->Ntemp*i));
   //  }
   //}
   //fread(op->o[0][0][0], sizeof(PREC_RES), op->Nmol*op->Ntemp*op->Nlayer*op->Nwave, fp);
 
   op->o      = (PREC_RES ****)       calloc(op->Nmol,   sizeof(PREC_RES ***));
-  for (i=0; i<op->Nmol; i++){
+  for     (i=0; i < op->Nmol; i++){
     op->o[i] = (PREC_RES  ***)       calloc(op->Ntemp,  sizeof(PREC_RES **));
-    for (t=0; t<op->Ntemp; t++){
+    for   (t=0; t < op->Ntemp; t++){
       op->o[i][t] = (PREC_RES **)    calloc(op->Nlayer, sizeof(PREC_RES *));
-      for (r=0; r<op->Nlayer; r++){
+      for (r=0; r < op->Nlayer; r++){
         op->o[i][t][r] = (PREC_RES *)calloc(op->Nwave,  sizeof(PREC_RES));
       }
     }
   }
 
   /* Read the opacity grid:                                                 */
-  for (i=0; i<op->Nmol; i++)
-    for (t=0; t<op->Ntemp; t++)
-      for (r=0; r<op->Nlayer; r++)
+  for     (i=0; i < op->Nmol;   i++)
+    for   (t=0; t < op->Ntemp;  t++)
+      for (r=0; r < op->Nlayer; r++)
         fread(op->o[i][t][r], sizeof(PREC_RES), op->Nwave, fp);
 
   return 0;

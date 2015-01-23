@@ -117,7 +117,7 @@ readcia(struct transit *tr){
   if(!npairs){
     return 0;
   }
-  transitprint(1, verblevel, "Computing CIA opacities for %i database%s ...\n",
+  transitprint(1, verblevel, "Computing CIA opacities for %i database%s:\n",
                npairs, npairs>1 ? "s":"");
 
   /* Allocate string for molecule names:                                    */
@@ -141,6 +141,8 @@ readcia(struct transit *tr){
     /* Attempt to open the files:                                           */
     if((fp=fopen(file, "r")) == NULL)
       transiterror(TERR_SERIOUS, "Cannot read CIA file '%s'.\n", file);
+    transitprint(10, verblevel, "  CIA file (%d/%d): '%s'\n",
+                                p+1, npairs, file);
     lines = 0; /* lines read counter                                        */
     lpa   = 0;
     /* Read the file headers:                                               */
@@ -184,11 +186,15 @@ readcia(struct transit *tr){
         if(st_cia.mol2[p] == -1)
           transiterror(TERR_SERIOUS, "CIA molecule '%s' from file '%s' does "
                     "not match any in the atmsopheric file.\n", colname, file);
+        transitprint(10, verblevel, "  CIA molecules: [%s, %s]\n",
+                         mol->name[st_cia.mol1[p]], mol->name[st_cia.mol2[p]]);
         continue;
 
       case 't': /* Read the sampling temperatures array:                    */
         while(isblank(*++lp));
         nt = st_cia.ntemp[p] = countfields(lp, ' '); /* Number of temps.    */
+        transitprint(10, verblevel, "  Number of temperature samples: %ld\n",
+                                    nt);
         if(!nt)
           transiterror(TERR_SERIOUS, "Wrong line %i in CIA file '%s', if it "
                        "begins with a 't' then it should have the "
@@ -198,9 +204,11 @@ readcia(struct transit *tr){
         st_cia.temp[p] = (PREC_CIA *)calloc(nt, sizeof(PREC_CIA));
         n = 0;    /* Count temperatures per line                            */
         lpa = lp; /* Pointer in line                                        */
+        transitprint(20, verblevel, "  Temperatures (K) = [");
         while(n < nt){
           while(isblank(*lpa++));
           st_cia.temp[p][n] = strtod(--lpa, &lp); /* Get value */
+          transitprint(20, verblevel, "%d, ", (int)st_cia.temp[p][n]);
           if(lp==lpa)
             transiterror(TERR_CRITICAL, "Less fields (%i) than expected (%i) "
                          "were read for temperature in the CIA file '%s'.\n",
@@ -209,6 +217,7 @@ readcia(struct transit *tr){
           lpa = lp;
           n++;
         }
+        transitprint(20, verblevel, "\b\b]\n");
         continue;
       default:
         break;
@@ -240,10 +249,9 @@ readcia(struct transit *tr){
 
       /* Re-allocate (double the size) if necessary:                        */
       if(n==wa){
-        transitprint(1, verblevel, "Double up CIA\n");
         wn   = (PREC_CIA  *)realloc(wn,  (wa<<=1) * sizeof(PREC_CIA));
         a    = (PREC_CIA **)realloc(a,    wa *      sizeof(PREC_CIA *));
-        a[0] = (PREC_CIA  *)realloc(a[0], wa * nt   sizeof(PREC_CIA));
+        a[0] = (PREC_CIA  *)realloc(a[0], wa * nt * sizeof(PREC_CIA));
         for(i=1; i<wa; i++)
           a[i] = a[0] + i*nt;
       }
@@ -275,12 +283,16 @@ readcia(struct transit *tr){
       for(i=1; i<n; i++)
         a[i] = a[0] + i*nt;
     }
+    transitprint(10, verblevel, "  Number of wavenumber samples: %d\n", n);
+    transitprint(20, verblevel, "  Wavenumber array (cm-1) = [%.1f, %.1f, "
+         "%.1f, ..., %.1f, %.1f, %.1f]\n", st_cia.wn[p][0],   st_cia.wn[p][1],
+      st_cia.wn[p][2], st_cia.wn[p][n-3], st_cia.wn[p][n-2], st_cia.wn[p][n-1]);
     st_cia.cia[p] = a;
     st_cia.nwave[p] = n;
     fclose(fp);
   }
   /* FINDME: The program breaks when I free colname, it makes no sense      */
-  // free(colname);
+  free(colname);
   transitprint(1, verblevel, "Done.\n");
   tr->pi |= TRPI_CIA;
   return 0;
