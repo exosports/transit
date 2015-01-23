@@ -216,16 +216,11 @@ readcia(struct transit *tr){
       break;
     }
 
-    /* Break if something failed:                                           */
-    if(!colname)
-      transiterror(TERR_SERIOUS, "There is either a temperature 't' or "
-                   "isotope name 'i' missing in CIA file '%s'.\n", file);
-
     /* Set an initial value for allocated wavenumber fields:                */
     wa = 32;
 
     /* Allocate wavenumber array:                                           */
-    wn = (PREC_CIA  *)calloc(wa, sizeof(PREC_CIA));
+    wn   = (PREC_CIA  *)calloc(wa,    sizeof(PREC_CIA));
     /* Allocate input extinction array (in cm-1 amagat-2):                  */
     a    = (PREC_CIA **)calloc(wa,    sizeof(PREC_CIA *));
     a[0] = (PREC_CIA  *)calloc(wa*nt, sizeof(PREC_CIA));
@@ -245,9 +240,10 @@ readcia(struct transit *tr){
 
       /* Re-allocate (double the size) if necessary:                        */
       if(n==wa){
-        wn   = (PREC_CIA  *)realloc(wn,   sizeof(PREC_CIA)*(wa<<=1));
-        a    = (PREC_CIA **)realloc(a,    sizeof(PREC_CIA)*wa);
-        a[0] = (PREC_CIA  *)realloc(a[0], sizeof(PREC_CIA)*wa*nt);
+        transitprint(1, verblevel, "Double up CIA\n");
+        wn   = (PREC_CIA  *)realloc(wn,  (wa<<=1) * sizeof(PREC_CIA));
+        a    = (PREC_CIA **)realloc(a,    wa *      sizeof(PREC_CIA *));
+        a[0] = (PREC_CIA  *)realloc(a[0], wa * nt   sizeof(PREC_CIA));
         for(i=1; i<wa; i++)
           a[i] = a[0] + i*nt;
       }
@@ -273,8 +269,9 @@ readcia(struct transit *tr){
 
     /* Re-allocate arrays to their final sizes:                             */
     if(n<wa){
-      st_cia.wn[p] = (PREC_CIA *)realloc(wn,   n*   sizeof(PREC_CIA));
-      a[0]         = (PREC_CIA *)realloc(a[0], n*nt*sizeof(PREC_CIA));
+      st_cia.wn[p] = (PREC_CIA  *)realloc(wn,   n*   sizeof(PREC_CIA));
+      a            = (PREC_CIA **)realloc(a,    n*   sizeof(PREC_CIA *));
+      a[0]         = (PREC_CIA  *)realloc(a[0], n*nt*sizeof(PREC_CIA));
       for(i=1; i<n; i++)
         a[i] = a[0] + i*nt;
     }
@@ -282,7 +279,8 @@ readcia(struct transit *tr){
     st_cia.nwave[p] = n;
     fclose(fp);
   }
-  free(colname);
+  /* FINDME: The program breaks when I free colname, it makes no sense      */
+  // free(colname);
   transitprint(1, verblevel, "Done.\n");
   tr->pi |= TRPI_CIA;
   return 0;
