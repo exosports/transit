@@ -57,9 +57,6 @@ Thank you for using transit!
 void main(int argc,      /* Number of variables                              */
           char **argv){  /* Variables                                        */
 
-  /* Initialization of data structure's pointers. Note that s_lt is not
-     assigned because the array that is going to point has not been
-     initialized yet.                                                       */
   struct transit transit;
   long itr=0;
   struct timeval tv;
@@ -143,18 +140,6 @@ void main(int argc,      /* Number of variables                              */
     transitprint(7, verblevel, "makeradsample() modified some of the hinted "
                                "parameters. Flag: 0x%lx.\n", fw_status);
 
-  /* Hack: add an index to f_out filename to get different files
-     and compare them:                                                      */
-  int fout_len = (int)strlen(transit.f_out);  /* Length of tr.f_out         */
-  char *dot    = strchr(transit.f_out, '.');  /* Search for '.' char        */
-  int dot_pos  = fout_len - (int)strlen(dot); /* Position of dot            */
-  char fout[fout_len+4];         /* Copy of tr.f_out                        */
-  char str_iter[4+1];            /* String of iteration number              */
-  strcpy(fout, transit.f_out);   /* Copy filename into fout                 */
-  strcpy(fout+dot_pos+4, dot);   /* Copy file extension into fout           */
-  strncpy(fout+dot_pos, "0000", 1);
-
-
   /* Calculate opacity grid:                                                */
   fw(opacity, <0, &transit);
   t0 = timecheck(verblevel, itr,  5, "opacity", tv, t0);
@@ -210,12 +195,6 @@ void main(int argc,      /* Number of variables                              */
     fw(extwn, !=0, &transit);
     t0 = timecheck(verblevel, itr, 11, "extwn", tv, t0);
  
-    if (verblevel > 0){
-      sprintf(str_iter, "%04li", itr);    /* Iteration number as string     */
-      strncpy(fout+dot_pos, str_iter, 4); /* Attach number to fout          */
-      strcpy(transit.f_out, fout);
-    }
-
     transitprint(1, verblevel, "TRAN FLAG 74: pre-transit calc\n");
     /* Ray solutions choice:                                                */
     RaySol path = transit.ds.th->path;
@@ -293,6 +272,7 @@ void main(int argc,      /* Number of variables                              */
   MPI_Barrier(comm);
   MPI_Comm_disconnect(&comm);
   transitprint(1, verblevel, "TRAN FLAG 99: worker off 2\n");
-  //MPI_Finalize();
+  MPI_Finalize();
+  transitprint(1, verblevel, "TRAN FLAG OUT ~~ 100 ~~\n");
 }
 
