@@ -76,13 +76,6 @@ modulation(struct transit *tr){ /* Main structure */
   prop_samp *ip = &tr->ips;
   prop_samp *wn = &tr->wns;
   transit_ray_solution *sol = tr->sol;
-  /* Check for monospaced impact parameter if required (monoip): */
-  if(ip->d==0 && sol->monoip){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "To compute %s modulation, the impact parameter has to "
-                 "be an equispaced array.\n", sol->name);
-    return -1;
-  }
 
   /* Allocate the modulation array: */
   PREC_RES *out = st_out.o = (PREC_RES *)calloc(wn->n, sizeof(PREC_RES));
