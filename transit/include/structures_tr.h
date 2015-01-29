@@ -356,6 +356,7 @@ struct transithint{
        wavs, wns, temp; /*   wavelength, wavenumber, and temperature        */
   RaySol  path;         /* Eclipse or transit ray solution.                 */
   char *angles;         /* String with incident angles (for eclipse)        */
+  char *qmol, *qscale;  /* String with species scale factors                */
   float allowrq;        /* How much less than one is accepted, and no warning
                            is issued if abundances don't ad up to that      */
   float timesalpha;     /* Number of alphas that have to be contained in a
@@ -420,7 +421,9 @@ struct transit{
   double gsurf;      /* Surface gravity                                     */
   int ann;           /* Number of angles                                    */
   double *angles;    /* Array of incident angles for eclipse geometry       */
-
+  int nqmol;         /* Number of species scale factors                     */
+  double *qscale;    /* Species scale factors                               */
+  int *qmol;         /* Species with scale factors                          */
   int taulevel;     /* Tau integration level of precision                   */
   int modlevel;     /* Modulation integration level of precision            */
 
