@@ -154,6 +154,8 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_DMAX,
     CLA_LMIN,
     CLA_LMAX,
+    CLA_QSCALE,
+    CLA_QMOL,
   };
 
   /* Generate the command-line option parser: */
@@ -221,6 +223,10 @@ processparameters(int argc,            /* Number of command-line args  */
      "Reference altitude of the planet's 'surface'."},
     {"gsurf",             CLA_GSURF,    required_argument, NULL, NULL,
      "Surface gravity in cm/s^2."},
+    {"qmol",              CLA_QMOL,     required_argument, NULL, NULL,
+     "List of molecule names to modify their abundace with qscale."},
+    {"qscale",            CLA_QSCALE,   required_argument, NULL, NULL,
+     "log10-abundance scale factors for molecules in qmol."},
 
     /* Wavelength options:                                                  */
     {NULL,         0,             HELPTITLE,         NULL,       NULL,
@@ -501,6 +507,12 @@ processparameters(int argc,            /* Number of command-line args  */
 
     case CLA_ALLOWQ:
       hints->allowrq = atof(optarg);
+      break;
+    case CLA_QMOL:
+      hints->qmol = xstrdup(optarg);
+      break;
+    case CLA_QSCALE:
+      hints->qscale = xstrdup(optarg);
       break;
     case CLA_OPABREAK: /* Bool: End after opacity calculation               */
       hints->opabreak = 1;
@@ -853,6 +865,14 @@ acceptgenhints(struct transit *tr){
     parseArray(&tr->angles, &tr->ann, th->angles);
     /* FINDME: do some checks that the angles make sense                    */
   }
+  if (th->qscale){
+   parseArray(&tr->qscale, &tr->nqmol, th->qscale);
+   if (countfields(th->qmol, ' ') != tr->nqmol)
+     transiterror(TERR_SERIOUS, "qscale (%d) and qmol (%d) should have the "
+          "same number of elements.\n", tr->nqmol, countfields(th->qmol,' '));
+  }
+  else
+    tr->nqmol = 0;
   return 0;
 }
 

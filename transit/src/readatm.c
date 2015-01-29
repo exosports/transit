@@ -96,7 +96,6 @@ getatm(struct transit *tr){
   tr->ds.at  = &at;
   tr->ds.mol = &mol;
 
-  PREC_ZREC *f_remainder; /* Abundance fraction for remainder molecules     */
   FILE *fp = NULL;        /* Pointer to atmospheric file                    */
 
   at.mass     = th->mass;  /* bool: abundance by mass (1) or by number (0)  */
@@ -131,11 +130,8 @@ getatm(struct transit *tr){
   at.atm.p = (PREC_ATM *)calloc(nrad, sizeof(PREC_ATM));
   rads->v[0] = 1.0;
 
-  /* Remainder molecules' abundance fraction:                               */
-  f_remainder = (PREC_ZREC *)calloc(1, sizeof(PREC_ZREC));
-
   /* Read keyword-variables from file:                                      */
-  if((i=getmnfromfile(fp, &at, tr, f_remainder))<1){
+  if((i=getmnfromfile(fp, &at, tr))<1){
     transiterror(TERR_SERIOUS, "getmnfromfile() returned error code %i\n", i);
     exit(EXIT_FAILURE);
   }
@@ -161,7 +157,7 @@ getatm(struct transit *tr){
   }
 
   /* Read isotopic abundances:                                              */
-  nrad = readatmfile(fp, tr, &at, rads, nrad, f_remainder);
+  nrad = readatmfile(fp, tr, &at, rads, nrad);
   transitprint(1, verblevel, "Done.\n\n");
   fclose(fp);
 
@@ -335,15 +331,11 @@ checkposvalue(PREC_RES val, /* Value to check                               */
 int
 getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
               struct atm_data *at,     /* atmosphere structure              */
-              struct transit *tr,      /* transit structure                 */
-              PREC_ZREC *f_remainder){ /* Remainder molecules' factor       */
+              struct transit *tr){     /* Remainder molecules' factor       */
   struct molecules *mol=tr->ds.mol;
   char line[maxline], *lp, keyword[maxline];
-  int nimol=0,           /* Number of molecules with abundance profile      */
-      nmol=0,            /* Total number of molecules                       */
-      i;                 /* Auxiliary for-loop index                        */
-  double cumulother = 0; /* Cumulative remainder-molecules' factor          */
-  int ipi = 0;           /* Number of remainder molecules                   */
+  int nmol=0,            /* Number of species in atmospheric file           */
+      i, j;              /* Auxiliary for-loop index                        */
 
   at->begline = 0; /* Line where the info begins                            */
 
@@ -361,22 +353,22 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
         /* Go to next line:                                                 */
         fgetupto_err(line, maxline, fp, &atmerr, tr->f_atm, at->begline++);
         /* Count the number of words (molecules) in line:                   */
-        nimol = countfields(line, ' ');
-        transitprint(15, verblevel, "The number of molecules is %d.\n", nimol);
+        nmol = countfields(line, ' ');
+        transitprint(15, verblevel, "The number of molecules is %d.\n", nmol);
 
         /* Allocate Molecules names:                                        */
-        mol->name    = (char **)calloc(nimol,             sizeof(char *));
-        mol->name[0] = (char  *)calloc(nimol*maxeisoname, sizeof(char));
-        for(i=1; i<nimol; i++)
+        mol->name    = (char **)calloc(nmol,             sizeof(char *));
+        mol->name[0] = (char  *)calloc(nmol*maxeisoname, sizeof(char));
+        for(i=1; i<nmol; i++)
           mol->name[i] = mol->name[0] + i*maxeisoname;
         /* Read and store the molecule names:                               */
         transitprint(1, verblevel, "Molecules with abundance profile:\n  ");
         lp = line;
         /* Read and store names:                                            */
-        for (i=0; i<nimol; i++){
+        for (i=0; i<nmol; i++){
           getname(lp, mol->name[i]);
           lp = nextfield(lp);
-          if (i < nimol-1)
+          if (i < nmol-1)
             transitprint(1, verblevel, "%s, ", mol->name[i]);
           else
             transitprint(1, verblevel, "%s.\n", mol->name[i]);
@@ -440,80 +432,43 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
       storename(at, line+1);
       continue;
 
-    /* Molecules with abundance proportional to the remainder:              */
-    case 'f':
-      lp = line;
-      lp = nextfield(lp); /* Skip keyword                                   */
-
-      /* Current total number of molecules:                                 */
-      nmol = ++ipi + nimol;
-      /* Re-allocate to add the new molecule:                               */
-      mol->name    = (char **)realloc(mol->name, nmol*sizeof(char *));
-      mol->name[0] = (char  *)realloc(mol->name[0],
-                                                 nmol*maxeisoname*sizeof(char));
-      for (i=1; i<nmol; i++)
-        mol->name[i] = mol->name[0] + i*maxeisoname;
-
-      /* Re-allocate remainder factors:                                     */
-      f_remainder = (PREC_ZREC *)realloc(f_remainder, ipi*sizeof(PREC_ZREC));
-
-      /* Read and store the molecule's name:                                */
-      getname(lp, mol->name[nmol-1]);
-
-      lp = nextfield(lp);   /* Move pointer to next field                   */
-      if(*lp == '=')        /* Skip an optional equal '=' sign              */
-        lp++;
-
-      /* Read and store factor:                                             */
-      f_remainder[ipi-1] = strtod(lp, NULL);
-      transitprint(30, verblevel, "%s remainder factor: %.3f\n",
-                                  mol->name[nmol-1], f_remainder[ipi-1]);
-      if(f_remainder[ipi-1] < 0)
-        transiterror(TERR_CRITICAL,
-                     "Abundance ratio has to be positive in atmosphere "
-                     "file '%s' in line: '%s'.\n", tr->f_atm, line);
-      continue;
-
     /* End of keyword variables:                                            */
     default:
       break;
     }
     break;
   }
-  if (ipi > 0){
-    transitprint(1, verblevel, "Molecules with abundance proportional to "
-                               "remainder:\n  ");
-    for(i=nimol; i<nmol; i++)
-      transitprint(1, verblevel, "%s, ", mol->name[i]);
-    transitprint(1, verblevel, "\b\b.\n");
-  }
 
   transitprint(3, verblevel, "Read all keywords in atmosphere file without "
                              "problems.\n");
 
   /* Set total number of molecules in atmosphere:                           */
-  mol->nmol = at->n_aiso = nmol = nimol + ipi;
+  mol->nmol = at->n_aiso = nmol;
 
+  /**/
+  if (tr->nqmol > 0){
+    tr->qmol = (int *)calloc(tr->nqmol, sizeof(int));
+    lp = tr->ds.th->qmol;
+    for (i=0; i < tr->nqmol; i++){
+      tr->qmol[i] = -1;
+      getname(lp, keyword);
+      for (j=0; j<nmol; j++)
+        if (strcmp(keyword, mol->name[j])== 0){
+          tr->qmol[i] = j;
+          break;
+        }
+      lp = nextfield(lp);
+    }
+  }
   /* Check that there was at least one isotope defined and re-allocate
      array sizes to their final size:                                       */
-  if(!nimol)
+  if(!nmol)
     transiterror(TERR_SERIOUS, "No isotopes were found in atmosphere file, "
                                "make sure to specify them with the comment/"
                                "header in the previous line '#SPECIES'.\n");
 
   /* Set position of beginning of data:                                     */
   at->begpos = ftell(fp) - strlen(line) - 1;
-
-  /* Calculate cumulative fraction of remainder molecules:                  */
-  for(i=0;  i < nmol-nimol;  i++)
-    cumulother += f_remainder[i];
-
-  transitprint(30, verblevel, "Cumulative remainder fraction: %.4f.\n",
-                               cumulother);
-  /* Check that cumulother sums to 1.0 (within allowed errors):             */
-  if(nmol>nimol  &&  abs(1.0 - cumulother) > ROUNDTHRESH)
-    transiterror(TERR_SERIOUS, "Sum of remainder-molecules fractional "
-           "abundance (%g) must add to 1.0 +/- %g.\n", cumulother, ROUNDTHRESH);
 
   /* Resolve what to do with those isotopes that appear in the
      line transition database, but not in the atmosphere file. Get
@@ -542,8 +497,7 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
             struct transit *tr,      /* transit struct                      */
             struct atm_data *at,     /* Atmosphere struct                   */
             prop_samp *rads,         /* Radius sampling                     */
-            int nrad,                /* Size of allocated radius array      */
-            PREC_ZREC *f_remainder){ /* Remainder molecules' factor         */
+            int nrad){               /* Remainder molecules' factor         */
 
   transitprint(1, verblevel, "Start reading abundances.\n");
   /* Find abundance related quantities for each radius                      */
@@ -552,11 +506,14 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
   char rc;          /* File reading output                                  */
   float allowq = tr->allowrq;
   int nabundances;  /* Number of abundances in list                         */
-  double sumq;      /* Sum of abundances per line                           */
+  double sumq, /* Sum of abundances per line                         */
+         ratio, sumq2=0.0;
   char line[maxline], *lp, *lp2;
   prop_mol *molec = at->molec;
   struct molecules *mol = tr->ds.mol;
-  int i, j;         /* Auxiliary for-loop indices                           */
+  int i, j,         /* Auxiliary for-loop indices                           */
+      iH2=valueinarray(mol->ID, 105, mol->nmol),
+      iHe=valueinarray(mol->ID,   2, mol->nmol);
 
   /* Count the number of abundances in each line:                           */
   fseek(fp, at->begpos, SEEK_SET); /* Go to position where data begins      */
@@ -608,19 +565,30 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
       lp = lp2;
       /* Read the abundance of the isotope:                                 */
       molec[i].q[r] = strtod(lp, &lp2);
+
+      if (tr->nqmol > 0){
+        if ( (j=valueinarray(tr->qmol, i, tr->nqmol)) >= 0)
+          molec[i].q[r] *= pow(10.0, tr->qscale[j]);
+      }
       if (r==0)
         transitprint(30, verblevel, "density[%d, %li]: %.9f.\n",
                                     i, r, molec[i].q[r]);
-      sumq += molec[i].q[r];                    /* Add the abundances       */
+
+      sumq += molec[i].q[r];      /* Add the abundances       */
+      if (i != iH2 && i != iHe)
+        sumq2 += molec[i].q[r];   /* Sum of metals abundance  */
+
       checkposvalue(molec[i].q[r], i+4, lines); /* Check that tmp is > 0    */
       if(lp==lp2)
         invalidfield(line, lines, 4+i, "isotope abundance");
     }
 
-    /* Set abundance of remainder molecules:                                */
-    for(j=0; i < at->n_aiso; i++, j++)
-      molec[i].q[r] = f_remainder[j]*(1-sumq);
-
+    if (tr->nqmol >0){
+      ratio = molec[iH2].q[r] / molec[iHe].q[r];
+      molec[iHe].q[r] =         (1-sumq2) / (1.0 + ratio);  /* He */
+      molec[iH2].q[r] = ratio * (1-sumq2) / (1.0 + ratio);  /* H2 */
+      sumq2 = 0.0;
+    }
     transitASSERT(i!=at->n_aiso, "The line %s of file %s contains %d abundance "
                                  "values, when there were %d expected.\n",
                                  __LINE__, __FILE__, i, at->n_aiso);
