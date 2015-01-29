@@ -355,12 +355,11 @@ struct transithint{
   prop_samp rads, ips,  /* Sampling properties of radius, impact parameter, */
        wavs, wns, temp; /*   wavelength, wavenumber, and temperature        */
   RaySol  path;         /* Eclipse or transit ray solution.                 */
-  long int ann;         /* Number of angles                                 */
-  PREC_RES angles[10];  /* Angles                                           */
+  char *angles;         /* String with incident angles (for eclipse)        */
   float allowrq;        /* How much less than one is accepted, and no warning
                            is issued if abundances don't ad up to that      */
   float timesalpha;     /* Number of alphas that have to be contained in a
-                           calculated profile, one side only                 */
+                           calculated profile, one side only                */
   int voigtfine;        /* Fine-binning for Voigt function in kapwl(), if
                            accepted it goes to tr.ds.op.vf                   */
   int nDop, nLor;       /* Number of broadening width samples                */
@@ -419,6 +418,8 @@ struct transit{
                         Lorentz half width                                  */
   double p0, r0;     /* Pressure and radius reference level                 */
   double gsurf;      /* Surface gravity                                     */
+  int ann;           /* Number of angles                                    */
+  double *angles;    /* Array of incident angles for eclipse geometry       */
 
   int taulevel;     /* Tau integration level of precision                   */
   int modlevel;     /* Modulation integration level of precision            */
