@@ -333,7 +333,6 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
             double toomuch,       /* Maximum optical depth calculated       */
             prop_samp *ip,        /* Impact parameter                       */
             struct geometry *sg){ /* Geometry struct                        */
-  /* General variables:                                                     */
   PREC_RES res;
   /* Stellar radius:                                                        */
   double srad = sg->starrad * sg->starradfct;
@@ -345,9 +344,9 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
 
   /* Max overall tau, for the tr.ds.sg.transparent=True case:               */
   const PREC_RES maxtau = tau[last] > toomuch? tau[last]:toomuch;
-  /* Integral part: */
-  PREC_RES rinteg[ipn], /* Integrand */
-           ipv[ipn];    /* Impact paramter where to integrate */
+
+  PREC_RES rinteg[ipn], /* Integrand                                        */
+           ipv[ipn];    /* Impact parameter where to integrate              */
 
   /* Integrate for each of the planet's layer starting from the
      outermost until the closest layer  */
@@ -370,11 +369,10 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
      have enough: */
   last++;
   if(last<3)
-    transiterror(TERR_CRITICAL,
-                 "Condition failed, less than 3 items (only %i) for radial "
-                 "integration.\n", last);
+    transiterror(TERR_CRITICAL, "Condition failed, less than 3 items "
+                                "(only %i) for radial integration.\n", last);
 
-  /* Integrate along radius: */
+  /* Integrate along radius:                                                */
 #ifdef _USE_GSL
   gsl_interp_accel *acc = gsl_interp_accel_alloc();
   gsl_interp *spl       = gsl_interp_alloc(gsl_interp_cspline, last);
@@ -452,7 +450,6 @@ modulationm1(PREC_RES *tau,        /* Optical depth array              */
 
 /* \fcnfh
    Wrapper function to calculate the modulation in/out-of-transit ratio.
-
    Return: modulation                                      */
 static PREC_RES
 modulationperwn(PREC_RES *tau,       /* Optical depth                    */

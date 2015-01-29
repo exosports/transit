@@ -161,7 +161,7 @@ intens_grid(struct transit *tr){
   prop_samp *wn = &tr->wns;          /* Wavenumber sample                   */
   long int wnn = wn->n;              /* Wavenumbers                         */
   long int i;                        /* For counting angles                 */
-  long int an = th->ann;             /* Number of angles                    */
+  int an = tr->ann;                  /* Number of angles                    */
   static struct optdepth tau;        /* Optical depth                       */
   static struct grid     intens;     /* Intensity grid                      */
 
@@ -188,269 +188,6 @@ intens_grid(struct transit *tr){
   for(i=1; i<an; i++)
     intens.a[i] = intens.a[0] + i*wnn;
 
-  return 0;
-}
-
-
-/* ################################### 
-    FILLS OUT OPTICAL DEPTH 2D ARRAY
-   ################################### */
-
-#define CIA_DOFLOAT  2
-#define CIA_RADFIRST 1
-
-/* \fcnfh
-   Calculates optical depth as a function of radii and wavenumber.
-   Return: 0 on success                                                     */
-
-/* DEF */
-int
-tau_eclipse(struct transit *tr){           /* Transit structure             */
-
-  struct optdepth *tau=tr->ds.tau;         /* Def optical depth structure   */
-  //tr->ds.tau = &tau;                     /* Called from transit structure */
-  prop_samp *rad = &tr->rads;              /* Radius sample                 */
-  prop_samp *wn  = &tr->wns;               /* Wavenumber sample             */
-  struct extinction *ex = tr->ds.ex;       /* Def extinction structure      */
-  PREC_RES **e = ex->e;                    /* Extinction array [rad][wn]    */
-  PREC_RES (*fcn)() = tr->ecl->tauEclipse; /* Function for totaltau_eclipse */
-                                           /* See structure_tr.h line ~91   */
-
-  long wi, ri; /* Indices for wavenumber, and radius                       */
-  int rn;      /* Returns error code from computeextradiaus=>exstradis     */
-
-  PREC_RES *r  = rad->v;         /* Values of radii                         */
-  PREC_RES *tau_wn;              /* Array of optical depths [rad], one wn   */
-  PREC_ATM *temp = tr->atm.t,    /* Temp array from atmospheric file        */
-           tfct  = tr->atm.tfct; /* Temp units from atmospheric file        */
-
-  /* Number of elements:                                                    */
-  long int wnn = wn->n;        /* Wavenumbers                              */
-  long int rnn = rad->n;       /* Radii                                    */
-  double wfct  = wn->fct;      /* Wavenumber units factor to cgs           */
-
-  struct transithint *trh = tr->ds.th;
-  /* Pato Rojo explanation: 
-  Consider:
-  TRU_*BITS
-  Those mark the bits that are carrying flags for each aspect. 
-  i.e. TRU_EXTBITS is 1 for all the flag positions that are relevant
-  for the extinction computation (only TRU_OUTTAU in that case); 
-  TRU_ATMBITS is 1 for all the flag positions that are relevant for 
-  the atmospheric computation; and so  on...therefore the line 64 
-  passes all the TAU relevant flags from the user hint to 
-  the main structure.  In particular, it only passes whether TRU_OUTTAU 
-  was 1 or 0 as specified by the user. */
-  transitacceptflag(tr->fl, tr->ds.th->fl, TRU_TAUBITS);
-
-  /* Set cloud structure:                                                   */
-  /* Linear for rini to rfin, grey opacity from 0 to maxe.                  */
-  static struct extcloud cl;
-  cl.maxe = tr->ds.th->cl.maxe; /* Maximum opacity                          */
-  cl.rini = tr->ds.th->cl.rini; /* Top layer radius                         */
-  cl.rfin = tr->ds.th->cl.rfin; /* Radius of maxe                           */
-  if(tr->ds.th->cl.rfct==0)
-    cl.rfct = rad->fct;
-  else
-    cl.rfct = tr->ds.th->cl.rfct;
-  tr->ds.cl = &cl;
-
-  /* Tests if ex is calculated for particular radius, if true/False:        */
-  _Bool *comp = ex->computed;
-
-  /* Restors extinction from the savefile if given:                         */
-  if(tr->save.ext)
-    restfile_extinct(tr->save.ext, e, comp, rnn, wnn);
-
-  /* Computes extinction at the outermost layer:                            */
-  /* Pato Rojo explanation:                                                 */
-  /* If outmost layer not computed r[lastr] will segfault otherwise.        */
-  /* Last computed layer in that case is unnecessary.                       */
-  /* Compute extinction when radius is below the last computed layer:       */
-  if(!comp[rnn-1]){
-    transitprint(1, verblevel, "Computing extinction in the outermost "
-                               "layer.\n");
-    if (tr->fp_opa != NULL)
-      rn = interpolmolext(tr, rnn-1, ex->e);
-    else
-      if((rn=computemolext(tr, rnn-1, ex->e))!=0)
-      transiterror(TERR_CRITICAL,
-                   "computeextradius() returned error code %i.\n", rn);
-  }
-
-  /* Gets a copy of the radius units factor:                                */
-  double rfct = rad->fct;
-
-  /* Reads angle index from transit structure                               */
-  long int angleIndex = tr->angleIndex;
-
-  /* Reads the current angle for optical depth calculation                  */
-  PREC_RES angle = trh->angles[angleIndex];
-
-  /* Requests at least four radii to calculate a spline interpolation:      */
-  if(rnn < 4)
-    transiterror(TERR_SERIOUS, "tau(): At least four radius points (%d given) "
-                 "are required. (three for spline and one for the analytical "
-                 "part)\n", rnn);
-
-  transitprint(1, verblevel, "Calculating optical depth at various radii for "
-                             "angle %2.1lf degrees.\n", angle);
-
-  PREC_RES er[rnn];        /* Array of extinction per radius                */
-
-  int lastr = rnn-1;       /* Radius index of last computed extinction      */
-                           /* from the outmost layer inwards                */
-
-  /* Tenth of wavenumber sample size, used for progress printing:           */
-  int wnextout = (long)(wnn/10.0); 
-
-  /* Extinction from scattering and clouds:                                 */
-  double e_s[rnn], e_c[rnn];
-  /* Extinction from CIA:                                                   */
-  PREC_CIA **e_cia = tr->ds.cia->e;
-  /* Extinction from scattering:                                            */
-  /* This is a hook for future handling of scattering.                      */
-  struct extscat *sc = tr->ds.sc;
-
-  /* Flow of this part:
-     For each wavenumber of the selected scale, the optical depth along 
-     the path with a given radius is computed. 
-     The computation starts with a radius r[rnn], equal to the radius
-     of the outmost layer and descends into the atmosphere until the 
-     optical depth rises above a certain user-defined limit (--toomuch). 
-     Each time this procedure reaches a radius whose extinction has not 
-     been computed, it calls the extinction computing routine, 
-     to compute the extinction over the whole wavenumber range.             */
-  
-  /* For each wavenumber:                                                   */
-  for(wi=0; wi < wnn; wi++){
-
-    /* Pointing to the declared tau array. All radii for one wn.            */
-    tau_wn = tau->t[wi];
-
-    /* Print output every 10\% that is ready:                               */
-    if(wi > wnextout){
-      transitprint(2, verblevel, "%i%%\n", (int)(100*(float)wi/wnn+0.5));
-      wnextout += (long)(wnn/10.0);
-    }
-
-    /* Calculate extinction from scattering, clouds, and CIA.               */
-    /* At each level just for the wn of interest:                           */
-    computeextscat(e_s,  rnn, sc, rad->v, rad->fct, temp, tfct, wn->v[wi]*wfct);
-    computeextcloud(e_c, rnn, &cl, rad, temp, tfct, wn->v[wi]*wfct);
-
-    /* Calculate extinction for all radii if extinction exists:             */
-    for(ri=0; ri < rnn; ri++)
-      er[ri] = e[ri][wi] + e_cia[wi][ri] + e_s[ri] + e_c[ri];
-
-    /* For each radii:                                                      */
-    for(ri=rnn-1; ri > -1; ri--){
-      transitprint(30, verblevel, "Radius r[%li] = %9.4g\n", ri, r[ri]);
-
-      /* Compute extinction only if radius is smaller than the radius of
-         the last calculated extinction:                                    */
-      if(r[ri] < r[lastr]){
-        transitprint(30, verblevel, "Last Tau (r=%9.4g, wn=%9.4g): %10.4g.\n",
-                                   r[ri-1], wn->v[wi], tau_wn[ri-1]);
-        if(ri)
-          transitprint(30, verblevel, "Last Tau (r=%9.4g, wn=%9.4g): %10.4g.\n",
-                                     r[ri-1], wn->v[wi], tau_wn[ri-1]);
-
-        /* If extinction was not computed, compute it using computextradius. 
-           The function calls extradius for one radius, but for all wn.
-           Then, the code updates extinction for the particular wn. 
-           Computation starts from the layer below outermost, since the 
-           outmost layer is computed above.                                 */ 
-                                          
-        do{
-          if(!comp[--lastr]){
-            /* Compute a new extinction at given radius printing error if
-               something happen:                                            */
-            transitprint(2, verblevel, "Radius %i: %.9g cm ...\n",
-                                       lastr+1, r[lastr]);
-            if (tr->fp_opa != NULL)
-              rn = interpolmolext(tr, lastr, ex->e);
-            else
-              if((rn=computemolext(tr, lastr, ex->e))!=0)
-                transiterror(TERR_CRITICAL,
-                           "computeextradius() return error code %i while "
-                           "computing radius #%i: %g\n", rn, r[lastr]*rfct);
-            /* Update the value of the extinction at the right place:       */
-            er[lastr] = e[lastr][wi] + e_s[lastr] + e_c[lastr] +
-                        e_cia[wi][lastr];
-          }
-        }while(r[ri]*rad->fct < r[lastr]*rfct);
-      }
-
-      //if (wi == 1612 || wi == 1611){
-      //if (wi == 1611){
-      //  transitprint(1,2, "ext(%3li) = tot:%.4e -- mol:%.4e -- cia:%.4e\n"
-      //                    "    rad: %.2f   angle: %.2f  rnn-ri: %li\n",
-      //                    ri, er[ri], e[ri][wi], e_cia[wi][ri],
-      //                    *(r+ri), angle, rnn-ri);
-      //}
-      /* Compute tau_wn[ri] array until tau reaches toomuch
-         first tau[0], starts from the outmost layer.                         
-         Also compute tau.last (radii where tau reaches toomuch at each wn): */
-
-      if( (tau_wn[rnn-ri-1] = rfct * fcn(r+ri, er+ri, angle, rnn-ri)) > tau->toomuch){
-        tau->last[wi] = rnn-ri-1;
-
-        if (ri < 3){
-          transitprint(1, verblevel,
-                       "WARNING: At wavenumber %g (cm-1), the critical TAU "
-                       "value (%g) was exceeded with tau=%g at the radius "
-                       "level %li (%g km), this should have "
-                       "happened in a deeper layer (check IP sampling or ATM "
-                       "file).\n", wn->v[wi], tau->toomuch, tau_wn[ri],
-                       ri, r[ri]*rfct/1e5);
-        }
-        /* Exit tau-calculation loop if it reached toomuch:                 */
-        break;
-      }
-
-      /* Sets tau of the outermost layer to zero:                           */
-      tau_wn[0] = 0;
-
-      transitDEBUG(22, verblevel, "Tau(lambda %li=%9.07g, r=%9.4g) : %g "
-                                  "(toomuch: %g)\n", wi, wn->v[wi], r[ri],
-                                  tau_wn[ri], tau->toomuch);
-    }
-
-    if(ri==rnn){
-      transitprint(1, verblevel,
-                   "WARNING: At wavenumber %g cm-1, the bottom of the "
-                   "atmosphere was reached before obtaining the critical TAU "
-                   "value of %g.\nMaximum TAU reached: %g.\n",
-                   wn->v[wi], tau->toomuch, tau_wn[ri]);
-      tau->last[wi] = ri-1;
-    }
-  }
-
-  transitprint(1, verblevel, " Done.\nOptical depth calculated up to %g.\n",
-               tr->ds.tau->toomuch);
-
-  /* Print detailed output if requested:                                    */
-  if(tr->ds.det->tau.n)
-    detailout(&tr->wns, &tr->rads,  &tr->ds.det->tau, tau->t, 0);
-  if(tr->ds.det->ext.n)
-    detailout(&tr->wns, &tr->rads, &tr->ds.det->ext, e, CIA_RADFIRST);
-  if(tr->ds.det->cia.n)
-    detailout(&tr->wns, &tr->rads, &tr->ds.det->cia, (double **)e_cia,
-              CIA_DOFLOAT);
-
-  if(tr->save.ext)
-    savefile_extinct(tr->save.ext, e, comp, rnn, wnn);
-
-  /* Print lowest radius before optical depth gets too big:                 */
-  if(tr->f_toomuch)
-    printtoomuch(tr->f_toomuch, tr->ds.tau, &tr->wns, &tr->rads);
-
-  /* Set progress indicator and output tau if requested, 
-     otherwise return success:                                              */
-  tr->pi |= TRPI_TAU;
-  if(tr->fl & TRU_OUTTAU)
-    printtau(tr);
   return 0;
 }
 
@@ -657,13 +394,12 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
 /* DEF */
 int
 flux(struct transit *tr){  /* Transit structure                             */
-  struct transithint *trh=tr->ds.th;
   static struct outputray st_out;
   tr->ds.out = &st_out;
 
   /* Get angles and number of angles from transithint:                      */
-  PREC_RES *angles = trh->angles;     /* Angles                             */
-  long int an = trh->ann;             /* Number of angles                   */
+  PREC_RES *angles = tr->angles;      /* Angles                             */
+  long int an = tr->ann;              /* Number of angles                   */
 
   /* Intensity for all angles and all wn                                    */
   PREC_RES **intens_grid = tr->ds.intens->a; 
@@ -719,62 +455,32 @@ flux(struct transit *tr){  /* Transit structure                             */
    for each angle)                                                          */
 
 void
-printintens(struct transit *tr)
-{
+printintens(struct transit *tr){
+  long int i, w;                  /* Auxilliary for-loop indices            */
+  FILE *outf = stdout;            /* Output file pointer                    */
 
-  /* Intensity for all angles and all wn                                    */
+  PREC_RES *angles = tr->angles;  /* Array of incident angles               */
+  int an = tr->ann;               /* Number of incident angles              */
+
+  prop_samp *wn = &tr->wns;       /* Wavenumber sample                      */
+  long int wnn = wn->n;           /* Number of wavenumber samples           */
+
+  /* Intensity for all angles and all wn:                                   */
   PREC_RES **intens_grid = tr->ds.intens->a;   
-
-  /* Takes number of angles from the transithint structure                  */
-  struct transithint *trh=tr->ds.th;
-  long int an = trh->ann;                   /* Number of angles            */
-
-  prop_samp *wn = &tr->wns;                  /* Wavenumber sample           */
-  long int wnn = wn->n;                     /* Wavenumbers                 */
-
-  /* Declaring indexes:                                                     */
-  long int i;                               /* For counting angles         */
-  long int w;                               /* For counting wn             */
-
-  /* Reads angles from transithint structure                                */
-  PREC_RES *angles = trh->angles;      
-
-  /* Declares stdout                                                        */
-  FILE *outf=stdout;
 
   /* Adds string to the output files to differentiate between outputs        */
   char our_fileName[512];
   strncpy(our_fileName, tr->f_out, 512);
   strcat(our_fileName, ".-Intens");
 
-  /* Opens a file:                                                          */
-  if(tr->f_out&&tr->f_out[0]!='-')
-    outf=fopen(our_fileName,"w");
+  /* Open file:                                                             */
+  if(tr->f_out && tr->f_out[0] != '-')
+    outf = fopen(our_fileName, "w");
 
   transitprint(1, verblevel, "\nPrinting intensity in '%s'\n",
-               tr->f_out ? tr->f_out:"standard output");
+                             tr->f_out ? tr->f_out:"standard output");
 
-  /* Prints:                                                                */
-  char wlu[20],wnu[20];                       /* Wavelength units name     */
-  long nsd=(long)(1e6);                      /* Wavenumber units name      */
-
-  /* Get wavenumber units name:                                             */
-  if((long)(nsd*tr->wns.fct)==nsd) strcpy(wnu,"cm");
-  else if((long)(nsd*1e-1*tr->wns.fct)==nsd) strcpy(wnu,"mm");
-  else if((long)(nsd*1e-4*tr->wns.fct)==nsd) strcpy(wnu,"um");
-  else if((long)(nsd*1e-7*tr->wns.fct)==nsd) strcpy(wnu,"nm");
-  else if((long)(nsd*1e-8*tr->wns.fct)==nsd) strcpy(wnu,"a");
-  else sprintf(wnu,"%6.1g cm",1/tr->wns.fct);
-
-  /* Get wavenumber units name:                                              */
-  if((long)(nsd*tr->wavs.fct)==nsd) strcpy(wlu,"cm");
-  else if((long)(nsd*1e1*tr->wavs.fct)==nsd) strcpy(wlu,"mm");
-  else if((long)(nsd*1e4*tr->wavs.fct)==nsd) strcpy(wlu,"um");
-  else if((long)(nsd*1e7*tr->wavs.fct)==nsd) strcpy(wlu,"nm");
-  else if((long)(nsd*1e8*tr->wavs.fct)==nsd)  strcpy(wlu,"a");
-  else sprintf(wlu,"%8.1g cm",tr->wavs.fct);
-
-  /* Prints the header:                                                      */
+  /* Print the header:                                                      */
   fprintf(outf, "#wvl [um]%*s", 6, " ");
   for(i=0; i < an; i++)
       fprintf(outf, "I[%4.1lf deg]%*s", angles[i], 7, " ");
@@ -783,7 +489,7 @@ printintens(struct transit *tr)
   /* Fills out each column with the correct output intensity                 */
   for(w=0; w<wnn; w++){
     fprintf(outf, "%-15.10g", 1e4/(tr->wns.v[w]/tr->wns.fct));
-    for(i = 0; i < an; i++)
+    for(i=0; i < an; i++)
       fprintf(outf, "%-18.9g", intens_grid[i][w]);
     fprintf(outf,"\n");
   }

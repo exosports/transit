@@ -76,116 +76,126 @@ void outdebtau(char *name, prop_samp *ip, PREC_RES **t, long wi, long wf)
 /* \fcnfh
    Calculates optical depth as a function of radii for a spherically
    symmetric planet.
-
    Return: 0 on success                                                     */
 int
 tau(struct transit *tr){
-  /* Different structures                                                   */
   struct transithint *th = tr->ds.th;   /* transithint struct               */
-  static struct optdepth tau;           /* Optical depth struct             */
-  tr->ds.tau     = &tau;                /* Optical depth                    */
-  prop_samp *rad = &tr->rads;           /* Radius sample                    */
-  prop_samp *wn  = &tr->wns;            /* Wavenumber sample                */
-  prop_samp *ip  = &tr->ips;            /* Impact parameter sample          */
+  struct optdepth *tau=tr->ds.tau;      /* Def optical depth structure      */
+  
   struct extinction *ex = tr->ds.ex;    /* Extinction struct                */
   PREC_RES **e = ex->e;                 /* Extinction coefficient           */
-  PREC_RES (*fcn)() = tr->sol->tauperb; /* transit ray path?                */
-
+  PREC_RES (*fcn)();
   long wi, ri; /* Indices for wavenumber, and radius                        */
-  int rn;
+  int rn;      /* Functions output code                                     */
 
-  /* Number of elements for each array:                                     */
-  long int wnn = wn->n;   /* Wavenumber                                     */
-  long int inn = ip->n;   /* Impact parameter                               */
-  long int rnn = rad->n;  /* Radius                                         */
-  double wfct  = wn->fct; /* Wavenumber units factor                        */
+  prop_samp *rad = &tr->rads;  /* Radius sampling                           */
+  PREC_RES *r  = rad->v;       /* Radius array                              */
+  long int rnn = rad->n;       /* Number of layers                          */
+  double  rfct = rad->fct;     /* Radius array units factor                 */
 
-  PREC_RES *bb = ip->v;          /* Impact parameter array                  */
-  PREC_RES *n  = tr->ds.ir->n;   /* Index of refraction                     */
-  PREC_RES *r  = rad->v;         /* radius array                            */
-  PREC_RES *tau_wn;              /* optical depth                           */
-  PREC_ATM *temp = tr->atm.t,    /* Temperatures                            */
+  PREC_RES *h;
+  long int nh;
+  double hfct;
+
+  if (th->path == eclipse){
+    h = (PREC_RES *)calloc(rnn, sizeof(PREC_RES)); /* Reversed radius array */
+    for (ri=0; ri <rnn; ri++)
+      h[ri] = r[rnn-ri-1];
+    nh = rnn;     /* Number of layers                        */
+    hfct = rfct;
+    fcn = tr->ecl->tauEclipse; /* totaltau_eclipse function   */
+  }
+  else{
+    prop_samp *ip = &tr->ips;
+    h  = ip->v;  /* Impact parameter array                   */
+    nh = ip->n;  /* Number of impact parameter samples       */
+    hfct = ip->fct;
+    fcn = tr->sol->tauperb; /* transit ray path?              */
+  }
+  /* Request at least four layers to calculate a spline interpolation:     */
+  if(nh < 4)
+    transiterror(TERR_SERIOUS, "At least four layers (%d given) are required "
+                 "(three for spline, one for the analitical part).\n", nh);
+
+  PREC_RES *n = tr->ds.ir->n;                   /* Index of refraction      */
+  PREC_RES angle = tr->angles[tr->angleIndex];  /* Incident angle           */
+
+
+  PREC_RES *tau_wn;              /* Optical depth array                     */
+  PREC_ATM *temp = tr->atm.t,    /* Temperature array                       */
            tfct  = tr->atm.tfct; /* Temperature units                       */ 
+
+  prop_samp *wn = &tr->wns; /* Wavenumber sampling                          */
+  long int wnn  = wn->n;    /* Number of wavenumber samples                 */
+  double wfct   = wn->fct;  /* Wavenumber units factor                      */
 
   PREC_RES er[rnn];   /* Array of extinction per radius                     */
   int lastr = rnn-1;  /* Radius index of last computed extinction           */
+
   int wnextout = (long)(wnn/10.0); /* (Wavenumber sample size)/10,
                                       used for progress printing            */
-
-  /* Get a copy of the radius units factor, and  the impact
-     parameter-to-radius units factor ratio:                                */
-  double rfct = rad->fct;
-  double riw  = ip->fct/rfct;
 
   double e_s[rnn],                  /* Extinction from scattering           */
          e_c[rnn];                  /* Extinction from clouds               */
   PREC_CIA **e_cia = tr->ds.cia->e; /* Extinction from CIA                  */
   struct extscat *sc = tr->ds.sc;   /* Scattering extinction struct         */
 
+  /* FINDME: TRANSIT ONLY */
+  tr->save.ext = th->save.ext;  /* Ext. coefficient save/restore filename   */
+  /* Use constant (taulevel=1) or variable (2) index of refraction:         */
+  const int taulevel  = tr->taulevel = th->taulevel;
+
   /* Check idxrefrac and extwn have been called:                            */
   transitcheckcalled(tr->pi, "tau", 2, "idxrefrac", TRPI_IDXREFRAC,
                                        "extwn",     TRPI_EXTWN);
 
-  /* FINDME: what's going on here? */
-  transitacceptflag(tr->fl, tr->ds.th->fl, TRU_TAUBITS);
-
-  /* Get optical depth calculation parameters:                              */
-  tr->save.ext = th->save.ext;  /* Ext. coefficient save/restore filename   */
-  /* Use constant (taulevel=1) or variable (2) index of refraction:         */
-  const int taulevel  = tr->taulevel = th->taulevel;
-  if(th->toomuch > 0)
-    tau.toomuch = th->toomuch;  /* Maximum optical depth to calculate:      */
-
-  /* Radius index where tau reached toomuch:                                */
-  tau.last = (long      *)calloc(wnn,       sizeof(long));
-  /* Optical depth per impact parameter:                                    */
-  tau.t    = (PREC_RES **)calloc(wnn,       sizeof(PREC_RES *));
-  tau.t[0] = (PREC_RES  *)calloc(wnn*ip->n, sizeof(PREC_RES));
-  for(wi=1; wi<wnn; wi++)
-    tau.t[wi] = tau.t[0] + wi*ip->n;
+  /* TRU_*BITS mark the bits that are carrying flags for each aspect.
+  i.e. TRU_EXTBITS is 1 for all the flag positions that are relevant
+  for the extinction computation (only TRU_OUTTAU in that case);
+  TRU_ATMBITS is 1 for all the flag positions that are relevant for
+  the atmospheric computation; and so  on...therefore the line 64
+  passes all the TAU relevant flags from the user hint to
+  the main structure.  In particular, it only passes whether TRU_OUTTAU
+  was 1 or 0 as specified by the user. */
+  transitacceptflag(tr->fl, th->fl, TRU_TAUBITS);
 
   /* Set cloud structure:                                                   */
   static struct extcloud cl;
-  cl.maxe = tr->ds.th->cl.maxe; /* Maximum opacity                          */
-  cl.rini = tr->ds.th->cl.rini; /* Top layer radius                         */
-  cl.rfin = tr->ds.th->cl.rfin; /* Radius of maxe                           */
-  if(tr->ds.th->cl.rfct==0)
+  cl.maxe = th->cl.maxe; /* Maximum opacity                          */
+  cl.rini = th->cl.rini; /* Top layer radius                         */
+  cl.rfin = th->cl.rfin; /* Radius of maxe                           */
+  if(th->cl.rfct == 0)
     cl.rfct = rad->fct;
   else
-    cl.rfct = tr->ds.th->cl.rfct;
+    cl.rfct = th->cl.rfct;
   tr->ds.cl = &cl;
 
   /* Has the extinction coefficient been calculated boolean:                */
   _Bool *comp = ex->computed;
+
   /* Restore extinction savefile if exists:                                 */
   if(tr->save.ext)
     restfile_extinct(tr->save.ext, e, comp, rnn, wnn);
 
   /* Compute extinction at the outermost layer:                             */
   if(!comp[rnn-1]){
-    transitprint(1, verblevel, "Computing extinction in the "
-                               "outermost layer.\n");
-    if((rn=computemolext(tr, rnn-1, ex->e))!=0)
-      transiterror(TERR_CRITICAL,
-                   "computeextradius() returned error code %i.\n", rn);
+    transitprint(1, verblevel, "Computing extinction at outermost layer.\n");
+    if (tr->fp_opa != NULL)
+      rn = interpolmolext(tr, rnn-1, ex->e);
+    else
+      if((rn=computemolext(tr, rnn-1, ex->e))!=0)
+        transiterror(TERR_CRITICAL,  "computemolext() returned error "
+                                     "code %i.\n", rn);
   }
 
-  /* Request at least four impact parameter samples to calculate a spline
-     interpolation:                                                         */
-  if(inn<4)
-    transiterror(TERR_SERIOUS, "tau(): At least four impact parameter points "
-                 "(%d given) are required (three for spline and one for "
-                 "the analitical part).\n", inn);
-
-  transitprint(1, verblevel, "Calculating optical depth at various "
-                             "radii ...\n");
+  transitprint(1, verblevel, "Calculating optical depth at various radii:\n");
 
   /* For each wavenumber:                                                   */
   for(wi=0; wi<wnn; wi++){
-    tau_wn = tau.t[wi];
+    tau_wn = tau->t[wi];
 
     /* Print output every 10% progress:                                     */
-    if(wi>wnextout){
+    if(wi > wnextout){
       transitprint(2, verblevel, "%i%%\n", (int)(100*(float)wi/wnn+0.5));
       wnextout += (long)(wnn/10.0);
     }
@@ -195,88 +205,80 @@ tau(struct transit *tr){
     computeextcloud(e_c, rnn, &cl, rad, temp, tfct, wn->v[wi]*wfct);
 
     /* Put the extinction values in a new array, the values may be
-       temporarily overwritten by (fnc)(), but they should be restored: */
-    for(ri=0; ri<rnn; ri++)
+       temporarily overwritten by (fnc)(), but they should be restored:     */
+    for(ri=0; ri < rnn; ri++)
       er[ri] = e[ri][wi] + e_s[ri] + e_c[ri] + e_cia[wi][ri];
 
-    /* For each impact parameter: */
-    for(ri=0; ri<inn; ri++){
+    /* For each height:                                                     */
+    for(ri=0; ri < nh; ri++){
+      //transitprint(1, 2, "height (%.2f)  vs rad[%d] (%.2f)\n",
+      //             h[ri]*hfct, lastr, r[lastr]*rfct);
+      //transitprint(1,2, "Ext[%d]: %.5e\n", lastr, er[lastr]);
       /* Compute extinction at new radius if the impact parameter is smaller
-         than the radius of last calculated extinction:                    */
-      if(bb[ri]*ip->fct < r[lastr]*rfct){
-      /* FINDME: What if the ray ends up going through a lower layer because
-         of the bending? */
+         than the radius of last calculated extinction:                     */
+      if(h[ri]*hfct < r[lastr]*rfct){
+        /* FINDME: What if the ray ends up going through a lower layer because
+           of the bending? */
         if(ri)
-          transitprint(3, verblevel, "Last Tau (bb=%9.4g, wn=%9.4g): %10.4g.\n",
-                                     bb[ri-1], wn->v[wi], tau_wn[ri-1]);
+          transitprint(30, verblevel, "Last Tau (height=%9.4g, wn=%9.4g): "
+                               "%10.4g.\n", h[ri-1], wn->v[wi], tau_wn[ri-1]);
         /* While the extinction at a radius bigger than the impact
            parameter is not computed, go for it: */
         do{
           if(!comp[--lastr]){
-            /* Compute a new extinction at given radius printing error if
-               something happen:                                            */
+            /* Compute extinction at given radius:                          */
             transitprint(2, verblevel, "Radius %i: %.9g cm ... \n",
-                                       lastr+1, r[lastr]);
-            if((rn=computemolext(tr, lastr, ex->e))!=0)
-              transiterror(TERR_CRITICAL,
-                           "computeextradius() return error code %i while "
-                           "computing radius #%i: %g\n", rn, r[lastr]*rfct);
+                                       lastr+1, r[lastr]*rfct);
+            if (tr->fp_opa != NULL)
+              rn = interpolmolext(tr, lastr, ex->e);
+            else
+              if((rn=computemolext(tr, lastr, ex->e))!=0)
+                transiterror(TERR_CRITICAL, "computemolext() returned error "
+                  "code %i at radius %i: %g cm.\n", rn, lastr, r[lastr]*rfct);
             /* Update the value of the extinction at the right place:       */
-            er[lastr] = e[lastr][wi] + e_s[lastr] +
-                        e_c[lastr] + e_cia[wi][lastr];
-            /* Print extinction:                                            */
-            if (lastr == 100){
-              transitprint(100, verblevel, "Extinction [%i] = {", lastr);
-              for (int i=500; i<600; i++){
-                transitprint(100, verblevel, "%.3e, ", e[lastr][i]);
-              }
-              transitprint(100, verblevel, "}\n");
-            }
+            er[lastr] = e[lastr][wi] + e_s[lastr] + e_c[lastr] +
+                        e_cia[wi][lastr];
           }
-        /* FINDME: a while instead of a do-while should work better, huh? */
-        }while(bb[ri]*ip->fct < r[lastr]*rfct);
+        }while(h[ri]*hfct < r[lastr]*rfct);
       }
       /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
       /* Calculate the optical depth and check if tau reached toomuch: */
-      /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
-      if( (tau_wn[ri] = rfct * 
-           fcn(bb[ri]*riw, r+lastr, n+lastr, er+lastr, rnn-lastr, taulevel))
-          > tau.toomuch){
-        /* Set tau.last if it reached toomuch: */
-        tau.last[wi] = ri;
+      if (th->path == eclipse)
+        tau_wn[ri] = rfct * fcn(r+rnn-1-ri, er+rnn-1-ri, angle, ri+1);
+      else
+        tau_wn[ri] = rfct * fcn(h[ri]*hfct/rfct, r+lastr, n+lastr,
+                                er+lastr, rnn-lastr, taulevel);
+
+      if (tau_wn[ri] > tau->toomuch){
+        tau->last[wi] = ri;   /* Set tau.last                                */
         if (ri<3){
-          transitprint(1, verblevel,
-                       "WARNING: At wavenumber %g (cm-1), the critical TAU "
-                       "value (%g) was exceeded with tau=%g at the impact "
-                       "parameter level %li (%g km), this should have "
-                       "happened at a deeper layer (check IP sampling or ATM "
-                       "file).\n", wn->v[wi], tau.toomuch, tau_wn[ri],
-                       ri, bb[ri]*rfct/1e5);
+          transiterror(TERR_WARNING, "At wavenumber %g (cm-1), the optical "
+                       "depth (%g) exceeded toomuch (%g) at the height "
+                       "level %li (%g km), this should have happened in a "
+                       "deeper layer (check layers sampling).\n", wn->v[wi],
+                       tau_wn[ri], tau->toomuch, ri, h[ri]*hfct/1e5);
         }
-        /* Exit impact-parameter loop if it reached toomuch: */
-        break;
+        break;  /* Exit height loop when the optical depth reached toomuch  */
       }
-      transitDEBUG(22, verblevel,
-                   "Tau(lambda %li=%9.07g, r=%9.4g) : %g  (toomuch: %g)\n",
-                   wi, wn->v[wi], r[ri], tau_wn[ri], tau.toomuch);
+      transitDEBUG(22, verblevel, "Tau(lambda %li=%9.07g, r=%9.4g) : %g "
+          "(toomuch: %g)\n", wi, wn->v[wi], r[ri], tau_wn[ri], tau->toomuch);
     }
 
-    if(ri==inn){
+    if(ri==nh){
       transitprint(1, verblevel,
                    "WARNING: At wavenumber %g cm-1, the bottom of the "
                    "atmosphere was reached before obtaining the critical TAU "
                    "value of %g.\nMaximum TAU reached: %g.\n",
-                   wn->v[wi], tau.toomuch, tau_wn[ri]);
-      tau.last[wi] = ri-1;
+                   wn->v[wi], tau->toomuch, tau_wn[ri]);
+      tau->last[wi] = ri-1;
     }
 
   }
-  transitprint(1, verblevel, " Done.\nOptical depth calculated up to %g.\n",
-               tr->ds.tau->toomuch);
+  transitprint(1, verblevel, "Done.\n");
 
-  /* Print detailed output if requested: */
+  /* Print detailed output if requested:                                    */
   if(tr->ds.det->tau.n)
-    detailout(&tr->wns, &tr->ips,  &tr->ds.det->tau, tau.t, 0);
+    detailout(&tr->wns, &tr->ips,  &tr->ds.det->tau, tau->t, 0);
   if(tr->ds.det->ext.n)
     detailout(&tr->wns, &tr->rads, &tr->ds.det->ext, e, CIA_RADFIRST);
   if(tr->ds.det->cia.n)
@@ -304,11 +306,14 @@ int
 init_optdepth(struct transit *tr){
   struct transithint *th=tr->ds.th;  /* Transit hint structure              */
   long int nwn  = tr->wns.n;         /* Number of wavenumbers               */
-  long int nrad = tr->rads.n;        /* Number of impact parameter          */
   long int i;                        /* For counting angles                 */
-  long int an = th->ann;             /* Number of angles                    */
+  int an = tr->ann;                  /* Number of angles                    */
   static struct optdepth tau;        /* Optical depth                       */
   static struct grid     intens;     /* Intensity grid                      */
+
+  long int nrad = tr->rads.n;  /* Number of layers                          */
+  if (th->path == eclipse)
+    nrad = tr->ips.n;          /* Number of impact parameter samples        */
 
   /* Initialize tau (optical depth) structure:                              */
   tr->ds.tau    = &tau;
@@ -339,6 +344,7 @@ init_optdepth(struct transit *tr){
 
   return 0;
 }
+
 
 /* \fcnfh
    Print to file the optical depth, cia, or extinction at the requested
@@ -437,28 +443,22 @@ printtoomuch(char *file,           /* Filename to save the info */
   long w;             /* Auxiliary for-loop index for wavenumber */
   FILE *out = stdout; /* File pointer */
 
-  /* Open file if it was specified: */
-  if(file && file[0] != '-')
+  /* Open file if it was specified, default to stdout:                      */
+  if(file[0] != '-')
     out = fopen(file, "w");
   if(!out)
-    transiterror(TERR_WARNING,
-                 "Cannot open '%s' for writing maximum depth before "
-                 "reaching toomuch optical depth.\n",
-                 out==stdout?"STDOUT":file);
+    transiterror(TERR_WARNING, "Cannot open '%s' for writing depth where the "
+                               "optical depth reached toomuch.\n", file);
 
-  transitprint(1, verblevel,
-               "\nPrinting in '%s'.\n"
-               "Maximum depth before optical depth got larger than %g, and "
-               "therefore impact parameter was not calculated for deeper "
-               "layers.\n\n", file, tau->toomuch);
+  transitprint(20, verblevel, "\nPrinting in '%s' the depth where the "
+                   "optical depth got larger than %g.\n", file, tau->toomuch);
 
-  /* Print header: */
-  fprintf(out, "#Wvn[cm-1]  Maximum_calculated_depth\n");
-  fprintf(out, "#Wavenumber (cm-1)  Radius at max. calculated depth (cm)\n");
-  /* Print the wavenumber and impact parameter: */
-  for(w=0; w<wn->n; w++)
-    fprintf(out, "%-14.10g%16.12g\n", wn->v[w]*wn->fct,
-                                      rad->v[tau->last[w]]*rad->fct);
+  /* Print header:                                                          */
+  fprintf(out, "# Wavenumber (cm-1)  Radius at max. calculated depth (km)\n");
+  /* Print the wavenumber and radius:                                       */
+  for(w=0; w < wn->n; w++)
+    fprintf(out, "%14.7f     %12.3f\n", wn->v[w]*wn->fct,
+                                        rad->v[tau->last[w]]*rad->fct/1e5);
   fclose(out);
 }
 

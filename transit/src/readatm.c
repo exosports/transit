@@ -565,7 +565,6 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
         =='#' || rc=='\n');
   /* Count values per line:                                                 */
   nabundances = countfields(lp, ' ') - 3; /* Subtract rad, p, and T columns */
-
   fseek(fp, at->begpos, SEEK_SET); /* Go to position where data begins      */
   while(1){
     /* Reallocate if necessary:                                             */

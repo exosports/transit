@@ -403,8 +403,8 @@ processparameters(int argc,            /* Number of command-line args  */
       break;
 
     /* Print info to screen if debugging:   */
-    transitDEBUG(21, verblevel, "Processing option '%c', argum: %s\n",
-                 rn, optarg);
+    transitDEBUG(21, verblevel, "Processing option '%c' / %d, argum: %s\n",
+                 rn, rn, optarg);
     /* Handle each case: */
     switch(rn){
     case CLA_CIAFILE:
@@ -668,62 +668,11 @@ processparameters(int argc,            /* Number of command-line args  */
         hints->path = transit;
       break;
     case CLA_INTENS_GRID:    /* Intensity grid                              */
-      parseAngles(hints, optarg);
+      hints->angles = xstrdup(optarg);
       break;
     }
   }
   procopt_free();
-
-  return 0;
-}
-
-/* FINDME: Move to pu */
-/* \fcnfh
-   Parser for angle parameter from configuration file
-   Reads the angles and write them in the transithint variable
-   Returns: zero on success                                      */
-
-int
-parseAngles(struct transithint *hints, char *slant){
-  /* Declares a copy variable of the text from the
-     configuration file so we can work on a copy                */
-  char angles_copy[100];
-
-  /* Defines a delimiter */
-  const char s[2] = ",";
-
-  /* Takes characters (tokens) between delimiters               */
-  char *token;
-
-  /* Declares floating variable for strings                     */
-  double theta;
-
-  /* Declares variable for number of angles                     */
-  long int angNum = 0;
-
-  /* Declares result of the conversion from string to floats    */
-  int res;
-
-  /* Makes a copy of angles read from cfg file                  */
-  strcpy(angles_copy, slant);
-
-  /* Gets first token                                           */
-  token = strtok(angles_copy, s);
-
-  /* Walks through other tokens                                 */
-  while(token != NULL){
-    /* Converts strings to floats                              */
-    res = sscanf(token, "%lf", &theta);
-
-    if(res==1){
-      /* Fills out hints variable angles                       */
-      hints->angles[angNum] = theta;
-      angNum++;
-    }
-    token = strtok(NULL, s);
-  }
-  /* Fill out hints variable ann                                */
-  hints->ann = angNum;
 
   return 0;
 }
@@ -898,6 +847,12 @@ acceptgenhints(struct transit *tr){
     return -1;
   }
   tr->gsurf = th->gsurf;
+
+  /* Read in the incident angles for eclipse geometry:                      */
+  if (th->path == eclipse){
+    parseArray(&tr->angles, &tr->ann, th->angles);
+    /* FINDME: do some checks that the angles make sense                    */
+  }
   return 0;
 }
 

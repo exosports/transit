@@ -190,21 +190,18 @@ int main(int argc,      /* Number of variables                              */
   /* Ray solutions choice:                                               */
   RaySol path = transit.ds.th->path;
 
+  /* Initialize structures for the optical-depth calculation:            */
+  fw(init_optdepth, !=0, &transit);
   /* Calculate optical depth for eclipse:                                */
   if(path == eclipse){
     transitprint(1,verblevel, "\nCalculating eclipse:\n");
 
-    /* Angle number                                                      */
-    struct transithint *th = transit.ds.th;
-    long int an = th->ann;
-
-    /* Sets intensity grid:                                              */
-    fw(intens_grid, !=0, &transit);
-    for(int i=0; i < an; i++){
+    /* Calculate intensity for each incident angle:                      */
+    for(int i=0; i < transit.ann; i++){
       /* Fills out angle index                                           */
       transit.angleIndex = i;
 
-      fw(tau_eclipse, !=0, &transit);
+      fw(tau, !=0, &transit);
       t0 = timecheck(verblevel, itr, 12, "tau eclipse", tv, t0);
   
       /* Calculates eclipse intensity:                                   */
@@ -225,7 +222,7 @@ int main(int argc,      /* Number of variables                              */
   else{
     transitprint(1,verblevel, "\nCalculating transit:\n");
     fw(tau, !=0, &transit);
-    t0 = timecheck(verblevel, itr, 12, "tau", tv, t0); 
+    t0 = timecheck(verblevel, itr, 12, "tau transit", tv, t0); 
 
    /* Calculates transit modulation:                                     */
     fw(modulation, !=0, &transit);

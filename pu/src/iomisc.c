@@ -1050,22 +1050,24 @@ splitnzero_free(char **multi)
 
 
 /* Count the number of fields in a string lp separated by the character sep
-   Return: number of fields  */
+   Return: number of fields                                                 */
 long
-countfields(char *lp,  /* Input string    */
-            char sep){ /* Field separator */
-  long nfields = 0;  /* Number of fields in lp */
+countfields(char *lp,  /* Input string                                      */
+            char sep){ /* Field separator                                   */
+  long nfields = 0;    /* Number of fields in lp                            */
 
-  /* Skip sep chars at beginning: */
-  while(*lp++ == sep){}
+  /* Skip sep chars at beginning:                                           */
+  while(*lp == sep)
+    lp++;
 
-  /* Count fields:                      */
+  /* Count fields:                                                          */
   while(*lp){
-    /* Go through a field:              */
+    /* Go through a field:                                                  */
     while(*lp++ != sep  &&  *lp){}
     nfields++;
-    /* Skip sep chars until next field: */
-    while(*lp++ == sep){}
+    /* Skip sep chars until next field:                                     */
+    while(*lp == sep)
+      lp++;
   }
   return nfields;
 }
@@ -1192,5 +1194,30 @@ divisors(int n,    /* Number to find the divisors of                        */
   /* Re-set the array length to its final size:                             */
   divs = (int *)realloc(divs, (*m)*sizeof(int));
   return divs;
+}
+
+/* \fcnfh
+   Read the string line and parse its blank-space separated elements
+   into the array pointer of doubles, store the number of elements into
+   the int pointed by narray. 
+   Returns: zero on success                                                 */
+int
+parseArray(double **array,
+           int *narray,
+           char *line){
+  char token[300];  /* Characters (tokens) between delimiters               */
+  int i;
+
+  (*narray) = countfields(line, ' ');   /* Count elements in line           */
+  (*array) = (double *)calloc((*narray), sizeof(double)); /* Allocate array */
+
+  /* Read and store each element:                                           */
+  for (i=0; i < (*narray); i++){
+    getname(line, token);
+    (*array)[i] = atof(token);
+    line = nextfield(line);
+  }
+
+  return 0;
 }
 
