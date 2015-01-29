@@ -211,9 +211,6 @@ tau(struct transit *tr){
 
     /* For each height:                                                     */
     for(ri=0; ri < nh; ri++){
-      //transitprint(1, 2, "height (%.2f)  vs rad[%d] (%.2f)\n",
-      //             h[ri]*hfct, lastr, r[lastr]*rfct);
-      //transitprint(1,2, "Ext[%d]: %.5e\n", lastr, er[lastr]);
       /* Compute extinction at new radius if the impact parameter is smaller
          than the radius of last calculated extinction:                     */
       if(h[ri]*hfct < r[lastr]*rfct){
