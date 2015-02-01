@@ -79,12 +79,13 @@ void outdebtau(char *name, prop_samp *ip, PREC_RES **t, long wi, long wf)
    Return: 0 on success                                                     */
 int
 tau(struct transit *tr){
-  struct transithint *th = tr->ds.th;   /* transithint struct               */
-  struct optdepth *tau=tr->ds.tau;      /* Def optical depth structure      */
+  struct transithint *th = tr->ds.th;    /* transithint struct              */
+  struct optdepth *tau=tr->ds.tau;       /* Def optical depth structure     */
   
-  struct extinction *ex = tr->ds.ex;    /* Extinction struct                */
-  PREC_RES **e = ex->e;                 /* Extinction coefficient           */
-  PREC_RES (*fcn)();
+  struct extinction *ex = tr->ds.ex;     /* Extinction struct               */
+  PREC_RES **e = ex->e;                  /* Extinction coefficient          */
+  PREC_RES (*fcn)() = tr->sol->optdepth; /* eclipsetau or transittau func.  */
+
   long wi, ri; /* Indices for wavenumber, and radius                        */
   int rn;      /* Functions output code                                     */
 
@@ -97,29 +98,23 @@ tau(struct transit *tr){
   long int nh;
   double hfct;
 
-  if (th->path == eclipse){
+  if (strcmp(tr->sol->name, "eclipse") == 0){
     h = (PREC_RES *)calloc(rnn, sizeof(PREC_RES)); /* Reversed radius array */
     for (ri=0; ri <rnn; ri++)
       h[ri] = r[rnn-ri-1];
     nh = rnn;     /* Number of layers                        */
     hfct = rfct;
-    fcn = tr->ecl->tauEclipse; /* totaltau_eclipse function   */
   }
   else{
     prop_samp *ip = &tr->ips;
     h  = ip->v;  /* Impact parameter array                   */
     nh = ip->n;  /* Number of impact parameter samples       */
     hfct = ip->fct;
-    fcn = tr->sol->tauperb; /* transit ray path?              */
   }
   /* Request at least four layers to calculate a spline interpolation:     */
   if(nh < 4)
     transiterror(TERR_SERIOUS, "At least four layers (%d given) are required "
                  "(three for spline, one for the analitical part).\n", nh);
-
-  PREC_RES *n = tr->ds.ir->n;                   /* Index of refraction      */
-  PREC_RES angle = tr->angles[tr->angleIndex];  /* Incident angle           */
-
 
   PREC_RES *tau_wn;              /* Optical depth array                     */
   PREC_ATM *temp = tr->atm.t,    /* Temperature array                       */
@@ -142,8 +137,6 @@ tau(struct transit *tr){
 
   /* FINDME: TRANSIT ONLY */
   tr->save.ext = th->save.ext;  /* Ext. coefficient save/restore filename   */
-  /* Use constant (taulevel=1) or variable (2) index of refraction:         */
-  const int taulevel  = tr->taulevel = th->taulevel;
 
   /* Check idxrefrac and extwn have been called:                            */
   transitcheckcalled(tr->pi, "tau", 2, "idxrefrac", TRPI_IDXREFRAC,
@@ -205,7 +198,7 @@ tau(struct transit *tr){
     computeextcloud(e_c, rnn, &cl, rad, temp, tfct, wn->v[wi]*wfct);
 
     /* Put the extinction values in a new array, the values may be
-       temporarily overwritten by (fnc)(), but they should be restored:     */
+       temporarily overwritten by (fcn)(), but they should be restored:     */
     for(ri=0; ri < rnn; ri++)
       er[ri] = e[ri][wi] + e_s[ri] + e_c[ri] + e_cia[wi][ri];
 
@@ -238,16 +231,13 @@ tau(struct transit *tr){
           }
         }while(h[ri]*hfct < r[lastr]*rfct);
       }
-      /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
-      /* Calculate the optical depth and check if tau reached toomuch: */
-      if (th->path == eclipse)
-        tau_wn[ri] = rfct * fcn(r+rnn-1-ri, er+rnn-1-ri, angle, ri+1);
-      else
-        tau_wn[ri] = rfct * fcn(h[ri]*hfct/rfct, r+lastr, n+lastr,
-                                er+lastr, rnn-lastr, taulevel);
+      /* :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+      /* Calculate the optical depth:                                       */
+      tau_wn[ri] = rfct * fcn(tr, h[ri]*hfct/rfct, er);
 
+      /* Check if the optical depth reached toomuch:                        */
       if (tau_wn[ri] > tau->toomuch){
-        tau->last[wi] = ri;   /* Set tau.last                                */
+        tau->last[wi] = ri;   /* Set tau.last                               */
         if (ri<3){
           transiterror(TERR_WARNING, "At wavenumber %g (cm-1), the optical "
                        "depth (%g) exceeded toomuch (%g) at the height "
@@ -309,7 +299,7 @@ init_optdepth(struct transit *tr){
   static struct grid     intens;     /* Intensity grid                      */
 
   long int nrad = tr->rads.n;  /* Number of layers                          */
-  if (th->path == eclipse)
+  if (strcmp(tr->sol->name, "transit") == 0)
     nrad = tr->ips.n;          /* Number of impact parameter samples        */
 
   /* Initialize tau (optical depth) structure:                              */
@@ -327,7 +317,7 @@ init_optdepth(struct transit *tr){
     tau.t[i] = tau.t[0] + i*nrad;
 
   /* Eclipse-only structures:                                               */
-  if (th->path == eclipse){
+  if (strcmp(tr->sol->name, "eclipse") == 0){
     /* Initialize intensity grid structure:                                 */
     tr->ds.intens = &intens;
     memset(&intens, 0, sizeof(struct grid));

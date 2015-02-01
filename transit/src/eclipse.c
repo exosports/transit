@@ -77,13 +77,28 @@ static PREC_RES *area_grid;
    Returns: Optical depth divided by rad.fct:  \frac{tau}{units_{rad}}      */
 /* DEF */
 static PREC_RES
-totaltau_eclipse(PREC_RES *rad,  /* Equispaced radius array: From current   */
-                                 /* to outmost layer                        */
-                 PREC_RES *ex,   /* Extinction[rad], all radii, one wn      */
-                                 /* Often used as ex+ri than &ex[ri]        */
-                 PREC_RES angle, /* Incident ray-path angle (degrees)       */
-                 long nrad){     /* Number of radii between current and     */
-                                 /* outmost layer                           */
+eclipsetau(struct transit *tr,
+           PREC_RES height,    /* Altitude down to where calculate tau      */
+           PREC_RES *ex){      /* Extinction per layer [rad]                */
+  /* Incident angle:                                                        */
+  PREC_RES angle = tr->angles[tr->angleIndex];
+  /* Layers radius array:                                                   */
+  prop_samp *rads = &tr->rads;  /* Radius sampling                           */
+  PREC_RES *rad  = rads->v;     /* Radius array                              */
+  /* Get the index rs, of the sampled radius immediately below or equal
+     to height (i.e. rad[rs] <= height < rad[rs+1]):                        */
+  int rs = binsearch(rad, 0, tr->rads.n-1, height);
+
+  /* Returns 0 if this is the top layer (no distance travelled):            */
+  if (rs == -5)
+    return 0.0;
+
+  /* Move pointers to the location of height:                               */
+  rad += rs;
+  ex  += rs;
+
+  /* Number of layers beween height and the top layer:                      */
+  int nrad = tr->rads.n - rs;
 
   PREC_RES res;          /* Optical depth divided by units of radius        */
   PREC_RES x3[3], r3[3]; /* Interpolation variables                         */
@@ -93,10 +108,6 @@ totaltau_eclipse(PREC_RES *rad,  /* Equispaced radius array: From current   */
 
   /* Distance along the path:                                               */
   PREC_RES s[nrad];
-
-  /* Returns 0 if at outmost layer. No distance travelled.                  */
-  if(nrad == 1)  
-    return 0.0;
 
   /* Providing three necessary points for spline integration:               */
   const PREC_RES tmpex  = *ex;
@@ -326,7 +337,7 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
   prop_samp *rad = &tr->rads;          /* Radius array pointer              */
   prop_samp *wn  = &tr->wns;           /* Wavenumber array pointer          */
   long int wnn   = wn->n;              /* Wavenumbers                       */
-  eclipse_ray_solution *ecl = tr->ecl; /* Eclipse ray solution pointer      */
+  ray_solution *sol = tr->sol; /* Eclipse ray solution pointer      */
 
   /* Reads angle index from transit structure                               */
   long int angleIndex = tr->angleIndex;
@@ -360,12 +371,12 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
     //if (fabs(wn->v[w] - 1844.59) < 0.005)
     //  transitprint(1, verblevel, "\nWavenumber index is: %li\n", w);
 
-    /* This is a call to: eclipse_intens:                                   */
-    out[w] = ecl->eclIntenWn(tr, tau->t[w], wn->v[w], tau->last[w], 
-                             tau->toomuch, rad);
+    /* Calculate the intensity spectrum (call to eclipse_intens):           */
+    out[w] = sol->spectrum(tr, tau->t[w], wn->v[w], tau->last[w],
+                           tau->toomuch, rad);
 
     /* Prints to screen the progress status:                                */
-    if(w==nextw){
+    if(w == nextw){
       nextw += wn->n/10;
       transitprint(2, verblevel, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
     }
@@ -380,18 +391,12 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
 }
 
 
-/* #################
-    CALCULATES FLUX
-   ################# */
-
 /* \fcnfh
    Calculates flux
    Formula: 
    Flux = pi * SUMM_i [I_i * (sin(theta_fin)^2 - sin(theta_in)^2)]
    I_i are calculated for each angle defined in the configuration file
-   Returns: zero on success                                                */
-
-/* DEF */
+   Returns: zero on success                                                 */
 int
 flux(struct transit *tr){  /* Transit structure                             */
   static struct outputray st_out;
@@ -421,10 +426,6 @@ flux(struct transit *tr){  /* Transit structure                             */
   for(i = 1; i < an; i++)
     area_grid[i] = (angles[i-1] + angles[i]) * DEGREES / 2.0;
 
-  /* Control code, to check areas:                                          */
-  //for(i=0; i<an+1; i++)
-  //  printf("Area grid [%ld] = %lf\n", i, area_grid[i]/DEGREES);  
-
   /* Allocates array for the emergent flux:                                 */
   out = st_out.o = (PREC_RES *)calloc(wnn, sizeof(PREC_RES));
 
@@ -439,21 +440,15 @@ flux(struct transit *tr){  /* Transit structure                             */
   freemem_localeclipse();
 
   /* prints output                                                          */
-  /* HACK: */
   if (verblevel > 0)
     printflux(tr);
   return 0;
 }
 
 
-/* ############################
-    OUTPUT FILE FOR INTENSITIES
-   ############################ */
-
 /* \fcnfh
    Print (to file or stdout) the emergent intensities as function of wavelength
    for each angle)                                                          */
-
 void
 printintens(struct transit *tr){
   long int i, w;                  /* Auxilliary for-loop indices            */
@@ -478,7 +473,7 @@ printintens(struct transit *tr){
     outf = fopen(our_fileName, "w");
 
   transitprint(1, verblevel, "\nPrinting intensity in '%s'\n",
-                             tr->f_out ? tr->f_out:"standard output");
+                             tr->f_out ? our_fileName:"standard output");
 
   /* Print the header:                                                      */
   fprintf(outf, "#wvl [um]%*s", 6, " ");
@@ -500,14 +495,9 @@ printintens(struct transit *tr){
 }
 
 
-/* ######################
-    OUTPUT FILE FOR FLUX
-   ###################### */
-
 /* \fcnfh
    Print (to file or stdout) the emergent intensity as function of wavenumber 
    (and wavelength)                                                         */
-
 void
 printflux(struct transit *tr){
   FILE *outf=stdout;
@@ -520,37 +510,17 @@ printflux(struct transit *tr){
   strncpy(our_fileName, tr->f_out, 512);
   strcat(our_fileName, ".-Flux");
 
-  /* Opens a file:                                                          */
+  /* Open file:                                                             */
   if(tr->f_out && tr->f_out[0] != '-')
-    outf=fopen(our_fileName, "w");
+    outf = fopen(our_fileName, "w");
 
   transitprint(1, verblevel, "\nPrinting flux in '%s'\n",
                tr->f_out ? our_fileName:"standard output");
 
-  /* Prints:                                                                */
-  char wlu[20], wnu[20];         /* Wavelength units name                   */
-  long nsd=(long)(1e6);        /* Wavenumber units name                     */
-
-  /* Get wavenumber units name:                                             */
-  if((long)(nsd*tr->wns.fct)==nsd) strcpy(wnu,"cm");
-  else if((long)(nsd*1e-1*tr->wns.fct)==nsd) strcpy(wnu,"mm");
-  else if((long)(nsd*1e-4*tr->wns.fct)==nsd) strcpy(wnu,"um");
-  else if((long)(nsd*1e-7*tr->wns.fct)==nsd) strcpy(wnu,"nm");
-  else if((long)(nsd*1e-8*tr->wns.fct)==nsd) strcpy(wnu,"a");
-  else sprintf(wnu, "%6.1g cm", 1/tr->wns.fct);
-
-  /* Get wavenumber units name:                                             */
-  if((long)(nsd*tr->wavs.fct)==nsd) strcpy(wlu,"cm");
-  else if((long)(nsd*1e1*tr->wavs.fct)==nsd) strcpy(wlu,"mm");
-  else if((long)(nsd*1e4*tr->wavs.fct)==nsd) strcpy(wlu,"um");
-  else if((long)(nsd*1e7*tr->wavs.fct)==nsd) strcpy(wlu,"nm");
-  else if((long)(nsd*1e8*tr->wavs.fct)==nsd)  strcpy(wlu,"a");
-  else sprintf(wlu,"%8.1g cm",tr->wavs.fct);
-
-  /* Prints the header:                                                     */
+  /* Print the header:                                                      */
   fprintf(outf, "#wvl [um]%*sFlux [erg/s/cm]\n", 6, " ");
 
-  /* Prints wavelength and flux:                                            */
+  /* Print wavelength and flux:                                             */
   for(rn=0; rn < tr->wns.n; rn++)
     fprintf(outf, "%-15.10g%-18.9g\n", 1e4/(tr->wns.v[rn]/tr->wns.fct),
             Flux[rn]);
@@ -586,17 +556,10 @@ freemem_intensityGrid(struct grid *intens,   /* grid structure              */
   return 0;
 }
 
-
-/* ############################
-    CALLS ECLIPSE RAY SOLUTION
-   ############################ */
-
-  /* Executes eclipse module:                                               */
-const eclipse_ray_solution eclipsepath = {
-       "Eclipse Path",   /* Name of the solution                            */
-       "eclipse.c",      /* Source code file name                           */
-       &totaltau_eclipse,/* Per per wavenumber value computation            */
-       &eclipse_intens,  /* Per wavenumber value computation                */
-       };
-
-
+const ray_solution eclipsepath = {
+  "eclipse",         /* Name of the solution                                */
+  "eclipse.c",       /* Source code file name                               */
+  0,                 /* Request equispaced layer sampling                   */
+  &eclipsetau,       /* Optical-depth calculation function                  */
+  &eclipse_intens,   /* Intensity calculation function                      */
+};
