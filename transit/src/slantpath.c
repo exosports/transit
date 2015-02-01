@@ -91,7 +91,7 @@ modulationm1(PREC_RES *tau, long last, double toomuch, prop_samp *ip,
    Return: Optical depth divided by rad.fct:  \frac{tau}{units_{rad}}       */
 static PREC_RES
 totaltau1(PREC_RES b,    /* Impact parameter                                */
-          PREC_RES *rad, /* Equispaced radius array                         */
+          PREC_RES *rad, /* Layers radius array                             */
           PREC_RES refr, /* Refractivity index                              */
           PREC_RES *ex,  /* Extinction[rad]                                 */
           long nrad){    /* Number of radii elements                        */
@@ -102,8 +102,6 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
 
   /* Closest approach radius:                                               */
   PREC_RES r0 = b/refr;
-  /* FINDME: isn't this r0 always less than rad[0]??  Because this routine
-             receives the array from r[last], not the entire array.         */
 
   /* Get the index rs, of the sampled radius immediately below or equal
      to r0 (i.e. rad[rs] <= r0 < rad[rs+1]):                                */
@@ -111,9 +109,8 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
     return 0;  /* If it is the outmost layer                                */
   /* If some other error occurred:                                          */
   else if(rs < 0)
-    transiterror(TERR_CRITICAL,
-                 "Closest approach value (%g) is outside sampled radius "
-                 "range (%g - %g).\n", r0, rad[0], rad[nrad-1]);
+    transiterror(TERR_CRITICAL, "Closest approach (%g) is larger than the "
+                 "top layer of the atmosphere (%g).\n", r0, rad[nrad-1]);
 
   /* Move extinction and radius pointers to the rs-th element:              */
   rad  += rs;
@@ -292,28 +289,33 @@ totaltau2(PREC_RES b,     /* Impact parameter         */
 
 
 /* \fcnfh
- Wrapper function to calculate the optical depth at a given impact parameter
+ Wrapper function to calculate the optical depth along the path for a
+ given impact parameter.
 
  Return: $\frac{tau}{units_{rad}}$ returns optical depth divided by units
                                     of 'rad'                           */
 static inline PREC_RES
-totaltau(PREC_RES b,      /* Differential impact parameter WRT maximum value */
-         PREC_RES *rad,   /* Radius array               */
-         PREC_RES *refr,  /* Refractivity index         */
-         PREC_RES *ex,    /* Extinction[rad]            */
-         long nrad,       /* Number of radii elements   */
-         int exprlevel){  /* Expression level of detail */
-  switch(exprlevel){
-  case 1:
+transittau(struct transit *tr,
+           PREC_RES b,      /* Impact paramer                               */
+           PREC_RES *ex){   /* Extinction array [rad]                       */
+
+  /* Optical depth calculation level:                                       */
+  tr->taulevel = tr->ds.th->taulevel;
+  PREC_RES *refr = tr->ds.ir->n;     /* Index-of-refraction array           */
+  PREC_RES *rad  = tr->rads.v;       /* Layer radius array                  */
+  PREC_RES nrad  = tr->rads.n;       /* Number of layers                    */
+
+  switch(tr->taulevel){
+  case 1: /* Constant index of refraction:                                  */
     return totaltau1(b, rad, *refr, ex, nrad);
     break;
-  case 2:
+  case 2: /* Variable index of refraction:                                  */
     return totaltau2(b, rad,  refr, ex, nrad);
     break;
   default:
     transiterror(TERR_CRITICAL,
                  "slantpath:: totaltau:: Level %i of detail has not been "
-                 "implemented to compute optical depth.\n", exprlevel);
+                 "implemented to compute optical depth.\n", tr->taulevel);
     return 0;
   }
 }
@@ -452,13 +454,17 @@ modulationm1(PREC_RES *tau,        /* Optical depth array              */
    Wrapper function to calculate the modulation in/out-of-transit ratio.
    Return: modulation                                      */
 static PREC_RES
-modulationperwn(PREC_RES *tau,       /* Optical depth                    */
-                long last,           /* Radius index where tau = toomuch */
-                double toomuch,      /* Maximum optical depth calculated */
-                prop_samp *ip,       /* Impact parameter array           */
-                struct geometry *sg, /* Geometry struct                  */
-                int exprlevel){      /* Modlevel                         */
-  switch(exprlevel){
+modulationperwn(struct transit *tr,  /* Transit structure                   */
+                PREC_RES *tau,       /* Optical depth                       */
+                PREC_RES w,          /* Wavenumber value                    */
+                long last,           /* Radius index where tau = toomuch    */
+                double toomuch,      /* Maximum optical depth calculated    */
+                prop_samp *ip){      /* Impact parameter array              */
+
+  tr->modlevel = tr->ds.th->modlevel;
+  struct geometry *sg  = tr->ds.sg;
+
+  switch(tr->modlevel){
   case 1:
     return modulation1(tau,  last, toomuch, ip, sg);
     break;
@@ -466,22 +472,17 @@ modulationperwn(PREC_RES *tau,       /* Optical depth                    */
     return modulationm1(tau, last, toomuch, ip, sg);
     break;
   default:
-    transiterror(TERR_CRITICAL,
-                 "slantpath:: modulationperwn:: Level %i of detail "
-                 "has not been implemented to compute modulation.\n",
-                 exprlevel);
+    transiterror(TERR_CRITICAL, "slantpath:: modulationperwn:: Level %i of "
+                 "detail has not been implemented to compute modulation.\n",
+                 tr->modlevel);
     return 0;
   }
 }
 
-
-const transit_ray_solution slantpath = {
-       "Slant Path",     /* Name of the solution                     */
-       "slantpath.c",    /* Source code file name                    */
-       1,                /* Equispaced impact parameter requested?   */
-       &totaltau,        /* Per impact parameter and per wavenumber 
-                            value computation                        */
-       &modulationperwn, /* Per wavenumber value computation         */
-       1                 /* Number of levels of modulation detail as
-                            it can be handled by the above fucntion  */
-       };
+const ray_solution slantpath = {
+  "transit",        /* Name of the solution                     */
+  "slantpath.c",    /* Source code file name                    */
+  0,                /* Request equispaced impact parameter      */
+  &transittau,      /* Optical-depth calculation function       */
+  &modulationperwn, /* Modulation calculation function          */
+};

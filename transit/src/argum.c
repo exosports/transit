@@ -65,14 +65,10 @@ Thank you for using transit!
 #include <gsl/gsl_version.h>
 #endif /* _USE_GSL */
 
-/* Transit ray solution:            */
-const static transit_ray_solution *raysols[] = {&slantpath, NULL};
-/* slantpath defined in slantpath.c */
-
-/* Eclipse ray solution:            */
-const static eclipse_ray_solution *eclipsesols[] = {&eclipsepath, NULL};
-/* eclipsepath defined in eclipse.c */
-
+/* Transit ray solutions:                                                   */
+const static ray_solution *raysols[] = {&slantpath,   /* see slantpath.c    */
+                                        &eclipsepath, /* see eclipse.c      */
+                                        NULL};
 
 #ifndef EXTRACFGFILES
 #  define PREPEXTRACFGFILES ""
@@ -324,9 +320,8 @@ processparameters(int argc,            /* Number of command-line args  */
     /* Resulting ray options:                 */
     {NULL,        0,            HELPTITLE,         NULL, NULL,
      "RESULTING RAY OPTIONS:"},
-    {"solution",  's',          required_argument, "Slant Path", "sol_name",
-     "Name of the kind of output solution ('slant path'is currently the only "
-     "available alternative)."},
+    {"solution",  's',          required_argument, "eclipse", "sol_name",
+     "Name of the kind of output solution (eclipse or transit)."},
     {"toomuch",   CLA_TOOMUCH,  required_argument, "20", "optdepth",
      "If optical depth for a particular path is larger than optdepth, then do "
      "not proceed to lower radius."},
@@ -334,8 +329,8 @@ processparameters(int argc,            /* Number of command-line args  */
      "Output is optical depth instead of modulation. It will be asked which "
      "radius to plot."},
     {"taulevel",  CLA_TAULEVEL, required_argument, "1",  "integer",
-     "Calculate the lightray path with a constant (1) or variable (2) "
-     "index of refraction."},
+     "Use constant (1) or variable (2) index of refraction for the transit "
+     "ray path."},
     {"modlevel",  CLA_MODLEVEL, required_argument, "1",  "integer",
      "Do an integration of level <integer> to compute modulation. 1 doesn't "
      "consider limb darkening. -1 doesn't consider limb darkening and "
@@ -359,9 +354,7 @@ processparameters(int argc,            /* Number of command-line args  */
     {"transparent", CLA_TRANSPARENT, no_argument,       NULL,    NULL,
      "If selected, the planet will have a maximum optical depth given by "
      "toomuch, it will never be totally opaque."},
-    {"solutiontype", CLA_SOLUTION_TYPE, required_argument, "eclipse",
-     NULL, "Ray solution type (eclipse or transit)."},
-    {"raygrid",      CLA_INTENS_GRID, required_argument, "0, 20, 40, 60, 80",
+    {"raygrid",      CLA_INTENS_GRID, required_argument, "0 20 40 60 80",
      NULL, "Intensity grid"},
     {NULL, 0, 0, NULL, NULL, NULL}
   };
@@ -674,11 +667,6 @@ processparameters(int argc,            /* Number of command-line args  */
     case CLA_CLOUDE:         /* Maximum cloud opacity                       */
       hints->cl.maxe = atof(optarg);
       break;
-    case CLA_SOLUTION_TYPE:  /* Ray-solution type                           */
-      hints->path = eclipse;
-      if(strncasecmp(optarg,"transit",7)==0)
-        hints->path = transit;
-      break;
     case CLA_INTENS_GRID:    /* Intensity grid                              */
       hints->angles = xstrdup(optarg);
       break;
@@ -696,43 +684,19 @@ processparameters(int argc,            /* Number of command-line args  */
     Return: 0 on success,
            -1 if no matching name was available                  */
 int
-acceptsoltype(transit_ray_solution **sol, 
+acceptsoltype(ray_solution **sol,
               char *hname){
-  /* raysols is defined at the beginning of this file            */
-  *sol = (transit_ray_solution *)raysols[0];
-  int len;  /* Length of hname                                   */
-  len = strlen(hname);
+  int n=0;
 
   /* Search through each element in *sol, compare names to hname */
-  while(*sol){
-    if(strncasecmp(hname, (*sol)->name, len)==0)
+  while (raysols[n]){
+    transitprint(1, verblevel, "sol name is '%s'\n", raysols[n]->name);
+    if(strcmp(hname, raysols[n]->name) == 0){
+      *sol = (ray_solution *)raysols[n];
       return 0;
-    sol++;
+    }
+    n++;
   }
-
-  return -1;
-}
-
-
-/* \fcnfh
-    Initialize eclipse ray solution solution and determine
-    if any of ecl-> name match hname.
-    Return: 0 on success,
-           -1 if no matching name was available                  */
-int
-accepteclipsetype(eclipse_ray_solution **ecl,
-                  char *hname){
-  *ecl = (eclipse_ray_solution *)eclipsesols[0];
-  int len;
-
-  len = strlen(hname);
-
-  while(*ecl){
-    if(strncasecmp(hname,(*ecl)->name,len)==0)
-      return 0;
-    ecl++;
-  }
-
   return -1;
 }
 
@@ -761,31 +725,23 @@ acceptgenhints(struct transit *tr){
   /* FINDME: Should check if the file exists:                               */
   tr->f_molfile   = th->f_molfile;
 
-  /* Initialize solution-type, accept hinted ray-solution
-     if it's name exists:                          */
-  int noSolName = acceptsoltype(&tr->sol,     th->solname) != 0;
-  int noEclName = accepteclipsetype(&tr->ecl, th->solname) != 0;
-  if(noSolName && noEclName){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Solution kind '%s' is invalid.\n"
-                 "Currently Accepted are:\n", th->solname);
+  /* Initialize solution type, accept hinted solution if it's in list:      */
+  if(acceptsoltype(&tr->sol, th->solname) != 0){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Solution kind '%s' is "
+                 "invalid.\nCurrently Accepted are:\n", th->solname);
 
-    transit_ray_solution **sol = (transit_ray_solution **)raysols;
+    ray_solution **sol = (ray_solution **)raysols;
     while(*sol)
       transiterror(TERR_SERIOUS | TERR_NOPREAMBLE | TERR_ALLOWCONT,
                    " %s\n", (*sol++)->name);
-
-    eclipse_ray_solution **ecl = (eclipse_ray_solution **)eclipsesols;
-    while(*ecl)
-      transiterror(TERR_SERIOUS | TERR_NOPREAMBLE | TERR_ALLOWCONT,
-                   " %s\n", (*ecl++)->name);
     exit(EXIT_FAILURE);
+    /* FINDME: Fix this error message                                       */
   }
 
-  /* Set hinted geometry hints:                    */
+  /* Set hinted geometry hints:                                             */
   setgeomhint(tr);
 
-  /* Accept hints for detailed output:             */
+  /* Accept hints for detailed output:                                      */
   static struct detailout det;
   memcpy(&det, &th->det, sizeof(struct detailout));
   tr->ds.det = &det;
@@ -861,7 +817,7 @@ acceptgenhints(struct transit *tr){
   tr->gsurf = th->gsurf;
 
   /* Read in the incident angles for eclipse geometry:                      */
-  if (th->path == eclipse){
+  if (strcmp(tr->sol->name, "eclipse") == 0){
     parseArray(&tr->angles, &tr->ann, th->angles);
     /* FINDME: do some checks that the angles make sense                    */
   }

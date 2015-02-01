@@ -58,63 +58,58 @@ Thank you for using transit!
 
 /* \fcnfh
    Calculate the transit modulation at each wavenumber
-
    Return: 0 on success, else
-          -1 if impact parameter sampling is not equispaced  */
+          -1 if impact parameter sampling is not equispaced                 */
 int
-modulation(struct transit *tr){ /* Main structure */
+modulation(struct transit *tr){
+  struct optdepth *tau = tr->ds.tau;
+  struct geometry *sg  = tr->ds.sg;
   static struct outputray st_out;
   tr->ds.out = &st_out;
 
-  /* Check that impact parameter and wavenumber samples exist: */
+  long w;
+  prop_samp *ip = &tr->ips;
+  prop_samp *wn = &tr->wns;
+  ray_solution *sol = tr->sol;
+
+  /* Check that impact parameter and wavenumber samples exist:              */
   transitcheckcalled(tr->pi, "modulation", 3, "tau",          TRPI_TAU,
                                               "makeipsample", TRPI_MAKEIP,
                                               "makewnsample", TRPI_MAKEWN);
 
-  /* Initial variables:  */
-  long w;
-  prop_samp *ip = &tr->ips;
-  prop_samp *wn = &tr->wns;
-  transit_ray_solution *sol = tr->sol;
-
-  /* Allocate the modulation array: */
+  /* Allocate the modulation array:                                         */
   PREC_RES *out = st_out.o = (PREC_RES *)calloc(wn->n, sizeof(PREC_RES));
-  struct geometry *sg  = tr->ds.sg;
-  struct optdepth *tau = tr->ds.tau;
 
-  /* Set time to the user hinted default, and other user hints: */
+  /* Set time to the user hinted default, and other user hints:             */
   setgeom(sg, HUGE_VAL, &tr->pi);
-  const int modlevel = tr->modlevel = tr->ds.th->modlevel;
 
-  /* Integrate for each wavelength: */
-  transitprint(1, verblevel, "\nIntegrating over wavelength.\n");
+  /* Integrate for each wavelength:                                         */
+  transitprint(1, verblevel, "Integrating over wavelength.\n");
 
   int nextw = wn->n/10;
 
-  /* Calculate the modulation at each wavenumber: */
-  for(w=0; w<wn->n; w++){
-    out[w] = sol->obsperwn(tau->t[w], tau->last[w], tau->toomuch, ip,
-                           sg, modlevel);
-    if(out[w]<0){
+  /* Calculate the modulation spectrum at each wavenumber:                  */
+  for(w=0; w < wn->n; w++){
+    out[w] = sol->spectrum(tr, tau->t[w], wn->v[w], tau->last[w],
+                           tau->toomuch, ip);
+    if (out[w] < 0){
       switch(-(int)out[w]){
       case 1:
-        if(modlevel == -1)
-          transiterror(TERR_SERIOUS,
-                       "Optical depth didn't reach limiting %g at wavenumber "
-                       "%g cm-1 (only reached %g). Cannot use critical "
-                       "radius technique (-1).\n", tau->toomuch,
+        if(tr->modlevel == -1)
+          transiterror(TERR_SERIOUS, "Optical depth didn't reach limiting "
+                       "%g at wavenumber %g cm-1 (only reached %g).  Cannot "
+                       "use critical radius technique (-1).\n", tau->toomuch,
                        tau->t[w][tau->last[w]], wn->v[w]*wn->fct);
       default:
-        transiterror(TERR_SERIOUS,
-                     "There was a problem while calculating modulation "
-                     "at wavenumber %g cm-1. Error code %i.\n",
+        transiterror(TERR_SERIOUS, "There was a problem while calculating "
+                     "modulation at wavenumber %g cm-1. Error code %i.\n",
                      wn->v[w]*wn->fct, (int)out[w]);
         break;
       }
       exit(EXIT_FAILURE);
     }
 
-    /* Print to screen the progress status: */
+    /* Print to screen the progress status:                                 */
     if(w==nextw){
       nextw += wn->n/10;
       transitprint(2, verblevel, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
@@ -122,7 +117,7 @@ modulation(struct transit *tr){ /* Main structure */
   }
   transitprint(1, verblevel, "\nDone.\n");
 
-  /* Set progress indicator, and print output: */
+  /* Set progress indicator, and print output:                              */
   tr->pi |= TRPI_MODULATION;
   printmod(tr);  
   return 0;

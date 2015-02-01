@@ -35,9 +35,6 @@
 struct transit;
 struct geometry;
 
-/* Type of ray solution, eclipse or transit:                                */
-typedef enum {transit, eclipse}  RaySol;
-
 /* Structure definitions:                                                   */
 typedef struct {    /* Sampling struct                                      */
   PREC_NREC n;      /* Number of elements                                   */
@@ -93,47 +90,22 @@ typedef struct {    /* One item per database                                */
 } prop_dbnoext;
 
 
-typedef struct {         /* Ray solution properties:              */
-  const char *name;      /* Ray solution name                     */
-  const char *file;      /* Ray solution filename (FINDME)        */
-  const short monoip;    /* Request equispaced inpact parameter?  */
-  PREC_RES (*tauperb)    /* Optical depth per impact parameter:   */
-       (PREC_RES b,      /*  Impact parameter                     */
-        PREC_RES *rad,   /*  Radius array                         */
-        PREC_RES *refr,  /*  Refractivity index                   */
-        PREC_RES *ex,    /*  Extinction[rad]                      */
-        long nrad,       /*  Number of radii elements             */
-        int exprlevel);  /*  FINDME                               */
-  PREC_RES (*obsperwn)         /* Integrated optical depth:          */
-        (PREC_RES *tau,        /*  Optical depth                     */
-        long last,             /*  index where tau exceeded toomuch  */
-        PREC_RES toomuch,      /*  Cutoff optical depth to calculate */ 
-        prop_samp *ip,         /*  Impact parameter                  */
-        struct geometry *star, /*  Geometry structure                */
-        int exprlevel);        /*  Modulation level                  */
-  const int nobs;        /* Number of levels of details as it can
-                            be handled by obsperwn                */
-} transit_ray_solution;
-
-
-
-typedef struct {              /* Ray solution properties:                 */
-  const char *name;           /* Ray solution name                        */
-  const char *file;           /* Ray solution filename (FINDME)           */
-  PREC_RES (*tauEclipse)      /* Optical depth for eclipse per wavenumber */
-       (PREC_RES *rad,        /* Radius array                             */
-        PREC_RES *ex,         /* Extinction[rad]                          */
-        PREC_RES angle,       /* Ray grid                                 */
-        long nrad);           /* Number of radii elements                 */
-  PREC_RES (*eclIntenWn)      /* Integrated optical depth:                */
-        (struct transit *tr,  /* Main structure                           */
-        PREC_RES *tau,        /* Optical depth                            */
-        PREC_RES w,           /* Current wavenumber value                 */
-        long last,            /* Index where tau exceeded toomuch         */
-        PREC_RES toomuch,     /* Cutoff optical depth to calculate        */
-        prop_samp *rad);      /* Impact parameter                         */
-} eclipse_ray_solution;
-
+typedef struct {             /* Ray solution parameters:                    */
+  const char *name;          /* Ray solution name                           */
+  const char *file;          /* Ray solution source file                    */
+  const short monospace;     /* Request equispaced inpact parameter?        */
+  PREC_RES (*optdepth)       /* Extinction-coefficient integrator function  */
+       (struct transit *tr,
+        PREC_RES b,          /*  Height of ray path                         */
+        PREC_RES *ex);       /*  Extinction array [rad]                     */
+  PREC_RES (*spectrum)       /* Optical-depth integrator function           */
+        (struct transit *tr,
+         PREC_RES *tau,      /*  Optical depth                              */
+         PREC_RES w,         /*  Wavenumber value                           */
+         long last,          /*  index where tau exceeded toomuch           */
+         PREC_RES toomuch,   /*  Cutoff optical depth                       */
+         prop_samp *r);      /*  Impact parameter or layers' radius         */
+} ray_solution;
 
 
 struct atm_isoprop{    /* Proportional-abundance isotopic parameters: */
@@ -354,7 +326,6 @@ struct transithint{
   PREC_NREC ot;         /* Radius index at which to print output from tau   */
   prop_samp rads, ips,  /* Sampling properties of radius, impact parameter, */
        wavs, wns, temp; /*   wavelength, wavenumber, and temperature        */
-  RaySol  path;         /* Eclipse or transit ray solution.                 */
   char *angles;         /* String with incident angles (for eclipse)        */
   char *qmol, *qscale;  /* String with species scale factors                */
   float allowrq;        /* How much less than one is accepted, and no warning
@@ -424,22 +395,21 @@ struct transit{
   int nqmol;         /* Number of species scale factors                     */
   double *qscale;    /* Species scale factors                               */
   int *qmol;         /* Species with scale factors                          */
-  int taulevel;     /* Tau integration level of precision                   */
-  int modlevel;     /* Modulation integration level of precision            */
+  int taulevel;      /* Tau integration level of precision                  */
+  int modlevel;      /* Modulation integration level of precision           */
 
-  long fl;          /* flags                                                */
-  long interpflag;  /* Interpolation flag                                   */
-  long pi;          /* progress indicator                                   */
+  long fl;           /* flags                                               */
+  long interpflag;   /* Interpolation flag                                  */
+  long pi;           /* progress indicator                                  */
 
-  transit_ray_solution *sol; /* Transit solution type                       */
-  eclipse_ray_solution *ecl; /* Eclipse solution type                       */
+  ray_solution *sol; /* Transit solution type                               */
   PREC_RES *outpret; /* Output dependent on wavelength only as it travels
                         to Earth before telescope                           */
 
   struct saves save; /* Saves indicator of program stats                    */
 
-  struct {          /* Data structures pointers, this is data that is not
-                       required for the final computation                   */
+  struct {           /* Data structures pointers, this is data that is not
+                        required for the final computation                  */
     struct transithint *th;
     struct lineinfo    *li;
     struct atm_data    *at;

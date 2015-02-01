@@ -132,14 +132,9 @@ extern int maxline;        /* Initialized in transitstd                     */
 extern int version;
 extern int revision;
 
-/* FINDME: remove isodo?                                                    */
-enum isodo {unclear=0, atmfile, ignore, fixed, factor};
-
 #include <structures_tr.h>
 
-extern const transit_ray_solution slantpath;
-
-extern const eclipse_ray_solution eclipsepath;
+extern const ray_solution slantpath, eclipsepath;
 
 /***** Prototypes *****/
 #include <proto_transit.h>
