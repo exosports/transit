@@ -5,9 +5,7 @@
 #endif
 
 /* src/extinction.c */
-extern inline int newprofile P_((float **pr, int vf, double dwn, float dop,
-                                 float lor, float ta, int nwave));
-extern inline int getprofile P_((float  *pr,         double dwn, float dop,
+extern inline int getprofile P_((float **pr,         double dwn, float dop,
                                  float lor, float ta, int nwave));
 extern void savefile_extinct P_((char *filename, double **e, short *c,
                                  long nrad, long nwav));

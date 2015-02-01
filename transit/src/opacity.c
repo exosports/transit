@@ -147,14 +147,12 @@ calcopacity(struct transit *tr,
   struct lineinfo *li=tr->ds.li;    /* Lineinfo struct                      */
   long Nmol, Ntemp, Nlayer, Nwave,  /* Opacity-grid  dimension sizes        */
        flag;                        /* Interpolation flag                   */
-  int i, j, k, t, r,                /* for-loop indices                     */
+  int i, j, t, r,                   /* for-loop indices                     */
       rn, iso1db;
-  int nDop, nLor;            /* Number of Doppler and lorentz-width samples */
-  double Lmin, Lmax, Dmin, Dmax;   /* Minimum and maximum widths            */
-  PREC_VOIGT ****profile;          /* Grid of Voigt profiles                */
-  //PREC_VOIGT ***vprofile;          /* Grid of Voigt profiles                */
-  int   voigtfine =tr->voigtfine;  /* Voigt profile wn oversampling factor  */
-  float timesalpha=tr->timesalpha; /* Voigt wings width                     */
+  int nDop, nLor;                   /* Number of Doppler and Lorentz-widths */
+  double Lmin, Lmax, Dmin, Dmax;    /* Minimum and maximum widths           */
+  PREC_VOIGT ***profile;            /* Grid of Voigt profiles               */
+  float timesalpha=tr->timesalpha;  /* Voigt wings width                    */
 
   struct timeval tv;  /* Time-keeping variables                             */
   double t0=0.0;
@@ -179,28 +177,13 @@ calcopacity(struct transit *tr,
     op->profsize[i] = op->profsize[0] + i*nLor;
 
   /* Allocate grid of Voigt profiles:                                       */
-  op->profile       = (PREC_VOIGT ****)calloc(nDop,     sizeof(PREC_VOIGT ***));
-  op->profile[0]    = (PREC_VOIGT  ***)calloc(nDop*nLor, sizeof(PREC_VOIGT **));
-  op->profile[0][0] = (PREC_VOIGT   **)calloc(nDop*nLor*voigtfine,
-                                                         sizeof(PREC_VOIGT *));
-  for (i=0; i<nDop; i++){
+  op->profile       = (PREC_VOIGT ***)calloc(nDop,     sizeof(PREC_VOIGT **));
+  op->profile[0]    = (PREC_VOIGT  **)calloc(nDop*nLor, sizeof(PREC_VOIGT *));
+  for (i=1; i<nDop; i++){
     op->profile[i] = op->profile[0] + i*nLor;
-    for (j=0; j<nLor; j++){
-      op->profile[i][j] = op->profile[0][0] + voigtfine*(j + i*nLor);
-    }
   }
   profile = op->profile;
-  transitprint(10, verblevel, "Number of Voigt profiles: %d.\n",
-                              nDop*nLor*voigtfine);
-
-  /* Re-work of Voigt profile:                                              */
-  /* FINDME: This is not really working.  Check why the hell it isn't       */
-  //op->vprofile    = (PREC_VOIGT ***)calloc(nDop,      sizeof(PREC_VOIGT **));
-  //op->vprofile[0] = (PREC_VOIGT  **)calloc(nDop*nLor, sizeof(PREC_VOIGT  *));
-  //for (i=0; i<nDop; i++){
-  //  op->vprofile[i] = op->vprofile[0] + i*nLor;
-  //}
-  //vprofile = op->vprofile;
+  transitprint(10, verblevel, "Number of Voigt profiles: %d.\n", nDop*nLor);
 
   t0 = timestart(tv, "Begin Voigt profiles calculation.");
   /* Evaluate the profiles for the array of widths:                         */
@@ -210,16 +193,12 @@ calcopacity(struct transit *tr,
       /* Set size and pointer to previous profile:                          */
       if (op->aDop[i]*10.0 < op->aLor[j]  &&  i != 0){
         op->profsize[i][j] = op->profsize[i-1][j];
-        for (k=0; k<voigtfine; k++)
-          profile[i][j][k] = profile[i-1][j][k];
-        //vprofile[i][j] = vprofile[i-1][j];
+        profile[i][j] = profile[i-1][j];
       }
       else{ /* Calculate a new profile for given widths:                    */
-        op->profsize[i][j] = newprofile(profile[i][j], voigtfine,
+        op->profsize[i][j] = getprofile(&profile[i][j],
                              tr->wns.d/tr->owns.o, op->aDop[i], op->aLor[j],
                              timesalpha, tr->owns.n);
-        //op->profsize[i][j] = getprofile(vprofile[i][j], tr->wns.d/tr->owns.o,
-        //                    op->aDop[i], op->aLor[j], timesalpha, tr->owns.n);
       }
       transitprint(5, verblevel, "Profile[%2d][%2d] size = %4li  (D=%.3g, "
                                   "L=%.3g).\n", i, j, 2*op->profsize[i][j]+1,
@@ -227,17 +206,16 @@ calcopacity(struct transit *tr,
       /* Calculate the integrated area of the lines:                        */
       /* FINDME: I should probably normalize to have the integral = 1.0     */
       // double area;
-      //transitprint(1,2, "%.5e, %.5e\n", op->vprofile[i][j][0], op->vprofile[i][j][1]);
 
       /* Print profile to screen:                                           */
-      //if ((i==7 && j==0) || (i==7 && j==11) || (i==8 && j==18) || (i==8 && j==25)){
-      //  for (k=0; k<2*op->profsize[i][j]+1; k++){
-      //    transitprint(1,2, "%.3e, ", profile[i][j][0][k]);
-      //  }
-      //  transitprint(1, 2, "\n");
-      //}
+      // if ((i==0 && j== 0) || (i==0 && j==29) ||
+      //     (i==8 && j==18) || (i==8 && j==25)){
+      //   for (int k=0; k<2*op->profsize[i][j]+1; k++){
+      //     transitprint(1,2, "%.3e, ", profile[i][j][k]);
+      //   }
+      //   transitprint(1, 2, "\n");
+      // }
 
-      // //transitprint(1, 2, "%.5e  %.5e  %.5e  %.5e  %.5e\n", profile[0][0]);
       // transitprint(1, 2, "Profile Areas: [");
       // for (k=0; k<voigtfine; k++){
       //   area = 0.0;
@@ -469,11 +447,10 @@ extinction(struct transit *tr,      /* transit struct                       */
   struct molecules *mol=tr->ds.mol; /* Molecules struct                     */
   struct atm_data  *at =tr->ds.at;  /* Atmosphere struct                    */
   struct line_transition *lt=&(tr->ds.li->lt); /* Line transition struct    */ 
-  //struct extinction *ex=tr->ds.ex;
 
   /* Voigt profile variables:                                               */
-  PREC_VOIGT ****profile =op->profile;   /* Voigt profile                   */
-  PREC_NREC    **profsize=op->profsize;  /* Voigt-profile half-size         */
+  PREC_VOIGT ***profile =op->profile;   /* Voigt profile                    */
+  PREC_NREC   **profsize=op->profsize;  /* Voigt-profile half-size          */
   double *aDop=op->aDop,              /* Doppler-width sample               */
          *aLor=op->aLor;              /* Lorentz-width sample               */
   int nDop=op->nDop,                  /* Number of Doppler samples          */
@@ -703,7 +680,7 @@ extinction(struct transit *tr,      /* transit struct                       */
       //transitprint(1, 2, "%li  ", j-offset);
       //transitprint(1, 2, "j=%d, p[%li]=%.2g   ", j, j-offset,
       //                    profile[idop[i]][ilor[i]][subw][j-offset]);
-      ktmp[m][j] += opac * profile[idop[i]][ilor[i]][0][ofactor*j - offset];
+      ktmp[m][j] += opac * profile[idop[i]][ilor[i]][ofactor*j - offset];
     }
     neval++;
   }
@@ -750,15 +727,12 @@ freemem_opacity(struct opacity *op, /* Opacity structure                    */
   free(op->o[0]);
   free(op->o);
 
-  free(op->profile[0][0][0]); /* The Voigt profiles                         */
-  free(op->profile[0][0]);
+  free(op->profile[0][0]); /* The Voigt profiles                            */
   free(op->profile[0]);
   free(op->profile);
 
   free(op->profsize[0]);  /* The Voigt-profile half-size                    */
   free(op->profsize);
-
-  //free();
 
   /* Update progress indicator and return:                                  */
   *pi &= ~(TRPI_OPACITY | TRPI_TAU);

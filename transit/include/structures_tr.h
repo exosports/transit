@@ -172,9 +172,8 @@ struct extinction{
 
 struct opacity{
   PREC_RES ****o;         /* Opacity grid [temp][iso][rad][wav]             */
-  PREC_VOIGT ****profile; /* Voigt profiles [nDop][nLor][vf][2*profsize+1]  */
-  PREC_VOIGT ***vprofile; /* Voigt profiles [nDop][nLor][2*profsize+1]      */
-  PREC_NREC **profsize;   /* Half-size (wavenumber) of Voigt profiles       */
+  PREC_VOIGT ***profile;  /* Voigt profiles [nDop][nLor][2*profsize+1]      */
+  PREC_NREC **profsize;   /* Half-size of Voigt profiles [nDop][nLor]       */
   double *aDop,           /* Sample of Doppler widths [nDop]                */
          *aLor;           /* Sample of Lorentz widths [nLor]                */
   PREC_RES *temp,         /* Opacity-grid temperature array                 */

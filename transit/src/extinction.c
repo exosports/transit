@@ -53,68 +53,10 @@ Thank you for using transit!
 
 #include <transit.h>
 
-/* \fcnfh
-   Wrapper to calculate a Voigt profile 'pr'
-
-   Return: 1/2 of the number of points in the non-oversampled profile       */
+/* Wrapper to calculate a Voigt profile
+   Return: 1/2 of the number of points in the profile                       */
 inline int
-newprofile(PREC_VOIGT **pr,  /* Output 2D profile                           */
-           int vf,           /* Number of fine resolution bins              */
-           PREC_RES dwn,     /* wavenumber spacing                          */
-           PREC_VOIGT dop,   /* Doppler width                               */
-           PREC_VOIGT lor,   /* Lorentz width                               */
-           float ta,         /* times of alpha                              */
-           int nwave){       /* Maximum half-size of profile                */
-  PREC_VOIGTP bigalpha, /* Largest width (Doppler or Lorentz)               */
-              wvgt;     /* Calculated half-width of profile                 */
-  int nvgt,             /* Number of points in profile                      */
-      j;                /* Auxiliary index                                  */
-
-  /* Get the largest width (alpha Doppler or Lorentz):                      */
-  bigalpha = dop;
-  if(bigalpha<lor)
-    bigalpha = lor;
-
-  /* Half width from line center where the profile will be computed:        */
-  wvgt = bigalpha*ta;
-  /* Number of points in profile:                                           */
-  nvgt = 2*(long)(wvgt/dwn+0.5) + 1;
-  /* The profile needs to contain at least three wavenumber elements:       */
-  if (nvgt < 2)
-    nvgt = 3;
-  /* Profile does not need to be larger than the wavenumber range:          */
-  if (nvgt > 2*nwave)
-    nvgt = 2*nwave + 1;
-
-  //transitprint(1, verblevel, "aDop=%.3g,  aLor=%.3g\nwvgt=%.4g,  "
-  //                           "alpha=%.4g.\n", dop, lor, wvgt, bigalpha);
-
-  /* Basic check that 'lor' or 'dop' are within sense:                      */
-  if(nvgt < 0)
-    transiterror(TERR_CRITICAL, "Number of Voigt bins (%d) are not positive.  "
-                 "Doppler width: %g, Lorentz width: %g.\n", nvgt, dop, lor);
-
-  /* Allocate profile array:                                                */
-  //transitprint(1, verblevel, "size = %d.\n", nvgt*vf);
-  *pr = (PREC_VOIGT *)calloc(nvgt*vf, sizeof(PREC_VOIGT));
-  for(j=0; j<vf; j++)
-    pr[j] = pr[0] + j*nvgt;
-
-  /* Calculate voigt using a width that gives an integer number of 'dwn'
-     spaced bins:                                                           */
-  if((j=voigtn(vf, nvgt, dwn*(long)(nvgt/2), lor, dop, pr, -1, 
-               nvgt>_voigt_maxelements?VOIGT_QUICK:0)) != 1)
-    transiterror(TERR_CRITICAL, "voigtn() returned error code %i.\n", j);
-
-  return nvgt/2;
-}
-
-
-/* Re-worked version of newprofile that calculates a profile in a 1D array
-   (voigtfine = 1 case)                                                     */
-/* FINDME: Investigate why it doesn't work.                                 */
-inline int
-getprofile(PREC_VOIGT *pr,   /* Output 1D profile                           */
+getprofile(PREC_VOIGT **pr,  /* Pointer to 1D profile                       */
            PREC_RES dwn,     /* wavenumber spacing                          */
            PREC_VOIGT dop,   /* Doppler width                               */
            PREC_VOIGT lor,   /* Lorentz width                               */
@@ -147,20 +89,14 @@ getprofile(PREC_VOIGT *pr,   /* Output 1D profile                           */
     transiterror(TERR_CRITICAL, "Number of Voigt bins (%d) are not positive.  "
                  "Doppler width: %g, Lorentz width: %g.\n", nvgt, dop, lor);
 
-  //transitprint(1, verblevel, "size = %d.\n", nvgt*vf);
   /* Allocate profile array:                                                */
-  pr = (PREC_VOIGT *)calloc(nvgt, sizeof(PREC_VOIGT));
+  *pr = (PREC_VOIGT *)calloc(nvgt, sizeof(PREC_VOIGT));
 
   /* Calculate voigt using a width that gives an integer number of 'dwn'
      spaced bins:                                                           */
-  if((j=voigtn2(nvgt, dwn*(long)(nvgt/2), lor, dop, pr, -1,
+  if((j=voigtn(nvgt, dwn*(long)(nvgt/2), lor, dop, pr, -1,
                nvgt > _voigt_maxelements ? VOIGT_QUICK:0)) != 1)
     transiterror(TERR_CRITICAL, "voigtn2() returned error code %i.\n", j);
-
-  //for (j=0; j<nvgt; j++){
-  //  transitprint(1, 2, "%.5e, ", pr[j]);
-  //}
-  //transitprint(1, 2, "])\n");
 
   return nvgt/2;
 }
@@ -438,8 +374,7 @@ computemolext(struct transit *tr, /* transit struct                         */
   long j, maxj, minj, offset;
 
   /* Voigt profile variables:                                               */
-  PREC_VOIGT ****profile=op->profile; /* Voigt profile                      */
-  //PREC_VOIGT ***vprofile=op->vprofile; /* Voigt profile                     */
+  PREC_VOIGT ***profile=op->profile; /* Voigt profile                      */
   PREC_NREC **profsize=op->profsize;  /* Voigt-profile half-size            */
   double *aDop=op->aDop,          /* Doppler-width sample                   */
          *aLor=op->aLor;          /* Lorentz-width sample                   */
@@ -655,9 +590,9 @@ computemolext(struct transit *tr, /* transit struct                         */
                  minj, maxj, subw, offset, ofactor*minj - offset);
     /* Add the contribution from this line to the opacity spectrum:         */
     for(j=minj; j<maxj; j++){
-      ktmp[j] += propto_k * profile[idop[i]][ilor[i]][0][ofactor*j - offset];
+      ktmp[j] += propto_k * profile[idop[i]][ilor[i]][ofactor*j - offset];
       transitprint(1000, verblevel, "%.4e, ",
-                            profile[idop[i]][ilor[i]][0][ofactor*j - offset]);
+                            profile[idop[i]][ilor[i]][ofactor*j - offset]);
       //ktmp[j] += propto_k * vprofile [idop[i]] [ilor[i]] [j-offset];
     }
     neval++;
