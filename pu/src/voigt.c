@@ -278,24 +278,23 @@ voigtf(int nwn,            /* Number of wavenumber bins where the function is
 
 
 /*\fcnfh
-  Compute Voigt profile on equispaced grid.
-
-  Return: 1 on success                           */
+  Compute Voigt profile on equispaced 2D grid.
+  Return: 1 on success                                                      */
 inline int 
-voigtn(int m,              /* Number of fine resolution bins (deviation
-                              of line center from bin center)             */
-       int nwn,            /* Number of wavenumber sample of the profile  */
-       PREC_VOIGTP dwn,    /* Wavenumber half-width sample                */
-       PREC_VOIGTP alphaL, /* Lorentz width                               */
-       PREC_VOIGTP alphaD, /* Doppler width                               */
-       PREC_VOIGT **vpro,  /* Array (m by nwn) where to store the profile */
-       PREC_VOIGTP eps,    /* Precision to which the profile is to be
-                              calculated. If negative, a fixed number of
-                              iterations are performed.                     */
-       int flags){         /* Miscellaneous flags, so far there is support
-                              for: 'VOIGT_QUICK' that performs a quick
-                              integration, i.e., the height multiplied
-                              by the bin width                              */
+voigtn2(int m,              /* Number of fine resolution bins (deviation
+                               of line center from bin center)              */
+        int nwn,            /* Number of wavenumber sample of the profile   */
+        PREC_VOIGTP dwn,    /* Wavenumber half-width sample                 */
+        PREC_VOIGTP alphaL, /* Lorentz width                                */
+        PREC_VOIGTP alphaD, /* Doppler width                                */
+        PREC_VOIGT **vpro,  /* Array (m by nwn) where to store the profile  */
+        PREC_VOIGTP eps,    /* Precision to which the profile is to be
+                               calculated. If negative, a fixed number of
+                               iterations are performed.                    */
+        int flags){         /* Miscellaneous flags, so far there is support
+                               for: 'VOIGT_QUICK' that performs a quick
+                               integration, i.e., the height multiplied
+                               by the bin width                             */
 
   /* The calculation is done filling the array from the centerpoint
      outwards.  The wavenumber value of each bin is considered to be the
@@ -414,19 +413,22 @@ voigtn(int m,              /* Number of fine resolution bins (deviation
 }
 
 
+/*\fcnfh
+  Compute Voigt profile on equispaced 1D grid.
+  Return: 1 on success                                                      */
 inline int
-voigtn2(int nwn,            /* Number of wavenumber sample of the profile   */
-        PREC_VOIGTP dwn,    /* Wavenumber half-width sample                 */
-        PREC_VOIGTP alphaL, /* Lorentz width                                */
-        PREC_VOIGTP alphaD, /* Doppler width                                */
-        PREC_VOIGT *vpro,  /* Array (m by nwn) where to store the profile  */
-        PREC_VOIGTP eps,    /* Precision to which the profile is to be
-                               calculated. If negative, a fixed number of
-                               iterations are performed.                    */
-        int flags){         /* Miscellaneous flags, so far there is support
-                               for: 'VOIGT_QUICK' that performs a quick
-                               integration, i.e., the height multiplied
-                               by the bin width                             */
+voigtn(int nwn,            /* Number of wavenumber sample of the profile    */
+       PREC_VOIGTP dwn,    /* Wavenumber half-width sample                  */
+       PREC_VOIGTP alphaL, /* Lorentz width                                 */
+       PREC_VOIGTP alphaD, /* Doppler width                                 */
+       PREC_VOIGT **vpro,  /* Array (m by nwn) where to store the profile   */
+       PREC_VOIGTP eps,    /* Precision to which the profile is to be
+                              calculated. If negative, a fixed number of
+                              iterations are performed.                     */
+       int flags){         /* Miscellaneous flags, so far there is support 
+                              for: 'VOIGT_QUICK' that performs a quick
+                              integration, i.e., the height multiplied
+                              by the bin width                              */
 
   /* The calculation is done filling the array from the centerpoint
      outwards.  The wavenumber value of each bin is considered to be the
@@ -503,7 +505,7 @@ voigtn2(int nwn,            /* Number of wavenumber sample of the profile   */
      beginning of each bin:                                                 */
   if(flags & VOIGT_QUICK){
     for(i=0; i<nwn; i++)
-      vpro[i] = aint[i];
+      (*vpro)[i] = aint[i];
   }
   /* If a slow integration is preferred, then calculate the number of
      fine-point per regular points, note that is one more than the ratio.   */
@@ -521,9 +523,9 @@ voigtn2(int nwn,            /* Number of wavenumber sample of the profile   */
     /* Is this number an odd number?
        If so, use Simpson's integration, otherwise use trapezoidal:         */
     if (i & 1)
-      meanintegSimp(aint, vpro, nint, nwn, i, dint);
+      meanintegSimp(aint, *vpro, nint, nwn, i, dint);
     else
-      meanintegTrap(aint, vpro, nint, nwn, i, dint);
+      meanintegTrap(aint, *vpro, nint, nwn, i, dint);
   }
   free(aint);
 

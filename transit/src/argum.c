@@ -269,8 +269,6 @@ processparameters(int argc,            /* Number of command-line args  */
     "Minimum Lorentz-broadening width (in cm-1)."},
     {"lmax",    CLA_LMAX, required_argument, "10.0", "float",
     "Maximum Lorentz-broadening width (in cm-1)."},
-    {"finebin", 'f',      required_argument, "1",    "integer",
-     "Number of fine-bins to calculate the Voigt function."},
     {"nwidth",  'a',      required_argument, "20",   "number",
      "Number of the max-widths (the greater of Voigt or Doppler widths) "
      "that needs to be contained in a calculated profile."},
@@ -565,9 +563,6 @@ processparameters(int argc,            /* Number of command-line args  */
       hints->temp.d = atof(optarg);
       break;
 
-    case 'f':  /* Number of fine-binning for Voigt calculation:  */
-      hints->voigtfine = atoi(optarg);
-      break;
     case 'a':  /* Number of half-widths in a profile:            */
       hints->timesalpha = atof(optarg);
       break;
@@ -747,23 +742,12 @@ acceptgenhints(struct transit *tr){
   tr->ds.det = &det;
 
   /* Accept line-profile arguments:                                         */
-
-  /* Check that voigtfine (oversampling factor of the profile binning)
-     is > 1, and set it's value in transit:                                 */
-  if(th->voigtfine < 1){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Fine binning of Voigt function has to be positive: %i.\n",
-                 th->voigtfine);
-    return -1;
-  }
-  tr->voigtfine = th->voigtfine;
-
   /* Check that timesalpha (profile half width in units of Doppler/Lorentz
      broadening half widths) is > 1, and set it's value in transit:         */
   if(th->timesalpha < 1){
     transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
                  "Times of maximum width has to be greater than one: %i\n",
-                 th->voigtfine);
+                 th->timesalpha);
     return -1;
   }
   tr->timesalpha = th->timesalpha;
