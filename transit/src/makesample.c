@@ -581,7 +581,7 @@ makeradsample(struct transit *tr){
 int
 makeipsample(struct transit *tr){
   struct transithint *th = tr->ds.th;
-  int res; /* Return output */
+  int res=0; /* Return output */
   int i;
 
   /* Case when I used the atmospheric radius sampling:                      */
