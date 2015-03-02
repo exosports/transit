@@ -12,7 +12,7 @@ the same name written by Patricio Rojo (Univ. de Chile, Santiago) when
 he was a graduate student at Cornell University under Joseph
 Harrington.
 
-Copyright (C) 2014 University of Central Florida.  All rights reserved.
+Copyright (C) 2015 University of Central Florida.  All rights reserved.
 
 This is a test version only, and may not be redistributed to any third
 party.  Please refer such requests to us.  This program is distributed
@@ -208,7 +208,7 @@ tau(struct transit *tr){
          than the radius of last calculated extinction:                     */
       if(h[ri]*hfct < r[lastr]*rfct){
         /* FINDME: What if the ray ends up going through a lower layer because
-           of the bending? */
+           of the refraction? */
         if(ri)
           transitprint(30, verblevel, "Last Tau (height=%9.4g, wn=%9.4g): "
                                "%10.4g.\n", h[ri-1], wn->v[wi], tau_wn[ri-1]);

@@ -12,7 +12,7 @@ the same name written by Patricio Rojo (Univ. de Chile, Santiago) when
 he was a graduate student at Cornell University under Joseph
 Harrington.
 
-Copyright (C) 2014 University of Central Florida.  All rights reserved.
+Copyright (C) 2015 University of Central Florida.  All rights reserved.
 
 This is a test version only, and may not be redistributed to any third
 party.  Please refer such requests to us.  This program is distributed
@@ -196,24 +196,19 @@ void main(int argc,      /* Number of variables                              */
     t0 = timecheck(verblevel, itr, 11, "extwn", tv, t0);
  
     transitprint(1, verblevel, "TRAN FLAG 74: pre-transit calc\n");
-    /* Ray solutions choice:                                                */
-    RaySol path = transit.ds.th->path;
+    /* Initialize structures for the optical-depth calculation:            */
+    fw(init_optdepth, !=0, &transit);
 
     /* Calculates optical depth for eclipse                                 */
-    if(path == eclipse){
+    if(strcmp(transit.sol->name, "eclipse") == 0){
       transitprint(1, verblevel, "\nCalculating eclipse:\n");
 
-      /* Angle number                                                       */
-      struct transithint *th = transit.ds.th;
-      long int an = th->ann;
-
-      /* Sets intensity grid:                                               */
-      fw(intens_grid, !=0, &transit);
-      for(i = 0; i < an; i++){
+      /* Calculate optical depth for eclipse:                               */
+      for(i=0; i < transit.ann; i++){
         /* Fills out angle index                                            */
         transit.angleIndex = i;
 
-        fw(tau_eclipse, !=0, &transit);
+        fw(tau, !=0, &transit);
         t0 = timecheck(verblevel, itr, 12, "tau eclipse", tv, t0);
   
         /* Calculates eclipse intensity:                                    */
@@ -231,10 +226,10 @@ void main(int argc,      /* Number of variables                              */
     }
 
     /* Calculate optical depth for transit:                                 */
-    else{
+    else if (strcmp(transit.sol->name, "transit") == 0){
       transitprint(1, verblevel, "\nCalculating transit:\n");
       fw(tau, !=0, &transit);
-      t0 = timecheck(verblevel, itr, 12, "tau", tv, t0); 
+      t0 = timecheck(verblevel, itr, 12, "tau transit", tv, t0);
 
       /* Calculates transit modulation:                                     */
       fw(modulation, !=0, &transit);

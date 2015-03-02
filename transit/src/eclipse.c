@@ -87,10 +87,10 @@ eclipsetau(struct transit *tr,
   PREC_RES *rad  = rads->v;     /* Radius array                              */
   /* Get the index rs, of the sampled radius immediately below or equal
      to height (i.e. rad[rs] <= height < rad[rs+1]):                        */
-  int rs = binsearch(rad, 0, tr->rads.n-1, height);
+  int rs = binsearchapprox(rad, height, 0, tr->rads.n-1);
 
   /* Returns 0 if this is the top layer (no distance travelled):            */
-  if (rs == -5)
+  if (rs == tr->rads.n-1)
     return 0.0;
 
   /* Move pointers to the location of height:                               */
@@ -337,11 +337,10 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
   prop_samp *rad = &tr->rads;          /* Radius array pointer              */
   prop_samp *wn  = &tr->wns;           /* Wavenumber array pointer          */
   long int wnn   = wn->n;              /* Wavenumbers                       */
-  ray_solution *sol = tr->sol; /* Eclipse ray solution pointer      */
+  ray_solution *sol = tr->sol;         /* Eclipse ray solution pointer      */
 
   /* Reads angle index from transit structure                               */
   long int angleIndex = tr->angleIndex;
-
   /* Intensity for all angles and all wn                                    */
   PREC_RES **intens_grid = tr->ds.intens->a;
 
@@ -386,7 +385,8 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
 
   /* Sets progress indicator, and prints output:                             */
   tr->pi |= TRPI_MODULATION; /* FINDME: this is not a modulation calculation */
-  printintens(tr);
+  if (tr->angleIndex == tr->ann-1)
+    printintens(tr);
   return 0;
 }
 

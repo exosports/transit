@@ -62,7 +62,7 @@ static __inline__ double
 stateeqnford(_Bool mass,  /* Abundance by mass (1) or by number (0)         */
              double q,    /* Abundance                                      */
              double ma,   /* Mean molecular mass (in AMU)                   */
-             double mi,   /* Molecular mass of the specie (in AMU)          */
+             double mi,   /* Molecular mass of the species (in AMU)         */
              double p,    /* Pressure                                       */
              double t){   /* Temperature                                    */
   const double rho = AMU * q * p / KB / t;
