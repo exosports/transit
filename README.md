@@ -14,7 +14,7 @@ alt=""border="10" /></a>
 * [License](#license)
 
 ### Team Members:
-* [Patricio Cubillos](https://github.com/pcubillos/) (author, UCF) <pcubillos@fulbrightmail.org>
+* [Patricio Cubillos](https://github.com/pcubillos/) (UCF) <pcubillos@fulbrightmail.org>
 * Jasmina Blecic (UCF)
 * Joe Harrington (UCF)
 * Patricio Rojo (U. de Chile)
