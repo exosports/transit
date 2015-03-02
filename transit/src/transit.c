@@ -98,7 +98,6 @@ int main(int argc,      /* Number of variables                              */
                  "makewnsample() modified some of the hinted "
                  "parameters according to returned flag: 0x%lx.\n",
                  fw_status);
-
   transitprint(10, verblevel, "Wavenumber [%li]: dwn=%.6f\n",
                               transit.wns.n, transit.wns.d);
   transitprint(10, verblevel, "Oversampled wavenumber [%li]: dwn=%.6f\n",
