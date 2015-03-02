@@ -43,7 +43,7 @@ To remove the program binaries, execute (from the respective directories):
 
 
 ### Be Kind:
-Please reference this paper if you found this module useful for your research:  
+Please reference these papers if you found this module useful for your research:  
   [Cubillos et al. 2015: The Bayesian Atmospheric Radiative-Transifer Code for Exoplanet Modeling I](), in preparation.  
   [Blecic et al. 2015: The Bayesian Atmospheric Radiative-Transifer Code for Exoplanet Modeling II](), in preparation.  
   [Harrington et al. 2015: The Bayesian Atmospheric Radiative-Transifer Code for Exoplanet Modeling III](), in preparation.  
