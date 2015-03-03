@@ -27,8 +27,8 @@
 #define PREC_ZREC double    /* Type for the partition info                  */
 #define PREC_LNDATA double  /* Type for the line data output                */
 #define PREC_RES double     /* Type for every partial result                */
-#define PREC_ATM double	    /* Type for atmospheric data                    */
-#define PREC_CS  double	    /* Type for cross-section                       */
+#define PREC_ATM double     /* Type for atmospheric data                    */
+#define PREC_CS  double     /* Type for cross-section                       */
 #define PREC_CIA double     /* Type for collision induced absorption        */
 
 #endif /* _TYPES_TR_H */
