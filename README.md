@@ -52,7 +52,7 @@ Make a working directory:
 **cd tmp/transit_demo/**  
 
 Copy the code from the repository to the working directory, and compile the programs:  
-**git clone https://github.com/pcubillos/transit transit**
+**git clone https://github.com/pcubillos/transit transit**  
 **cd transit/pu/**  
 **make**  
 **cd ../transit/**  
