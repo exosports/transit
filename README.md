@@ -8,8 +8,9 @@ alt=""border="10" /></a>
 
 ### Table of Contents:
 * [Team Members](#team-members)
-* [Code Description](#code-description)
-* [Installation and System Requirements](#installation-and-system-requirements)
+* [Getting Started](#getting-started)
+* [Installation](#installation)
+* [Quick Example](#quick-example)
 * [Be Kind](#be-kind)
 * [License](#license)
 
@@ -21,7 +22,7 @@ alt=""border="10" /></a>
 * Madison Stemm (UCF)
 * Andrew Foster (UCF)
 
-### Code Description:
+### Getting Started:
 Get the Transit user's manual [here](doc/transitUM.pdf).
 
 ### Installation:
@@ -40,6 +41,57 @@ To compile the pylineread fortran code:
 
 To remove the program binaries, execute (from the respective directories):  
 **make clean**  
+
+
+### Quick Example:
+
+Make a working directory:  
+**cd**  
+**mkdir tmp/**  
+**mkdir tmp/transit_demo/**  
+**cd tmp/transit_demo/**  
+
+Copy the code from the repository to the working directory, and compile the programs:  
+**git clone https://github.com/pcubillos/transit transit**
+**cd transit/pu/**  
+**make**  
+**cd ../transit/**  
+**make**  
+**cd ../pylineread/src/fortran/**  
+**make**  
+**cd ../../../..**  
+
+
+Download the methane line-transition database from the HITRAN server:  
+**wget --user=HITRAN --password=getdata -N https://www.cfa.harvard.edu/HITRAN/HITRAN2008/HITRAN2008/By-Molecule/Compressed-files/06_hit08.zip**  
+**unzip 06_hit08.zip**
+
+Copy the pylineread configuration file and run pylineread to make the transition-line-information (TLI) file:  
+**cp ../transit/pylineread/examples/pyline_example.cfg pyline_demo.cfg**  
+**../transit/pylineread/src/pylineread.py -c pyline_demo.cfg**
+
+Copy the transit configuration file and run transit to compute the spectrum:  
+**cp ../transit/transit/examples/demo/transit_demo.cfg .**  
+**../transit/transit/transit -c transit_demo.cfg**
+
+To check out the results, run this Python script:
+```python
+import sys
+sys.path.append("../transit/scripts/")
+import readtransit as rt
+wlength, flux = rt.readspectrum("CH4_demo_spectrum.dat.-Flux", 0)
+
+plt.figure(0, (8,5))
+plt.clf()
+plt.title("Methane Emission Spectrum")
+plt.plot(wlength, flux, "b")
+plt.xlabel("Wavelength  (um)")
+plt.ylabel("Flux  (erg s-1 cm-1)")
+```
+
+<dl >
+  <img src="doc/Methane_emission_spectra.png"   width="600">
+</dl>
 
 
 ### Be Kind:
