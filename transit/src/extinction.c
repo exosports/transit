@@ -630,7 +630,6 @@ interpolmolext(struct transit *tr, /* transit struct                        */
       i, m;   /* for-loop indices                                           */
   double ext; /* Interpolated extinction coefficient                        */
 
-  double *ktmp = (double *)calloc(tr->owns.n, sizeof(double));
   /* Layer temperature:                                                     */
   //transitprint(1,2,"\n Radius index: %li\n", r);
   PREC_ATM temp = tr->atm.t[r] * tr->atm.tfct;
@@ -662,7 +661,6 @@ interpolmolext(struct transit *tr, /* transit struct                        */
       kiso[r][i] += mol->molec[imol].d[r] * ext;
     }
   }
-  free(ktmp);
   ex->computed[r] = 1;
   return 0;
 }
