@@ -67,7 +67,7 @@ Download the methane line-transition database from the HITRAN server:
 **unzip 06_hit08.zip**
 
 Copy the pylineread configuration file and run pylineread to make the transition-line-information (TLI) file:  
-**cp ../transit/pylineread/examples/pyline_example.cfg pyline_demo.cfg**  
+**cp ../transit/pylineread/examples/demo/pyline_demo.cfg .**  
 **../transit/pylineread/src/pylineread.py -c pyline_demo.cfg**
 
 Copy the transit configuration file and run transit to compute the spectrum:  
