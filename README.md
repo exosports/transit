@@ -61,6 +61,9 @@ Copy the code from the repository to the working directory, and compile the prog
 **make**  
 **cd ../../../..**  
 
+Create a directory to place the configuration files and execute the code:  
+**mkdir run**  
+**cd run**  
 
 Download the methane line-transition database from the HITRAN server:  
 **wget --user=HITRAN --password=getdata -N https://www.cfa.harvard.edu/HITRAN/HITRAN2008/HITRAN2008/By-Molecule/Compressed-files/06_hit08.zip**  
