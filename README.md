@@ -79,6 +79,7 @@ Copy the transit configuration file and run transit to compute the spectrum:
 
 To check out the results, run this Python script:
 ```python
+import matplotlib.pyplot as plt
 import sys
 sys.path.append("../transit/scripts/")
 import readtransit as rt
@@ -90,6 +91,7 @@ plt.title("Methane Emission Spectrum")
 plt.plot(wlength, flux, "b")
 plt.xlabel("Wavelength  (um)")
 plt.ylabel("Flux  (erg s-1 cm-1)")
+plt.show()
 ```
 
 <dl >
