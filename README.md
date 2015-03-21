@@ -45,7 +45,7 @@ To remove the program binaries, execute (from the respective directories):
 
 ### Quick Example:
 
-Make a working directory:  
+Make a working directory:
 ```shell
 cd  
 mkdir tmp/  
@@ -53,7 +53,7 @@ mkdir tmp/transit_demo/
 cd tmp/transit_demo/  
 ```
 
-Copy the code from the repository to the working directory, and compile the programs:  
+Copy the code from the repository to the working directory, and compile the programs:
 ```shell
 git clone https://github.com/pcubillos/transit transit  
 cd transit/pu/  
@@ -65,25 +65,25 @@ make
 cd ../../../..  
 ```
 
-Create a directory to place the configuration files and execute the code:  
+Create a directory to place the configuration files and execute the code:
 ```shell
 mkdir run  
 cd run  
 ```
 
-Download the methane line-transition database from the HITRAN server:  
+Download the methane line-transition database from the HITRAN server:
 ```shell
 wget --user=HITRAN --password=getdata -N https://www.cfa.harvard.edu/HITRAN/HITRAN2008/HITRAN2008/By-Molecule/Compressed-files/06_hit08.zip  
 unzip 06_hit08.zip
 ```
 
-Copy the pylineread configuration file and run pylineread to make the transition-line-information (TLI) file:  
+Copy the pylineread configuration file and run pylineread to make the transition-line-information (TLI) file:
 ```shell
 cp ../transit/pylineread/examples/demo/pyline_demo.cfg .  
 ../transit/pylineread/src/pylineread.py -c pyline_demo.cfg
 ```
 
-Copy the transit configuration file and run transit to compute the spectrum:  
+Copy the transit configuration file and run transit to compute the spectrum:
 ```shell
 cp ../transit/transit/examples/demo/transit_demo.cfg .  
 ../transit/transit/transit -c transit_demo.cfg
