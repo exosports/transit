@@ -27,16 +27,16 @@ Get the Transit user's manual [here](doc/transitUM.pdf).
 
 ### Installation:
 To obtain the Transit code download the latest stable version from the releases page (TBD). Alternatively, clone the repository to your local machine with the following terminal command:  
-**git clone https://github.com/pcubillos/transit mytransit/**  
+**git clone https://github.com/pcubillos/transit transit/**  
 
 To compile the pu and transit modules execute ‘make’ on the respective folders:  
-**cd mytransit/pu**  
+**cd transit/pu**  
 **make**  
-**cd ../mytransit/transit**  
+**cd ../transit/transit**  
 **make**  
 
 To compile the pylineread fortran code:  
-**cd mytransit/pylineread/src/fortran**  
+**cd transit/pylineread/src/fortran**  
 **make**  
 
 To remove the program binaries, execute (from the respective directories):  
@@ -46,36 +46,48 @@ To remove the program binaries, execute (from the respective directories):
 ### Quick Example:
 
 Make a working directory:  
-**cd**  
-**mkdir tmp/**  
-**mkdir tmp/transit_demo/**  
-**cd tmp/transit_demo/**  
+```shell
+cd  
+mkdir tmp/  
+mkdir tmp/transit_demo/  
+cd tmp/transit_demo/  
+```
 
 Copy the code from the repository to the working directory, and compile the programs:  
-**git clone https://github.com/pcubillos/transit transit**  
-**cd transit/pu/**  
-**make**  
-**cd ../transit/**  
-**make**  
-**cd ../pylineread/src/fortran/**  
-**make**  
-**cd ../../../..**  
+```shell
+git clone https://github.com/pcubillos/transit transit  
+cd transit/pu/  
+make  
+cd ../transit/  
+make  
+cd ../pylineread/src/fortran/  
+make  
+cd ../../../..  
+```
 
 Create a directory to place the configuration files and execute the code:  
-**mkdir run**  
-**cd run**  
+```shell
+mkdir run  
+cd run  
+```
 
 Download the methane line-transition database from the HITRAN server:  
-**wget --user=HITRAN --password=getdata -N https://www.cfa.harvard.edu/HITRAN/HITRAN2008/HITRAN2008/By-Molecule/Compressed-files/06_hit08.zip**  
-**unzip 06_hit08.zip**
+```shell
+wget --user=HITRAN --password=getdata -N https://www.cfa.harvard.edu/HITRAN/HITRAN2008/HITRAN2008/By-Molecule/Compressed-files/06_hit08.zip  
+unzip 06_hit08.zip
+```
 
 Copy the pylineread configuration file and run pylineread to make the transition-line-information (TLI) file:  
-**cp ../transit/pylineread/examples/demo/pyline_demo.cfg .**  
-**../transit/pylineread/src/pylineread.py -c pyline_demo.cfg**
+```shell
+cp ../transit/pylineread/examples/demo/pyline_demo.cfg .  
+../transit/pylineread/src/pylineread.py -c pyline_demo.cfg
+```
 
 Copy the transit configuration file and run transit to compute the spectrum:  
-**cp ../transit/transit/examples/demo/transit_demo.cfg .**  
-**../transit/transit/transit -c transit_demo.cfg**
+```shell
+cp ../transit/transit/examples/demo/transit_demo.cfg .  
+../transit/transit/transit -c transit_demo.cfg
+```
 
 To check out the results, run this Python script:
 ```python
