@@ -1,7 +1,7 @@
 ### Transit
 >A radiative-transfer code for planetary atmospheres  
 
-Transit calculates the transmission or emission flux spectrum of a planetary atmosphere with application to extrasolar-planet transit and eclipse observations, respectively. Transit computes the spectra by solving for the one-dimensional line-by-line radiative-transfer equation for a plane-parallel atmospheric model.  
+Transit calculates the transmission or emission spectrum of a planetary atmosphere with application to extrasolar-planet transit and eclipse observations, respectively. Transit computes the spectra by solving the one-dimensional line-by-line radiative-transfer equation for an atmospheric model.  
 
 <a href="https://www.youtube.com/watch?v=-GHBFHyeI14" target="_blank"><img src="https://github.com/pcubillos/transit/blob/master/doc/ScreenShot.jpg" 
 alt=""border="10" /></a>
@@ -9,7 +9,7 @@ alt=""border="10" /></a>
 ### Table of Contents:
 * [Team Members](#team-members)
 * [Getting Started](#getting-started)
-* [Installation](#installation)
+* [Install and Compile](#install-and-compile)
 * [Quick Example](#quick-example)
 * [Be Kind](#be-kind)
 * [License](#license)
@@ -25,27 +25,8 @@ alt=""border="10" /></a>
 ### Getting Started:
 Get the Transit user's manual [here](doc/transitUM.pdf).
 
-### Installation:
-To obtain the Transit code download the latest stable version from the releases page (TBD). Alternatively, clone the repository to your local machine with the following terminal command:  
-**git clone https://github.com/pcubillos/transit transit/**  
-
-To compile the pu and transit modules execute ‘make’ on the respective folders:  
-**cd transit/pu**  
-**make**  
-**cd ../transit/transit**  
-**make**  
-
-To compile the pylineread fortran code:  
-**cd transit/pylineread/src/fortran**  
-**make**  
-
-To remove the program binaries, execute (from the respective directories):  
-**make clean**  
-
-
-### Quick Example:
-
-Make a working directory:
+### Install and Compile:
+To obtain the Transit code download the latest stable version from the releases page (TBD). Alternatively, clone the repository to your local machine with the following terminal commands.  First, create a working directory to place the code:  
 ```shell
 cd  
 mkdir tmp/  
@@ -53,22 +34,38 @@ mkdir tmp/transit_demo/
 cd tmp/transit_demo/  
 ```
 
-Copy the code from the repository to the working directory, and compile the programs:
+Clone the repository to your working directory:  
 ```shell
 git clone https://github.com/pcubillos/transit transit  
+```
+
+Compile the pu and transit programs (in that order), as well as the pylineread FORTRAN code:  
+```shell
 cd transit/pu/  
 make  
 cd ../transit/  
 make  
 cd ../pylineread/src/fortran/  
 make  
-cd ../../../..  
 ```
 
-Create a directory to place the configuration files and execute the code:
+To remove the program binaries, execute (from the respective directories):  
 ```shell
-mkdir run  
-cd run  
+make clean
+```
+
+### Quick Example:
+
+The following script quickly lets you calculate a methane emssion
+spectrum from the terminal.  To start, follow the instructions in
+the previous Section to install and compile the code.  Now,
+create a working directory to place the files and execute the
+programs:
+```shell
+cd  
+cd tmp/transit_demo/  
+mkdir run/  
+cd run/  
 ```
 
 Download the methane line-transition database from the HITRAN server:
