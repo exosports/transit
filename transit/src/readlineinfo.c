@@ -653,13 +653,14 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
   transitprint(2, verblevel, "First and last gf are %.8g and %.8g.\n",
                               lt->gf[0], lt->gf[li->n_l-1]);
 
-  transitprint(1,2,"GF:\n");
-  int jj = 0;
-  for (int i=0; i<li->n_l; i++){
-    //transitprint(1,2, "%.3e ", lt->gf[i]);
-    if (lt->gf[i] <= 0.0)
-      jj++;
-  }
+  //transitprint(1,2,"GF:\n");
+  //int jj = 0;
+  //for (int i=0; i<li->n_l; i++){
+  //  transitprint(1,2, "%.3e ", lt->gf[i]);
+  //  if (lt->gf[i] <= 0.0)
+  //    jj++;
+  //}
+
   //int q = 1;
   //while(lt->wl[q] == lt->wl[1]){
   //  transitprint(1, 2, "i=%2d:  wl=%.12g  ID=%d Elow=%.8g  gf=%.8g\n", 
