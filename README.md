@@ -30,7 +30,7 @@ To obtain the Transit code download the latest stable version from the releases 
 ```shell
 mkdir transit_demo/  
 cd transit_demo/  
-topdir=`cwd`
+topdir=`pwd`
 ```
 
 Clone the repository to your working directory:  
@@ -44,7 +44,7 @@ cd $topdir/transit/pu/
 make  
 cd $topdir/transit/transit/  
 make  
-cd $topdir/pylineread/src/fortran/  
+cd $topdir/transit/pylineread/src/fortran/  
 make  
 ```
 
