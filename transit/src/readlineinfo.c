@@ -660,7 +660,6 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
     if (lt->gf[i] <= 0.0)
       jj++;
   }
-  transitprint(1,2,"THERE ARE %d gf=0\n", jj);
   //int q = 1;
   //while(lt->wl[q] == lt->wl[1]){
   //  transitprint(1, 2, "i=%2d:  wl=%.12g  ID=%d Elow=%.8g  gf=%.8g\n", 
