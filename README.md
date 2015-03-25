@@ -26,26 +26,25 @@ alt=""border="10" /></a>
 Get the Transit user's manual [here](doc/transitUM.pdf).
 
 ### Install and Compile:
-To obtain the Transit code download the latest stable version from the releases page (TBD). Alternatively, clone the repository to your local machine with the following terminal commands.  First, create a working directory to place the code:  
+To obtain the Transit code download the latest stable version from the releases page (TBD). Alternatively, clone the repository to your local machine with the following terminal commands.  First, create a top-level directory to place the code:  
 ```shell
-cd  
-mkdir tmp/  
-mkdir tmp/transit_demo/  
-cd tmp/transit_demo/  
+mkdir transit_demo/  
+cd transit_demo/  
+topdir=`cwd`
 ```
 
 Clone the repository to your working directory:  
 ```shell
-git clone https://github.com/pcubillos/transit transit  
+git clone https://github.com/pcubillos/transit transit/
 ```
 
 Compile the pu and transit programs (in that order), as well as the pylineread FORTRAN code:  
 ```shell
-cd transit/pu/  
+cd $topdir/transit/pu/  
 make  
-cd ../transit/  
+cd $topdir/transit/transit/  
 make  
-cd ../pylineread/src/fortran/  
+cd $topdir/pylineread/src/fortran/  
 make  
 ```
 
@@ -57,13 +56,12 @@ make clean
 ### Quick Example:
 
 The following script quickly lets you calculate a methane emssion
-spectrum from the terminal.  To start, follow the instructions in
+spectrum between 2 and 4 um.  These instructions are mean to be executed from a Shell terminal.  To begin, follow the instructions in
 the previous Section to install and compile the code.  Now,
 create a working directory to place the files and execute the
 programs:
 ```shell
-cd  
-cd tmp/transit_demo/  
+cd $topdir
 mkdir run/  
 cd run/  
 ```
@@ -76,14 +74,14 @@ unzip 06_hit08.zip
 
 Copy the pylineread configuration file and run pylineread to make the transition-line-information (TLI) file:
 ```shell
-cp ../transit/pylineread/examples/demo/pyline_demo.cfg .  
-../transit/pylineread/src/pylineread.py -c pyline_demo.cfg
+cp $topdir/transit/pylineread/examples/demo/pyline_demo.cfg .  
+$topdir/transit/pylineread/src/pylineread.py -c pyline_demo.cfg
 ```
 
 Copy the transit configuration file and run transit to compute the spectrum:
 ```shell
-cp ../transit/transit/examples/demo/transit_demo.cfg .  
-../transit/transit/transit -c transit_demo.cfg
+cp $topdir/transit/transit/examples/demo/transit_demo.cfg .  
+$topdir/transit/transit/transit -c transit_demo.cfg
 ```
 
 To check out the results, run this Python script:
