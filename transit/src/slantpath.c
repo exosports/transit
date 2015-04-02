@@ -51,36 +51,12 @@ USA
 Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
-/*
-List of functions defined here:
-static inline PREC_RES 
-totaltau(PREC_RES b, PREC_RES *rad, PREC_RES *refr, PREC_RES *ex, long nrad,
-         int exprlevel) 
-
-static PREC_RES
-totaltau1(PREC_RES b, PREC_RES *rad, PREC_RES refr, PREC_RES *ex, long nrad)
-
-static PREC_RES
-totaltau2(PREC_RES b, PREC_RES *rad, PREC_RES *refr, PREC_RES *ex, long nrad)
-
-static PREC_RES
-modulationperwn(PREC_RES *tau, long last, double toomuch, prop_samp *ip,
-                struct geometry *sg, int exprlevel)
-
-static PREC_RES
-modulation1(PREC_RES *tau, long last, double toomuch, prop_samp *ip,
-            struct geometry *sg)
-
-static inline PREC_RES
-modulationm1(PREC_RES *tau, long last, double toomuch, prop_samp *ip,
-             struct geometry *sg)                                            */
-
 #include <transit.h>
 
 
-/* \fcnfh
-   Computes optical depth at a given impact parameter for a medium
-   with constant index of refraction (no ray bending).
+/* FUNCTION
+   Compute the light path and optical depth at a given impact parameter
+   and wavenumber, for a medium with constant index of refraction
 
    The impact parameter, b, and radii rad should have the same units.
    The result needs to be multiplied by the units of 'rad' to be real.
@@ -178,56 +154,56 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
 }
 
 
-/* \fcnfh
-   Computes optical depth at a given impact parameter for a medium with
-   variable index of refraction.
+/* FUNCTION
+   Compute the light path and optical depth at a given impact parameter
+   and wavenumber, for a medium with constant index of refraction
 
- The impact parameter b needs to be given in units of 'rad' and the result
- needs to be multiplied by the units 'rad' to be real.
+   The impact parameter b needs to be given in units of 'rad' and the
+   result needs to be multiplied by the units 'rad' to be real.
 
- Return: $\frac{tau}{units_{rad}}$ returns optical depth divided by units
-                                   of 'rad'                               */
+   Return: $\frac{tau}{units_{rad}}$ returns optical depth divided by
+           units of 'rad'                                                   */
 static PREC_RES
-totaltau2(PREC_RES b,     /* Impact parameter         */
-          PREC_RES *rad,  /* Radius array             */
-          PREC_RES *refr, /* Refractivity index       */
-          PREC_RES *ex,   /* Extinction[rad]          */
-          long nrad){     /* Number of radii elements */
+totaltau2(PREC_RES b,      /* Impact parameter                              */
+          PREC_RES *rad,   /* Radius array                                  */
+          PREC_RES *refr,  /* Refractivity index                            */
+          PREC_RES *ex,    /* Extinction[rad]                               */
+          long nrad){      /* Number of radii elements                      */
   PREC_RES dt[nrad];
   PREC_RES r0a = b;
   PREC_RES r0 = 0;
   int rs, i=0;
   const int maxiterations=50;
 
-  transiterror(TERR_CRITICAL|TERR_ALLOWCONT,
-               "This routine has not been successfully tested yet. Be "
-               "critic of the result.\n");
+  transiterror(TERR_CRITICAL|TERR_ALLOWCONT, "This routine has not been "
+               "tested yet.  You have been warned.\n");
 
-  /* Look for closest approach radius: */
+  /* Look for closest approach radius:                                      */
   while(1){
     r0 = b/lineinterp(r0a, rad, refr, nrad);
     if(r0==r0a)
       break;
     if(i++ > maxiterations)
-      transiterror(TERR_CRITICAL,
-                   "Maximum iterations (%i) reached while looking for "
-                   "r0. Convergence not reached (%.6g!=%.6g).\n",
+      transiterror(TERR_CRITICAL, "Maximum iterations (%i) reached while "
+                   "looking for r0. Convergence not reached (%.6g!=%.6g).\n",
                    maxiterations, r0, r0a);
     r0a = r0;
   }
 
   /* Get bin value 'rs' such that r0 is between rad[rs-1] inclusive
-     and rad[rs] exclusive: */
-  /*If we are looking at the outmost layer, then return: */
+     and rad[rs] exclusive:                                                 */
+  /* If we are looking at the outmost layer, then return:                   */
   if((rs=binsearch(rad, 0, nrad-1, r0))==-5)
     return 0;
-  /* If some other error occurred: */
+
+  /* If some other error occurred:                                          */
   else if(rs<0)
     transiterror(TERR_CRITICAL,
                  "Closest approach value(%g) is outside sampled radius "
                  "range(%g - %g).\n", r0, rad[0], rad[nrad-1]);
-  /* Move pointer to rs-th element: */
+  /* Move pointer to rs-th element:                                         */
   rs++;
+  /* FINDME: This will break                                                */
 
   /* A fraction 'analiticfrac' of the integration near the closest
      appraoach is calcualated analitically, otherwise, I get a division
@@ -239,9 +215,9 @@ totaltau2(PREC_RES b,     /* Impact parameter         */
      }_{\rm{analitic}} +
      \underbrace{2\int_{r_1=r_0+\delta r}^{\infty}
                  \frac{e_{\nu}~n~r}{\sqrt{n^2r^2-\rho^2}}{\rm d} r
-     }_{\rm{numerical}} */
+     }_{\rm{numerical}}                                                     */
 
-  /* First for the analitical part of the integral: */
+  /* First for the analitical part of the integral:                         */
   PREC_RES res;
   if(ex[rs-1]==ex[rs])
     res = ex[rs] * r0 * (sqrt( rad[rs]*rad[rs] / (r0*r0) - 1));
@@ -256,7 +232,7 @@ totaltau2(PREC_RES b,     /* Impact parameter         */
                         log(sqrt( rm*rm / (r0*r0) - 1) + rm/r0 ))  / 2.0;
   }
 
-  /* And now for the numerical integration. Set the variables: */
+  /* And now for the numerical integration.  Set the variables:             */
   for(i=rs; i<nrad; i++){
     r0a = b / (refr[i]*rad[i]);
     transitASSERT(r0a>1, "Condition could not be asserted, b/(nr)=%g > 1.\n",
@@ -265,10 +241,9 @@ totaltau2(PREC_RES b,     /* Impact parameter         */
     dt[i] = ex[i]/sqrt(1-r0a*r0a);
   }
 
-  /* Integrate: */
-  /* Use spline if GSL is available along with at least 3 points: */
+  /* Integrate: Use spline if GSL is available along with at least 3 points: */
 #ifdef _USE_GSL
-  if(nrad-rs>2){
+  if(nrad-rs > 2){
     gsl_interp_accel *acc = gsl_interp_accel_alloc();
     gsl_spline *spl = gsl_spline_alloc(gsl_interp_cspline, nrad-rs);
     gsl_spline_init(spl, rad+rs, dt+rs, nrad-rs);
@@ -276,21 +251,18 @@ totaltau2(PREC_RES b,     /* Impact parameter         */
     gsl_spline_free(spl);
     gsl_interp_accel_free(acc);
   }
-  /* Only integrate Trapezium if there are only two points available: */
-  else
+  else /* Else, use trapezoidal integration when there are only two points: */
 #endif /* _USE_GSL */
-  /* Integrate Simpson-Trapezium if enough(w/o GSL) or not enough (w/ GSL)
-     elements: */
-  if(nrad-rs>1)
+  if(nrad-rs > 1)
     res += integ_trasim(rad[1]-rad[0], dt+rs, nrad-rs);
 
   return 2*(res);
 }
 
 
-/* \fcnfh
+/* FUNCTION
  Wrapper function to calculate the optical depth along the path for a
- given impact parameter.
+ given impact parameter at a specific wavenumber.
 
  Return: $\frac{tau}{units_{rad}}$ returns optical depth divided by units
                                     of 'rad'                           */
@@ -321,9 +293,9 @@ transittau(struct transit *tr,
 }
 
 
-/* \fcnfh
-   Calculate the transit's modulation at a given wavenumber for
-   no-limb darkening nor emitted flux.
+/* FUNCTION
+   Calculate the transit modulation at a given wavenumber for no-limb
+   darkening nor emitted flux.
 
    Return: the transit's modulation:
    1 - in-transit/out-of-transit flux ratio (Equation 3.12):
@@ -347,28 +319,29 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
   /* Max overall tau, for the tr.ds.sg.transparent=True case:               */
   const PREC_RES maxtau = tau[last] > toomuch? tau[last]:toomuch;
 
-  PREC_RES rinteg[ipn], /* Integrand                                        */
-           ipv[ipn];    /* Impact parameter where to integrate              */
+  PREC_RES rinteg[ipn],  /* Integrand                                       */
+           ipv[ipn];     /* Impact parameter where to integrate             */
 
   /* Integrate for each of the planet's layer starting from the
-     outermost until the closest layer  */
+     outermost until the closest layer:                                     */
   for(i=0; i<=last; i++){
     ipv   [ipn1-i] = ip->v[i] * ip->fct;
     rinteg[ipn1-i] = exp(-tau[i]) * ipv[ipn1-i];
   }
   /* Add one more layer with 0. Only two to have a nice ending
-    spline and not unnecessary values: */
+    spline and not unnecessary values:                                      */
   last += 1;
-  if(last>ipn1) last = ipn1;
-  for(; i<=last; i++){
+  if (last > ipn1)
+    last = ipn1;
+  for(; i <= last; i++){
     ipv   [ipn1-i] = ip->v[i] * ip->fct;
     rinteg[ipn1-i] = 0;
   }
   /* FINDME: there is no need to use a for-loop here, the first two lines
-     are confusing also. This could have been written much simpler        */
+     are confusing also. This could have been written much simpler          */
 
   /* Increment last to represent the number of elements, check that we
-     have enough: */
+     have enough:                                                           */
   last++;
   if(last<3)
     transiterror(TERR_CRITICAL, "Condition failed, less than 3 items "
@@ -387,7 +360,7 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
 # error computation of modulation() without GSL is not implemented
 #endif
 
-  /* TD: Add real unblocked area of the star, considering geometry */
+  /* TD: Add real unblocked area of the star, considering geometry          */
   /* Substract the total area blocked by the planet. This is from the
      following:
      \begin{eqnarray}
@@ -397,23 +370,23 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
                   \ +\ Area_{p}} {\pi R_s^2}                       \\
          = & -\frac{2\int_0^{r_p} e^{-\tau}r{\rm d}r
                 \ +\ r_p^2} {\pi R_s^2}   
-     \end{eqnarray}                                                */
+     \end{eqnarray}                                                         */
 
   res = ipv[ipn1]*ipv[ipn1] - 2.0*res;
 
   /* If the planet is going to be transparent with its maximum optical
-     depth given by toomuch then: */
+     depth given by toomuch then:                                           */
   if(sg->transpplanet)
     res -= exp(-maxtau) * ipv[ipn-last] * ipv[ipn-last];
 
-  /* Normalize by the stellar radius: */
+  /* Normalize by the stellar radius:                                       */
   res *= 1.0 / (srad*srad);
 
   return res;
 }
 
 
-/* \fcnfh
+/* FUNCTION
    Calculate the modulation at a given wavenumber, considering the planet
    as an opaque disc of radius r = r(tau=toomuch), for no-limb darkening
    nor planet emission.
@@ -450,7 +423,7 @@ modulationm1(PREC_RES *tau,        /* Optical depth array              */
 }
 
 
-/* \fcnfh
+/* FUNCTION
    Wrapper function to calculate the modulation in/out-of-transit ratio.
    Return: modulation                                      */
 static PREC_RES
