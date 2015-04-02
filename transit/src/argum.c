@@ -116,7 +116,6 @@ processparameters(int argc,            /* Number of command-line args  */
     //CLA_GTIMEFCT,
     //CLA_GMASSRAD,
     //CLA_GMASSRADFCT,
-    CLA_OUTTAU,
     CLA_TOOMUCH,
     CLA_OUTTOOMUCH,
     CLA_OUTSAMPLE,
@@ -323,9 +322,6 @@ processparameters(int argc,            /* Number of command-line args  */
     {"toomuch",   CLA_TOOMUCH,  required_argument, "20", "optdepth",
      "If optical depth for a particular path is larger than optdepth, then do "
      "not proceed to lower radius."},
-    {"outtau",    CLA_OUTTAU,   required_argument, "0",  "#radius",
-     "Output is optical depth instead of modulation. It will be asked which "
-     "radius to plot."},
     {"taulevel",  CLA_TAULEVEL, required_argument, "1",  "integer",
      "Use constant (1) or variable (2) index of refraction for the transit "
      "ray path."},
@@ -488,13 +484,6 @@ processparameters(int argc,            /* Number of command-line args  */
     case CLA_GSURF:      /* Surface gravity                                 */
       hints->gsurf = atof(optarg);
       break;
-
-    case CLA_OUTTAU:
-      if(atoi(optarg))
-        hints->fl |= TRU_OUTTAU;
-      hints->ot = atoi(optarg) - 1;
-      break;
-    /* Interactive radius, wavelength, and wavenumber inputs: */
 
     case CLA_ALLOWQ:
       hints->allowrq = atof(optarg);

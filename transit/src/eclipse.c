@@ -157,52 +157,6 @@ eclipsetau(struct transit *tr,
 }
 
 
-/* ################################### 
-    GRID FOR INTENSITY CALCULATION
-   ################################### */
-
-/* \fcnfh
-   Allocates intensity grid. 2D array of angles and wn to pack intensities
-   Return: 0 on success  */
-
-/* DEF */
-int
-intens_grid(struct transit *tr){ 
-  struct transithint *th=tr->ds.th;  /* Transit hint structure              */
-  prop_samp *wn = &tr->wns;          /* Wavenumber sample                   */
-  long int wnn = wn->n;              /* Wavenumbers                         */
-  long int i;                        /* For counting angles                 */
-  int an = tr->ann;                  /* Number of angles                    */
-  static struct optdepth tau;        /* Optical depth                       */
-  static struct grid     intens;     /* Intensity grid                      */
-
-  /* Initialize new structures:                                             */
-  tr->ds.tau    = &tau;
-  tr->ds.intens = &intens;
-  memset(&intens, 0, sizeof(struct grid));
-
-  /* Set maximum optical depth:                                             */
-  if(th->toomuch > 0)
-    tau.toomuch = th->toomuch;
-
-  /* Allocate array with layer index where tau reaches toomuch:             */
-  tau.last = (long      *)calloc(wnn,            sizeof(long));
-  /* Allocate optical-depth array [rad][wn]:                                */
-  tau.t    = (PREC_RES **)calloc(wnn,            sizeof(PREC_RES *));
-  tau.t[0] = (PREC_RES  *)calloc(wnn*tr->rads.n, sizeof(PREC_RES  ));
-  for(i=1; i < wnn; i++)
-    tau.t[i] = tau.t[0] + i*tr->rads.n;
-
-  /* Allocate 2D array of intensities [angle][wn]:                         */
-  intens.a    = (PREC_RES **)calloc(an,     sizeof(PREC_RES *));
-  intens.a[0] = (PREC_RES  *)calloc(an*wnn, sizeof(PREC_RES  ));
-  for(i=1; i<an; i++)
-    intens.a[i] = intens.a[0] + i*wnn;
-
-  return 0;
-}
-
-
 /* ################################################# 
     CALCULATES EMERGENT INTENSITY FOR ONE WAVENUMBER
    ################################################# */

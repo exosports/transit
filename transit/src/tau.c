@@ -51,30 +51,60 @@ USA
 Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
-/*
-List of functions defined in tau.c:
------------------------------------
-int tau(struct transit *tr)
-int detailout(prop_samp *wn, prop_samp *rad, struct detailfld *det,
-              PREC_RES **arr, short flag)
-void printtoomuch(char *file, struct optdepth *tau, prop_samp *wn,
-                  prop_samp *rad)
-void printtau(struct transit *tr)
-int freemem_tau(struct optdepth *tau, long *pi)
-void outdebtauex(char *name, PREC_RES **e, prop_samp *ip, PREC_RES **t,
-                 long rn, long w)
-void outdebex(char *name, PREC_RES **e, PREC_RES *r, long rn, long wi, long wf)
-void outdebtau(char *name, prop_samp *ip, PREC_RES **t, long wi, long wf)
- */
-
 #include <transit.h>
 #include <extraext.h>
 
 #define CIA_DOFLOAT  2
 #define CIA_RADFIRST 1
 
-/* \fcnfh
-   Calculates optical depth as a function of radii for a spherically
+/* FUNCTION
+   Initialize the optical depth structure for transit or eclipse geometry   */
+int
+init_optdepth(struct transit *tr){
+  struct transithint *th=tr->ds.th;  /* Transit hint structure              */
+  long int nwn  = tr->wns.n;         /* Number of wavenumbers               */
+  long int i;                        /* For counting angles                 */
+  int an = tr->ann;                  /* Number of angles                    */
+  static struct optdepth tau;        /* Optical depth                       */
+  static struct grid intens;         /* Intensity grid                      */
+
+  long int nrad = tr->rads.n;  /* Number of layers                          */
+  if (strcmp(tr->sol->name, "transit") == 0)
+    nrad = tr->ips.n;          /* Number of impact parameter samples        */
+
+  /* Initialize tau (optical depth) structure:                              */
+  tr->ds.tau    = &tau;
+  /* Set maximum optical depth:                                             */
+  if(th->toomuch > 0)
+    tau.toomuch = th->toomuch;
+
+  /* Allocate array with layer index where tau reaches toomuch:             */
+  tau.last = (long      *)calloc(nwn,      sizeof(long));
+  /* Allocate optical-depth array [rad][wn]:                                */
+  tau.t    = (PREC_RES **)calloc(nwn,      sizeof(PREC_RES *));
+  tau.t[0] = (PREC_RES  *)calloc(nwn*nrad, sizeof(PREC_RES  ));
+  for(i=1; i<nwn; i++)
+    tau.t[i] = tau.t[0] + i*nrad;
+
+  /* Eclipse-only structures:                                               */
+  if (strcmp(tr->sol->name, "eclipse") == 0){
+    /* Initialize intensity grid structure:                                 */
+    tr->ds.intens = &intens;
+    memset(&intens, 0, sizeof(struct grid));
+
+    /* Allocate 2D array of intensities [angle][wn]:                        */
+    intens.a    = (PREC_RES **)calloc(an,     sizeof(PREC_RES *));
+    intens.a[0] = (PREC_RES  *)calloc(an*nwn, sizeof(PREC_RES  ));
+    for(i=1; i<an; i++)
+      intens.a[i] = intens.a[0] + i*nwn;
+  }
+
+  return 0;
+}
+
+
+/* FUNCTION
+   Calculate the optical depth as a function of radii for a spherically
    symmetric planet.
    Return: 0 on success                                                     */
 int
@@ -94,10 +124,11 @@ tau(struct transit *tr){
   long int rnn = rad->n;       /* Number of layers                          */
   double  rfct = rad->fct;     /* Radius array units factor                 */
 
+  /* Store the height of each layer (eclipse) or impact parameter (transit)
+     starting from the outermost layer:                                     */
   PREC_RES *h;
-  long int nh;
+  long int nh; /* Number of layers / impact-parameter samples               */
   double hfct;
-
   if (strcmp(tr->sol->name, "eclipse") == 0){
     h = (PREC_RES *)calloc(rnn, sizeof(PREC_RES)); /* Reversed radius array */
     for (ri=0; ri <rnn; ri++)
@@ -146,7 +177,7 @@ tau(struct transit *tr){
   i.e. TRU_EXTBITS is 1 for all the flag positions that are relevant
   for the extinction computation (only TRU_OUTTAU in that case);
   TRU_ATMBITS is 1 for all the flag positions that are relevant for
-  the atmospheric computation; and so  on...therefore the line 64
+  the atmospheric computation; and so  on...therefore the following line
   passes all the TAU relevant flags from the user hint to
   the main structure.  In particular, it only passes whether TRU_OUTTAU
   was 1 or 0 as specified by the user. */
@@ -154,9 +185,9 @@ tau(struct transit *tr){
 
   /* Set cloud structure:                                                   */
   static struct extcloud cl;
-  cl.maxe = th->cl.maxe; /* Maximum opacity                          */
-  cl.rini = th->cl.rini; /* Top layer radius                         */
-  cl.rfin = th->cl.rfin; /* Radius of maxe                           */
+  cl.maxe = th->cl.maxe; /* Maximum opacity                                 */
+  cl.rini = th->cl.rini; /* Top layer radius                                */
+  cl.rfin = th->cl.rfin; /* Radius of maxe                                  */
   if(th->cl.rfct == 0)
     cl.rfct = rad->fct;
   else
@@ -232,7 +263,7 @@ tau(struct transit *tr){
         }while(h[ri]*hfct < r[lastr]*rfct);
       }
       /* :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
-      /* Calculate the optical depth:                                       */
+      /* Calculate the optical depth (call to transittau or eclipsetau):    */
       tau_wn[ri] = rfct * fcn(tr, h[ri]*hfct/rfct, er);
 
       /* Check if the optical depth reached toomuch:                        */
@@ -281,90 +312,42 @@ tau(struct transit *tr){
 
   /* Set progress indicator and output tau if requested:                    */
   tr->pi |= TRPI_TAU;
-  if(tr->fl & TRU_OUTTAU)
-    printtau(tr);
   return 0;
 }
 
 
-/* Initialize the optical depth structure (regardless of transit or
-   eclipse) geometry                                                        */
-int
-init_optdepth(struct transit *tr){
-  struct transithint *th=tr->ds.th;  /* Transit hint structure              */
-  long int nwn  = tr->wns.n;         /* Number of wavenumbers               */
-  long int i;                        /* For counting angles                 */
-  int an = tr->ann;                  /* Number of angles                    */
-  static struct optdepth tau;        /* Optical depth                       */
-  static struct grid     intens;     /* Intensity grid                      */
-
-  long int nrad = tr->rads.n;  /* Number of layers                          */
-  if (strcmp(tr->sol->name, "transit") == 0)
-    nrad = tr->ips.n;          /* Number of impact parameter samples        */
-
-  /* Initialize tau (optical depth) structure:                              */
-  tr->ds.tau    = &tau;
-  /* Set maximum optical depth:                                             */
-  if(th->toomuch > 0)
-    tau.toomuch = th->toomuch;
-
-  /* Allocate array with layer index where tau reaches toomuch:             */
-  tau.last = (long      *)calloc(nwn,      sizeof(long));
-  /* Allocate optical-depth array [rad][wn]:                                */
-  tau.t    = (PREC_RES **)calloc(nwn,      sizeof(PREC_RES *));
-  tau.t[0] = (PREC_RES  *)calloc(nwn*nrad, sizeof(PREC_RES  ));
-  for(i=1; i<nwn; i++)
-    tau.t[i] = tau.t[0] + i*nrad;
-
-  /* Eclipse-only structures:                                               */
-  if (strcmp(tr->sol->name, "eclipse") == 0){
-    /* Initialize intensity grid structure:                                 */
-    tr->ds.intens = &intens;
-    memset(&intens, 0, sizeof(struct grid));
-
-    /* Allocate 2D array of intensities [angle][wn]:                        */
-    intens.a    = (PREC_RES **)calloc(an,     sizeof(PREC_RES *));
-    intens.a[0] = (PREC_RES  *)calloc(an*nwn, sizeof(PREC_RES  ));
-    for(i=1; i<an; i++)
-      intens.a[i] = intens.a[0] + i*nwn;
-  }
-
-  return 0;
-}
-
-
-/* \fcnfh
+/* FUNCTION
    Print to file the optical depth, cia, or extinction at the requested
    wavenumbers
-
-   Return: 0 on success                  */
+   Return: 0 on success                                                     */
 int
-detailout(prop_samp *wn,         /* transit's wavenumber array */
-          prop_samp *rad,        /* Radius array               */
-          struct detailfld *det, /* Detail field struct        */
-          PREC_RES **arr,        /* Array of values to store   */
-          short flag){           /* Flags                      */
-  long i,       /* Auxiliary for-loop index */
-       u, d, m; /* Auxiliary binary search indices */
+detailout(prop_samp *wn,         /* transit's wavenumber array              */
+          prop_samp *rad,        /* Radius array                            */
+          struct detailfld *det, /* Detail field struct                     */
+          PREC_RES **arr,        /* Array of values to store                */
+          short flag){           /* Flags                                   */
 
-  /* Handle flags: */
-  _Bool radfirst = (_Bool)(flag & CIA_RADFIRST); /* rad index is first in arr */
-  _Bool dofloat  = (_Bool)(flag & CIA_DOFLOAT);  /* Print as float value      */
+  long i,        /* Auxiliary for-loop index                                */
+       u, d, m;  /* Auxiliary binary search indices                         */
 
-  long idx[det->n]; /* Wavenumber indices */
+  /* The radius index is first in array:                                    */
+  _Bool radfirst = (_Bool)(flag & CIA_RADFIRST);
+  /* Print as float value:                                                  */
+  _Bool dofloat  = (_Bool)(flag & CIA_DOFLOAT);
+
+  long idx[det->n];  /* Wavenumber indices                                  */
   double val;
-  float **arrf = (float **)arr;      /* Float-casted array */
-  FILE *out = fopen(det->file, "w"); /* Pointer to file    */
+  float **arrf = (float **)arr;       /* Float-casted array                 */
+  FILE *out = fopen(det->file, "w");  /* Pointer to file                    */
   if(!out)
     transiterror(TERR_SERIOUS, "Cannot open '%s' for writing fine detail.\n",
                                det->file);
-
   transitprint(1, verblevel, "\nPrinting in '%s'. Fine detail of %s at "
                              "selected wavenumbers.\n", det->file, det->name);
 
   fprintf(out, "#Radius-w=>    ");
-  /* Binary search to find the index for the requested wavenumbers: */
-  for(i=0; i<det->n; i++){
+  /* Binary search to find the index for the requested wavenumbers:         */
+  for(i=0; i < det->n; i++){
     val = det->ref[i];
     u = wn->n-1;
     if(val == wn->v[u])
@@ -379,13 +362,13 @@ detailout(prop_samp *wn,         /* transit's wavenumber array */
           d = m;
       }
     }
-    idx[i] = d; /* Wavenumber index in transit array */
-    /* Print the wavenumber */
+    idx[i] = d; /* Wavenumber index in transit array                        */
+    /* Print the wavenumber:                                                */
     fprintf(out, "%-15.8g", wn->v[idx[i]]);
   }
   fprintf(out, "\n");
 
-  /* Print radii and value: */
+  /* Print radii and value:                                                 */
   if(radfirst){
     for(m=0; m<rad->n; m++){
       fprintf(out, "%-15.7g", rad->v[m]);
@@ -418,17 +401,17 @@ detailout(prop_samp *wn,         /* transit's wavenumber array */
 }
 
 
-/* \fcnfh
+/* FUNCTION
    Print (to file or stdout) the impact parameter where the optical depth
-   reached toomuch (for each wavenumber)  */
+   reached toomuch (for each wavenumber)                                    */
 void
-printtoomuch(char *file,           /* Filename to save the info */
-             struct optdepth *tau, /* Tau information           */
-             prop_samp *wn,        /* Wavenumber sampling       */
-             prop_samp *rad){      /* Radius sampling           */
+printtoomuch(char *file,            /* Filename to save the info            */
+             struct optdepth *tau,  /* Tau information                      */
+             prop_samp *wn,         /* Wavenumber sampling                  */
+             prop_samp *rad){       /* Radius sampling                      */
 
-  long w;             /* Auxiliary for-loop index for wavenumber */
-  FILE *out = stdout; /* File pointer */
+  long w;              /* Auxiliary for-loop index for wavenumber           */
+  FILE *out = stdout;  /* File pointer                                      */
 
   /* Open file if it was specified, default to stdout:                      */
   if(file[0] != '-')
@@ -450,77 +433,24 @@ printtoomuch(char *file,           /* Filename to save the info */
 }
 
 
-/* \fcnfh
-  Print (to file or stdout) the optical depth at an specified radius
-  (asked interactively).                                                    */
-void
-printtau(struct transit *tr){
-  int rn;
-  FILE *out = stdout;
-  prop_samp *rads  = &tr->ips;
-  PREC_RES **t     = tr->ds.tau->t;
-  long *last       = tr->ds.tau->last;
-  PREC_RES toomuch = tr->ds.tau->toomuch;
-  long rad;
-
-  transitcheckcalled(tr->pi, "printtau", 1, "tau", TRPI_TAU);
-  tr->ot = tr->ds.th->ot;
-
-  /* Open file if it was specified:                                         */
-  if(tr->f_out && tr->f_out[0] != '-')
-    out = fopen(tr->f_out, "w");
-  if(!out)
-    transiterror(TERR_WARNING, "Cannot open '%s' for writing optical depth.\n",
-                               out==stdout?"STDOUT":tr->f_out);
-
-  /* FINDME: This makes no sense.                                           */
-  if(tr->ot < 0){
-    rad = askforposl("Radius at which you want to print the optical "
-                     "depth (%li - %li): ", 1, rads->n) - 1;
-    if(rad > rads->n){
-      fprintf(stderr, "Value out of range, try again.\n");
-      printtau(tr);
-    }
-  }
-  else
-    rad = tr->ot;
-
-  transitprint(1, verblevel, "\nPrinting in '%s'.\nOptical depth for radius "
-               "%li (at %g cm)\n", tr->f_out? tr->f_out:"standard output",
-                rad+1, rads->fct*rads->v[rad]);
-
-  transitprint(2, verblevel, "Optical depth calculated up to %g cm-1.\n",
-                             toomuch);
-
-  /* Print the wavelength, and optical depth:                               */
-  fprintf(out, "#Wavelength [um]      Optical depth [cm-1]\n");
-  for(rn=0; rn < tr->wns.n; rn++)
-    fprintf(out, "%14.6f%17.7g\n", 1e4/(tr->wns.v[rn] * tr->wns.fct),
-                                   rad > last[rn]? toomuch:t[rn][rad]);
-
-  exit(EXIT_SUCCESS);
-}
-
-
-/* \fcnfh
+/* FUNCTION
    Free tau structure
-
-   Return: 0 on success */
+   Return: 0 on success                                                     */
 int
-freemem_tau(struct optdepth *tau, /* Optical depth structure */
-            long *pi){            /* Progress flag           */
-  /* Free arrays: */
+freemem_tau(struct optdepth *tau,  /* Optical depth structure               */
+            long *pi){             /* Progress flag                         */
+
+  /* Free arrays:                                                           */
   free(tau->t[0]);
   free(tau->t);
   free(tau->last);
 
-  /* Update progress indicator and return: */
+  /* Update progress indicator and return:                                  */
   *pi &= ~(TRPI_TAU);
   return 0;
-
 }
 
-
+/* FUNCTION                                                                 */
 void
 outdebtauex(char *name,
             PREC_RES **e,
@@ -538,40 +468,49 @@ outdebtauex(char *name,
 }
 
 
+/* FUNCTION
+   Print to file (name) the extinction coefficient as a function of radius
+   (up to layer index rn) for the specified wavenumber range (indices from
+    wi to wf).                                                              */
 void
-outdebex(char *name,
-         PREC_RES **e,
-         PREC_RES *r,
-         long rn,
-         long wi,
-         long wf){
-  FILE *fp = fopen(name, "w");
+outdebex(char *name,    /* File name to save values                         */
+         PREC_RES **e,  /* Extinction-coefficient array [nwn][nlayers]      */
+         PREC_RES *r,   /* Radius array [nlayers]                           */
+         long rn,       /* FINDME */
+         long wi,       /* Initial wavenumber index                         */
+         long wf){      /* Final wavenumber index                           */
 
-  long i, j;
-  for(j=0; j<rn; j++){
+  FILE *fp = fopen(name, "w");  /* File pointer                             */
+  long i, j;                    /* Auxiliary for-loop indices               */
+
+  for(j=0; j < rn; j++){   /* */
     fprintf(fp, "%-15.10g\t", r[j]);
-    for(i=wi; i<=wf; i++)
+    for(i=wi; i<=wf; i++)  /* */
       fprintf(fp, "%-15.10g\t", e[j][i]);
     fprintf(fp, "\n");
   }
   fclose(fp);
 }
-         
 
+
+/* FUNCTION
+   Print to file (name) the optical depth as function of impact parameter
+   for the specified wavenumber range (indices from wi to wf).              */
 void
-outdebtau(char *name,
-       prop_samp *ip,
-       PREC_RES **t,
-       long wi,
-       long wf){
-  FILE *fp = fopen(name, "w");
+outdebtau(char *name,  /* File name to save values                          */
+       prop_samp *ip,  /* Impact parameter sampling [nlayers]               */
+       PREC_RES **t,   /* Optical depth array  [nwn][nlayers]               */
+       long wi,        /* Initial wavenumber index                          */
+       long wf){       /* Final wavenumber index                            */
 
-  long i, j;
-  for(j=0; j<ip->n; j++){
+  FILE *fp = fopen(name, "w");  /* File pointer                             */
+  long i, j;                    /* Auxiliary for-loop indices               */
+
+  for(j=0; j < ip->n; j++){  /* Loop over the layers                        */
     fprintf(fp, "%-15.10g\t", ip->v[j]);
-    for(i=wi; i<=wf; i++)
+    for(i=wi; i <= wf; i++)  /* Loop over the wavenumbers                   */
       fprintf(fp, "%-15.10g\t", t[i][j]);
     fprintf(fp, "\n");
   }
-  fclose(fp);
+  fclose(fp);  /* Close pointer                                             */
 }
