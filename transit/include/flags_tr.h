@@ -101,8 +101,6 @@
                                       extinction in a per isotope array,
                                       all of them should be combined        */
 #define TRU_EXTBITS     0x00f00000 /* FINDME                                */
-
-#define TRU_OUTTAU      0x01000000 /* Print out optical depth               */
 #define TRU_TAUBITS     0x0f000000 /* FINDME                                */
 
 /* Progress indicator flags:  */
