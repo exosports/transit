@@ -63,7 +63,7 @@ Thank you for using transit!
 #include <transit.h>
 
 /* \fcnfh                                                                   */
-int main(int argc,      /* Number of variables                              */
+int mytest(int argc,      /* Number of variables                              */
          char **argv){  /* Variables                                        */
 
   /* Initialization of data structure's pointers. Note that s_lt is not

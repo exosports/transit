@@ -74,7 +74,7 @@ WARNFLAGS   = -Wall -Winline
 GSLPRM      = -D_USE_GSL
 GSLLIB      = -lgsl -lblas
 #-W -Werror
-INCLFLAGS   = -I/usr/X11R6/include -I/home/devel/include \
+INCLFLAGS   = -I/usr/X11R6/include -I/home/devel/include -I/usr/include/python2.7 \
 	      -I$(INCL) -I. $(INCLUDES)
 LIBFLAGS    = -L/usr/X11R6/lib -L/home/devel/lib
 CPROTOFLAGS = $(INCLFLAGS) $(GSLPRM) -f 3 -m -e -i -X 0
