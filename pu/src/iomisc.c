@@ -1166,6 +1166,10 @@ binsearchapprox(double *array, double value, int lo, int hi){
       return hi;
     return lo;
   }
+  if (hi-lo == 0){
+	  printf("The high and low values in binsearchapprox are the same, indicating an issue most likely with the config, please fix and rerun\n");
+	  exit(1);
+  }
   /* Compare to middle point and search in corresponding sub-array:         */
   else if (array[(hi+lo)/2] > value)
     return binsearchapprox(array, value, lo, (hi+lo)/2);

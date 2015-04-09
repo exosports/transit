@@ -69,6 +69,23 @@ src/transit_wrap.o src/transit_wrap.o.d: src/transit_wrap.c /usr/include/stdc-pr
  /usr/include/python2.7/eval.h /usr/include/python2.7/pyctype.h \
  /usr/include/python2.7/pystrtod.h /usr/include/python2.7/pystrcmp.h \
  /usr/include/python2.7/dtoa.h /usr/include/python2.7/pyfpe.h \
+ /usr/include/python2.7/numpy/arrayobject.h \
+ /usr/include/python2.7/numpy/ndarrayobject.h \
+ /usr/include/python2.7/numpy/ndarraytypes.h \
+ /usr/include/python2.7/numpy/npy_common.h \
+ /usr/include/python2.7/numpy/numpyconfig.h \
+ /usr/include/python2.7/numpy/_numpyconfig.h \
+ /usr/include/python2.7/numpy/npy_endian.h \
+ /usr/include/python2.7/numpy/npy_cpu.h \
+ /usr/include/python2.7/numpy/utils.h \
+ /usr/include/python2.7/numpy/_neighborhood_iterator_imp.h \
+ /usr/include/python2.7/numpy/__multiarray_api.h \
+ /usr/include/python2.7/numpy/npy_interrupt.h /usr/include/setjmp.h \
+ /usr/include/bits/setjmp.h /usr/include/signal.h \
+ /usr/include/bits/signum.h /usr/include/bits/siginfo.h \
+ /usr/include/bits/sigaction.h /usr/include/bits/sigcontext.h \
+ /usr/include/bits/sigstack.h /usr/include/sys/ucontext.h \
+ /usr/include/bits/sigthread.h \
  /usr/lib/gcc/x86_64-unknown-linux-gnu/4.9.2/include/float.h
 src/transit_wrap.c /usr/include/stdc-predef.h:
 /usr/include/python2.7/Python.h /usr/include/python2.7/patchlevel.h:
@@ -141,4 +158,21 @@ src/transit_wrap.c /usr/include/stdc-predef.h:
 /usr/include/python2.7/eval.h /usr/include/python2.7/pyctype.h:
 /usr/include/python2.7/pystrtod.h /usr/include/python2.7/pystrcmp.h:
 /usr/include/python2.7/dtoa.h /usr/include/python2.7/pyfpe.h:
+/usr/include/python2.7/numpy/arrayobject.h:
+/usr/include/python2.7/numpy/ndarrayobject.h:
+/usr/include/python2.7/numpy/ndarraytypes.h:
+/usr/include/python2.7/numpy/npy_common.h:
+/usr/include/python2.7/numpy/numpyconfig.h:
+/usr/include/python2.7/numpy/_numpyconfig.h:
+/usr/include/python2.7/numpy/npy_endian.h:
+/usr/include/python2.7/numpy/npy_cpu.h:
+/usr/include/python2.7/numpy/utils.h:
+/usr/include/python2.7/numpy/_neighborhood_iterator_imp.h:
+/usr/include/python2.7/numpy/__multiarray_api.h:
+/usr/include/python2.7/numpy/npy_interrupt.h /usr/include/setjmp.h:
+/usr/include/bits/setjmp.h /usr/include/signal.h:
+/usr/include/bits/signum.h /usr/include/bits/siginfo.h:
+/usr/include/bits/sigaction.h /usr/include/bits/sigcontext.h:
+/usr/include/bits/sigstack.h /usr/include/sys/ucontext.h:
+/usr/include/bits/sigthread.h:
 /usr/lib/gcc/x86_64-unknown-linux-gnu/4.9.2/include/float.h:

@@ -63,8 +63,8 @@ Thank you for using transit!
 #include <transit.h>
 
 /* \fcnfh                                                                   */
-int mytest(int argc,      /* Number of variables                              */
-         char **argv){  /* Variables                                        */
+void mytest(int argc,      /* Number of variables                              */
+         char **argv, double** veco, int* numb){  /* Variables                                        */
 
   /* Initialization of data structure's pointers. Note that s_lt is not
      assigned because the array that is going to point has not been
@@ -158,7 +158,7 @@ int mytest(int argc,      /* Number of variables                              */
 
   if (transit.opabreak){
     /* FINDME: Free memory                                                  */
-    return EXIT_SUCCESS;
+    //return EXIT_SUCCESS;
   }
 
   /* Compute sampling of impact parameter:                                  */
@@ -224,7 +224,9 @@ int mytest(int argc,      /* Number of variables                              */
     fw(modulation, !=0, &transit);
     t0 = timecheck(verblevel, itr, 13, "modulation", tv, t0);
   }
- 
+  *veco = transit.ds.out->o;
+  *numb = (int)transit.wns.n;
+
   /* Free no longer needed memory                                        */
   freemem_idexrefrac(transit.ds.ir,        &transit.pi);
   freemem_extinction(transit.ds.ex,        &transit.pi);
@@ -232,7 +234,7 @@ int mytest(int argc,      /* Number of variables                              */
 
   free(transit.save.ext);
   freemem_cia      (transit.ds.cia, &transit.pi);
-  freemem_outputray(transit.ds.out, &transit.pi);
+  //freemem_outputray(transit.ds.out, &transit.pi);
   t0 = timecheck(verblevel, itr, 14, "THE END", tv, t0);
   transitprint(1, verblevel, "----------------------------\n");
 
@@ -240,9 +242,9 @@ int mytest(int argc,      /* Number of variables                              */
   freemem_molecules(    transit.ds.mol, &transit.pi);
   freemem_atmosphere(   transit.ds.at,  &transit.pi);
   freemem_lineinfotrans(transit.ds.li,  &transit.pi);
-  freemem_transit(&transit);
+  //freemem_transit(&transit);
 
-  return EXIT_SUCCESS;
+  //return EXIT_SUCCESS;
 }
 
 

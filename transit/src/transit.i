@@ -1,8 +1,38 @@
 %module transit_module
 %{
 #define SWIG_FILE_WITH_INIT
-extern int mytest(int argc, char **argv);
+extern void mytest(int argc, char **argv, double** veco, int * numb);
 %}
+
+%include "numpy.i"
+
+%init %{
+        import_array();
+%}
+
+%apply (double** ARGOUTVIEWM_ARRAY1, int *DIM1) {(double** veco, int * numb)}
+/*%apply (double* ARGOUT_ARRAY1, int DIM1) {(double* veco, int numb)}*/
+
+/*%exception
+{
+     errno = 0;
+     $action
+ 
+     if (errno != 0)
+     {
+         switch(errno)
+         {
+             case ENOMEM:
+                 PyErr_Format(PyExc_MemoryError, "Failed malloc()");
+                 break;
+             default:
+                 PyErr_Format(PyExc_Exception, "Unknown exception");
+         }
+         SWIG_fail;
+     }
+}
+*/
+
 %typemap(in) char ** {
   /* Check if is a list */
   if (PyList_Check($input)) {
@@ -25,4 +55,4 @@ extern int mytest(int argc, char **argv);
   free((char *) $1);
 }
 #include "transit.h"
-extern int mytest(int argc, char **argv);
+extern void mytest(int argc, char **argv,double** veco,int *numb);

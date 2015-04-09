@@ -73,7 +73,7 @@ resample(const short getingx, /* Axis flag: 0:y, 1:x,  2:free arrays      */
          long ny,             /* Number of y axis to process              */ 
          ...){                /* Pairs of reference and output data
                                  y-axis (in that order)                   */
-  double *soutx;
+  static double *soutx;
   //'D' and 'h' will be used to store info for the spline function.
   //'x' is pointing to the array's x-axis array; it is assumed that that
   //won't change between calls to resamplex() and resampley().
@@ -193,7 +193,8 @@ resample(const short getingx, /* Axis flag: 0:y, 1:x,  2:free arrays      */
                       __FILE__, nout, ndat);
       return -2;
     }
-
+    /* this section reads the extra arguments from ... passed from
+     * resampley */
     va_start(ap, ny);
     while(ny--){
       y   = va_arg(ap, double *);
@@ -208,6 +209,7 @@ resample(const short getingx, /* Axis flag: 0:y, 1:x,  2:free arrays      */
       switch(flags&SAMP_BITS){
       /* Use spline interpolation:                                          */
       case SAMP_SPLINE:
+	      printf("starting spline\n");
         natcubspline(ndat, x, y, nout, indx, t, out, soutx);
         break;
       case SAMP_LINEAR:
@@ -316,8 +318,12 @@ natcubspline(int ndat,      /* Length of (x,y) array                        */
   gsl_interp_accel acc={0,0,0};
   gsl_interp *spl=gsl_interp_alloc(gsl_interp_cspline,ndat);
   gsl_interp_init(spl,x,y,ndat);
-  for(i=0;i<n;i++)
-    yout[i]=gsl_interp_eval(spl,x,y,xref[i],&acc);
+  printf("in spline\n");
+  for(i=0;i<n;i++){
+	  printf("itteration %li of %i\n",i,n);
+          yout[i]=gsl_interp_eval(spl,x,y,xref[i],&acc);
+          printf("end itteration\n");
+  }
   gsl_interp_free(spl);
 #else
 #error non equispaced integration is not working yet without GSL

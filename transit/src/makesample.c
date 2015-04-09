@@ -546,6 +546,7 @@ makeradsample(struct transit *tr){
                      atms->mm,    atmt->mm);
 
   /* Interpolate molecular density and abundance:                           */
+  transitprint(1,verblevel,"\nstepping makeradsample\n");
   for(i=0; i<nmol; i++)
     resampley(flag, 2, atms->molec[i].d, molec[i].d,
                        atms->molec[i].q, molec[i].q);

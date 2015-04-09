@@ -1,0 +1,4 @@
+import transit_module
+args = ["transit","-c","transit_demo.cfg"]
+out = transit_module.mytest(len(args),args)
+
