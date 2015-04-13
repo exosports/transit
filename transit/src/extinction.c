@@ -607,6 +607,10 @@ computemolext(struct transit *tr, /* transit struct                         */
   downsample(ktmp, kiso[r], dnwn, tr->owns.o/ofactor);
   /*test freeing the ktmp memory to prevent a leak */
   free(ktmp);
+  free(alphal);
+  free(alphad);
+  free(idop);
+  free(ilor);
   transitprint(9, verblevel, "Number of co-added lines:     %8li  (%5.2f%%)\n",
                              nadd,  nadd*100.0/nlines);
   transitprint(9, verblevel, "Number of skipped profiles:   %8li  (%5.2f%%)\n",
