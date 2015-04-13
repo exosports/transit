@@ -402,7 +402,8 @@ computemolext(struct transit *tr, /* transit struct                         */
    * faster */
   /*ktmp is also not being freed at all, so at the end of the function code
    * is being added to free up the memory */
-  double *ktmp = (double *)malloc(tr->owns.n, sizeof(double));
+  //double *ktmp = (double *)malloc(tr->owns.n*sizeof(double));
+  double *ktmp = (double *)calloc(tr->owns.n,sizeof(double));
   int ofactor;  /* Dynamic oversampling factor                              */
 
   long nadd  = 0, /* Number of co-added lines                               */

@@ -50,6 +50,23 @@
 #include <constants_tr.h>
 #include <types_tr.h>
 
+extern struct transit transit;
+extern long itr;
+extern struct timeval tv;
+extern double t0;
+extern int argc;
+extern char ** argv;
+extern int init_run;
+
+extern void transit_init(int argc, char **argv);
+extern int  get_no_samples(void);
+extern void get_waveno_arr(double * waveno_arr, int waveno);
+extern void run_transit(double * re_input, int transint, double *\
+		transit_out,int transit_out_size);
+
+
+
+
 /*****   Macros   *****/
 static __inline__ void
 printextprogress(long wi, long wnn){
