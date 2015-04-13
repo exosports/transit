@@ -1,0 +1,1903 @@
+desc: --stacks=yes
+cmd: python2 bart_python_script
+time_unit: i
+#-----------
+snapshot=0
+#-----------
+time=0
+mem_heap_B=0
+mem_heap_extra_B=0
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=1
+#-----------
+time=3534209031
+mem_heap_B=68777198
+mem_heap_extra_B=686970
+mem_stacks_B=3112
+heap_tree=empty
+#-----------
+snapshot=2
+#-----------
+time=8603014083
+mem_heap_B=70980914
+mem_heap_extra_B=687006
+mem_stacks_B=3112
+heap_tree=empty
+#-----------
+snapshot=3
+#-----------
+time=13421334140
+mem_heap_B=73999218
+mem_heap_extra_B=691086
+mem_stacks_B=2472
+heap_tree=empty
+#-----------
+snapshot=4
+#-----------
+time=17380469963
+mem_heap_B=76323534
+mem_heap_extra_B=687322
+mem_stacks_B=2424
+heap_tree=empty
+#-----------
+snapshot=5
+#-----------
+time=20537115244
+mem_heap_B=71109966
+mem_heap_extra_B=687106
+mem_stacks_B=2472
+heap_tree=empty
+#-----------
+snapshot=6
+#-----------
+time=25736664927
+mem_heap_B=84206250
+mem_heap_extra_B=687198
+mem_stacks_B=2472
+heap_tree=empty
+#-----------
+snapshot=7
+#-----------
+time=29114140618
+mem_heap_B=81187374
+mem_heap_extra_B=690842
+mem_stacks_B=3112
+heap_tree=empty
+#-----------
+snapshot=8
+#-----------
+time=32751420863
+mem_heap_B=83901514
+mem_heap_extra_B=695086
+mem_stacks_B=2424
+heap_tree=empty
+#-----------
+snapshot=9
+#-----------
+time=37157814203
+mem_heap_B=92542370
+mem_heap_extra_B=699582
+mem_stacks_B=1968
+heap_tree=detailed
+n7: 92542370 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n6: 72488479 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n1: 25314064 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 25314064 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 25314064 0x64E0A96: opacity (opacity.c:129)
+     n1: 25314064 0x64EDD68: transit_init (transit.c:125)
+      n1: 25314064 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 25314064 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 25314064 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 25314064 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 25314064 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 25314064 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 25314064 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 25314064 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 25314064 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 1195872 0x64E96DE: readdatarng (readlineinfo.c:620)
+   n1: 1195872 0x64E9DA9: readlineinfo (readlineinfo.c:727)
+    n1: 1195872 0x64EDBBB: transit_init (transit.c:114)
+     n1: 1195872 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 1195872 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 1195872 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 1195872 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 1195872 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 1195872 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 1195872 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 1195872 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 1195872 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 1195872 0x64E9701: readdatarng (readlineinfo.c:621)
+   n1: 1195872 0x64E9DA9: readlineinfo (readlineinfo.c:727)
+    n1: 1195872 0x64EDBBB: transit_init (transit.c:114)
+     n1: 1195872 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 1195872 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 1195872 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 1195872 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 1195872 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 1195872 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 1195872 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 1195872 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 1195872 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 1195872 0x64E9723: readdatarng (readlineinfo.c:622)
+   n1: 1195872 0x64E9DA9: readlineinfo (readlineinfo.c:727)
+    n1: 1195872 0x64EDBBB: transit_init (transit.c:114)
+     n1: 1195872 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 1195872 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 1195872 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 1195872 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 1195872 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 1195872 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 1195872 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 1195872 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 1195872 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 366783 in 51 places, all below massif's threshold (01.00%)
+ n3: 7806720 0x4EAE66D: dictresize (in /usr/lib/libpython2.7.so.1.0)
+  n0: 3727872 in 59 places, all below massif's threshold (01.00%)
+  n2: 3145728 0x4EBEE9F: PyString_InternInPlace (in /usr/lib/libpython2.7.so.1.0)
+   n2: 3145728 0x4EB0EC6: PyDict_SetItemString (in /usr/lib/libpython2.7.so.1.0)
+    n1: 3145728 0x12064904: ??? (in /usr/lib/python2.7/site-packages/sip.so)
+     n1: 3145728 0x12064BD5: ??? (in /usr/lib/python2.7/site-packages/sip.so)
+      n1: 3145728 0x12064FE6: ??? (in /usr/lib/python2.7/site-packages/sip.so)
+       n1: 3145728 0x4F0CC3B: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 3145728 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 3145728 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 3145728 0x4F20AC7: PyImport_ExecCodeModuleEx (in /usr/lib/libpython2.7.so.1.0)
+           n1: 3145728 0x4F20D41: load_source_module (in /usr/lib/libpython2.7.so.1.0)
+            n1: 3145728 0x4F219AF: import_submodule (in /usr/lib/libpython2.7.so.1.0)
+             n1: 3145728 0x4F21C2D: load_next (in /usr/lib/libpython2.7.so.1.0)
+              n1: 3145728 0x4F2260C: PyImport_ImportModuleLevel (in /usr/lib/libpython2.7.so.1.0)
+               n1: 3145728 0x4F07EA6: builtin___import__ (in /usr/lib/libpython2.7.so.1.0)
+                n1: 3145728 0x4E788C1: PyObject_Call (in /usr/lib/libpython2.7.so.1.0)
+                 n1: 3145728 0x4F09BB5: PyEval_CallObjectWithKeywords (in /usr/lib/libpython2.7.so.1.0)
+                  n1: 3145728 0x4F0CD76: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+                   n1: 3145728 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+                    n1: 3145728 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+                     n1: 3145728 0x4F20AC7: PyImport_ExecCodeModuleEx (in /usr/lib/libpython2.7.so.1.0)
+                      n1: 3145728 0x4F20D41: load_source_module (in /usr/lib/libpython2.7.so.1.0)
+                       n1: 3145728 0x4F219AF: import_submodule (in /usr/lib/libpython2.7.so.1.0)
+                        n1: 3145728 0x4F21C2D: load_next (in /usr/lib/libpython2.7.so.1.0)
+                         n1: 3145728 0x4F22646: PyImport_ImportModuleLevel (in /usr/lib/libpython2.7.so.1.0)
+                          n1: 3145728 0x4F07EA6: builtin___import__ (in /usr/lib/libpython2.7.so.1.0)
+                           n1: 3145728 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+                            n1: 3145728 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+                             n1: 3145728 0x4F0EFE2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+                              n0: 3145728 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+   n0: 0 in 2 places, all below massif's threshold (01.00%)
+  n1: 933120 0x4F0F549: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+   n1: 933120 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+    n0: 933120 in 2 places, all below massif's threshold (01.00%)
+ n2: 3068164 0x4EDB82F: _PyUnicode_New.part.8 (in /usr/lib/libpython2.7.so.1.0)
+  n2: 3064296 0x4EE0CE9: PyUnicodeUCS4_DecodeUTF8Stateful (in /usr/lib/libpython2.7.so.1.0)
+   n1: 2664520 0x4F24AFE: r_object (in /usr/lib/libpython2.7.so.1.0)
+    n1: 2664520 0x4F2450D: r_object (in /usr/lib/libpython2.7.so.1.0)
+     n2: 2664520 0x4F246F9: r_object (in /usr/lib/libpython2.7.so.1.0)
+      n1: 2528828 0x4F2450D: r_object (in /usr/lib/libpython2.7.so.1.0)
+       n2: 2528828 0x4F246F9: r_object (in /usr/lib/libpython2.7.so.1.0)
+        n1: 1604952 0x4F2450D: r_object (in /usr/lib/libpython2.7.so.1.0)
+         n2: 1604952 0x4F246F9: r_object (in /usr/lib/libpython2.7.so.1.0)
+          n1: 1575836 0x4F26526: PyMarshal_ReadObjectFromString (in /usr/lib/libpython2.7.so.1.0)
+           n1: 1575836 0x4F265E6: PyMarshal_ReadLastObjectFromFile (in /usr/lib/libpython2.7.so.1.0)
+            n1: 1575836 0x4F1F3FF: read_compiled_module (in /usr/lib/libpython2.7.so.1.0)
+             n2: 1575836 0x4F20CF4: load_source_module (in /usr/lib/libpython2.7.so.1.0)
+              n2: 1572960 0x4F219AF: import_submodule (in /usr/lib/libpython2.7.so.1.0)
+               n2: 1569564 0x4F21C2D: load_next (in /usr/lib/libpython2.7.so.1.0)
+                n1: 1259748 0x4F22646: PyImport_ImportModuleLevel (in /usr/lib/libpython2.7.so.1.0)
+                 n1: 1259748 0x4F07EA6: builtin___import__ (in /usr/lib/libpython2.7.so.1.0)
+                  n1: 1259748 0x4E788C1: PyObject_Call (in /usr/lib/libpython2.7.so.1.0)
+                   n1: 1259748 0x4F09BB5: PyEval_CallObjectWithKeywords (in /usr/lib/libpython2.7.so.1.0)
+                    n1: 1259748 0x4F0CD76: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+                     n1: 1259748 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+                      n1: 1259748 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+                       n1: 1259748 0x4F20AC7: PyImport_ExecCodeModuleEx (in /usr/lib/libpython2.7.so.1.0)
+                        n2: 1259748 0x4F20D41: load_source_module (in /usr/lib/libpython2.7.so.1.0)
+                         n1: 1257180 0x4F219AF: import_submodule (in /usr/lib/libpython2.7.so.1.0)
+                          n1: 1257180 0x4F21C2D: load_next (in /usr/lib/libpython2.7.so.1.0)
+                           n0: 1257180 in 2 places, all below massif's threshold (01.00%)
+                         n0: 2568 in 1 place, below massif's threshold (01.00%)
+                n0: 309816 in 1 place, below massif's threshold (01.00%)
+               n0: 3396 in 1 place, below massif's threshold (01.00%)
+              n0: 2876 in 1 place, below massif's threshold (01.00%)
+          n0: 29116 in 1 place, below massif's threshold (01.00%)
+        n0: 923876 in 1 place, below massif's threshold (01.00%)
+      n0: 135692 in 1 place, below massif's threshold (01.00%)
+   n0: 399776 in 1 place, below massif's threshold (01.00%)
+  n0: 3868 in 3 places, all below massif's threshold (01.00%)
+ n2: 2456543 0x4EBEF68: PyString_FromStringAndSize (in /usr/lib/libpython2.7.so.1.0)
+  n2: 2290119 0x4F24186: r_object (in /usr/lib/libpython2.7.so.1.0)
+   n2: 1875494 0x4F2450D: r_object (in /usr/lib/libpython2.7.so.1.0)
+    n2: 1875494 0x4F246F9: r_object (in /usr/lib/libpython2.7.so.1.0)
+     n1: 1624822 0x4F2450D: r_object (in /usr/lib/libpython2.7.so.1.0)
+      n2: 1624822 0x4F246F9: r_object (in /usr/lib/libpython2.7.so.1.0)
+       n1: 1416788 0x4F26526: PyMarshal_ReadObjectFromString (in /usr/lib/libpython2.7.so.1.0)
+        n1: 1416788 0x4F265E6: PyMarshal_ReadLastObjectFromFile (in /usr/lib/libpython2.7.so.1.0)
+         n1: 1416788 0x4F1F3FF: read_compiled_module (in /usr/lib/libpython2.7.so.1.0)
+          n2: 1416788 0x4F20CF4: load_source_module (in /usr/lib/libpython2.7.so.1.0)
+           n2: 1416038 0x4F219AF: import_submodule (in /usr/lib/libpython2.7.so.1.0)
+            n2: 984675 0x4F21C2D: load_next (in /usr/lib/libpython2.7.so.1.0)
+             n1: 949844 0x4F2260C: PyImport_ImportModuleLevel (in /usr/lib/libpython2.7.so.1.0)
+              n1: 949844 0x4F07EA6: builtin___import__ (in /usr/lib/libpython2.7.so.1.0)
+               n1: 949844 0x4E788C1: PyObject_Call (in /usr/lib/libpython2.7.so.1.0)
+                n1: 949844 0x4F09BB5: PyEval_CallObjectWithKeywords (in /usr/lib/libpython2.7.so.1.0)
+                 n2: 949844 0x4F0CD76: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+                  n1: 948868 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+                   n1: 948868 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+                    n0: 948868 in 2 places, all below massif's threshold (01.00%)
+                  n0: 976 in 1 place, below massif's threshold (01.00%)
+             n0: 34831 in 1 place, below massif's threshold (01.00%)
+            n0: 431363 in 2 places, all below massif's threshold (01.00%)
+           n0: 750 in 1 place, below massif's threshold (01.00%)
+       n0: 208034 in 1 place, below massif's threshold (01.00%)
+     n0: 250672 in 2 places, all below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+   n0: 414625 in 2 places, all below massif's threshold (01.00%)
+  n0: 166424 in 10 places, all below massif's threshold (01.00%)
+ n3: 2365024 0x4ED9F7D: unicode_resize (in /usr/lib/libpython2.7.so.1.0)
+  n1: 1339176 0x4EE95D0: PyUnicodeUCS4_Format (in /usr/lib/libpython2.7.so.1.0)
+   n1: 1339176 0x4E747FC: binary_op1 (in /usr/lib/libpython2.7.so.1.0)
+    n1: 1339176 0x4E74C70: binary_op (in /usr/lib/libpython2.7.so.1.0)
+     n1: 1339176 0x4F0BA33: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+      n2: 1339176 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 1232740 0x4E9D52A: function_call (in /usr/lib/libpython2.7.so.1.0)
+        n1: 1232740 0x4E788C1: PyObject_Call (in /usr/lib/libpython2.7.so.1.0)
+         n1: 1232740 0x4E877AB: instancemethod_call (in /usr/lib/libpython2.7.so.1.0)
+          n1: 1232740 0x4E788C1: PyObject_Call (in /usr/lib/libpython2.7.so.1.0)
+           n1: 1232740 0x4ECF095: slot_tp_call (in /usr/lib/libpython2.7.so.1.0)
+            n1: 1232740 0x4E788C1: PyObject_Call (in /usr/lib/libpython2.7.so.1.0)
+             n1: 1232740 0x4F0DC1A: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+              n2: 1232740 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+               n1: 1217500 0x4F0EFE2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+                n2: 1217500 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+                 n1: 1010964 0x4F0EFE2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+                  n1: 1010964 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+                   n1: 1010964 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+                    n1: 1010964 0x4F20AC7: PyImport_ExecCodeModuleEx (in /usr/lib/libpython2.7.so.1.0)
+                     n1: 1010964 0x4F20D41: load_source_module (in /usr/lib/libpython2.7.so.1.0)
+                      n1: 1010964 0x4F219AF: import_submodule (in /usr/lib/libpython2.7.so.1.0)
+                       n1: 1010964 0x4F21C2D: load_next (in /usr/lib/libpython2.7.so.1.0)
+                        n0: 1010964 in 2 places, all below massif's threshold (01.00%)
+                 n0: 206536 in 1 place, below massif's threshold (01.00%)
+               n0: 15240 in 1 place, below massif's threshold (01.00%)
+       n0: 106436 in 2 places, all below massif's threshold (01.00%)
+  n2: 1021728 0x4EE8012: PyUnicodeUCS4_Join (in /usr/lib/libpython2.7.so.1.0)
+   n1: 1021728 0x4F0F741: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+    n1: 1021728 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+     n0: 1021728 in 2 places, all below massif's threshold (01.00%)
+   n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 4120 in 4 places, all below massif's threshold (01.00%)
+ n0: 2297056 in 290 places, all below massif's threshold (01.00%)
+ n2: 2060384 0x4F3F147: _PyObject_GC_Malloc (in /usr/lib/libpython2.7.so.1.0)
+  n1: 1951736 0x4EC946A: PyType_GenericAlloc (in /usr/lib/libpython2.7.so.1.0)
+   n0: 1951736 in 5 places, all below massif's threshold (01.00%)
+  n0: 108648 in 1 place, below massif's threshold (01.00%)
+#-----------
+snapshot=10
+#-----------
+time=40961933548
+mem_heap_B=100398726
+mem_heap_extra_B=701050
+mem_stacks_B=2472
+heap_tree=empty
+#-----------
+snapshot=11
+#-----------
+time=45832839246
+mem_heap_B=110585014
+mem_heap_extra_B=702522
+mem_stacks_B=3104
+heap_tree=empty
+#-----------
+snapshot=12
+#-----------
+time=50882754205
+mem_heap_B=251788542
+mem_heap_extra_B=725978
+mem_stacks_B=4944
+heap_tree=detailed
+n4: 251788542 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 231601439 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 129600024 0x64DAE44: computemolext (extinction.c:401)
+   n1: 86400016 0x64EC779: tau (tau.c:256)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10142779 in 92 places, all below massif's threshold (01.00%)
+ n0: 9312219 in 294 places, all below massif's threshold (01.00%)
+ n2: 7806720 0x4EAE66D: dictresize (in /usr/lib/libpython2.7.so.1.0)
+  n0: 4660992 in 60 places, all below massif's threshold (01.00%)
+  n2: 3145728 0x4EBEE9F: PyString_InternInPlace (in /usr/lib/libpython2.7.so.1.0)
+   n2: 3145728 0x4EB0EC6: PyDict_SetItemString (in /usr/lib/libpython2.7.so.1.0)
+    n1: 3145728 0x12064904: ??? (in /usr/lib/python2.7/site-packages/sip.so)
+     n1: 3145728 0x12064BD5: ??? (in /usr/lib/python2.7/site-packages/sip.so)
+      n1: 3145728 0x12064FE6: ??? (in /usr/lib/python2.7/site-packages/sip.so)
+       n1: 3145728 0x4F0CC3B: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 3145728 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 3145728 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 3145728 0x4F20AC7: PyImport_ExecCodeModuleEx (in /usr/lib/libpython2.7.so.1.0)
+           n1: 3145728 0x4F20D41: load_source_module (in /usr/lib/libpython2.7.so.1.0)
+            n1: 3145728 0x4F219AF: import_submodule (in /usr/lib/libpython2.7.so.1.0)
+             n1: 3145728 0x4F21C2D: load_next (in /usr/lib/libpython2.7.so.1.0)
+              n1: 3145728 0x4F2260C: PyImport_ImportModuleLevel (in /usr/lib/libpython2.7.so.1.0)
+               n1: 3145728 0x4F07EA6: builtin___import__ (in /usr/lib/libpython2.7.so.1.0)
+                n1: 3145728 0x4E788C1: PyObject_Call (in /usr/lib/libpython2.7.so.1.0)
+                 n1: 3145728 0x4F09BB5: PyEval_CallObjectWithKeywords (in /usr/lib/libpython2.7.so.1.0)
+                  n1: 3145728 0x4F0CD76: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+                   n1: 3145728 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+                    n1: 3145728 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+                     n1: 3145728 0x4F20AC7: PyImport_ExecCodeModuleEx (in /usr/lib/libpython2.7.so.1.0)
+                      n1: 3145728 0x4F20D41: load_source_module (in /usr/lib/libpython2.7.so.1.0)
+                       n1: 3145728 0x4F219AF: import_submodule (in /usr/lib/libpython2.7.so.1.0)
+                        n1: 3145728 0x4F21C2D: load_next (in /usr/lib/libpython2.7.so.1.0)
+                         n1: 3145728 0x4F22646: PyImport_ImportModuleLevel (in /usr/lib/libpython2.7.so.1.0)
+                          n1: 3145728 0x4F07EA6: builtin___import__ (in /usr/lib/libpython2.7.so.1.0)
+                           n1: 3145728 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+                            n1: 3145728 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+                             n1: 3145728 0x4F0EFE2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+                              n0: 3145728 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+   n0: 0 in 2 places, all below massif's threshold (01.00%)
+ n2: 3068164 0x4EDB82F: _PyUnicode_New.part.8 (in /usr/lib/libpython2.7.so.1.0)
+  n2: 3064296 0x4EE0CE9: PyUnicodeUCS4_DecodeUTF8Stateful (in /usr/lib/libpython2.7.so.1.0)
+   n1: 2664520 0x4F24AFE: r_object (in /usr/lib/libpython2.7.so.1.0)
+    n1: 2664520 0x4F2450D: r_object (in /usr/lib/libpython2.7.so.1.0)
+     n2: 2664520 0x4F246F9: r_object (in /usr/lib/libpython2.7.so.1.0)
+      n1: 2528828 0x4F2450D: r_object (in /usr/lib/libpython2.7.so.1.0)
+       n1: 2528828 0x4F246F9: r_object (in /usr/lib/libpython2.7.so.1.0)
+        n0: 2528828 in 2 places, all below massif's threshold (01.00%)
+      n0: 135692 in 1 place, below massif's threshold (01.00%)
+   n0: 399776 in 1 place, below massif's threshold (01.00%)
+  n0: 3868 in 3 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=13
+#-----------
+time=54583621762
+mem_heap_B=381388950
+mem_heap_extra_B=727482
+mem_stacks_B=4808
+heap_tree=empty
+#-----------
+snapshot=14
+#-----------
+time=58681308883
+mem_heap_B=554189366
+mem_heap_extra_B=729402
+mem_stacks_B=4808
+heap_tree=empty
+#-----------
+snapshot=15
+#-----------
+time=63175758955
+mem_heap_B=770189790
+mem_heap_extra_B=731786
+mem_stacks_B=4944
+heap_tree=detailed
+n3: 770189790 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 750002687 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 648000120 0x64DAE44: computemolext (extinction.c:401)
+   n1: 604800112 0x64EC779: tau (tau.c:256)
+    n1: 604800112 0x64EE41B: do_transit (transit.c:204)
+     n1: 604800112 0x64EDFC8: run_transit (transit.c:160)
+      n1: 604800112 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 604800112 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 604800112 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 604800112 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 604800112 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 604800112 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 604800112 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 604800112 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 604800112 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10143931 in 92 places, all below massif's threshold (01.00%)
+ n0: 12380383 in 295 places, all below massif's threshold (01.00%)
+ n1: 7806720 0x4EAE66D: dictresize (in /usr/lib/libpython2.7.so.1.0)
+  n0: 7806720 in 61 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=16
+#-----------
+time=66876457005
+mem_heap_B=899790198
+mem_heap_extra_B=733274
+mem_stacks_B=4808
+heap_tree=empty
+#-----------
+snapshot=17
+#-----------
+time=70973863598
+mem_heap_B=1072590614
+mem_heap_extra_B=735194
+mem_stacks_B=5048
+heap_tree=empty
+#-----------
+snapshot=18
+#-----------
+time=73419518795
+mem_heap_B=1202190830
+mem_heap_extra_B=736602
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 1202190830 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 1182003727 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 1080000200 0x64DAE44: computemolext (extinction.c:401)
+   n1: 1036800192 0x64EC779: tau (tau.c:256)
+    n1: 1036800192 0x64EE41B: do_transit (transit.c:204)
+     n1: 1036800192 0x64EDFC8: run_transit (transit.c:160)
+      n1: 1036800192 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 1036800192 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 1036800192 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 1036800192 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 1036800192 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 1036800192 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 1036800192 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 1036800192 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 1036800192 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10144891 in 92 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=19
+#-----------
+time=77517338186
+mem_heap_B=1374991246
+mem_heap_extra_B=738522
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 1374991246 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 1354804143 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 1252800232 0x64DAE44: computemolext (extinction.c:401)
+   n1: 1209600224 0x64EC779: tau (tau.c:256)
+    n1: 1209600224 0x64EE41B: do_transit (transit.c:204)
+     n1: 1209600224 0x64EDFC8: run_transit (transit.c:160)
+      n1: 1209600224 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 1209600224 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 1209600224 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 1209600224 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 1209600224 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 1209600224 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 1209600224 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 1209600224 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 1209600224 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10145275 in 92 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=20
+#-----------
+time=81615099488
+mem_heap_B=1547791662
+mem_heap_extra_B=740442
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 1547791662 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 1527604559 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 1425600264 0x64DAE44: computemolext (extinction.c:401)
+   n1: 1382400256 0x64EC779: tau (tau.c:256)
+    n1: 1382400256 0x64EE41B: do_transit (transit.c:204)
+     n1: 1382400256 0x64EDFC8: run_transit (transit.c:160)
+      n1: 1382400256 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 1382400256 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 1382400256 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 1382400256 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 1382400256 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 1382400256 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 1382400256 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 1382400256 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 1382400256 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10145659 in 92 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=21
+#-----------
+time=84605075807
+mem_heap_B=1634191966
+mem_heap_extra_B=741434
+mem_stacks_B=4808
+heap_tree=empty
+#-----------
+snapshot=22
+#-----------
+time=88703171064
+mem_heap_B=1806992382
+mem_heap_extra_B=743354
+mem_stacks_B=4856
+heap_tree=empty
+#-----------
+snapshot=23
+#-----------
+time=92673289045
+mem_heap_B=2022992806
+mem_heap_extra_B=745722
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 2022992806 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 2002805703 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 1900800352 0x64DAE44: computemolext (extinction.c:401)
+   n1: 1857600344 0x64EC779: tau (tau.c:256)
+    n1: 1857600344 0x64EE41B: do_transit (transit.c:204)
+     n1: 1857600344 0x64EDFC8: run_transit (transit.c:160)
+      n1: 1857600344 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 1857600344 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 1857600344 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 1857600344 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 1857600344 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 1857600344 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 1857600344 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 1857600344 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 1857600344 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10146715 in 92 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=24
+#-----------
+time=99175515148
+mem_heap_B=2368593638
+mem_heap_extra_B=749562
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 2368593638 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 2348406535 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 2246400416 0x64DAE44: computemolext (extinction.c:401)
+   n1: 2203200408 0x64EC779: tau (tau.c:256)
+    n1: 2203200408 0x64EE41B: do_transit (transit.c:204)
+     n1: 2203200408 0x64EDFC8: run_transit (transit.c:160)
+      n1: 2203200408 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 2203200408 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 2203200408 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 2203200408 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 2203200408 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 2203200408 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 2203200408 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 2203200408 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 2203200408 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10147483 in 92 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=25
+#-----------
+time=102434122803
+mem_heap_B=2541394054
+mem_heap_extra_B=751498
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 2541394054 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 2521206951 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 2419200448 0x64DAE44: computemolext (extinction.c:401)
+   n1: 2376000440 0x64EC779: tau (tau.c:256)
+    n1: 2376000440 0x64EE41B: do_transit (transit.c:204)
+     n1: 2376000440 0x64EDFC8: run_transit (transit.c:160)
+      n1: 2376000440 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 2376000440 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 2376000440 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 2376000440 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 2376000440 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 2376000440 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 2376000440 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 2376000440 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 2376000440 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10147867 in 92 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=26
+#-----------
+time=105704807933
+mem_heap_B=2714194470
+mem_heap_extra_B=753418
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 2714194470 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 2694007367 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 2592000480 0x64DAE44: computemolext (extinction.c:401)
+   n1: 2548800472 0x64EC779: tau (tau.c:256)
+    n1: 2548800472 0x64EE41B: do_transit (transit.c:204)
+     n1: 2548800472 0x64EDFC8: run_transit (transit.c:160)
+      n1: 2548800472 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 2548800472 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 2548800472 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 2548800472 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 2548800472 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 2548800472 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 2548800472 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 2548800472 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 2548800472 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10148251 in 92 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=27
+#-----------
+time=111453675783
+mem_heap_B=3059795302
+mem_heap_extra_B=757258
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 3059795302 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 3039608199 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 2937600544 0x64DAE44: computemolext (extinction.c:401)
+   n1: 2894400536 0x64EC779: tau (tau.c:256)
+    n1: 2894400536 0x64EE41B: do_transit (transit.c:204)
+     n1: 2894400536 0x64EDFC8: run_transit (transit.c:160)
+      n1: 2894400536 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 2894400536 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 2894400536 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 2894400536 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 2894400536 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 2894400536 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 2894400536 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 2894400536 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 2894400536 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10149019 in 92 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=28
+#-----------
+time=115647509230
+mem_heap_B=3362196030
+mem_heap_extra_B=760618
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 3362196030 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 3342008927 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 3240000600 0x64DAE44: computemolext (extinction.c:401)
+   n1: 3196800592 0x64EC779: tau (tau.c:256)
+    n1: 3196800592 0x64EE41B: do_transit (transit.c:204)
+     n1: 3196800592 0x64EDFC8: run_transit (transit.c:160)
+      n1: 3196800592 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 3196800592 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 3196800592 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 3196800592 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 3196800592 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 3196800592 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 3196800592 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 3196800592 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 3196800592 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10149691 in 92 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=29
+#-----------
+time=121487998899
+mem_heap_B=3794197070
+mem_heap_extra_B=765418
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 3794197070 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 3774009967 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 3672000680 0x64DAE44: computemolext (extinction.c:401)
+   n1: 3628800672 0x64EC779: tau (tau.c:256)
+    n1: 3628800672 0x64EE41B: do_transit (transit.c:204)
+     n1: 3628800672 0x64EDFC8: run_transit (transit.c:160)
+      n1: 3628800672 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 3628800672 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 3628800672 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 3628800672 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 3628800672 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 3628800672 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 3628800672 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 3628800672 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 3628800672 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10150651 in 92 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=30
+#-----------
+time=125287327993
+mem_heap_B=4053397694
+mem_heap_extra_B=768298
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 4053397694 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 4033210591 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 3931200728 0x64DAE44: computemolext (extinction.c:401)
+   n1: 3888000720 0x64EC779: tau (tau.c:256)
+    n1: 3888000720 0x64EE41B: do_transit (transit.c:204)
+     n1: 3888000720 0x64EDFC8: run_transit (transit.c:160)
+      n1: 3888000720 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 3888000720 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 3888000720 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 3888000720 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 3888000720 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 3888000720 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 3888000720 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 3888000720 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 3888000720 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 43200008 0x64EC2D4: tau (tau.c:210)
+    n1: 43200008 0x64EE41B: do_transit (transit.c:204)
+     n1: 43200008 0x64EDFC8: run_transit (transit.c:160)
+      n1: 43200008 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10151227 in 92 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=31
+#-----------
+time=127994742820
+mem_heap_B=4139797998
+mem_heap_extra_B=769290
+mem_stacks_B=5296
+heap_tree=empty
+#-----------
+snapshot=32
+#-----------
+time=131891829754
+mem_heap_B=4139800398
+mem_heap_extra_B=769314
+mem_stacks_B=5088
+heap_tree=empty
+#-----------
+snapshot=33
+#-----------
+time=136605531375
+mem_heap_B=4226202110
+mem_heap_extra_B=770258
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 4226202110 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n4: 4206015007 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 4104000760 0x64DAE44: computemolext (extinction.c:401)
+   n1: 4017600744 0x64EC779: tau (tau.c:256)
+    n1: 4017600744 0x64EE41B: do_transit (transit.c:204)
+     n1: 4017600744 0x64EDFC8: run_transit (transit.c:160)
+      n1: 4017600744 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 4017600744 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 4017600744 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 4017600744 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 4017600744 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 4017600744 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 4017600744 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 4017600744 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 4017600744 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n2: 43220016 0x64DD9DE: makesample1 (makesample.c:150)
+   n1: 43200008 0x64DE9D7: makewnsample (makesample.c:422)
+    n1: 43200008 0x64EDA0E: transit_init (transit.c:101)
+     n1: 43200008 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+      n1: 43200008 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+       n1: 43200008 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 43200008 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+         n1: 43200008 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+          n1: 43200008 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+           n1: 43200008 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 43200008 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+             n0: 43200008 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n0: 20008 in 1 place, below massif's threshold (01.00%)
+  n0: 10155611 in 94 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=34
+#-----------
+time=141727638636
+mem_heap_B=4442202630
+mem_heap_extra_B=772658
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 4442202630 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n3: 4422015527 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 4320000800 0x64DAE44: computemolext (extinction.c:401)
+   n1: 4233600784 0x64EC779: tau (tau.c:256)
+    n1: 4233600784 0x64EE41B: do_transit (transit.c:204)
+     n1: 4233600784 0x64EDFC8: run_transit (transit.c:160)
+      n1: 4233600784 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 4233600784 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 4233600784 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 4233600784 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 4233600784 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 4233600784 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 4233600784 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 4233600784 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 4233600784 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 53376107 in 95 places, all below massif's threshold (01.00%)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=35
+#-----------
+time=145075513063
+mem_heap_B=4571803038
+mem_heap_extra_B=774130
+mem_stacks_B=4808
+heap_tree=empty
+#-----------
+snapshot=36
+#-----------
+time=149922957454
+mem_heap_B=4787803462
+mem_heap_extra_B=776498
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 4787803462 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n3: 4767616359 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 4665600864 0x64DAE44: computemolext (extinction.c:401)
+   n1: 4579200848 0x64EC779: tau (tau.c:256)
+    n1: 4579200848 0x64EE41B: do_transit (transit.c:204)
+     n1: 4579200848 0x64EDFC8: run_transit (transit.c:160)
+      n1: 4579200848 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 4579200848 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 4579200848 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 4579200848 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 4579200848 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 4579200848 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 4579200848 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 4579200848 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 4579200848 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 53376875 in 95 places, all below massif's threshold (01.00%)
+  n1: 48638620 0x64DA0E8: getprofile (extinction.c:93)
+   n1: 48638620 0x64E0FC4: calcopacity (opacity.c:199)
+    n1: 48638620 0x64E0A96: opacity (opacity.c:129)
+     n1: 48638620 0x64EDD68: transit_init (transit.c:125)
+      n1: 48638620 0x64F37B7: _wrap_transit_init (transit_wrap.c:3607)
+       n1: 48638620 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 48638620 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 48638620 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 48638620 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 48638620 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 48638620 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 48638620 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 48638620 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=37
+#-----------
+time=154020419276
+mem_heap_B=4960603878
+mem_heap_extra_B=778418
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 4960603878 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 4940416775 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 4838400896 0x64DAE44: computemolext (extinction.c:401)
+   n1: 4752000880 0x64EC779: tau (tau.c:256)
+    n1: 4752000880 0x64EE41B: do_transit (transit.c:204)
+     n1: 4752000880 0x64EDFC8: run_transit (transit.c:160)
+      n1: 4752000880 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 4752000880 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 4752000880 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 4752000880 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 4752000880 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 4752000880 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 4752000880 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 4752000880 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 4752000880 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 102015879 in 96 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=38
+#-----------
+time=157986473042
+mem_heap_B=5090204286
+mem_heap_extra_B=779890
+mem_stacks_B=4808
+heap_tree=empty
+#-----------
+snapshot=39
+#-----------
+time=162084066574
+mem_heap_B=5263004702
+mem_heap_extra_B=781810
+mem_stacks_B=4808
+heap_tree=empty
+#-----------
+snapshot=40
+#-----------
+time=166313406673
+mem_heap_B=5479005126
+mem_heap_extra_B=784178
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 5479005126 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 5458818023 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 5356800992 0x64DAE44: computemolext (extinction.c:401)
+   n1: 5270400976 0x64EC779: tau (tau.c:256)
+    n1: 5270400976 0x64EE41B: do_transit (transit.c:204)
+     n1: 5270400976 0x64EDFC8: run_transit (transit.c:160)
+      n1: 5270400976 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 5270400976 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 5270400976 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 5270400976 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 5270400976 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 5270400976 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 5270400976 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 5270400976 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 5270400976 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 102017031 in 96 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=41
+#-----------
+time=170279648978
+mem_heap_B=5608605534
+mem_heap_extra_B=785650
+mem_stacks_B=4808
+heap_tree=empty
+#-----------
+snapshot=42
+#-----------
+time=174377626778
+mem_heap_B=5781405950
+mem_heap_extra_B=787570
+mem_stacks_B=4808
+heap_tree=empty
+#-----------
+snapshot=43
+#-----------
+time=180232777925
+mem_heap_B=6083806582
+mem_heap_extra_B=790898
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 6083806582 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 6063619479 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 5961601104 0x64DAE44: computemolext (extinction.c:401)
+   n1: 5875201088 0x64EC779: tau (tau.c:256)
+    n1: 5875201088 0x64EE41B: do_transit (transit.c:204)
+     n1: 5875201088 0x64EDFC8: run_transit (transit.c:160)
+      n1: 5875201088 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 5875201088 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 5875201088 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 5875201088 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 5875201088 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 5875201088 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 5875201088 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 5875201088 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 5875201088 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 102018375 in 96 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=44
+#-----------
+time=186736643766
+mem_heap_B=6429407414
+mem_heap_extra_B=794738
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 6429407414 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 6409220311 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 6307201168 0x64DAE44: computemolext (extinction.c:401)
+   n1: 6220801152 0x64EC779: tau (tau.c:256)
+    n1: 6220801152 0x64EE41B: do_transit (transit.c:204)
+     n1: 6220801152 0x64EDFC8: run_transit (transit.c:160)
+      n1: 6220801152 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 6220801152 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 6220801152 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 6220801152 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 6220801152 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 6220801152 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 6220801152 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 6220801152 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 6220801152 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 102019143 in 96 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=45
+#-----------
+time=189997501246
+mem_heap_B=6602207830
+mem_heap_extra_B=796658
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 6602207830 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 6582020727 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 6480001200 0x64DAE44: computemolext (extinction.c:401)
+   n1: 6393601184 0x64EC779: tau (tau.c:256)
+    n1: 6393601184 0x64EE41B: do_transit (transit.c:204)
+     n1: 6393601184 0x64EDFC8: run_transit (transit.c:160)
+      n1: 6393601184 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 6393601184 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 6393601184 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 6393601184 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 6393601184 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 6393601184 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 6393601184 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 6393601184 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 6393601184 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 102019527 in 96 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=46
+#-----------
+time=196293246407
+mem_heap_B=6947808662
+mem_heap_extra_B=800498
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 6947808662 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 6927621559 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 6825601264 0x64DAE44: computemolext (extinction.c:401)
+   n1: 6739201248 0x64EC779: tau (tau.c:256)
+    n1: 6739201248 0x64EE41B: do_transit (transit.c:204)
+     n1: 6739201248 0x64EDFC8: run_transit (transit.c:160)
+      n1: 6739201248 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 6739201248 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 6739201248 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 6739201248 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 6739201248 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 6739201248 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 6739201248 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 6739201248 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 6739201248 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 102020295 in 96 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=47
+#-----------
+time=201221395257
+mem_heap_B=7293409494
+mem_heap_extra_B=804338
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 7293409494 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 7273222391 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 7171201328 0x64DAE44: computemolext (extinction.c:401)
+   n1: 7084801312 0x64EC779: tau (tau.c:256)
+    n1: 7084801312 0x64EE41B: do_transit (transit.c:204)
+     n1: 7084801312 0x64EDFC8: run_transit (transit.c:160)
+      n1: 7084801312 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 7084801312 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 7084801312 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 7084801312 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 7084801312 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 7084801312 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 7084801312 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 7084801312 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 7084801312 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 102021063 in 96 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=48
+#-----------
+time=204656725229
+mem_heap_B=7552610118
+mem_heap_extra_B=807218
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 7552610118 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 7532423015 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 7430401376 0x64DAE44: computemolext (extinction.c:401)
+   n1: 7344001360 0x64EC779: tau (tau.c:256)
+    n1: 7344001360 0x64EE41B: do_transit (transit.c:204)
+     n1: 7344001360 0x64EDFC8: run_transit (transit.c:160)
+      n1: 7344001360 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 7344001360 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 7344001360 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 7344001360 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 7344001360 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 7344001360 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 7344001360 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 7344001360 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 7344001360 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 102021639 in 96 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=49
+#-----------
+time=209434451877
+mem_heap_B=7898210950
+mem_heap_extra_B=811058
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 7898210950 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 7878023847 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 7776001440 0x64DAE44: computemolext (extinction.c:401)
+   n1: 7689601424 0x64EC779: tau (tau.c:256)
+    n1: 7689601424 0x64EE41B: do_transit (transit.c:204)
+     n1: 7689601424 0x64EDFC8: run_transit (transit.c:160)
+      n1: 7689601424 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 7689601424 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 7689601424 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 7689601424 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 7689601424 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 7689601424 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 7689601424 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 7689601424 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 7689601424 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 102022407 in 96 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=50
+#-----------
+time=210507691311
+mem_heap_B=7984611158
+mem_heap_extra_B=812018
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 7984611158 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 7964424055 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 7862401456 0x64DAE44: computemolext (extinction.c:401)
+   n1: 7776001440 0x64EC779: tau (tau.c:256)
+    n1: 7776001440 0x64EE41B: do_transit (transit.c:204)
+     n1: 7776001440 0x64EDFC8: run_transit (transit.c:160)
+      n1: 7776001440 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 7776001440 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 7776001440 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 7776001440 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 7776001440 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 7776001440 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 7776001440 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 7776001440 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 7776001440 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 102022599 in 96 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=51
+#-----------
+time=212034526492
+mem_heap_B=8071011366
+mem_heap_extra_B=812978
+mem_stacks_B=4944
+heap_tree=detailed
+n2: 8071011366 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 8050824263 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 7948801472 0x64DAE44: computemolext (extinction.c:401)
+   n1: 7862401456 0x64EC779: tau (tau.c:256)
+    n1: 7862401456 0x64EE41B: do_transit (transit.c:204)
+     n1: 7862401456 0x64EDFC8: run_transit (transit.c:160)
+      n1: 7862401456 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 7862401456 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 7862401456 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 7862401456 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 7862401456 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 7862401456 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 7862401456 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 7862401456 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 7862401456 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 102022791 in 96 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=52
+#-----------
+time=213442911263
+mem_heap_B=8157411574
+mem_heap_extra_B=813938
+mem_stacks_B=4944
+heap_tree=peak
+n2: 8157411574 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 8137224471 0x64FBD32: xcalloc (xmalloc.c:102)
+  n2: 8035201488 0x64DAE44: computemolext (extinction.c:401)
+   n1: 7948801472 0x64EC779: tau (tau.c:256)
+    n1: 7948801472 0x64EE41B: do_transit (transit.c:204)
+     n1: 7948801472 0x64EDFC8: run_transit (transit.c:160)
+      n1: 7948801472 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 7948801472 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 7948801472 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 7948801472 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 7948801472 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 7948801472 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 7948801472 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 7948801472 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 7948801472 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+   n1: 86400016 0x64EC2D4: tau (tau.c:210)
+    n1: 86400016 0x64EE41B: do_transit (transit.c:204)
+     n1: 86400016 0x64EDFC8: run_transit (transit.c:160)
+      n1: 86400016 0x64F3B63: _wrap_run_transit (transit_wrap.c:3693)
+       n1: 86400016 0x4F0F7C2: PyEval_EvalFrameEx (in /usr/lib/libpython2.7.so.1.0)
+        n1: 86400016 0x4F10AEE: PyEval_EvalCodeEx (in /usr/lib/libpython2.7.so.1.0)
+         n1: 86400016 0x4F10BE7: PyEval_EvalCode (in /usr/lib/libpython2.7.so.1.0)
+          n1: 86400016 0x4F2A10D: run_mod (in /usr/lib/libpython2.7.so.1.0)
+           n1: 86400016 0x4F2B330: PyRun_FileExFlags (in /usr/lib/libpython2.7.so.1.0)
+            n1: 86400016 0x4F2C545: PyRun_SimpleFileExFlags (in /usr/lib/libpython2.7.so.1.0)
+             n1: 86400016 0x4F3DA18: Py_Main (in /usr/lib/libpython2.7.so.1.0)
+              n0: 86400016 0x54387FE: (below main) (in /usr/lib/libc-2.21.so)
+  n0: 102022983 in 96 places, all below massif's threshold (01.00%)
+ n0: 20187103 in 296 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=53
+#-----------
+time=215888566851
+mem_heap_B=8157412470
+mem_heap_extra_B=813978
+mem_stacks_B=4736
+heap_tree=empty
+#-----------
+snapshot=54
+#-----------
+time=218334222049
+mem_heap_B=8157413270
+mem_heap_extra_B=813986
+mem_stacks_B=4384
+heap_tree=empty
+#-----------
+snapshot=55
+#-----------
+time=220779877298
+mem_heap_B=8157414870
+mem_heap_extra_B=814002
+mem_stacks_B=4984
+heap_tree=empty

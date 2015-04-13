@@ -1,7 +1,20 @@
 %module transit_module
 %{
 #define SWIG_FILE_WITH_INIT
-extern void mytest(int argc, char **argv, double** veco, int * numb);
+//extern struct transit transit;
+//extern long itr;
+//extern struct timeval tv;
+//extern double t0;
+//extern int argc;
+//extern char ** argv;
+//extern int init_run;
+
+extern void transit_init(int argc, char **argv);
+extern int  get_no_samples(void);
+extern void get_waveno_arr(double * waveno_arr, int waveno);
+extern void run_transit(double * re_input, int transint, double *\
+transit_out,int transit_out_size);
+extern void free_memory(void);
 %}
 
 %include "numpy.i"
@@ -10,9 +23,9 @@ extern void mytest(int argc, char **argv, double** veco, int * numb);
         import_array();
 %}
 
-%apply (double** ARGOUTVIEWM_ARRAY1, int *DIM1) {(double** veco, int * numb)}
-/*%apply (double* ARGOUT_ARRAY1, int DIM1) {(double* veco, int numb)}*/
-
+%apply (double* INPLACE_ARRAY1,int DIM1) {(double* waveno_arr, int waveno)}
+%apply (double* INPLACE_ARRAY1,int DIM1) {(double* transit_out, int transit_out_size)}
+%apply (double* IN_ARRAY1, int DIM1) {(double* re_input, int transint)}
 /*%exception
 {
      errno = 0;
@@ -55,4 +68,18 @@ extern void mytest(int argc, char **argv, double** veco, int * numb);
   free((char *) $1);
 }
 #include "transit.h"
-extern void mytest(int argc, char **argv,double** veco,int *numb);
+//extern struct transit transit;
+//extern long itr;
+//extern struct timeval tv;
+//extern double t0;
+//extern int argc;
+//extern char ** argv;
+//extern int init_run;
+
+extern void transit_init(int argc, char **argv);
+extern int  get_no_samples(void);
+extern void get_waveno_arr(double * waveno_arr, int waveno);
+extern void run_transit(double * re_input, int transint, double *\
+transit_out,int transit_out_size);
+extern void free_memory(void);
+

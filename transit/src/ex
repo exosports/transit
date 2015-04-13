@@ -67,14 +67,6 @@ struct timeval tv;
 double t0=0.0;
 int    init_run=0;
 
-void transit_init(int argc, char **argv);
-int  get_no_samples(void);
-void get_waveno_arr(double * waveno_arr, int waveno);
-void run_transit(double * re_input, int transint, double *\
-transit_out,int transit_out_size);
-void do_transit(double * transit_out);
-
-
 void transit_init(int argc, char **argv){
 	/*The purpose of this function is to set up and initialize all the
 	 * structures nessisary to run the transit code.*/
@@ -154,15 +146,11 @@ void get_waveno_arr(double * waveno_arr, int waveno){
 
 void run_transit(double * re_input, int transtint,double * transit_out,\
 		int transit_out_size){
-
-    //printf("here\n"); 
-//	fw(reloadatm, <0, &transit, re_input);
+	fw(reloadatm, <0, &transit, re_input);
 	do_transit(transit_out);
 }
 
 void do_transit(double * transit_out){
-    int i;
-    int nspec = (int)transit.wns.n;
     if (init_run > 0){
     fw(makeipsample, <0, &transit);
     t0 = timecheck(verblevel, itr,  6, "makeipsample", tv, t0);
@@ -171,15 +159,15 @@ void do_transit(double * transit_out){
                                  "parameters. Flag: 0x%lx.\n", fw_status);
  
     /* Print sampling info:                                                 */
-    //if (niter == 0){
-    //  fw(outsample, !=0, &transit);
-    //  t0 = timecheck(verblevel, itr,  7, "outsample", tv, t0);
-    //}
+    if (niter == 0){
+      fw(outsample, !=0, &transit);
+      t0 = timecheck(verblevel, itr,  7, "outsample", tv, t0);
+    }
 
     /* Interpolate CIA:                                                     */
     fw(interpolatecia, !=0, &transit);
     t0 = timecheck(verblevel, itr,  9, "interpolatecia", tv, t0);
-
+ 
     /* Compute index of refraction:                                         */
     fw(idxrefrac, !=0, &transit);
     t0 = timecheck(verblevel, itr,  10, "idxrefrac", tv, t0);
@@ -232,7 +220,7 @@ void do_transit(double * transit_out){
     transitprint(1, verblevel, "TRAN FLAG 76: The spectrum size is: %d\n",
                                 nspec);
     for(int i =0; i < transit.wns.n; i++){
-    	transit_out[i] = transit.ds.out->o[i];
+    	trans_out[i] = transit.ds.out->0[i];
     }
     transitprint(1, verblevel, "TRAN FLAG 77: The number of layers is: %li\n",
                                 transit.ds.at->rads.n);
@@ -254,7 +242,7 @@ void do_transit(double * transit_out){
     }
 }
 
-void free_memory(void){
+void free_memory(){
    /*This function frees all the memory used in transit, and should be
     * called at the end of the program. Check if all these data structures
     * can be used when called from bart, In MPItransit not all the frees
@@ -265,7 +253,6 @@ void free_memory(void){
   freemem_lineinfotrans(transit.ds.li,  &transit.pi);
   freemem_transit(&transit);
   freemem_cia(       transit.ds.cia, &transit.pi);
-  init_run = 0;
 }
 
 int main(int argc, char **argv){
