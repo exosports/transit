@@ -398,7 +398,11 @@ computemolext(struct transit *tr, /* transit struct                         */
   double minwidth, maxwidth;  /* FINDME: For-test only */
 
   /* Temporal extinction array:                                             */
-  double *ktmp = (double *)calloc(tr->owns.n, sizeof(double));
+  /* switching to malloc from calloc, which may be less safe, but much
+   * faster */
+  /*ktmp is also not being freed at all, so at the end of the function code
+   * is being added to free up the memory */
+  double *ktmp = (double *)malloc(tr->owns.n, sizeof(double));
   int ofactor;  /* Dynamic oversampling factor                              */
 
   long nadd  = 0, /* Number of co-added lines                               */
@@ -600,6 +604,8 @@ computemolext(struct transit *tr, /* transit struct                         */
   transitprint(10, verblevel, "Kmin: %.5e   Kmax: %.5e\n", kmin, kmax);
   /* Downsample ktmp to the final sampling size:                          */
   downsample(ktmp, kiso[r], dnwn, tr->owns.o/ofactor);
+  /*test freeing the ktmp memory to prevent a leak */
+  free(ktmp);
   transitprint(9, verblevel, "Number of co-added lines:     %8li  (%5.2f%%)\n",
                              nadd,  nadd*100.0/nlines);
   transitprint(9, verblevel, "Number of skipped profiles:   %8li  (%5.2f%%)\n",
