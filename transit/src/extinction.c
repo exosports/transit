@@ -594,10 +594,16 @@ computemolext(struct transit *tr, /* transit struct                         */
                        "index1:%li\nf=np.array([",
                  minj, maxj, subw, offset, ofactor*minj - offset);
     /* Add the contribution from this line to the opacity spectrum:         */
-    for(j=minj; j<maxj; j++){
-      ktmp[j] += propto_k * profile[idop[i]][ilor[i]][ofactor*j - offset];
-      transitprint(1000, verblevel, "%.4e, ",
-                            profile[idop[i]][ilor[i]][ofactor*j - offset]);
+    /* Adding in more complex but faster array indexing based on simpler
+     * pointer arrithmatic*/
+    PREC_VOIGT * tmp_point = profile[idop[i]][ilor[i]];
+    int beg_j = ofactor*minj - offset;
+    for(j=minj; j<maxj; ++j){
+      //ktmp[j] += propto_k * profile[idop[i]][ilor[i]][ofactor*j - offset];
+      ktmp[j] += propto_k * tmp_point[beg_j];
+      //transitprint(1000, verblevel, "%.4e, ",
+      //                      tmp_point[beg_j]);
+      beg_j += ofactor;
       //ktmp[j] += propto_k * vprofile [idop[i]] [ilor[i]] [j-offset];
     }
     neval++;

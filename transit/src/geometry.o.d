@@ -7,6 +7,7 @@ src/geometry.o src/geometry.o.d: src/geometry.c /usr/include/stdc-predef.h \
  /usr/include/bits/huge_valf.h /usr/include/bits/huge_vall.h \
  /usr/include/bits/inf.h /usr/include/bits/nan.h \
  /usr/include/bits/mathdef.h /usr/include/bits/mathcalls.h \
+ /usr/include/bits/mathinline.h /usr/include/bits/math-finite.h \
  /usr/include/errno.h /usr/include/bits/errno.h \
  /usr/include/linux/errno.h /usr/include/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
@@ -18,13 +19,15 @@ src/geometry.o src/geometry.o.d: src/geometry.c /usr/include/stdc-predef.h \
  /usr/include/bits/select.h /usr/include/bits/sigset.h \
  /usr/include/unistd.h /usr/include/bits/posix_opt.h \
  /usr/include/bits/confname.h ../pu/include/pu/sampling.h \
- /usr/include/stdlib.h /usr/include/bits/stdlib-float.h \
- /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
- /usr/include/wchar.h /usr/include/bits/stdio_lim.h \
- /usr/include/bits/sys_errlist.h /usr/include/string.h \
+ /usr/include/stdlib.h /usr/include/bits/stdlib-bsearch.h \
+ /usr/include/bits/stdlib-float.h /usr/include/stdio.h \
+ /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
+ /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
+ /usr/include/bits/stdio.h /usr/include/string.h \
+ /usr/include/bits/string.h /usr/include/bits/string2.h \
+ /usr/include/endian.h /usr/include/bits/endian.h \
  ../pu/include/pu/profile.h ../pu/include/pu/iomisc.h \
- /usr/include/ctype.h /usr/include/endian.h /usr/include/bits/endian.h \
- /usr/include/termios.h /usr/include/bits/termios.h \
+ /usr/include/ctype.h /usr/include/termios.h /usr/include/bits/termios.h \
  ../pu/include/pu/numerical.h ../pu/include/pu/xmalloc.h \
  /usr/include/strings.h /usr/include/alloca.h \
  /usr/include/gsl/gsl_spline.h /usr/include/gsl/gsl_interp.h \
@@ -44,6 +47,7 @@ include/transit.h:
 /usr/include/bits/huge_valf.h /usr/include/bits/huge_vall.h:
 /usr/include/bits/inf.h /usr/include/bits/nan.h:
 /usr/include/bits/mathdef.h /usr/include/bits/mathcalls.h:
+/usr/include/bits/mathinline.h /usr/include/bits/math-finite.h:
 /usr/include/errno.h /usr/include/bits/errno.h:
 /usr/include/linux/errno.h /usr/include/asm/errno.h:
 /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h:
@@ -55,13 +59,15 @@ include/transit.h:
 /usr/include/bits/select.h /usr/include/bits/sigset.h:
 /usr/include/unistd.h /usr/include/bits/posix_opt.h:
 /usr/include/bits/confname.h ../pu/include/pu/sampling.h:
-/usr/include/stdlib.h /usr/include/bits/stdlib-float.h:
-/usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h:
-/usr/include/wchar.h /usr/include/bits/stdio_lim.h:
-/usr/include/bits/sys_errlist.h /usr/include/string.h:
+/usr/include/stdlib.h /usr/include/bits/stdlib-bsearch.h:
+/usr/include/bits/stdlib-float.h /usr/include/stdio.h:
+/usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h:
+/usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h:
+/usr/include/bits/stdio.h /usr/include/string.h:
+/usr/include/bits/string.h /usr/include/bits/string2.h:
+/usr/include/endian.h /usr/include/bits/endian.h:
 ../pu/include/pu/profile.h ../pu/include/pu/iomisc.h:
-/usr/include/ctype.h /usr/include/endian.h /usr/include/bits/endian.h:
-/usr/include/termios.h /usr/include/bits/termios.h:
+/usr/include/ctype.h /usr/include/termios.h /usr/include/bits/termios.h:
 ../pu/include/pu/numerical.h ../pu/include/pu/xmalloc.h:
 /usr/include/strings.h /usr/include/alloca.h:
 /usr/include/gsl/gsl_spline.h /usr/include/gsl/gsl_interp.h:
