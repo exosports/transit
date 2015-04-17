@@ -676,11 +676,15 @@ extinction(struct transit *tr,      /* transit struct                       */
       maxj = dnwn;
 
     /* Add the contribution from this line to the opacity spectrum:         */
-    for(j=minj; j<maxj; j++){
+    PREC_VOIGT * tmp_point = profile[idop[i]][ilor[i]];
+    int beg_j = ofactor*minj - offset;
+    for(j=minj; j<maxj; ++j){
       //transitprint(1, 2, "%li  ", j-offset);
       //transitprint(1, 2, "j=%d, p[%li]=%.2g   ", j, j-offset,
       //                    profile[idop[i]][ilor[i]][subw][j-offset]);
-      ktmp[m][j] += opac * profile[idop[i]][ilor[i]][ofactor*j - offset];
+      //ktmp[m][j] += opac * profile[idop[i]][ilor[i]][ofactor*j - offset];
+      ktmp[m][j] += opac * tmp_point[beg_j];
+      beg_j += ofactor;
     }
     neval++;
   }

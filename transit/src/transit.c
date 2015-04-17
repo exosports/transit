@@ -156,7 +156,7 @@ void run_transit(double * re_input, int transtint,double * transit_out,\
 		int transit_out_size){
 
     //printf("here\n"); 
-//	fw(reloadatm, <0, &transit, re_input);
+	fw(reloadatm, <0, &transit, re_input);
 	do_transit(transit_out);
 }
 
@@ -195,15 +195,15 @@ void do_transit(double * transit_out){
     /* Calculates optical depth for eclipse                                 */
     if(strcmp(transit.sol->name, "eclipse") == 0){
       transitprint(1, verblevel, "\nCalculating eclipse:\n");
+      
+      fw(tau, !=0, &transit);
+      t0 = timecheck(verblevel, itr, 12, "tau eclipse", tv, t0);
 
       /* Calculate optical depth for eclipse:                               */
       for(i=0; i < transit.ann; i++){
         /* Fills out angle index                                            */
         transit.angleIndex = i;
-
-        fw(tau, !=0, &transit);
-        t0 = timecheck(verblevel, itr, 12, "tau eclipse", tv, t0);
-  
+   
         /* Calculates eclipse intensity:                                    */
         /* In cgs units erg/s/sr/cm                                         */
         fw(emergent_intens, !=0, &transit);

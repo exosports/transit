@@ -2,3 +2,5 @@
 *.o.d
 callgrind*
 .*.swp
+*.dat
+CH4_*

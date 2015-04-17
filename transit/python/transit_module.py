@@ -91,23 +91,23 @@ except AttributeError:
 
 
 
-def transit_init(argc, argv):
+def transit_init(argc: 'int', argv: 'char **') -> "void":
     return _transit_module.transit_init(argc, argv)
 transit_init = _transit_module.transit_init
 
-def get_no_samples():
+def get_no_samples() -> "int":
     return _transit_module.get_no_samples()
 get_no_samples = _transit_module.get_no_samples
 
-def get_waveno_arr(waveno_arr):
+def get_waveno_arr(waveno_arr: 'double *') -> "void":
     return _transit_module.get_waveno_arr(waveno_arr)
 get_waveno_arr = _transit_module.get_waveno_arr
 
-def run_transit(re_input, transit_out):
+def run_transit(re_input: 'double *', transit_out: 'double *') -> "void":
     return _transit_module.run_transit(re_input, transit_out)
 run_transit = _transit_module.run_transit
 
-def free_memory():
+def free_memory() -> "void":
     return _transit_module.free_memory()
 free_memory = _transit_module.free_memory
 # This file is compatible with both classic and new-style classes.
