@@ -23,8 +23,8 @@ extern void free_memory(void);
         import_array();
 %}
 
-%apply (double* INPLACE_ARRAY1,int DIM1) {(double* waveno_arr, int waveno)}
-%apply (double* INPLACE_ARRAY1,int DIM1) {(double* transit_out, int transit_out_size)}
+%apply (double* ARGOUT_ARRAY1,int DIM1) {(double* waveno_arr, int waveno)}
+%apply (double* ARGOUT_ARRAY1,int DIM1) {(double* transit_out, int transit_out_size)}
 %apply (double* IN_ARRAY1, int DIM1) {(double* re_input, int transint)}
 /*%exception
 {
@@ -53,8 +53,23 @@ extern void free_memory(void);
     int i = 0;
     $1 = (char **) malloc((size+1)*sizeof(char *));
     for (i = 0; i < size; i++) {
-      //PyObject *o = PyList_GetItem($input,i);
-       $1[i] = PyString_AsString(PyList_GetItem($input,i));
+      PyObject *o = PyList_GetItem($input,i);
+      if (PyString_Check(o))
+        $1[i] = PyString_AsString(o);
+      /*This next section is nessisary if python 3 is used,
+       *as it uses unicode by default, not ascii*/
+      else {
+        PyObject *s = PyUnicode_AsASCIIString(o);
+        if (PyString_Check(s)){
+                $1[i] = PyString_AsString(s);
+        }
+        /*Finally catch errors if strings are not passed in the list*/
+        else{
+                PyErr_SetString(PyExc_TypeError,"List must contain strings");
+                free($1);
+                return NULL;
+        }
+        }
     }
     $1[i] = 0;
   } else {

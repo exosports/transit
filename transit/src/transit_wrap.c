@@ -2911,9 +2911,10 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define SWIGTYPE_p_char swig_types[0]
-#define SWIGTYPE_p_p_char swig_types[1]
-static swig_type_info *swig_types[3];
-static swig_module_info swig_module = {swig_types, 2, 0, 0, 0, 0};
+#define SWIGTYPE_p_double swig_types[1]
+#define SWIGTYPE_p_p_char swig_types[2]
+static swig_type_info *swig_types[4];
+static swig_module_info swig_module = {swig_types, 3, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3595,8 +3596,23 @@ SWIGINTERN PyObject *_wrap_transit_init(PyObject *SWIGUNUSEDPARM(self), PyObject
       int i = 0;
       arg2 = (char **) malloc((size+1)*sizeof(char *));
       for (i = 0; i < size; i++) {
-        //PyObject *o = PyList_GetItem(obj1,i);
-        arg2[i] = PyString_AsString(PyList_GetItem(obj1,i));
+        PyObject *o = PyList_GetItem(obj1,i);
+        if (PyString_Check(o))
+        arg2[i] = PyString_AsString(o);
+        /*This next section is nessisary if python 3 is used,
+               *as it uses unicode by default, not ascii*/
+        else {
+          PyObject *s = PyUnicode_AsASCIIString(o);
+          if (PyString_Check(s)){
+            arg2[i] = PyString_AsString(s);
+          }
+          /*Finally catch errors if strings are not passed in the list*/
+          else{
+            PyErr_SetString(PyExc_TypeError,"List must contain strings");
+            free(arg2);
+            return NULL;
+          }
+        }
       }
       arg2[i] = 0;
     } else {
@@ -3635,21 +3651,31 @@ SWIGINTERN PyObject *_wrap_get_waveno_arr(PyObject *SWIGUNUSEDPARM(self), PyObje
   PyObject *resultobj = 0;
   double *arg1 = (double *) 0 ;
   int arg2 ;
-  PyArrayObject *array1 = NULL ;
-  int i1 = 1 ;
+  PyObject *array1 = NULL ;
   PyObject * obj0 = 0 ;
   
   if (!PyArg_ParseTuple(args,(char *)"O:get_waveno_arr",&obj0)) SWIG_fail;
   {
-    array1 = obj_to_array_no_conversion(obj0, NPY_DOUBLE);
-    if (!array1 || !require_dimensions(array1,1) || !require_contiguous(array1)
-      || !require_native(array1)) SWIG_fail;
+    npy_intp dims[1];
+    if (!PyInt_Check(obj0))
+    {
+      const char* typestring = pytype_string(obj0);
+      PyErr_Format(PyExc_TypeError,
+        "Int dimension expected.  '%s' given.",
+        typestring);
+      SWIG_fail;
+    }
+    arg2 = (int) PyInt_AsLong(obj0);
+    dims[0] = (npy_intp) arg2;
+    array1 = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
+    if (!array1) SWIG_fail;
     arg1 = (double*) array_data(array1);
-    arg2 = 1;
-    for (i1=0; i1 < array_numdims(array1); ++i1) arg2 *= array_size(array1,i1);
   }
   get_waveno_arr(arg1,arg2);
   resultobj = SWIG_Py_Void();
+  {
+    resultobj = SWIG_Python_AppendOutput(resultobj,(PyObject*)array1);
+  }
   return resultobj;
 fail:
   return NULL;
@@ -3664,8 +3690,7 @@ SWIGINTERN PyObject *_wrap_run_transit(PyObject *SWIGUNUSEDPARM(self), PyObject 
   int arg4 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 = 0 ;
-  PyArrayObject *array3 = NULL ;
-  int i3 = 1 ;
+  PyObject *array3 = NULL ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -3683,15 +3708,26 @@ SWIGINTERN PyObject *_wrap_run_transit(PyObject *SWIGUNUSEDPARM(self), PyObject 
     arg2 = (int) array_size(array1,0);
   }
   {
-    array3 = obj_to_array_no_conversion(obj1, NPY_DOUBLE);
-    if (!array3 || !require_dimensions(array3,1) || !require_contiguous(array3)
-      || !require_native(array3)) SWIG_fail;
+    npy_intp dims[1];
+    if (!PyInt_Check(obj1))
+    {
+      const char* typestring = pytype_string(obj1);
+      PyErr_Format(PyExc_TypeError,
+        "Int dimension expected.  '%s' given.",
+        typestring);
+      SWIG_fail;
+    }
+    arg4 = (int) PyInt_AsLong(obj1);
+    dims[0] = (npy_intp) arg4;
+    array3 = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
+    if (!array3) SWIG_fail;
     arg3 = (double*) array_data(array3);
-    arg4 = 1;
-    for (i3=0; i3 < array_numdims(array3); ++i3) arg4 *= array_size(array3,i3);
   }
   run_transit(arg1,arg2,arg3,arg4);
   resultobj = SWIG_Py_Void();
+  {
+    resultobj = SWIG_Python_AppendOutput(resultobj,(PyObject*)array3);
+  }
   {
     if (is_new_object1 && array1)
     {
@@ -3736,18 +3772,22 @@ static PyMethodDef SwigMethods[] = {
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_double = {"_p_double", "double *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_char = {"_p_p_char", "char **", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_char,
+  &_swigt__p_double,
   &_swigt__p_p_char,
 };
 
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_double[] = {  {&_swigt__p_double, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_char[] = {  {&_swigt__p_p_char, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_char,
+  _swigc__p_double,
   _swigc__p_p_char,
 };
 

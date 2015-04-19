@@ -270,7 +270,9 @@ void free_memory(void){
 
 int main(int argc, char **argv){
 	transit_init(argc,argv);
-	do_transit(transit.ds.out);
+	int trans_size = get_no_samples();
+	double tmp[trans_size];
+	do_transit(tmp);
 	free_memory();
 	return EXIT_SUCCESS;
 }
