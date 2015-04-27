@@ -209,7 +209,6 @@ resample(const short getingx, /* Axis flag: 0:y, 1:x,  2:free arrays      */
       switch(flags&SAMP_BITS){
       /* Use spline interpolation:                                          */
       case SAMP_SPLINE:
-	      printf("starting spline\n");
         natcubspline(ndat, x, y, nout, indx, t, out, soutx);
         break;
       case SAMP_LINEAR:
@@ -318,11 +317,8 @@ natcubspline(int ndat,      /* Length of (x,y) array                        */
   gsl_interp_accel acc={0,0,0};
   gsl_interp *spl=gsl_interp_alloc(gsl_interp_cspline,ndat);
   gsl_interp_init(spl,x,y,ndat);
-  printf("in spline\n");
   for(i=0;i<n;i++){
-	  printf("itteration %li of %i\n",i,n);
           yout[i]=gsl_interp_eval(spl,x,y,xref[i],&acc);
-          printf("end itteration\n");
   }
   gsl_interp_free(spl);
 #else

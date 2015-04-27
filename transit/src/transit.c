@@ -69,15 +69,15 @@ int    init_run=0;
 
 void transit_init(int argc, char **argv);
 int  get_no_samples(void);
-void get_waveno_arr(double * waveno_arr, int waveno);
-void run_transit(double * re_input, int transint, double *\
-transit_out,int transit_out_size);
-void do_transit(double * transit_out);
+void get_waveno_arr(double *waveno_arr, int waveno);
+void run_transit(double *re_input, int transint, double *transit_out,
+                 int transit_out_size);
+void do_transit(double *transit_out);
 
 
 void transit_init(int argc, char **argv){
-	/*The purpose of this function is to set up and initialize all the
-	 * structures nessisary to run the transit code.*/
+  /* The purpose of this function is to set up and initialize all the
+     structures nessisary to run the transit code.                          */
   transitprint(1,2, "TRAN FLAG 00: This is transit\n");
   memset(&transit, 0, sizeof(struct transit));
   verblevel=2;
@@ -133,32 +133,31 @@ void transit_init(int argc, char **argv){
 
 
 int get_no_samples(void){
-	/* This function will return the size of the wave number array */
-	return (int)transit.wns.n;
+  /* This function will return the size of the wave number array */
+  return (int)transit.wns.n;
 }
 
 void get_waveno_arr(double * waveno_arr, int waveno){
   int i;
   if (init_run > 0){
-	  for(i =0;i < (int)transit.wns.n; i++){
-		  waveno_arr[i] = transit.wns.v[i];
-	  }
+    for(i=0; i < (int)transit.wns.n; i++){
+      waveno_arr[i] = transit.wns.v[i];
+    }
   }
   else{
-	  printf("Transit not initialized, please run init. Values set -1\n");
-	  for(i = 0; i < (int)transit.wns.n; i++){
-		  waveno_arr[i] = -1;
-	  }
+    printf("Transit not initialized, please run init. Values set -1\n");
+    for(i=0; i < (int)transit.wns.n; i++){
+        waveno_arr[i] = -1;
+    }
   }
 }
 
-void run_transit(double * re_input, int transtint,double * transit_out,\
-		int transit_out_size){
-
-    //printf("here\n"); 
-	fw(reloadatm, <0, &transit, re_input);
-	do_transit(transit_out);
+void run_transit(double * re_input, int transtint,double * transit_out,
+                 int transit_out_size){
+  fw(reloadatm, <0, &transit, re_input);
+  do_transit(transit_out);
 }
+
 
 void do_transit(double * transit_out){
     int i;
@@ -231,8 +230,8 @@ void do_transit(double * transit_out){
  
     transitprint(1, verblevel, "TRAN FLAG 76: The spectrum size is: %d\n",
                                 nspec);
-    for(int i =0; i < transit.wns.n; i++){
-    	transit_out[i] = transit.ds.out->o[i];
+    for(int i=0; i < transit.wns.n; i++){
+      transit_out[i] = transit.ds.out->o[i];
     }
     transitprint(1, verblevel, "TRAN FLAG 77: The number of layers is: %li\n",
                                 transit.ds.at->rads.n);
@@ -250,16 +249,15 @@ void do_transit(double * transit_out){
     itr++;
     }
     else{
-	    printf("Transit init not run, please initialize transit\n");
+      printf("Transit init not run, please initialize transit\n");
     }
 }
 
 void free_memory(void){
-   /*This function frees all the memory used in transit, and should be
-    * called at the end of the program. Check if all these data structures
-    * can be used when called from bart, In MPItransit not all the frees
-    * happen.
-    */
+  /* This function frees all the memory used in transit, and should be
+     called at the end of the program. Check if all these data structures
+     can be used when called from bart, In MPItransit not all the frees
+     happen.                                                                */
   freemem_molecules(    transit.ds.mol, &transit.pi);
   freemem_atmosphere(   transit.ds.at,  &transit.pi);
   freemem_lineinfotrans(transit.ds.li,  &transit.pi);
@@ -269,12 +267,12 @@ void free_memory(void){
 }
 
 int main(int argc, char **argv){
-	transit_init(argc,argv);
-	int trans_size = get_no_samples();
-	double tmp[trans_size];
-	do_transit(tmp);
-	free_memory();
-	return EXIT_SUCCESS;
+  transit_init(argc,argv);
+  int trans_size = get_no_samples();
+  double tmp[trans_size];
+  do_transit(tmp);
+  free_memory();
+  return EXIT_SUCCESS;
 }
 
 /* \fcnfh                                                                   */

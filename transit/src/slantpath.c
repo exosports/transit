@@ -81,12 +81,14 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
 
   /* Get the index rs, of the sampled radius immediately below or equal
      to r0 (i.e. rad[rs] <= r0 < rad[rs+1]):                                */
-  if((rs = binsearch(rad, 0, nrad-1, r0)) == -5)
+  rs = binsearch(rad, 0, nrad-1, r0);
+  if ((rs == -5) || (rs == -2))
     return 0;  /* If it is the outmost layer                                */
   /* If some other error occurred:                                          */
-  else if(rs < 0)
+  else if(rs < 0){
     transiterror(TERR_CRITICAL, "Closest approach (%g) is larger than the "
                  "top layer of the atmosphere (%g).\n", r0, rad[nrad-1]);
+  }
 
   /* Move extinction and radius pointers to the rs-th element:              */
   rad  += rs;

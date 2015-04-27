@@ -33,6 +33,7 @@
 #error Some of the preprocessor constants were already defined!
 #endif
 
+#define AMAGAT (2.68678e19)      /* Amagat in cm-3                           */
 #define RHOSTP (1.29e-3)         /* Density at standard temp and press       */
 #define PI (3.141592653589793)   /* PI                                       */
 #define DEGREES (PI/180.0)       /* to make degrees to radian                */
