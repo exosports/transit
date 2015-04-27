@@ -337,7 +337,9 @@ interpolatecia(struct transit *tr){
 
     /* Calculate absorption coefficients in cm-1 units:                     */
     for(i=0; i < tr->rads.n; i++){
-      amagat2 = densiso1[i]*densiso2[i]/RHOSTP/RHOSTP;
+      //amagat2 = densiso1[i]*densiso2[i]/RHOSTP/RHOSTP;
+      amagat2 = densiso1[i]*densiso2[i]/(AMU*mol->mass[cia->mol1[n]] * AMAGAT *
+                                         AMU*mol->mass[cia->mol2[n]] * AMAGAT);
       for(j=0; j < tr->wns.n; j++)
         cia->e[j][i] += e[j][i]*amagat2;
     }
