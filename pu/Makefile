@@ -96,6 +96,7 @@ STDFLAGS    = $(NODBGFLAGS)
 else
 STDFLAGS    = $(DBGFLAGS)
 endif
+CFLAGS      = -fPIC -lgslcblas -O3 -ffast-math
 STDFLAGS   += $(INCLFLAGS) $(LIBFLAGS) $(WARNFLAGS) -pedantic \
 	      -std=c99 $(EXTPRM) $(CPUOPTION) $(GSLPRM) $(CFLAGS)
 

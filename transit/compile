@@ -1,4 +1,4 @@
-mpicc -fPIC -o MPItransit src/MPItransit.c \
+gcc -fPIC -c `ls src/*.c` \
 -ltransit                              \
 -lm                                    \
 -lpu                                   \
@@ -10,4 +10,8 @@ mpicc -fPIC -o MPItransit src/MPItransit.c \
 -Isrc/                                 \
 -I../pu/include/                       \
 -I../pu/src/                           \
--L../pu                                
+-L../pu                                \
+-I/usr/include/python3.4m              \
+-std=c99                               \
+-lgslcblas                             \
+-w                                      

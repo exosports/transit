@@ -9,7 +9,7 @@
 
 .PHONY: clean all install
 
-all: binaries libraries
+all: swig binaries libraries pyth
 
 #subdirectories, random order
 d   := src
@@ -19,9 +19,13 @@ d   := include
 include $(d)/Rules.mk
 
 #Commands
-
+swig: 
+	sh $(scriptdir)swig.sh
 binaries: $(bin_PROGRAMS)
 libraries: $(lib_STATIC) $(lib_DYNAMIC)
+pyth: 
+	python $(scriptdir)setup.py build_ext --inplace
+	sh $(scriptdir)python_clean.sh
 install: install-bin install-magic #install-header install-lib
 uninstall: uninstall-bin uninstall-magic #uninstall-lib uninstall-header
 

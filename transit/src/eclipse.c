@@ -81,7 +81,8 @@ eclipsetau(struct transit *tr,
            PREC_RES height,    /* Altitude down to where calculate tau      */
            PREC_RES *ex){      /* Extinction per layer [rad]                */
   /* Incident angle:                                                        */
-  PREC_RES angle = tr->angles[tr->angleIndex];
+  //PREC_RES angle = tr->angles[tr->angleIndex];
+  //PREC_RES angle_rad = angle * DEGREES;   
   /* Layers radius array:                                                   */
   prop_samp *rads = &tr->rads;  /* Radius sampling                           */
   PREC_RES *rad  = rads->v;     /* Radius array                              */
@@ -104,7 +105,7 @@ eclipsetau(struct transit *tr,
   PREC_RES x3[3], r3[3]; /* Interpolation variables                         */
 
   /* Conversion to radian:                                                  */
-  PREC_RES angle_rad = angle * DEGREES;   
+  //PREC_RES angle_rad = angle * DEGREES;   
 
   /* Distance along the path:                                               */
   PREC_RES s[nrad];
@@ -133,7 +134,7 @@ eclipsetau(struct transit *tr,
   /* Distance along the path:                                               */
   s[0] = 0.0;
   for(int i=1; i < nrad; i++){
-    s[i] = s[i-1] + (rad[i] - rad[i-1])/cos(angle_rad);
+    s[i] = s[i-1] + (rad[i] - rad[i-1]); // /cos(angle_rad);
   }
 
   /* Integrate extinction along the path:                                   */
@@ -178,6 +179,8 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
   /* General variables:                                                     */
   PREC_RES res;                  /* Result                                  */
   PREC_ATM *temp = tr->atm.t;    /* Temperatures                            */
+ 
+  PREC_RES angle = tr->angles[tr->angleIndex] * DEGREES;   
 
   /* Takes sampling properties for wavenumber from tr:                      */
   prop_samp *wn = &tr->wns; 
@@ -207,7 +210,7 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
     tauIV[i] = tau[i];
     B[i] =  (2.0 * H * w * w * w * wfct * wfct * wfct * LS * LS)
           / (exp(H * w * wfct * LS / (KB * temp[rnn-1-i])) - 1.0);
-    tauInteg[i] = B[i] * exp(-tau[i]);
+    tauInteg[i] = B[i] * exp(-tau[i]/ cos(angle));
   }
 
   /* Added 0 at the end when tau reach toomuch, so the spline looks nice    */
@@ -268,7 +271,7 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
   //  for (i=0; i<last; i++)
   //    transitprint(1, 2, "  tau: %.10e   int:%.10g\n", tauIV[i], tauInteg[i]);
   //}
-  return res;
+  return res/cos(angle);
 }
 
 

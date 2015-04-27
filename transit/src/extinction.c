@@ -398,7 +398,12 @@ computemolext(struct transit *tr, /* transit struct                         */
   double minwidth, maxwidth;  /* FINDME: For-test only */
 
   /* Temporal extinction array:                                             */
-  double *ktmp = (double *)calloc(tr->owns.n, sizeof(double));
+  /* switching to malloc from calloc, which may be less safe, but much
+   * faster */
+  /*ktmp is also not being freed at all, so at the end of the function code
+   * is being added to free up the memory */
+  double *ktmp = (double *)malloc(tr->owns.n*sizeof(double));
+  //double *ktmp = (double *)calloc(tr->owns.n,sizeof(double));
   int ofactor;  /* Dynamic oversampling factor                              */
 
   long nadd  = 0, /* Number of co-added lines                               */
@@ -589,10 +594,16 @@ computemolext(struct transit *tr, /* transit struct                         */
                        "index1:%li\nf=np.array([",
                  minj, maxj, subw, offset, ofactor*minj - offset);
     /* Add the contribution from this line to the opacity spectrum:         */
-    for(j=minj; j<maxj; j++){
-      ktmp[j] += propto_k * profile[idop[i]][ilor[i]][ofactor*j - offset];
-      transitprint(1000, verblevel, "%.4e, ",
-                            profile[idop[i]][ilor[i]][ofactor*j - offset]);
+    /* Adding in more complex but faster array indexing based on simpler
+     * pointer arrithmatic*/
+    PREC_VOIGT * tmp_point = profile[idop[i]][ilor[i]];
+    int beg_j = ofactor*minj - offset;
+    for(j=minj; j<maxj; ++j){
+      //ktmp[j] += propto_k * profile[idop[i]][ilor[i]][ofactor*j - offset];
+      ktmp[j] += propto_k * tmp_point[beg_j];
+      //transitprint(1000, verblevel, "%.4e, ",
+      //                      tmp_point[beg_j]);
+      beg_j += ofactor;
       //ktmp[j] += propto_k * vprofile [idop[i]] [ilor[i]] [j-offset];
     }
     neval++;
@@ -600,6 +611,12 @@ computemolext(struct transit *tr, /* transit struct                         */
   transitprint(10, verblevel, "Kmin: %.5e   Kmax: %.5e\n", kmin, kmax);
   /* Downsample ktmp to the final sampling size:                          */
   downsample(ktmp, kiso[r], dnwn, tr->owns.o/ofactor);
+  /*test freeing the ktmp memory to prevent a leak */
+  free(ktmp);
+  free(alphal);
+  free(alphad);
+  free(idop);
+  free(ilor);
   transitprint(9, verblevel, "Number of co-added lines:     %8li  (%5.2f%%)\n",
                              nadd,  nadd*100.0/nlines);
   transitprint(9, verblevel, "Number of skipped profiles:   %8li  (%5.2f%%)\n",

@@ -61,25 +61,32 @@ Thank you for using transit!
 /* TBD: calloc checks */
 
 #include <transit.h>
+struct transit transit;
+long itr=0;
+struct timeval tv;
+double t0=0.0;
+int    init_run=0;
 
-/* \fcnfh                                                                   */
-int main(int argc,      /* Number of variables                              */
-         char **argv){  /* Variables                                        */
+void transit_init(int argc, char **argv);
+int  get_no_samples(void);
+void get_waveno_arr(double *waveno_arr, int waveno);
+void run_transit(double *re_input, int transint, double *transit_out,
+                 int transit_out_size);
+void do_transit(double *transit_out);
 
-  /* Initialization of data structure's pointers. Note that s_lt is not
-     assigned because the array that is going to point has not been
-     initialized yet.                                                       */
-  struct transit transit;
-  long itr=0;
-  struct timeval tv;
-  double t0=0.0;
 
+void transit_init(int argc, char **argv){
+  /* The purpose of this function is to set up and initialize all the
+     structures nessisary to run the transit code.                          */
+  transitprint(1,2, "TRAN FLAG 00: This is transit\n");
   memset(&transit, 0, sizeof(struct transit));
   verblevel=2;
 
   /* Process the command line arguments:                                    */
   fw(processparameters, !=0, argc, argv, &transit);
   t0 = timecheck(verblevel, itr,  0, "processparameters", tv, t0);
+
+  transitprint(1, verblevel, "verblevel: %d\n", verblevel);
 
   /* Accept all general hints:                                              */
   fw(acceptgenhints, !=0, &transit);
@@ -98,10 +105,6 @@ int main(int argc,      /* Number of variables                              */
                  "makewnsample() modified some of the hinted "
                  "parameters according to returned flag: 0x%lx.\n",
                  fw_status);
-  transitprint(10, verblevel, "Wavenumber [%li]: dwn=%.6f\n",
-                              transit.wns.n, transit.wns.d);
-  transitprint(10, verblevel, "Oversampled wavenumber [%li]: dwn=%.6f\n",
-                              transit.owns.n, (transit.owns.d/transit.owns.o));
 
   /* Read Atmosphere information:                                           */
   fw(getatm, !=0, &transit);
@@ -118,133 +121,345 @@ int main(int argc,      /* Number of variables                              */
     transitprint(7, verblevel, "makeradsample() modified some of the hinted "
                                "parameters. Flag: 0x%lx.\n", fw_status);
 
-  // // Compare atmopheric samplings:
-  // // radius
-  // transitprint(1, 2, "Radius sampling size: %li\n", transit.rads.n);
-  // for (itr = 0; itr < transit.rads.n; itr++)
-  //   transitprint(1, 2, "%.3e ", transit.rads.v[itr] - transit.ds.at->rads.v[itr]);
-  // // pressure
-  // transitprint(1,2,"\nPressure sampling:\n");
-  // for (itr = 0; itr < transit.rads.n; itr++)
-  //   transitprint(1, 2, "%.3e ", transit.atm.p[itr] - transit.ds.at->atm.p[itr]);
-  // // temp
-  // transitprint(1,2,"\nTemperature sampling:\n");
-  // for (itr = 0; itr < transit.rads.n; itr++)
-  //   transitprint(1, 2, "%.3e ", transit.atm.t[itr] - transit.ds.at->atm.t[itr]);
-  // // mm
-  // transitprint(1,2,"\nMmm sampling:\n");
-  // for (itr = 0; itr < transit.rads.n; itr++)
-  //   transitprint(1, 2, "%.3e ", transit.ds.at->mm[itr]);
-    //transitprint(1, 2, "%.3e ", transit.atm.mm[itr] - transit.ds.at->mm[itr]);
-  // // q
-  // transitprint(1,2,"\nAbundance sampling:\n");
-  // for (itr = 0; itr < transit.rads.n; itr++)
-  //   transitprint(1, 2, "%.3e ", transit.ds.mol->molec[0].q[itr] - transit.ds.at->molec[0].q[itr]);
-  // // d
-  // transitprint(1,2,"\nDensity sampling:\n");
-  // for (itr = 0; itr < transit.rads.n; itr++)
-  //   transitprint(1, 2, "%.3e ", transit.ds.mol->molec[1].d[itr] - transit.ds.at->molec[1].d[itr]);
-  // // Z
-  // transitprint(1,2,"\nPartition-function sampling:\n");
-  // for (itr = 0; itr < transit.rads.n; itr++)
-  //   transitprint(1, 2, "%.3e ", transit.ds.iso->isov[0].z[itr] -
-  //                               transit.ds.li->isov[0].z[itr]);
-  // transitprint(1,2,"\n");
-
-  // return 0;
   /* Calculate opacity grid:                                                */
   fw(opacity, <0, &transit);
   t0 = timecheck(verblevel, itr,  5, "opacity", tv, t0);
 
-  if (transit.opabreak){
-    /* FINDME: Free memory                                                  */
-    return EXIT_SUCCESS;
-  }
-
-  /* Compute sampling of impact parameter:                                  */
-  fw(makeipsample, <0, &transit);
-  t0 = timecheck(verblevel, itr,  6, "makeipsample", tv, t0);
-  if (fw_status>0)
-    transitprint(7, verblevel, "makeipsample() modified some of the hinted "
-                               "parameters. Flag: 0x%lx.\n", fw_status);
-
-  /* Print sampling info:                                                   */
-  fw(outsample, !=0, &transit);
-  t0 = timecheck(verblevel, itr,  7, "outsample", tv, t0);
-
-  /* Initialize CIA:                                                     */
+  /* Initialize CIA:                                                        */
   fw(readcia, !=0, &transit);
-  t0 = timecheck(verblevel, itr,  8, "readcia", tv, t0);
-  fw(interpolatecia, !=0, &transit);
-  t0 = timecheck(verblevel, itr,  9, "interpolatecia", tv, t0);
+  t0 = timecheck(verblevel, itr,  6, "readcia", tv, t0);
+  init_run = 1;
+}
 
-  /* Compute index of refraction:                                        */
-  fw(idxrefrac, !=0, &transit);
-  t0 = timecheck(verblevel, itr,  10, "idxrefrac", tv, t0);
+
+int get_no_samples(void){
+  /* This function will return the size of the wave number array */
+  return (int)transit.wns.n;
+}
+
+void get_waveno_arr(double * waveno_arr, int waveno){
+  int i;
+  if (init_run > 0){
+    for(i=0; i < (int)transit.wns.n; i++){
+      waveno_arr[i] = transit.wns.v[i];
+    }
+  }
+  else{
+    printf("Transit not initialized, please run init. Values set -1\n");
+    for(i=0; i < (int)transit.wns.n; i++){
+        waveno_arr[i] = -1;
+    }
+  }
+}
+
+void run_transit(double * re_input, int transtint,double * transit_out,
+                 int transit_out_size){
+  fw(reloadatm, <0, &transit, re_input);
+  do_transit(transit_out);
+}
+
+
+void do_transit(double * transit_out){
+    int i;
+    int nspec = (int)transit.wns.n;
+    if (init_run > 0){
+    fw(makeipsample, <0, &transit);
+    t0 = timecheck(verblevel, itr,  6, "makeipsample", tv, t0);
+    if(fw_status>0)
+      transitprint(7, verblevel, "makeipsample() modified some of the hinted "
+                                 "parameters. Flag: 0x%lx.\n", fw_status);
  
-  /* Calculate extinction coefficient:                                   */
-  fw(extwn, !=0, &transit);
-  t0 = timecheck(verblevel, itr, 11, "extwn", tv, t0);
+    /* Print sampling info:                                                 */
+    //if (niter == 0){
+    //  fw(outsample, !=0, &transit);
+    //  t0 = timecheck(verblevel, itr,  7, "outsample", tv, t0);
+    //}
+
+    /* Interpolate CIA:                                                     */
+    fw(interpolatecia, !=0, &transit);
+    t0 = timecheck(verblevel, itr,  9, "interpolatecia", tv, t0);
+
+    /* Compute index of refraction:                                         */
+    fw(idxrefrac, !=0, &transit);
+    t0 = timecheck(verblevel, itr,  10, "idxrefrac", tv, t0);
  
-  /* Initialize structures for the optical-depth calculation:            */
-  fw(init_optdepth, !=0, &transit);
-  /* Calculate optical depth for eclipse:                                */
-  if (strcmp(transit.sol->name, "eclipse") == 0){
-    transitprint(1,verblevel, "\nCalculating eclipse:\n");
+    /* Calculate extinction coefficient:                                    */
+    fw(extwn, !=0, &transit);
+    t0 = timecheck(verblevel, itr, 11, "extwn", tv, t0);
+ 
+    transitprint(1, verblevel, "TRAN FLAG 74: pre-transit calc\n");
+    /* Initialize structures for the optical-depth calculation:            */
+    fw(init_optdepth, !=0, &transit);
 
-    /* Calculate intensity for each incident angle:                      */
-    for(int i=0; i < transit.ann; i++){
-      /* Fills out angle index                                           */
-      transit.angleIndex = i;
-
+    /* Calculates optical depth for eclipse                                 */
+    if(strcmp(transit.sol->name, "eclipse") == 0){
+      transitprint(1, verblevel, "\nCalculating eclipse:\n");
+      
       fw(tau, !=0, &transit);
       t0 = timecheck(verblevel, itr, 12, "tau eclipse", tv, t0);
-  
-      /* Calculates eclipse intensity:                                   */
-      /* In cgs units erg/s/sr/cm                                        */
-      fw(emergent_intens, !=0, &transit);
-      t0 = timecheck(verblevel, itr, 13, "emergent intensity", tv, t0);
+
+      /* Calculate optical depth for eclipse:                               */
+      for(i=0; i < transit.ann; i++){
+        /* Fills out angle index                                            */
+        transit.angleIndex = i;
+   
+        /* Calculates eclipse intensity:                                    */
+        /* In cgs units erg/s/sr/cm                                         */
+        fw(emergent_intens, !=0, &transit);
+        t0 = timecheck(verblevel, itr, 13, "emergent intensity", tv, t0);
+      }
+
+      /* Calculates flux  erg/s/cm                                          */
+      fw(flux, !=0, &transit);
+      t0 = timecheck(verblevel, itr, 14, "flux", tv, t0);
+
+      /* Free no longer needed memory                                       */
+      freemem_intensityGrid(transit.ds.intens, &transit.pi);
     }
 
-    /* Calculates flux  erg/s/cm                                         */
-    fw(flux, !=0, &transit);
-    t0 = timecheck(verblevel, itr, 14, "flux", tv, t0);
+    /* Calculate optical depth for transit:                                 */
+    else if (strcmp(transit.sol->name, "transit") == 0){
+      transitprint(1, verblevel, "\nCalculating transit:\n");
+      fw(tau, !=0, &transit);
+      t0 = timecheck(verblevel, itr, 12, "tau transit", tv, t0);
 
-    /* Free no longer needed memory                                      */
-    freemem_intensityGrid(transit.ds.intens, &transit.pi);
-  }
-
-  /* Calculate optical depth for transit:                                */
-  else if (strcmp(transit.sol->name, "transit") == 0){
-    transitprint(1,verblevel, "\nCalculating transit:\n");
-    fw(tau, !=0, &transit);
-    t0 = timecheck(verblevel, itr, 12, "tau transit", tv, t0); 
-
-   /* Calculates transit modulation:                                     */
-    fw(modulation, !=0, &transit);
-    t0 = timecheck(verblevel, itr, 13, "modulation", tv, t0);
-  }
+      /* Calculates transit modulation:                                     */
+      fw(modulation, !=0, &transit);
+      t0 = timecheck(verblevel, itr, 13, "modulation", tv, t0);
+   }
  
-  /* Free no longer needed memory                                        */
-  freemem_idexrefrac(transit.ds.ir,        &transit.pi);
-  freemem_extinction(transit.ds.ex,        &transit.pi);
-  freemem_tau(transit.ds.tau,              &transit.pi);
+    transitprint(1, verblevel, "TRAN FLAG 76: The spectrum size is: %d\n",
+                                nspec);
+    for(int i=0; i < transit.wns.n; i++){
+      transit_out[i] = transit.ds.out->o[i];
+    }
+    transitprint(1, verblevel, "TRAN FLAG 77: The number of layers is: %li\n",
+                                transit.ds.at->rads.n);
 
-  free(transit.save.ext);
-  freemem_cia      (transit.ds.cia, &transit.pi);
-  freemem_outputray(transit.ds.out, &transit.pi);
-  t0 = timecheck(verblevel, itr, 14, "THE END", tv, t0);
-  transitprint(1, verblevel, "----------------------------\n");
+    /* Free arrays allocated inside the individual call:                    */
+    free(transit.save.ext);
+    freemem_samp(&transit.ips);
+    freemem_idexrefrac(transit.ds.ir,  &transit.pi);
+    freemem_extinction(transit.ds.ex,  &transit.pi);
+    freemem_tau(       transit.ds.tau, &transit.pi);
+    freemem_outputray( transit.ds.out, &transit.pi);
 
-  freemem_isotopes(     transit.ds.iso, &transit.pi);
+    t0 = timecheck(verblevel, itr, 14, "THE END", tv, t0);
+    transitprint(1, verblevel, "----------------------------\n");
+    itr++;
+    }
+    else{
+      printf("Transit init not run, please initialize transit\n");
+    }
+}
+
+void free_memory(void){
+  /* This function frees all the memory used in transit, and should be
+     called at the end of the program. Check if all these data structures
+     can be used when called from bart, In MPItransit not all the frees
+     happen.                                                                */
   freemem_molecules(    transit.ds.mol, &transit.pi);
   freemem_atmosphere(   transit.ds.at,  &transit.pi);
   freemem_lineinfotrans(transit.ds.li,  &transit.pi);
   freemem_transit(&transit);
+  freemem_cia(       transit.ds.cia, &transit.pi);
+  init_run = 0;
+}
 
+int main(int argc, char **argv){
+  transit_init(argc,argv);
+  int trans_size = get_no_samples();
+  double tmp[trans_size];
+  do_transit(tmp);
+  free_memory();
   return EXIT_SUCCESS;
 }
 
+/* \fcnfh                                                                   */
+//void mytest(int argc,      /* Number of variables                              */
+//         char **argv, double** veco, int* numb){  /* Variables                                        */
+//
+//  /* Initialization of data structure's pointers. Note that s_lt is not
+//     assigned because the array that is going to point has not been
+//     initialized yet.                                                       */
+//  struct transit transit;
+//  long itr=0;
+//  struct timeval tv;
+//  double t0=0.0;
+//
+//  memset(&transit, 0, sizeof(struct transit));
+//  verblevel=2;
+//
+//  /* Process the command line arguments:                                    */
+//  fw(processparameters, !=0, argc, argv, &transit);
+//  t0 = timecheck(verblevel, itr,  0, "processparameters", tv, t0);
+//
+//  /* Accept all general hints:                                              */
+//  fw(acceptgenhints, !=0, &transit);
+//  /* Presentation:                                                          */
+//  printintro();
+//
+//  /* No program warnings if verblevel is 0 or 1:                            */
+//  if(verblevel<2)
+//    transit_nowarn = 1;
+//
+//  /* Make wavenumber binning:                                               */
+//  fw(makewnsample, <0, &transit);
+//  t0 = timecheck(verblevel, itr,  1, "makewnsample", tv, t0);
+//  if(fw_status>0)
+//    transitprint(7, verblevel,
+//                 "makewnsample() modified some of the hinted "
+//                 "parameters according to returned flag: 0x%lx.\n",
+//                 fw_status);
+//  transitprint(10, verblevel, "Wavenumber [%li]: dwn=%.6f\n",
+//                              transit.wns.n, transit.wns.d);
+//  transitprint(10, verblevel, "Oversampled wavenumber [%li]: dwn=%.6f\n",
+//                              transit.owns.n, (transit.owns.d/transit.owns.o));
+//
+//  /* Read Atmosphere information:                                           */
+//  fw(getatm, !=0, &transit);
+//  t0 = timecheck(verblevel, itr,  2, "getatm", tv, t0);
+//
+//  /* Read line info:                                                        */
+//  fw(readlineinfo, !=0, &transit);
+//  t0 = timecheck(verblevel, itr,  3, "readlineinfo", tv, t0);
+//
+//  /* Make radius binning and interpolate data to new value:                 */
+//  fw(makeradsample, <0, &transit);
+//  t0 = timecheck(verblevel, itr,  4, "makeradsample", tv, t0);
+//  if(fw_status>0)
+//    transitprint(7, verblevel, "makeradsample() modified some of the hinted "
+//                               "parameters. Flag: 0x%lx.\n", fw_status);
+//
+//  // // Compare atmopheric samplings:
+//  // // radius
+//  // transitprint(1, 2, "Radius sampling size: %li\n", transit.rads.n);
+//  // for (itr = 0; itr < transit.rads.n; itr++)
+//  //   transitprint(1, 2, "%.3e ", transit.rads.v[itr] - transit.ds.at->rads.v[itr]);
+//  // // pressure
+//  // transitprint(1,2,"\nPressure sampling:\n");
+//  // for (itr = 0; itr < transit.rads.n; itr++)
+//  //   transitprint(1, 2, "%.3e ", transit.atm.p[itr] - transit.ds.at->atm.p[itr]);
+//  // // temp
+//  // transitprint(1,2,"\nTemperature sampling:\n");
+//  // for (itr = 0; itr < transit.rads.n; itr++)
+//  //   transitprint(1, 2, "%.3e ", transit.atm.t[itr] - transit.ds.at->atm.t[itr]);
+//  // // mm
+//  // transitprint(1,2,"\nMmm sampling:\n");
+//  // for (itr = 0; itr < transit.rads.n; itr++)
+//  //   transitprint(1, 2, "%.3e ", transit.ds.at->mm[itr]);
+//    //transitprint(1, 2, "%.3e ", transit.atm.mm[itr] - transit.ds.at->mm[itr]);
+//  // // q
+//  // transitprint(1,2,"\nAbundance sampling:\n");
+//  // for (itr = 0; itr < transit.rads.n; itr++)
+//  //   transitprint(1, 2, "%.3e ", transit.ds.mol->molec[0].q[itr] - transit.ds.at->molec[0].q[itr]);
+//  // // d
+//  // transitprint(1,2,"\nDensity sampling:\n");
+//  // for (itr = 0; itr < transit.rads.n; itr++)
+//  //   transitprint(1, 2, "%.3e ", transit.ds.mol->molec[1].d[itr] - transit.ds.at->molec[1].d[itr]);
+//  // // Z
+//  // transitprint(1,2,"\nPartition-function sampling:\n");
+//  // for (itr = 0; itr < transit.rads.n; itr++)
+//  //   transitprint(1, 2, "%.3e ", transit.ds.iso->isov[0].z[itr] -
+//  //                               transit.ds.li->isov[0].z[itr]);
+//  // transitprint(1,2,"\n");
+//
+//  // return 0;
+//  /* Calculate opacity grid:                                                */
+//  fw(opacity, <0, &transit);
+//  t0 = timecheck(verblevel, itr,  5, "opacity", tv, t0);
+//
+//  if (transit.opabreak){
+//    /* FINDME: Free memory                                                  */
+//    //return EXIT_SUCCESS;
+//  }
+//
+//  /* Compute sampling of impact parameter:                                  */
+//  fw(makeipsample, <0, &transit);
+//  t0 = timecheck(verblevel, itr,  6, "makeipsample", tv, t0);
+//  if (fw_status>0)
+//    transitprint(7, verblevel, "makeipsample() modified some of the hinted "
+//                               "parameters. Flag: 0x%lx.\n", fw_status);
+//
+//  /* Print sampling info:                                                   */
+//  fw(outsample, !=0, &transit);
+//  t0 = timecheck(verblevel, itr,  7, "outsample", tv, t0);
+//
+//  /* Initialize CIA:                                                     */
+//  fw(readcia, !=0, &transit);
+//  t0 = timecheck(verblevel, itr,  8, "readcia", tv, t0);
+//  fw(interpolatecia, !=0, &transit);
+//  t0 = timecheck(verblevel, itr,  9, "interpolatecia", tv, t0);
+//
+//  /* Compute index of refraction:                                        */
+//  fw(idxrefrac, !=0, &transit);
+//  t0 = timecheck(verblevel, itr,  10, "idxrefrac", tv, t0);
+// 
+//  /* Calculate extinction coefficient:                                   */
+//  fw(extwn, !=0, &transit);
+//  t0 = timecheck(verblevel, itr, 11, "extwn", tv, t0);
+// 
+//  /* Initialize structures for the optical-depth calculation:            */
+//  fw(init_optdepth, !=0, &transit);
+//  /* Calculate optical depth for eclipse:                                */
+//  if (strcmp(transit.sol->name, "eclipse") == 0){
+//    transitprint(1,verblevel, "\nCalculating eclipse:\n");
+//
+//    /* Calculate intensity for each incident angle:                      */
+//    for(int i=0; i < transit.ann; i++){
+//      /* Fills out angle index                                           */
+//      transit.angleIndex = i;
+//
+//      fw(tau, !=0, &transit);
+//      t0 = timecheck(verblevel, itr, 12, "tau eclipse", tv, t0);
+//  
+//      /* Calculates eclipse intensity:                                   */
+//      /* In cgs units erg/s/sr/cm                                        */
+//      fw(emergent_intens, !=0, &transit);
+//      t0 = timecheck(verblevel, itr, 13, "emergent intensity", tv, t0);
+//    }
+//
+//    /* Calculates flux  erg/s/cm                                         */
+//    fw(flux, !=0, &transit);
+//    t0 = timecheck(verblevel, itr, 14, "flux", tv, t0);
+//
+//    /* Free no longer needed memory                                      */
+//    freemem_intensityGrid(transit.ds.intens, &transit.pi);
+//  }
+//
+//  /* Calculate optical depth for transit:                                */
+//  else if (strcmp(transit.sol->name, "transit") == 0){
+//    transitprint(1,verblevel, "\nCalculating transit:\n");
+//    fw(tau, !=0, &transit);
+//    t0 = timecheck(verblevel, itr, 12, "tau transit", tv, t0); 
+//
+//   /* Calculates transit modulation:                                     */
+//    fw(modulation, !=0, &transit);
+//    t0 = timecheck(verblevel, itr, 13, "modulation", tv, t0);
+//  }
+//  *veco = transit.ds.out->o;
+//  *numb = (int)transit.wns.n;
+//
+//  /* Free no longer needed memory                                        */
+//  freemem_idexrefrac(transit.ds.ir,        &transit.pi);
+//  freemem_extinction(transit.ds.ex,        &transit.pi);
+//  freemem_tau(transit.ds.tau,              &transit.pi);
+//
+//  free(transit.save.ext);
+//  freemem_cia      (transit.ds.cia, &transit.pi);
+//  //freemem_outputray(transit.ds.out, &transit.pi);
+//  t0 = timecheck(verblevel, itr, 14, "THE END", tv, t0);
+//  transitprint(1, verblevel, "----------------------------\n");
+//
+//  freemem_isotopes(     transit.ds.iso, &transit.pi);
+//  freemem_molecules(    transit.ds.mol, &transit.pi);
+//  freemem_atmosphere(   transit.ds.at,  &transit.pi);
+//  freemem_lineinfotrans(transit.ds.li,  &transit.pi);
+//  //freemem_transit(&transit);
+//
+//  //return EXIT_SUCCESS;
+//}
+//
 
 /* \fcnfh
    Frees transit structure.                 */

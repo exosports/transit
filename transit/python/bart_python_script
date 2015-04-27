@@ -1,0 +1,71 @@
+import transit_module
+args = ["transit","-c","../src/transit_demo.cfg"]
+#out = transit_module.mytest(len(args),args)
+import os,sys
+BARTdir = os.path.dirname("/home/nate/Bart/BART/code/")
+sys.path.append(BARTdir)
+import PT as pt
+import scipy.constants as sc
+import matplotlib.pyplot as plt
+import numpy as np
+
+Rsun = 6.995e8 # Sun radius in meters
+
+# Pressure array (bars):
+p = np.logspace(2, -5, 100)
+
+# Physical (fixed for each planet) parameters:
+Ts = 5040.0        # K
+Ti =  100.0        # K
+a  = 0.031 * sc.au # m
+Rs = 0.756 * Rsun  # m
+g  = 2192.8        # cm s-2
+
+# Fitting parameters:
+kappa  = -1.5   # log10(3e-2)
+gamma1 = -0.8   # log10(0.158)
+gamma2 = -0.8   # log10(0.158)
+alpha  = 0.5
+beta   = 1.0
+params = [kappa, gamma1, gamma2, alpha, beta]
+T0 = pt.PT_line(p, params, Rs, Ts, Ti, a, g)
+
+abundance = np.array([1e-10,0.15,1e-10,1e-10,1e-10,0.8496,1e-4,1e-4,1e-4,1e-4,1e-10,1e-10,1e-10])
+
+profiles = np.zeros((14,100))
+profiles[0] = T0
+for i in range(1,14):
+	profiles[i,:] = abundance[i-1]
+
+
+
+transit_module.transit_init(len(args),args)
+#tmp = np.zeros(transit_module.get_no_samples())
+import time
+
+
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+#transit_module.run_transit(profiles.flatten(),tmp)
+t1=time.time();tmp = transit_module.run_transit(profiles.flatten());t2=time.time()

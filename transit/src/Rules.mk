@@ -19,7 +19,7 @@ local_$(d)        := $(lib_$(d)) $(bin_PROGRAMS_$(d))
 transit_FILES_$(d)    := transitstd readlineinfo makesample     \
                          extinction transit tau eclipse         \
                          idxrefraction argum slantpath geometry \
-                         observable readatm cia opacity
+                         observable readatm cia opacity 
 
 transit_OBJS_$(d)     := $(transit_FILES_$(d):%=$(d)/%.o)
 transit_PIC_OBJS_$(d) := $(transit_FILES_$(d):%=$(d)/%_pic.o)
@@ -47,7 +47,8 @@ $(OBJS_$(d):.o=.proto): CP_LOCAL :=  -I$(d)
 $(local_$(d)): $(d)/Rules.mk
 $(local_$(d)): CF_LOCAL := -D_USE_GSL -I$(d) -Iinclude \
 	-DHAVE_INLINE -DGSL_RANGE_CHECK_OFF #\
-#	`pkg-config --cflags gtk+-2.0`
+#	`pkg-config --cflags gtk+-2.0`\
+
 $(local_$(d)): LL_LOCAL := -lm -lgsl \
 #`pkg-config --libs gtk+-2.0` \
 	-lplplotd -lcfitsio -lblas

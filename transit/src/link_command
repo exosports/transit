@@ -1,0 +1,16 @@
+gcc -shared -lgsl -lgslcblas argum.o
+cia.o
+eclipse.o
+extinction.o
+geometry.o
+idxrefraction.o
+makesample.o
+observable.o
+opacity.o
+readatm.o
+readlineinfo.o
+slantpath.o
+tau.o
+transit.o
+transit_wrap.o
+transitstd.o ../../pu/src/voigt.o ../../pu/src/procopt.o ../../pu/src/iomisc.o ../../pu/src/numerical.o ../../pu/src/xmalloc.o ../../pu/src/sampling.o -o _transit_module.so
