@@ -341,7 +341,6 @@ struct transithint{
   _Bool opabreak;       /* Break after opacity calculation flag              */
   long fl;              /* flags                                             */
   _Bool userefraction;  /* Whether to use variable refraction                */
-  _Bool savefiles    ;  /* Whether to save files                             */
   double p0, r0;        /* Pressure and radius reference level               */
   double gsurf;         /* Surface gravity                                   */
 

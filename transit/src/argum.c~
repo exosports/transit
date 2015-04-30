@@ -151,7 +151,6 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_LMAX,
     CLA_QSCALE,
     CLA_QMOL,
-    CLA_SAVEFILES,
   };
 
   /* Generate the command-line option parser: */
@@ -193,9 +192,6 @@ processparameters(int argc,            /* Number of command-line args  */
      "default there is no such output."},
     {"molfile",    CLA_MOLFILE,    required_argument, "../inputs/molecules.dat",
      "filename", "Path to file with the molecular info."},
-    {"savefiles", CLA_SAVEFILES, required_argument, NULL, "no",
-     "Save output files with tau, molecular extinction, CIA, and total " 
-     "extinction, with the predetermined file names."},
 
     /* Radius options:                                                      */
     {NULL,       0,           HELPTITLE,         NULL, NULL,
@@ -375,15 +371,11 @@ processparameters(int argc,            /* Number of command-line args  */
   st_trh.fl |= TRU_ATMASK1P | TRU_SAMPSPL | TRH_MASS;
   st_trh.verbnoise = 4;
   st_trh.mass = 1;
-  st_trh.savefiles = 0;
 
   int rn,  /* optdocs' short option */ 
       i;   /* Auxilliary index      */
   char name[20];
   /* For interactive rad, wavelength, and wavenumber sample inputs: */
-
-  int isYes, /* if savefiles is 'yes' */ 
-       isNo; /* if savefiles is 'no' */
 
   /* Preset names for detailed output in transithint: */
   struct detailfld *det = &hints->det.tau;
@@ -481,17 +473,6 @@ processparameters(int argc,            /* Number of command-line args  */
       if(*optarg != '\0'){
         hints->f_toomuch = (char *)calloc(strlen(optarg)+1, sizeof(char));
         strcpy(hints->f_toomuch, optarg);
-      }
-      break;
-    case CLA_SAVEFILES: /* output files with tau, extionction, CIA         */
-      isYes = strncmp(optarg, "yes", 3)==0;
-      isNo  = strncmp(optarg, "no" , 2)==0;
-      if (isYes || isNo){
-        hints->savefiles = isYes;
-      }
-      else{
-        printf("\nAllowed arguments for savefiles are: 'yes' or 'no'\n\n");
-        exit(EXIT_FAILURE);
       }
       break;
     case CLA_RPRESS:     /* Pressure reference level                        */
