@@ -211,8 +211,15 @@ tau(struct transit *tr){
         transiterror(TERR_CRITICAL,  "computemolext() returned error "
                                      "code %i.\n", rn);
   }
-
   transitprint(1, verblevel, "Calculating optical depth at various radii:\n");
+
+  /* Save total, cloud and scattering extinction into files if requested in cfg  */
+  FILE *totEx = openFile("total_extion.dat", 
+  "# 2D total extinction\n# er [wn][rad]; wn[0]=min(wn), row[0]=bottom (max(p))\n");
+  FILE *cloudEx = openFile("cloud_extion.dat",
+  "# 2D cloud extinction\n# e_c [wn][rad]; wn[0]=min(wn), row[0]=bottom (max(p))\n");
+  FILE *scattEx = openFile("scatt_extion.dat",
+  "# 2D scatt extinction\n# e_s [wn][rad]; wn[0]=min(wn), row[0]=bottom (max(p))\n");
 
   /* For each wavenumber:                                                   */
   for(wi=0; wi<wnn; wi++){
@@ -282,6 +289,13 @@ tau(struct transit *tr){
           "(toomuch: %g)\n", wi, wn->v[wi], r[ri], tau_wn[ri], tau->toomuch);
     }
 
+      /* Write total, cloud, and scatt extinction into files if requested  */
+      if (th->savefiles){
+        save1Darray(tr, totEx,    er, rnn, wi);
+        save1Darray(tr, cloudEx, e_c, rnn, wi);
+        save1Darray(tr, scattEx, e_s, rnn, wi);
+      }
+
     if(ri==nh){
       transitprint(1, verblevel,
                    "WARNING: At wavenumber %g cm-1, the bottom of the "
@@ -291,26 +305,32 @@ tau(struct transit *tr){
       tau->last[wi] = ri-1;
     }
 
+
   }
   transitprint(1, verblevel, "Done.\n");
 
   /* Save various files if requested in the config file:                 */
 
-  /* Call saveCIA and save CIA                                           */
-  if (th->savefiles)
-        saveCIA(tr); 
-
-  /* Call saveExtin and save total extionction                           */
-  if (th->savefiles)
-    saveExtin(tr);
-
-  /* Call savemolExtion and save molecular extionction                   */
-  if (th->savefiles)
-    savemolExtion(tr);
-
-  /* Call savetau and save tau                                           */
-  if (th->savefiles)
-    savetau(tr);  
+  /* Save files requested                                                */
+  if (th->savefiles){
+    /* 2D tau [wn][rad], wn[0] = min(wn), rad[0]=top of the atm (min(p)) */
+    savetau(tr);
+    /* 2D CIA  extinction [wn][rad], 
+                              wn[0] = min(wn), rad[0]=bottom (max(p))    */
+    saveCIA(tr);
+    /* 2D mol-line extinction [wn][rad],
+                              wn[0] = min(wn), rad[0]=bottom (max(p))    */
+    savemolExtion(tr, ri);
+    /* 2D total extinction [wn][rad], 
+                               wn[0] = min(wn), rad[0]=bottom (max(p))   */
+    closeFile(totEx);
+    /* 2D cloud extinction [wn][rad], 
+                               wn[0] = min(wn), rad[0]=bottom (max(p))   */
+    closeFile(cloudEx);
+    /* 2D scatt extinction [wn][rad], 
+                              wn[0] = min(wn), rad[0]=bottom (max(p))   */
+    closeFile(scattEx);
+  }
 
   /* Print detailed output if requested:                                 */
   if(tr->ds.det->tau.n)
@@ -339,30 +359,31 @@ tau(struct transit *tr){
 void print1dArrayDouble(FILE *outf, double *array, int noColumns, char *format){
 	if(outf == NULL)
 		outf= stdout;
-	
 	for(int col=0; col<noColumns; col++)
 		fprintf(outf, format, array[col]);
-		
 	fprintf(outf, "\n");
 }
 
 /* \fcnfh
    Generalized function to print 2D array to a file                         */
-void print2dArrayDouble(FILE *outf, double **array, int noRows, int noColumns, char *format){
+void print2dArrayDouble(FILE *outf, double **array, 
+     int noRows, int noColumns, char *format, prop_samp *wn){
 	if(outf == NULL)
 		outf= stdout;
-	
 	for(int row=0; row < noRows; row++){
+		fprintf(outf, "wavenumber: ");
+		fprintf(outf, format, wn->v[row]);
+		fprintf(outf, "\n");
 		print1dArrayDouble(outf, array[row], noColumns, format);
-		fprintf(outf, "[%d row]\n", row);
+		fprintf(outf, "\n");
 	}
 }
 
 
 /* \fcnfh
-  Print to a file molecular extinction                                     */
+  Print to a file molecular line extinction                                */
 void
-savemolExtion(struct transit *tr){
+savemolExtion(struct transit *tr, long ri){
   struct extinction *ex = tr->ds.ex;     /* Extinction struct              */
   PREC_RES **e = ex->e;                   /* Extinction coefficient         */
 
@@ -379,42 +400,16 @@ savemolExtion(struct transit *tr){
 
   /* write header                                                           */
   fprintf(myFile, "\n");
-  fprintf(myFile, "# e_mol, row[0] - bottom, 100bar ; row[99] - top, 1e-5 bar\n");
+  fprintf(myFile, "# mol-line extinction\n");
+  fprintf(myFile, "# e [rad][wn]; rad[0]=bottom (max(p)); wn[0]=min(wn)\n");
   fprintf(myFile, "\n");
 
-  /* call 2D array function, row --> [wnn], column --> [rnn]                */
-  print2dArrayDouble(myFile, e, rnn, wnn, format);
-
-  /* close the file                                                         */
-  fflush(myFile);
-  fclose(myFile);
-}
-
-
-/* \fcnfh
-  Print to a file total exionction                                          */
-void
-saveExtin(struct transit *tr){
-
-  prop_samp *rad = &tr->rads; /* Radius sampling                            */
-  long int rnn = rad->n;     /* Number of layers                           */
-
-  PREC_RES er[rnn];           /* Array of extinction per radius             */
-
-  /* open file to write                                                     */
-  FILE *myFile = fopen("total_extion.dat", "w");
-
-  /* format of the characters written                                       */
-  char *format= "%-20.10g";
-
-  /* write header                                                           */
-  fprintf(myFile, "\n");
-  fprintf(myFile, "# er, row[0] - bottom, 100bar ; row[99] - top, 1e-5 bar\n");
-  fprintf(myFile, "\n");
-
-  /* call 1D array                                                          */
-  print1dArrayDouble(myFile, er, rnn, format);
-
+  /* write file, row --> [rnn], column --> [wnn]                            */
+  for(int ri=0; ri < rnn; ri++){
+	fprintf(myFile, "radius: %-20.10g\n", rad->v[ri]);
+	print1dArrayDouble(myFile, e[ri], wnn, format);
+	fprintf(myFile, "\n");
+  }
   /* close the file                                                         */
   fflush(myFile);
   fclose(myFile);
@@ -432,9 +427,6 @@ saveCIA(struct transit *tr){
   prop_samp *rad = &tr->rads; /* Radius sampling                            */
   long int rnn = rad->n;     /* Number of layers                           */
 
-  double e_s[rnn],                  /* Extinction from scattering          */
-          e_c[rnn];                  /* Extinction from clouds              */
-
   /* open file to write                                                     */
   FILE *myFile = fopen("CIA.dat", "w");
 
@@ -443,30 +435,12 @@ saveCIA(struct transit *tr){
 
   /* write header                                                           */
   fprintf(myFile, "\n");
-  fprintf(myFile, "# e_cia, e_c, e_s\n");
-  fprintf(myFile, "\n");
-
-  /* write header                                                           */
-  fprintf(myFile, "\n");
-  fprintf(myFile, "# e_cia array, row[0] = wn[0]; rad starts from the bottom, p=100bar\n");
+  fprintf(myFile, "# 2D CIA extinction\n");
+  fprintf(myFile, "# e_cia [wn][rad]; wn[0]=min(wn); row[0]=bottom (max(p))\n");
   fprintf(myFile, "\n");
 
   /* call 2D array function, row --> [wnn], column --> [rnn]                */
-  print2dArrayDouble(myFile, e_cia, wnn, rnn, format);
-
-  /* print cloud exctinction                                                */
-  fprintf(myFile, "\n");
-  fprintf(myFile, "# e_c\n");
-
-  /* call 1D array function                                                 */
-  print1dArrayDouble(myFile, e_c, rnn, format);
-  
-  /* print scattering exctinction                                           */
-  fprintf(myFile, "\n");
-  fprintf(myFile, "# e_s\n");
-
-  /* call 1D array function                                                 */
-  print1dArrayDouble(myFile, e_s, rnn, format);
+  print2dArrayDouble(myFile, e_cia, wnn, rnn, format, wn);
 
   /* close the file                                                         */
   fflush(myFile);
@@ -476,6 +450,46 @@ saveCIA(struct transit *tr){
 
 /* \fcnfh
   Print to a file tau                                                      */
+void
+save1Darray(struct transit *tr, FILE *myFile, PREC_RES *array1d, 
+                                              int nrad, long wi){
+  struct optdepth *tau=tr->ds.tau;       /* Def optical depth structure    */
+
+  prop_samp *wn = &tr->wns;   /* Wavenumber sampling                        */
+  prop_samp *rad = &tr->rads; /* Radius sampling                            */
+
+  /* format of the characters written                                       */
+  char *format= "%-20.10g";
+   
+  /*                                                                        */
+  fprintf(myFile, "\n");
+  fprintf(myFile, "wavenumber: %-20.10g\n", wn->v[wi]);
+  print1dArrayDouble(myFile, array1d, nrad, format);
+}
+
+/* \fcnfh
+  Print to a file tau                                                      */
+FILE *
+openFile(char *filename, char *header){
+  /* open file to write                                                     */
+  FILE *myFile = fopen(filename, "w");
+  fprintf(myFile, "\n");
+  fprintf(myFile, header);
+  return myFile;
+}
+
+/* \fcnfh
+  Print to a file tau                                                      */
+void
+closeFile(FILE *myFile){
+  /* close the file                                                         */
+  fflush(myFile);
+  fclose(myFile);
+}
+
+
+/* \fcnfh
+  Print 2D tau into a file                                                  */
 void
 savetau(struct transit *tr){
   struct optdepth *tau=tr->ds.tau;       /* Def optical depth structure    */
@@ -492,11 +506,12 @@ savetau(struct transit *tr){
    
   /* write header                                                           */
   fprintf(myFile, "\n");
-  fprintf(myFile, "# tau array; row[0] = wn[0]; rad[0] --> top = 1e-5 bar\n");
+  fprintf(myFile, "# 2D optical depth\n");
+  fprintf(myFile, "# tau [wn][rad]; wn[0]=min(wn); rad[0]=top (min(p))\n");
   fprintf(myFile, "\n");
 
   /* call 2D array function, row --> [wnn], column --> [rnn]                */
-  print2dArrayDouble(myFile, tau->t, wnn, rnn, format);
+  print2dArrayDouble(myFile, tau->t, wnn, rnn, format, wn);
 
   /* close the file                                                         */
   fflush(myFile);

@@ -14,10 +14,12 @@ extern void printtoomuch P_((char *file, struct optdepth *tau, prop_samp *wn, pr
 extern int freemem_tau P_((struct optdepth *tau, long *pi));
 extern int detailout P_((prop_samp *wn, prop_samp *rad, struct detailfld *det, double **arr, short flag));
 extern void print1dArrayDouble P_((FILE *outf, double *array, int noColumns, char *format));
-extern void print2dArrayDouble P_((FILE *outf, double **array, int noRows, int noColumns, char *format));
-extern void savemolExtion P_((struct transit *tr));
-extern void saveExtin P_((struct transit *tr));
+extern void print2dArrayDouble P_((FILE *outf, double **array, int noRows, int noColumns, char *format, prop_samp *wn));
+extern void savemolExtion P_((struct transit *tr, long ri));
 extern void savetau P_((struct transit *tr));
 extern void saveCIA P_((struct transit *tr));
+void save1Darray P_((struct transit *tr, FILE *myFile, PREC_RES *array1d, int nrad, long wi));
+FILE * openFile P_((char *filename, char *header));
+void closeFile P_((FILE *myFile));
 
 #undef P_
