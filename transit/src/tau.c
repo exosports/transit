@@ -118,6 +118,10 @@ tau(struct transit *tr){
 
   long wi, ri; /* Indices for wavenumber, and radius                        */
   int rn;      /* Functions output code                                     */
+  int i;
+
+  PREC_ATM *density = (PREC_ATM *)calloc(tr->ds.mol->nmol, sizeof(PREC_ATM));
+  double   *Z       = (double   *)calloc(tr->ds.iso->n_i,  sizeof(double));
 
   prop_samp *rad = &tr->rads;  /* Radius sampling                           */
   PREC_RES *r  = rad->v;       /* Radius array                              */
@@ -206,12 +210,19 @@ tau(struct transit *tr){
     transitprint(1, verblevel, "Computing extinction at outermost layer.\n");
     if (tr->fp_opa != NULL)
       rn = interpolmolext(tr, rnn-1, ex->e);
-    else
-      if((rn=computemolext(tr, rnn-1, ex->e))!=0)
+    else{
+      for (i=0; i < tr->ds.mol->nmol; i++)
+        density[i] = tr->ds.mol->molec[i].d[rnn-1];
+      for (i=0; i < tr->ds.iso->n_i; i++)
+        Z[i]       = tr->ds.iso->isov[i].z [rnn-1];
+      
+      if((rn=computemolext(tr, ex->e+(rnn-1), tr->atm.t[rnn-1]*tr->atm.tfct,
+                           density, Z, 0)) != 0)
         transiterror(TERR_CRITICAL,  "computemolext() returned error "
                                      "code %i.\n", rn);
+    }
+    ex->computed[rnn-1] = 1;
   }
-  transitprint(1, verblevel, "Calculating optical depth at various radii:\n");
 
   /* Save total, cloud and scattering extinction into files if requested in cfg  */
   FILE *totEx = openFile("total_extion.dat", 
@@ -221,6 +232,7 @@ tau(struct transit *tr){
   FILE *scattEx = openFile("scatt_extion.dat",
   "# 2D scatt extinction\n# e_s [wn][rad]; wn[0]=min(wn), row[0]=bottom (max(p))\n");
 
+  transitprint(1, verblevel, "Calculating optical depth at various radii:\n");
   /* For each wavenumber:                                                   */
   for(wi=0; wi<wnn; wi++){
     tau_wn = tau->t[wi];
@@ -259,10 +271,17 @@ tau(struct transit *tr){
                                        lastr+1, r[lastr]*rfct);
             if (tr->fp_opa != NULL)
               rn = interpolmolext(tr, lastr, ex->e);
-            else
-              if((rn=computemolext(tr, lastr, ex->e))!=0)
-                transiterror(TERR_CRITICAL, "computemolext() returned error "
-                  "code %i at radius %i: %g cm.\n", rn, lastr, r[lastr]*rfct);
+            else{
+              for (i=0; i < tr->ds.mol->nmol; i++)
+                density[i] = tr->ds.mol->molec[i].d[lastr];
+              for (i=0; i < tr->ds.iso->n_i; i++)
+                Z[i]       = tr->ds.iso->isov[i].z [lastr];
+              if((rn=computemolext(tr, ex->e+lastr,
+                         tr->atm.t[lastr]*tr->atm.tfct, density, Z, 0)) != 0)
+                transiterror(TERR_CRITICAL,  "computemolext() returned error "
+                                             "code %i.\n", rn);
+            }
+            ex->computed[lastr] = 1;
             /* Update the value of the extinction at the right place:       */
             er[lastr] = e[lastr][wi] + e_s[lastr] + e_c[lastr] +
                         e_cia[wi][lastr];

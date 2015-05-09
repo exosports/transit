@@ -19,6 +19,7 @@ extern void printone P_((struct transit *tr));
 extern int freemem_extinction P_((struct extinction *ex, long *pi));
 extern int restextinct P_((FILE *in, long nrad, short niso, long nwn,
                            struct extinction *ex));
-extern int computemolext P_((struct transit *tr, PREC_NREC r, PREC_RES **kiso));
+extern int computemolext P_((struct transit *tr, PREC_RES **kiso,
+                   PREC_ATM temp, PREC_ATM *density, double *Z, int permol));
 extern int interpolmolext P_((struct transit *tr, PREC_NREC r, PREC_RES **kiso));
 #undef P_

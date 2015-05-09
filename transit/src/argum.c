@@ -693,7 +693,6 @@ acceptsoltype(ray_solution **sol,
 
   /* Search through each element in *sol, compare names to hname */
   while (raysols[n]){
-    transitprint(1, verblevel, "sol name is '%s'\n", raysols[n]->name);
     if(strcmp(hname, raysols[n]->name) == 0){
       *sol = (ray_solution *)raysols[n];
       return 0;
@@ -784,8 +783,8 @@ acceptgenhints(struct transit *tr){
   default:
     transiterror(TERR_SERIOUS, "Invalid sampling function specified.\n");
   }
-  transitprint(1, verblevel, "transit interpolation flag: %li.\n",
-                             tr->interpflag);
+  transitprint(10, verblevel, "transit interpolation flag: %li.\n",
+                               tr->interpflag);
 
   if (th->r0 < 0){
     transiterror(TERR_SERIOUS|TERR_ALLOWCONT,

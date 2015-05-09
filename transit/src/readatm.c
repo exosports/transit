@@ -463,7 +463,7 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
   /* Check that there was at least one isotope defined and re-allocate
      array sizes to their final size:                                       */
   if(!nmol)
-    transiterror(TERR_SERIOUS, "No isotopes were found in atmosphere file, "
+    transiterror(TERR_SERIOUS, "No species were found in the atmospheric file, "
                                "make sure to specify them with the comment/"
                                "header in the previous line '#SPECIES'.\n");
 

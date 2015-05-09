@@ -12,7 +12,7 @@ the same name written by Patricio Rojo (Univ. de Chile, Santiago) when
 he was a graduate student at Cornell University under Joseph
 Harrington.
 
-Copyright (C) 2014 University of Central Florida.  All rights reserved.
+Copyright (C) 2015 University of Central Florida.  All rights reserved.
 
 This is a test version only, and may not be redistributed to any third
 party.  Please refer such requests to us.  This program is distributed
@@ -53,7 +53,7 @@ Thank you for using transit!
 
 #include <transit.h>
 
-/* Wrapper to calculate a Voigt profile
+/* FUNCTION: Wrapper to calculate a Voigt profile
    Return: 1/2 of the number of points in the profile                       */
 inline int
 getprofile(PREC_VOIGT **pr,  /* Pointer to 1D profile                       */
@@ -102,8 +102,8 @@ getprofile(PREC_VOIGT **pr,  /* Pointer to 1D profile                       */
 }
 
 
-/* \fcnfh
- Saving extinction for a possible next run                                  */
+/* FUNCTION:
+   Saving extinction for a possible next run                                */
 void
 savefile_extinct(char *filename,
                  PREC_RES **e,
@@ -137,9 +137,8 @@ savefile_extinct(char *filename,
 }
 
 
-/* \fcnfh
-   Restoring extinction for a possible next run
-*/
+/* FUNCTION:
+   Restoring extinction for a possible next run                             */
 void
 restfile_extinct(char *filename,
                  PREC_RES **e,
@@ -184,12 +183,11 @@ restfile_extinct(char *filename,
 }
 
 
-/*\fcnfh
-  Fill up the extinction information in tr->ds.ex  
-  TD: Scattering parameters should be added at some point here.
-
+/* FUNCTION:
+   Fill up the extinction information in tr->ds.ex  
+   TD: Scattering parameters should be added at some point here.
   Return: 0 on success, else
-          computeextradius()  */
+          computeextradius()                                                */
 int
 extwn(struct transit *tr){
   struct transithint *th=tr->ds.th;
@@ -258,42 +256,11 @@ extwn(struct transit *tr){
   /* Set progress indicator, and print and output extinction if one P,T
      was desired, otherwise return success:                                 */
   tr->pi |= TRPI_EXTWN;
-  if(tr->rads.n == 1)
-    printone(tr);
   return 0;
 }
 
 
-/* \fcnfh
-   Printout for one P, T conditions                                         */
-void
-printone(struct transit *tr){
-  int rn;
-  FILE *out=stdout;
-
-  /* Open file:                                                             */
-  if(tr->f_out && tr->f_out[0] != '-')
-    out = fopen(tr->f_out, "w");
-
-  transitprint(1, verblevel, "\nPrinting extinction for one radius (at %gcm) "
-                             "in '%s'\n", tr->rads.v[0],
-                             tr->f_out ? tr->f_out:"standard output");
-
-  /* Print:                                                                 */
-  fprintf(out, "#wavenumber[cm-1]   wavelength[nm]   extinction[cm-1]   "
-               "cross-section[cm2]\n");
-  for(rn=0; rn < tr->wns.n; rn++)
-    fprintf(out, "%12.6f%14.6f%17.7g%17.7g\n", tr->wns.fct*tr->wns.v[rn],
-            1/(tr->wavs.fct * tr->wns.v[rn] * tr->wns.fct),
-            tr->ds.ex->e[0][rn],
-            AMU*tr->ds.ex->e[0][rn] *
-            tr->ds.iso->isof[0].m/tr->ds.mol->molec[tr->ds.iso->imol[0]].d[0]);
-
-  exit(EXIT_SUCCESS);
-}
-
-
-/* \fcnfh
+/* FUNCTION:
    Free extinction coefficient structure arrays
    Return 0 on success */
 int
@@ -310,7 +277,7 @@ freemem_extinction(struct extinction *ex, /* Extinciton struct       */
 }
 
 
-/* \fcnfh
+/* FUNCTION:
    Restore hints structure, the structure needs to have been allocated
    before
    Returns 0 on success
@@ -357,24 +324,30 @@ restextinct(FILE *in,
 }
 
 
-/* Compute the molecular extinction:                                        */
+/* FUNCTION: Compute the molecular extinction.
+   Store results in kiso.  If permol is true, calculate extinction per
+   molecule separately; else, collapse all extinction into kiso[0].         */
 int
 computemolext(struct transit *tr, /* transit struct                         */
-              PREC_NREC r,        /* Radius index                           */
-              PREC_RES **kiso){   /* Extinction coefficient array           */
+              PREC_RES **kiso,    /* Extinction coefficient array [mol][wn] */
+              PREC_ATM temp,      /* Temperature                            */
+              PREC_ATM *density,  /* Density per species                    */
+              double *Z,          /* Partition Function per isotope         */
+              int permol){        /* Calculate the extinction per molecule  */
 
-  struct opacity *op=tr->ds.op;
-  struct isotopes  *iso=tr->ds.iso; /* Isotopes struct                      */
-  struct molecules *mol=tr->ds.mol;
-  struct extinction *ex=tr->ds.ex;
-  struct line_transition *lt=&(tr->ds.li->lt); /* Line transition struct    */
+  /* Transit structures:                                                    */
+  struct opacity    *op =tr->ds.op;
+  struct isotopes   *iso=tr->ds.iso;
+  struct molecules  *mol=tr->ds.mol;
+  struct line_transition *lt=&(tr->ds.li->lt);
 
   PREC_NREC ln;
-  int i, *idop, *ilor;
+  int i, m=0,
+      *idop, *ilor;
   long j, maxj, minj, offset;
 
   /* Voigt profile variables:                                               */
-  PREC_VOIGT ***profile=op->profile; /* Voigt profile                      */
+  PREC_VOIGT ***profile=op->profile;  /* Voigt profile                      */
   PREC_NREC **profsize=op->profsize;  /* Voigt-profile half-size            */
   double *aDop=op->aDop,          /* Doppler-width sample                   */
          *aLor=op->aLor;          /* Lorentz-width sample                   */
@@ -387,23 +360,20 @@ computemolext(struct transit *tr, /* transit struct                         */
   double fdoppler, florentz, /* Doppler and Lorentz-broadening factors      */
          csdiameter;         /* Collision diameter                          */
   double propto_k;
-  double kmax=0, kmin;       /* Maximum and minimum values of propto_k      */
+  double *kmax, *kmin,       /* Maximum and minimum values of propto_k      */
+         **ktmp;
 
   PREC_VOIGTP *alphal, *alphad;
 
-  int niso = iso->n_i,        /* Number of isotopes                         */
-      nmol = mol->nmol;       /* Number of species                          */
+  int niso = iso->n_i,        /* Number of isotopes in atmosphere           */
+      nmol = mol->nmol,       /* Number of species in atmosphere            */
+      Nmol;                   /* Number of species with line-transitions    */
 
   int iown, idwn;             /* Line-center indices                        */
-  double minwidth, maxwidth;  /* FINDME: For-test only */
 
-  /* Temporal extinction array:                                             */
-  /* switching to malloc from calloc, which may be less safe, but much
-   * faster */
-  /*ktmp is also not being freed at all, so at the end of the function code
-   * is being added to free up the memory */
-  double *ktmp = (double *)malloc(tr->owns.n*sizeof(double));
-  //double *ktmp = (double *)calloc(tr->owns.n,sizeof(double));
+  double maxwidth=0,   /* Maximum width between Lorentz and Doppler         */
+         minwidth=1e5; /* Minimum width among isotopes in a Layer           */
+
   int ofactor;  /* Dynamic oversampling factor                              */
 
   long nadd  = 0, /* Number of co-added lines                               */
@@ -412,20 +382,13 @@ computemolext(struct transit *tr, /* transit struct                         */
 
   /* Wavenumber array variables:                                            */
   PREC_RES  *wn = tr->wns.v;
-  PREC_NREC // nwn = tr->wns.n,
-            onwn = tr->owns.n,
+  PREC_NREC onwn = tr->owns.n,
             dnwn;
 
   /* Wavenumber sampling intervals:                                         */
   PREC_RES  dwn = tr->wns.d /tr->wns.o,   /* Output array                   */
            odwn = tr->owns.d/tr->owns.o,  /* Oversampling array             */
            ddwn;                          /* Dynamic sampling array         */
-  /* Layer temperature:                                                     */
-  PREC_ATM temp = tr->atm.t[r]*tr->atm.tfct;
-
-  /* Constant factors for line widths:                                      */
-  fdoppler = sqrt(2*KB*temp/AMU) * SQRTLN2 / LS;
-  florentz = sqrt(2*KB*temp/PI/AMU) / (AMU*LS);
 
   /* Allocate alpha Lorentz and Doppler arrays:                             */
   alphal = (PREC_VOIGTP *)calloc(niso, sizeof(PREC_VOIGTP));
@@ -435,8 +398,25 @@ computemolext(struct transit *tr, /* transit struct                         */
   idop = (int *)calloc(niso, sizeof(int));
   ilor = (int *)calloc(niso, sizeof(int));
 
-  maxwidth = 0.0;
-  minwidth = 1e5;
+  kmax = (double *)calloc(op->Nmol, sizeof(double));
+  kmin = (double *)calloc(op->Nmol, sizeof(double));
+
+  /* Number of species in output array:                                     */
+  if (permol)
+    Nmol = op->Nmol;
+  else
+    Nmol = 1;
+
+  /* Temporary extinction array:                                            */
+  ktmp    = (double **)malloc(Nmol            * sizeof(double *));
+  ktmp[0] = (double  *)malloc(Nmol*tr->owns.n * sizeof(double  ));
+  for (i=1; i<Nmol; i++)
+    ktmp[i] = ktmp[0] + tr->owns.n * i;
+
+  /* Constant factors for line widths:                                      */
+  fdoppler = sqrt(2*KB*temp/AMU) * SQRTLN2 / LS;
+  florentz = sqrt(2*KB*temp/PI/AMU) / (AMU*LS);
+
   /* Calculate the isotope's widths for this layer:                         */
   for(i=0; i<niso; i++){
     /* Lorentz profile width:                                               */
@@ -445,21 +425,18 @@ computemolext(struct transit *tr, /* transit struct                         */
       /* Isotope's collision diameter:                                      */
       csdiameter = (mol->radius[j] + mol->radius[iso->imol[i]]);
       /* Line width:                                                        */
-      alphal[i] += mol->molec[j].d[r]/mol->mass[j] * csdiameter * csdiameter *
+      alphal[i] += density[j]/mol->mass[j] * csdiameter * csdiameter *
                    sqrt(1/iso->isof[i].m + 1/mol->mass[j]);
     }
     alphal[i] *= florentz;
 
     /* Doppler profile width (divided by central wavenumber):               */
-    alphad[i] = fdoppler/sqrt(iso->isof[i].m);
+    alphad[i] = fdoppler / sqrt(iso->isof[i].m);
 
     /* Print Lorentz and Doppler broadening widths:                         */
     if(i <= 0)
-      transitprint(1, verblevel, "Lorentz: %.9f, Doppler: %.9f broadening "
-              "(T=%d, r=%li).\n", alphal[i], alphad[i]*wn[0], (int)temp, r);
-              //"Doppler2: %.9f (T=%d, p=%.4e, wn0: %.6f, wnf: %.6f).\n",
-              //alphal[i], alphad[i]*wn[0], alphad[i]*wn[tr->wns.n-1],
-              //(int)temp, tr->atm.p[r]*tr->atm.pfct, wn[0], wn[tr->wns.n-1]);
+      transitprint(1, verblevel, "Broadening (cm-1): Lorentz: %.5e, Doppler: "
+              "%.5e (T=%d).\n", alphal[i], alphad[i]*wn[0], (int)temp);
 
     maxwidth = fmax(alphal[i], alphad[i]*wn[0]); /* Max between Dop and Lor */
     minwidth = fmin(minwidth, maxwidth);
@@ -478,9 +455,9 @@ computemolext(struct transit *tr, /* transit struct                         */
   ofactor = tr->odivs[i-1];         /* Dynamic-sampling oversampling factor */
   ddwn    = odwn * ofactor;         /* Dynamic-sampling grid interval       */
   dnwn    = 1 + (onwn-1) / ofactor; /* Number of dynamic-sampling values    */
-  transitprint(100, verblevel, "Dynamic-sampling grid interval: %.9f  "
+  transitprint(10, verblevel, "Dynamic-sampling grid interval: %.9f  "
                "(scale factor:%i)\n", ddwn, ofactor);
-  transitprint(100, verblevel, "Number of dynamic-sampling values:%li\n",
+  transitprint(10, verblevel, "Number of dynamic-sampling values:%li\n",
                                 dnwn);
 
   /* Determine the maximum and minimum extinction-coefficient in this layer */
@@ -489,44 +466,44 @@ computemolext(struct transit *tr, /* transit struct                         */
     wavn = 1.0 / (lt->wl[ln] * lt->wfct);
     /* Isotope ID of line:                                                  */
     i = lt->isoid[ln];
+    /* Species index in output array:                                       */
+    if (permol)
+      m = valueinarray(op->molID, mol->ID[iso->imol[i]], op->Nmol);
 
     /* If it is beyond the lower limit, skip to next line transition:       */
-    if(wavn < tr->wns.i)
-      continue;
-    if(wavn > tr->owns.v[onwn-1])
+    if ((wavn < tr->wns.i) || (wavn > tr->owns.v[onwn-1]))
       continue;
 
     /* Calculate the extinction coefficient except the broadening factor:   */
-    propto_k = mol->molec[iso->imol[i]].d[r]*iso->isoratio[i] *  /* Density */
+    propto_k = iso->isoratio[i]               *       /* Density            */
             SIGCTE     * lt->gf[ln]           *       /* Constant * gf      */
             exp(-EXPCTE*lt->efct*lt->elow[ln]/temp) * /* Level population   */
             (1-exp(-EXPCTE*wavn/temp))        /       /* Induced emission   */
             iso->isof[i].m                    /       /* Isotope mass       */
-            iso->isov[i].z[r];                        /* Partition function */
-    if (kmax == 0){
-      kmax = kmin = propto_k;
+            Z[i];                                     /* Partition function */
+    /* Maximum line strength among all transitions for each species:        */
+    if (kmax[m] == 0){
+      kmax[m] = kmin[m] = propto_k;
     } else{
-      kmax = fmax(kmax, propto_k);
-      kmin = fmin(kmin, propto_k);
+      kmax[m] = fmax(kmax[m], propto_k);
+      kmin[m] = fmin(kmin[m], propto_k);
     }
   }
 
   /* Compute the spectra, proceed for every line:                           */
   for(ln=0; ln<nlines; ln++){
-    wavn = 1.0/(lt->wl[ln]*lt->wfct); /* Wavenumber */
-    i    = lt->isoid[ln];             /* Isotope ID */
+    wavn = 1.0/(lt->wl[ln]*lt->wfct);
+    i    = lt->isoid[ln];
+    if (permol)
+      m = valueinarray(op->molID, mol->ID[iso->imol[i]], op->Nmol);
 
-    if(wavn < tr->wns.i)
-      continue;
-    if(wavn > tr->owns.v[onwn-1])
+    if ((wavn < tr->wns.i) || (wavn > tr->owns.v[onwn-1]))
       continue;
 
-    /* Extinction coefficient:                                              */
-    propto_k = mol->molec[iso->imol[i]].d[r] * iso->isoratio[i] *
-               SIGCTE * lt->gf[ln]                              *
-               exp(-EXPCTE*lt->efct*lt->elow[ln]/temp)          *
-               (1-exp(-EXPCTE*wavn/temp)) / iso->isof[i].m      /
-               iso->isov[i].z[r];
+    /* Extinction coefficient (factors depending on the line transition):   */
+    propto_k = lt->gf[ln]                              *
+               exp(-EXPCTE*lt->efct*lt->elow[ln]/temp) *
+               (1-exp(-EXPCTE*wavn/temp));
 
     /* Index of closest oversampled wavenumber:                             */
     iown = (wavn - tr->wns.i)/odwn;
@@ -540,21 +517,25 @@ computemolext(struct transit *tr, /* transit struct                         */
         nadd++;
         ln++;
         /* Add the contribution from this line into the opacity:            */
-        propto_k += mol->molec[iso->imol[i]].d[r] * iso->isoratio[i] *
-                    SIGCTE * lt->gf[ln]                              *
-                    exp(-EXPCTE * lt->efct * lt->elow[ln] / temp)    *
-                    (1-exp(-EXPCTE*next_wn/temp)) / iso->isof[i].m   /
-                    iso->isov[i].z[r];
+        propto_k += lt->gf[ln]                                    *
+                    exp(-EXPCTE * lt->efct * lt->elow[ln] / temp) *
+                    (1-exp(-EXPCTE*next_wn/temp));
       }
       else
         break;
     }
+    /* The rest of the factors:                                             */
+    propto_k *= SIGCTE*iso->isoratio[i] / (iso->isof[i].m * Z[i]);
 
     /* If line is too weak, skip it:                                        */
-    if (propto_k < ex->ethresh * kmax){
+    if (propto_k < tr->ds.th->ethresh * kmax[m]){
       nskip++;
       continue;
     }
+    /* Multiply by the species density:                                     */
+    if (permol == 0)
+      propto_k *= density[iso->imol[i]];
+
     /* Index of closest (but not larger than) dynamic-sampling wavenumber:  */
     idwn = (wavn - tr->wns.i)/ddwn;
 
@@ -568,13 +549,6 @@ computemolext(struct transit *tr, /* transit struct                         */
     if (alphad[i]*wavn/alphal[i] >= 1e-1){
       /* Recalculate index for Doppler width:                               */
       idop[i] = binsearchapprox(aDop, alphad[i]*wavn, 0, nDop);
-    }
-
-    if (r== 100 && ln >= 1 && ln <= 19){
-      transitprint(100, verblevel, "k=%.10e, d=%.4e, rat=%.4e, gf=%.4e, "
-                   "elow=%.4e, T=%.4e, w=%.4e, m=%.4e, z=%.4e\n", propto_k,
-                   mol->molec[iso->imol[i]].d[r], iso->isoratio[i], lt->gf[ln],
-                   lt->elow[ln], temp, wavn, iso->isof[i].m, iso->isov[i].z[r]);
     }
 
     /* Sub-sampling offset between center of line and dyn-sampled wn:       */
@@ -595,28 +569,19 @@ computemolext(struct transit *tr, /* transit struct                         */
                  minj, maxj, subw, offset, ofactor*minj - offset);
     /* Add the contribution from this line to the opacity spectrum:         */
     /* Adding in more complex but faster array indexing based on simpler
-     * pointer arrithmatic*/
+     * pointer arrithmatic                                                  */
     PREC_VOIGT * tmp_point = profile[idop[i]][ilor[i]];
     int beg_j = ofactor*minj - offset;
     for(j=minj; j<maxj; ++j){
-      //ktmp[j] += propto_k * profile[idop[i]][ilor[i]][ofactor*j - offset];
-      ktmp[j] += propto_k * tmp_point[beg_j];
-      //transitprint(1000, verblevel, "%.4e, ",
-      //                      tmp_point[beg_j]);
+      ktmp[m][j] += propto_k * tmp_point[beg_j];
       beg_j += ofactor;
-      //ktmp[j] += propto_k * vprofile [idop[i]] [ilor[i]] [j-offset];
     }
     neval++;
   }
-  transitprint(10, verblevel, "Kmin: %.5e   Kmax: %.5e\n", kmin, kmax);
-  /* Downsample ktmp to the final sampling size:                          */
-  downsample(ktmp, kiso[r], dnwn, tr->owns.o/ofactor);
-  /*test freeing the ktmp memory to prevent a leak */
-  free(ktmp);
-  free(alphal);
-  free(alphad);
-  free(idop);
-  free(ilor);
+  /* Downsample ktmp to the final sampling size:                            */
+  for (m=0; m < Nmol; m++)
+    downsample(ktmp[m], kiso[m], dnwn, tr->owns.o/ofactor);
+
   transitprint(9, verblevel, "Number of co-added lines:     %8li  (%5.2f%%)\n",
                              nadd,  nadd*100.0/nlines);
   transitprint(9, verblevel, "Number of skipped profiles:   %8li  (%5.2f%%)\n",
@@ -624,7 +589,16 @@ computemolext(struct transit *tr, /* transit struct                         */
   transitprint(9, verblevel, "Number of evaluated profiles: %8li  (%5.2f%%)\n",
                              neval, neval*100.0/nlines);
 
-  ex->computed[r] = 1;
+  /* Free allocated memory:                                                 */
+  free(ktmp[0]);
+  free(ktmp);
+  free(alphal);
+  free(alphad);
+  free(idop);
+  free(ilor);
+  free(kmax);
+  free(kmin);
+
   return 0;
 }
 
@@ -638,7 +612,6 @@ interpolmolext(struct transit *tr, /* transit struct                        */
 
   struct opacity    *op=tr->ds.op;  /* Opacity struct                       */
   struct molecules *mol=tr->ds.mol;
-  struct extinction *ex=tr->ds.ex;
 
   long Nmol, Ntemp, Nwave;
   PREC_RES *gtemp;
@@ -648,7 +621,6 @@ interpolmolext(struct transit *tr, /* transit struct                        */
   double ext; /* Interpolated extinction coefficient                        */
 
   /* Layer temperature:                                                     */
-  //transitprint(1,2,"\n Radius index: %li\n", r);
   PREC_ATM temp = tr->atm.t[r] * tr->atm.tfct;
   /* Gridded temperatures:                                                  */  
   gtemp = op->temp;
@@ -671,13 +643,13 @@ interpolmolext(struct transit *tr, /* transit struct                        */
     /* Add contribution from each molecule:                                 */
     for (m=0; m < Nmol; m++){
       /* Linear interpolation of the extinction coefficient:                */
-      ext = (op->o[m][itemp  ][r][i] * (gtemp[itemp+1]-temp) + 
-             op->o[m][itemp+1][r][i] * (temp - gtemp[itemp]) ) /
+      ext = (op->o[r][itemp  ][m][i] * (gtemp[itemp+1]-temp) + 
+             op->o[r][itemp+1][m][i] * (temp - gtemp[itemp]) ) /
                                                  (gtemp[itemp+1]-gtemp[itemp]);
       imol = valueinarray(mol->ID, gmol[m], mol->nmol);
       kiso[r][i] += mol->molec[imol].d[r] * ext;
     }
   }
-  ex->computed[r] = 1;
+
   return 0;
 }
