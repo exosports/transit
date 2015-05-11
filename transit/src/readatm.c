@@ -740,6 +740,7 @@ Re-load data from array into transit's atm structure.                       */
 int
 reloadatm(struct transit *tr,
           double *input){ /* Array with updated temp. and abund. profiles   */
+
   struct atm_data   *at=tr->ds.at;   /* Atmosphere data struct              */
   struct molecules *mol=tr->ds.mol;  /* Molecules stucture                  */
   int nlayers = at->rads.n,          /* Number of layers                    */
@@ -748,7 +749,6 @@ reloadatm(struct transit *tr,
   double sumq,
 	 allowq = tr->allowrq;
 
-  transitprint(1, verblevel, "Nlayers=%d,  Nmol=%d.\n", nlayers, nmol);
   /* Update atmfile temperature array:                                      */
   for (i=0; i<nlayers; i++){
     at->atm.t[i] = input[i];

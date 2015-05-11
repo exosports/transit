@@ -120,6 +120,8 @@ tau(struct transit *tr){
   int rn;      /* Functions output code                                     */
   int i;
 
+  FILE *totEx, *cloudEx, *scattEx;
+
   PREC_ATM *density = (PREC_ATM *)calloc(tr->ds.mol->nmol, sizeof(PREC_ATM));
   double   *Z       = (double   *)calloc(tr->ds.iso->n_i,  sizeof(double));
 
@@ -224,13 +226,18 @@ tau(struct transit *tr){
     ex->computed[rnn-1] = 1;
   }
 
-  /* Save total, cloud and scattering extinction into files if requested in cfg  */
-  FILE *totEx = openFile("total_extion.dat", 
-  "# 2D total extinction\n# er [wn][rad]; wn[0]=min(wn), row[0]=bottom (max(p))\n");
-  FILE *cloudEx = openFile("cloud_extion.dat",
-  "# 2D cloud extinction\n# e_c [wn][rad]; wn[0]=min(wn), row[0]=bottom (max(p))\n");
-  FILE *scattEx = openFile("scatt_extion.dat",
-  "# 2D scatt extinction\n# e_s [wn][rad]; wn[0]=min(wn), row[0]=bottom (max(p))\n");
+  /* Save total, cloud, and scattering extinction to file if requested:     */
+  if (th->savefiles){
+    totEx = openFile("total_extion.dat", 
+              "# 2D total extinction\n"
+              "# er [wn][rad]; wn[0]=min(wn), row[0]=bottom (max(p))\n");
+    cloudEx = openFile("cloud_extion.dat",
+              "# 2D cloud extinction\n"
+              "# e_c [wn][rad]; wn[0]=min(wn), row[0]=bottom (max(p))\n");
+    scattEx = openFile("scatt_extion.dat",
+              "# 2D scatt extinction\n"
+              "# e_s [wn][rad]; wn[0]=min(wn), row[0]=bottom (max(p))\n");
+  }
 
   transitprint(1, verblevel, "Calculating optical depth at various radii:\n");
   /* For each wavenumber:                                                   */
@@ -308,7 +315,7 @@ tau(struct transit *tr){
           "(toomuch: %g)\n", wi, wn->v[wi], r[ri], tau_wn[ri], tau->toomuch);
     }
 
-      /* Write total, cloud, and scatt extinction into files if requested  */
+      /* Write total, cloud, and scattering extinction to file if requested: */
       if (th->savefiles){
         save1Darray(tr, totEx,    er, rnn, wi);
         save1Darray(tr, cloudEx, e_c, rnn, wi);
@@ -369,6 +376,12 @@ tau(struct transit *tr){
 
   /* Set progress indicator and output tau if requested:                    */
   tr->pi |= TRPI_TAU;
+
+  /* Free allocated memory:                                                 */
+  free(density);
+  free(Z);
+  if (strcmp(tr->sol->name, "eclipse") == 0)
+    free(h);
   return 0;
 }
 

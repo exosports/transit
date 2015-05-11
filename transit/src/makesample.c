@@ -12,7 +12,7 @@ the same name written by Patricio Rojo (Univ. de Chile, Santiago) when
 he was a graduate student at Cornell University under Joseph
 Harrington.
 
-Copyright (C) 2014 University of Central Florida.  All rights reserved.
+Copyright (C) 2015 University of Central Florida.  All rights reserved.
 
 This is a test version only, and may not be redistributed to any third
 party.  Please refer such requests to us.  This program is distributed
@@ -546,7 +546,6 @@ makeradsample(struct transit *tr){
                      atms->mm,    atmt->mm);
 
   /* Interpolate molecular density and abundance:                           */
-  transitprint(1,verblevel,"\nstepping makeradsample\n");
   for(i=0; i<nmol; i++)
     resampley(flag, 2, atms->molec[i].d, molec[i].d,
                        atms->molec[i].q, molec[i].q);
