@@ -61,10 +61,9 @@ extern int init_run;
 extern void transit_init(int argc, char **argv);
 extern int  get_no_samples(void);
 extern void get_waveno_arr(double * waveno_arr, int waveno);
+extern void set_radius(double refradius);
 extern void run_transit(double * re_input, int transint, double *\
 		transit_out,int transit_out_size);
-
-
 
 
 /*****   Macros   *****/
@@ -72,9 +71,7 @@ static __inline__ void
 printextprogress(long wi, long wnn){
 }
 
-/* 
-
-*/
+/* FINDME: Take this function out of here                                   */
 static __inline__ double
 stateeqnford(_Bool mass,  /* Abundance by mass (1) or by number (0)         */
              double q,    /* Abundance                                      */

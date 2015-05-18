@@ -11,8 +11,9 @@
 
 extern void transit_init(int argc, char **argv);
 extern int  get_no_samples(void);
-extern void get_waveno_arr(double * waveno_arr, int waveno);
-extern void run_transit(double * re_input, int transint, double *\
+extern void get_waveno_arr(double *waveno_arr, int waveno);
+extern void set_radius(double refradius);
+extern void run_transit(double *re_input, int transint, double *\
 transit_out,int transit_out_size);
 extern void free_memory(void);
 %}
@@ -94,6 +95,7 @@ extern void free_memory(void);
 extern void transit_init(int argc, char **argv);
 extern int  get_no_samples(void);
 extern void get_waveno_arr(double * waveno_arr, int waveno);
+extern void set_radius(double refradius);
 extern void run_transit(double * re_input, int transint, double *\
 transit_out,int transit_out_size);
 extern void free_memory(void);
