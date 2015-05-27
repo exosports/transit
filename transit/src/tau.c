@@ -274,7 +274,7 @@ tau(struct transit *tr){
         do{
           if(!comp[--lastr]){
             /* Compute extinction at given radius:                          */
-            transitprint(2, verblevel, "Radius %i: %.9g cm ... \n",
+            transitprint(5, verblevel, "Radius %i: %.9g cm ... \n",
                                        lastr+1, r[lastr]*rfct);
             if (tr->fp_opa != NULL)
               rn = interpolmolext(tr, lastr, ex->e);
