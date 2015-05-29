@@ -248,7 +248,7 @@ void free_memory(void){
      happen.                                                                */
   freemem_molecules(    transit.ds.mol, &transit.pi);
   freemem_atmosphere(   transit.ds.at,  &transit.pi);
-  freemem_lineinfotrans(transit.ds.li,  &transit.pi);
+  // freemem_lineinfotrans(transit.ds.li,  &transit.pi);
   freemem_transit(&transit);
   freemem_cia(       transit.ds.cia, &transit.pi);
   init_run = 0;
