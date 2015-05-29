@@ -12,7 +12,7 @@ the same name written by Patricio Rojo (Univ. de Chile, Santiago) when
 he was a graduate student at Cornell University under Joseph
 Harrington.
 
-Copyright (C) 2014 University of Central Florida.  All rights reserved.
+Copyright (C) 2015 University of Central Florida.  All rights reserved.
 
 This is a test version only, and may not be redistributed to any third
 party.  Please refer such requests to us.  This program is distributed
@@ -308,7 +308,7 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
   struct optdepth *tau = tr->ds.tau;
 
   /* Integrate for each wavelength:                                         */
-  transitprint(1, verblevel, "\nIntegrating over wavelength.\n");
+  transitprint(4, verblevel, "Integrating over wavelength.\n");
 
   /* Printing process variable:                                             */
   int nextw = wn->n/10;
@@ -334,11 +334,11 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
     /* Prints to screen the progress status:                                */
     if(w == nextw){
       nextw += wn->n/10;
-      transitprint(2, verblevel, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
+      transitprint(10, verblevel, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
     }
   }
 
-  transitprint(1, verblevel, "\nDone.\n");
+  transitprint(4, verblevel, "\nDone.\n");
 
   /* Sets progress indicator, and prints output:                             */
   tr->pi |= TRPI_MODULATION; /* FINDME: this is not a modulation calculation */
@@ -348,8 +348,8 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
 }
 
 
-/* \fcnfh
-   Calculates flux
+/* FUNCTION
+   Calculate the flux spectrum
    Formula: 
    Flux = pi * SUMM_i [I_i * (sin(theta_fin)^2 - sin(theta_in)^2)]
    I_i are calculated for each angle defined in the configuration file
@@ -422,13 +422,16 @@ printintens(struct transit *tr){
 
   /* Adds string to the output files to differentiate between outputs        */
   char our_fileName[512];
-  strncpy(our_fileName, tr->f_outintens, 512);
-  //strcat(our_fileName, ".-Intens");
 
   /* Open file:                                                             */
-  if(tr->f_outintens && tr->f_outintens[0] != '-')
+  if (tr->f_outintens && tr->f_outintens[0] != '-'){
+    strncpy(our_fileName, tr->f_outintens, 512);
     outf = fopen(our_fileName, "w");
-
+  }
+  else{
+    transitprint(1, verblevel, "No intensity file.\n");
+    return;
+  }
   transitprint(1, verblevel, "\nPrinting intensity in '%s'\n",
                              tr->f_outintens ? our_fileName:"standard output");
 

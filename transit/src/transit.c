@@ -254,8 +254,9 @@ void free_memory(void){
   init_run = 0;
 }
 
+
 int main(int argc, char **argv){
-  transit_init(argc,argv);
+  transit_init(argc, argv);
   int trans_size = get_no_samples();
   double tmp[trans_size];
   do_transit(tmp);
