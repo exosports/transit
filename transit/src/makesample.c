@@ -615,6 +615,11 @@ makeipsample(struct transit *tr){
     /* Make the sampling taking as reference the radius sampling:           */
     res = makesample(&tr->ips, &usamp, &rsamp, TRH_IPRM);
   }
+
+  /* Print sample information to file                                       */
+  if (th->savefiles)
+    outsample(tr);
+
   /* Set progress indicator:                                                */
   if(res >= 0)
     tr->pi |= TRPI_MAKEIP;

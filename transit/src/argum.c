@@ -116,9 +116,12 @@ processparameters(int argc,            /* Number of command-line args  */
     //CLA_GTIMEFCT,
     //CLA_GMASSRAD,
     //CLA_GMASSRADFCT,
+    CLA_OUTMOD,
     CLA_TOOMUCH,
     CLA_OUTTOOMUCH,
     CLA_OUTSAMPLE,
+    CLA_OUTFLUX,
+    CLA_OUTINTENS,
     CLA_TAULEVEL,
     CLA_MODLEVEL,
     CLA_ETHRESH,
@@ -177,8 +180,8 @@ processparameters(int argc,            /* Number of command-line args  */
     /* Input and output options:              */
     {NULL,          0,             HELPTITLE,         NULL, NULL,
      "INPUT/OUTPUT OPTIONS:"},
-    {"output",     'o',            required_argument, "-",  "outfile",
-     "Change output file name, a dash (-) directs to standard output."},
+    {"output",     CLA_OUTMOD,      required_argument, "-",  "filename",
+     "Outputs modulation information, a dash (-) directs to standard output."},
     {"atm",        CLA_ATMOSPHERE, required_argument, "NULL",  "atmfile",
      "File containing atmospheric info (Radius, pressure, temperature). A dash"
      " (-) indicates alternative input."},
@@ -190,6 +193,12 @@ processparameters(int argc,            /* Number of command-line args  */
      " of wavelength."},
     {"outsample",  CLA_OUTSAMPLE,  required_argument, NULL, "filename",
      "Outputs sampling information. A dash (-) indicates standard input. By "
+     "default there is no such output."},
+    {"outflux",  CLA_OUTFLUX,  required_argument, NULL, "filename",
+     "Outputs flux information. A dash (-) indicates standard input. By "
+     "default there is no such output."},
+    {"outintens",  CLA_OUTINTENS,  required_argument, NULL, "filename",
+     "Outputs intensity information. A dash (-) indicates standard input. By "
      "default there is no such output."},
     {"molfile",    CLA_MOLFILE,    required_argument, "../inputs/molecules.dat",
      "filename", "Path to file with the molecular info."},
@@ -467,9 +476,9 @@ processparameters(int argc,            /* Number of command-line args  */
       hints->f_molfile = (char *)realloc(hints->f_molfile, strlen(optarg)+1);
       strcpy(hints->f_molfile, optarg);
       break;
-    case 'o':            /* Output file name           */
-      hints->f_out = (char *)realloc(hints->f_out, strlen(optarg)+2);
-      strcpy(hints->f_out, optarg);
+    case CLA_OUTMOD:     /* Modulation output file name           */
+      hints->f_outmod = (char *)realloc(hints->f_outmod, strlen(optarg)+2);
+      strcpy(hints->f_outmod, optarg);
       break;
     case CLA_OUTSAMPLE:  /* Sampling output file name  */
       if(hints->f_outsample) free_null(hints->f_outsample);
@@ -482,6 +491,16 @@ processparameters(int argc,            /* Number of command-line args  */
         hints->f_toomuch = (char *)calloc(strlen(optarg)+1, sizeof(char));
         strcpy(hints->f_toomuch, optarg);
       }
+      break;
+    case CLA_OUTFLUX:  /* Flux output file name  */
+      if(hints->f_outflux) free_null(hints->f_outflux);
+      hints->f_outflux = (char *)calloc(strlen(optarg)+2, sizeof(char));
+      strcpy(hints->f_outflux, optarg);
+      break;
+    case CLA_OUTINTENS:  /* Intensity output file name  */
+      if(hints->f_outintens) free_null(hints->f_outintens);
+      hints->f_outintens = (char *)calloc(strlen(optarg)+2, sizeof(char));
+      strcpy(hints->f_outintens, optarg);
       break;
     case CLA_SAVEFILES: /* output files with tau, extionction, CIA         */
       isYes = strncmp(optarg, "yes", 3)==0;
@@ -713,17 +732,26 @@ acceptgenhints(struct transit *tr){
   /* Pointer to transithint:                       */
   struct transithint *th = tr->ds.th;
 
-  /* Accept output file:                           */
-  if(th->f_out)
-    tr->f_out = th->f_out;
+  /* Accept modulation output file:                  */
+  if(th->f_outmod)
+    tr->f_outmod = th->f_outmod;
   else{ /* File not specified, use standard output */
-    tr->f_out    = (char *)calloc(2, sizeof(char));
-    tr->f_out[0] = '-';
+    tr->f_outmod    = (char *)calloc(2, sizeof(char));
+    tr->f_outmod[0] = '-';
   }
 
-  /* Accept toomuch and outsample output files:    */
+  /* Accept flux output file:                           */
+  if(th->f_outflux)
+    tr->f_outflux = th->f_outflux;
+  else{ /* File not specified, use standard output */
+    tr->f_outflux    = (char *)calloc(2, sizeof(char));
+    tr->f_outflux[0] = '-';
+  }
+
+  /* Accept toomuch, outsample, and intensity output files:    */
   tr->f_toomuch   = th->f_toomuch;
   tr->f_outsample = th->f_outsample;
+  tr->f_outintens = th->f_outintens;
   /* FINDME: Should check if the file exists:                               */
   tr->f_molfile   = th->f_molfile;
 
@@ -835,7 +863,9 @@ savehint(FILE *out,
   /* Save strings:                                                          */
   savestr(out, hints->f_atm);
   savestr(out, hints->f_line);
-  savestr(out, hints->f_out);
+  savestr(out, hints->f_outmod);
+  savestr(out, hints->f_outflux);
+  savestr(out, hints->f_outintens);
   savestr(out, hints->f_toomuch);
   savestr(out, hints->f_outsample);
   savestr(out, hints->solname);
@@ -876,7 +906,11 @@ resthint(FILE *in,
   if(rn<0) return rn; else res += rn;
   rn = reststr(in, &hint->f_line);
   if(rn<0) return rn; else res += rn;
-  rn = reststr(in, &hint->f_out);
+  rn = reststr(in, &hint->f_outmod);
+  if(rn<0) return rn; else res += rn;
+  rn = reststr(in, &hint->f_outflux);
+  if(rn<0) return rn; else res += rn;
+  rn = reststr(in, &hint->f_outintens);
   if(rn<0) return rn; else res += rn;
   rn = reststr(in, &hint->f_toomuch);
   if(rn<0) return rn; else res += rn;
@@ -927,7 +961,9 @@ freemem_hints(struct transithint *h){
   /* Free strings which are copied into transit:                            */
   free(h->f_atm);
   free(h->f_line);
-  free(h->f_out);
+  free(h->f_outmod);
+  free(h->f_outflux);
+  free(h->f_outintens);
   free(h->f_toomuch);
   free(h->f_outsample);
   free(h->f_molfile);

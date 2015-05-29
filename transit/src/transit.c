@@ -167,12 +167,6 @@ void do_transit(double * transit_out){
     if(fw_status>0)
       transitprint(7, verblevel, "makeipsample() modified some of the hinted "
                                  "parameters. Flag: 0x%lx.\n", fw_status);
- 
-    /* Print sampling info:                                                 */
-    //if (niter == 0){
-    //  fw(outsample, !=0, &transit);
-    //  t0 = timecheck(verblevel, itr,  7, "outsample", tv, t0);
-    //}
 
     /* Interpolate CIA:                                                     */
     fw(interpolatecia, !=0, &transit);

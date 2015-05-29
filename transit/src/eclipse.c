@@ -422,21 +422,31 @@ printintens(struct transit *tr){
 
   /* Adds string to the output files to differentiate between outputs        */
   char our_fileName[512];
-  strncpy(our_fileName, tr->f_out, 512);
-  strcat(our_fileName, ".-Intens");
+  strncpy(our_fileName, tr->f_outintens, 512);
+  //strcat(our_fileName, ".-Intens");
 
   /* Open file:                                                             */
-  if(tr->f_out && tr->f_out[0] != '-')
+  if(tr->f_outintens && tr->f_outintens[0] != '-')
     outf = fopen(our_fileName, "w");
 
   transitprint(1, verblevel, "\nPrinting intensity in '%s'\n",
-                             tr->f_out ? our_fileName:"standard output");
+                             tr->f_outintens ? our_fileName:"standard output");
 
   /* Print the header:                                                      */
-  fprintf(outf, "#wvl [um]%*s", 6, " ");
+  //fprintf(outf, "#wvl [um]%*s", 6, " ");
+  //for(i=0; i < an; i++)
+  //    fprintf(outf, "I[%4.1lf deg]%*s", angles[i], 7, " ");
+  //fprintf(outf, "[erg/s/cm/sr]\n");
+
+  /* Print the header:                                                      */
+  fprintf(outf, "#wvl %*s", 10, " ");
   for(i=0; i < an; i++)
       fprintf(outf, "I[%4.1lf deg]%*s", angles[i], 7, " ");
-  fprintf(outf, "[erg/s/cm/sr]\n");
+  fprintf(outf, "\n#[um]%*s", 10, " ");
+  for(i=0; i < an; i++)
+      fprintf(outf, "[erg/s/cm/sr]%*s", 5, " ");
+  fprintf(outf, "\n");
+
 
   /* Fills out each column with the correct output intensity                 */
   for(w=0; w<wnn; w++){
@@ -464,15 +474,15 @@ printflux(struct transit *tr){
 
   /* Adds string to the output files to differentiate between outputs:      */
   char our_fileName[512];
-  strncpy(our_fileName, tr->f_out, 512);
-  strcat(our_fileName, ".-Flux");
+  strncpy(our_fileName, tr->f_outflux, 512);
+  //strcat(our_fileName, ".-Flux");
 
   /* Open file:                                                             */
-  if(tr->f_out && tr->f_out[0] != '-')
+  if(tr->f_outflux && tr->f_outflux[0] != '-')
     outf = fopen(our_fileName, "w");
 
   transitprint(1, verblevel, "\nPrinting flux in '%s'\n",
-               tr->f_out ? our_fileName:"standard output");
+               tr->f_outflux ? our_fileName:"standard output");
 
   /* Print the header:                                                      */
   fprintf(outf, "#wvl [um]%*sFlux [erg/s/cm]\n", 6, " ");

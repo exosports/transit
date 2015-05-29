@@ -318,9 +318,11 @@ struct transithint{
   char *f_atm,          /* Atmosphere filename                              */
        *f_line,         /* TLI filename                                     */
        *f_opa,          /* Opacity filename                                 */
-       *f_out,          /* Output (main) filename                           */
+       *f_outmod,       /* Output modulation filename                       */
        *f_toomuch,      /* Output toomuch filename                          */
        *f_outsample,    /* Output sample filename                           */
+       *f_outflux,      /* Output flux filename                             */
+       *f_outintens,    /* Output intensity filename                        */
        *f_molfile;      /* Known molecular info filename                    */
   PREC_NREC ot;         /* Radius index at which to print output from tau   */
   prop_samp rads, ips,  /* Sampling properties of radius, impact parameter, */
@@ -367,9 +369,11 @@ struct transit{
   char *f_atm,       /* Atmosphere filename                                 */
        *f_line,      /* TLI filename                                        */
        *f_opa,       /* Opacity filename                                    */
-       *f_out,       /* Output (main) filename                              */
+       *f_outmod,    /* Output modulation filename                          */
        *f_toomuch,   /* Output toomuch filename                             */
        *f_outsample, /* Output sample filename                              */
+       *f_outflux,   /* Output flux filename                                */
+       *f_outintens, /* Output intensity filename                           */
        *f_molfile;   /* Known molecular info filename                       */
   PREC_NREC ot;      /* Radius index at which to print output from tau      */
 

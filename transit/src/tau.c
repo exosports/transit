@@ -659,10 +659,10 @@ printtoomuch(char *file,            /* Filename to save the info            */
                    "optical depth got larger than %g.\n", file, tau->toomuch);
 
   /* Print header:                                                          */
-  fprintf(out, "# Wavenumber (cm-1)  Radius at max. calculated depth (km)\n");
+  fprintf(out, "# Wavelenght (um)  Radius at max. calculated depth (km)\n");
   /* Print the wavenumber and radius:                                       */
   for(w=0; w < wn->n; w++)
-    fprintf(out, "%14.7f     %12.3f\n", wn->v[w]*wn->fct,
+    fprintf(out, "%14.7f     %12.3f\n", 1.0/wn->v[w]*wn->fct*1e4,
                                         rad->v[tau->last[w]]*rad->fct/1e5);
   fclose(out);
 }

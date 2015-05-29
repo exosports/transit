@@ -133,12 +133,12 @@ printmod(struct transit *tr){
   int rn;
 
   /* Open file: */
-  if(tr->f_out && tr->f_out[0] != '-')
-    outf = fopen(tr->f_out, "w");
+  if(tr->f_outmod && tr->f_outmod[0] != '-')
+    outf = fopen(tr->f_outmod, "w");
 
   transitprint(1, verblevel,
                "\nPrinting in-transit/out-transit modulation in '%s'.\n",
-               tr->f_out?tr->f_out:"standard output");
+               tr->f_outmod?tr->f_outmod:"standard output");
 
   /* Print: */
   char wlu[20], /* Wavelength units name */
