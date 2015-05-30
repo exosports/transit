@@ -54,8 +54,7 @@ Thank you for using transit!
 
 #include <transit.h>
 
-/* FUNCTION:
-   Calculate the opacity due to molecular transitions.
+/* FUNCTION:  Calculate the opacity due to molecular transitions.
    Return: 0 on success                                                     */
 int
 opacity(struct transit *tr){
@@ -69,76 +68,64 @@ opacity(struct transit *tr){
   /* Check that the radius array has been sampled:                          */
   transitcheckcalled(tr->pi, "opacity", 1, "makeradsample", TRPI_MAKERAD);
 
-  /* Check if the opacity file was specified:                               */
-  if(th->f_opa == NULL){
-    transitprint(1, verblevel, "No opacity file specified.\n");
-  }
-
   /* Check if the opacity file exists:                                      */
   int fe = fileexistopen(th->f_opa, &tr->fp_opa);
   tr->f_opa = th->f_opa;  /* Set file name in transit struct                */
   transitprint(10, verblevel, "Opacity-file exist status = %d\n", fe);
 
-  /* If the file exists, read the opacities from it:                        */
-  if(fe == 1){
+  /* The opacity file exists:                                               */
+  if (fe == 1){
     transitprint(1, verblevel, "Reading opacity file: '%s'.\n", tr->f_opa);
     /* Read the grid of opacities from file:                                */
     readopacity(tr, tr->fp_opa);
   }
-  /* Else, calculate Voigt profiles and the opacity grid:                   */
+  /* Calculate Voigt profiles:                                              */
   else{
+    transitprint(1, verblevel, "Calculating grid of Voigt profiles.\n");
+    calcprofiles(tr);
+    if (fe == 0)
+      transitprint(1, verblevel, "No opacity file specified.\n");
+  }
+  /* Opacity file specified, but it doesn't exist yet:                      */
+  if (fe == -1){
     /* Open file for writing:                                               */
     tr->fp_opa = fopen(tr->f_opa, "wb");
     /* Create file:                                                         */
-    if(fe == -1 && tr->fp_opa == NULL){
-        transiterror(TERR_WARNING, "Opacity filename '%s' cannot be opened for "
-                                   "writing.\n", tr->f_opa);
-        return -1;
+    if (tr->fp_opa == NULL){
+      transiterror(TERR_WARNING, "Opacity filename '%s' cannot be opened "
+                                 "for writing.\n", tr->f_opa);
+      return -1;
     }
-    /* Calculate the Voigt profiles (and grid of opacities if requested):   */
-    if (tr->fp_opa != NULL)
-      transitprint(1, verblevel, "Calculating new grid of opacities: '%s'.\n",
+    /* Calculate the grid of opacities:                                     */
+    transitprint(1, verblevel, "Calculating new grid of opacities: '%s'.\n",
                                tr->f_opa);
-    else
-      transitprint(1, verblevel, "Calculating grid of Voigt profiles.\n");
-
     calcopacity(tr, tr->fp_opa);
+
+    /* Free the line-transition memory:                                     */
+    freemem_linetransition(&tr->ds.li->lt, &tr->pi);
+    tr->pi |= TRPI_READDATA;
+    tr->pi |= TRPI_READINFO;
+    tr->pi |= TRPI_CHKRNG;
   }
 
   /* Set progress indicator and return success:                             */
   tr->pi |= TRPI_OPACITY;
-	freemem_lineinfotrans(tr->ds.li, &tr->pi);
-	tr->pi |= TRPI_READDATA;
-	tr->pi |= TRPI_READINFO;
-	tr->pi |= TRPI_CHKRNG;
   return 0;
 }
 
 
-/* FUNCTION:  Calculate opacities for the grid of wavenumber, radius,
-   and temperature arrays for each molecule.                                */
+/*  FUNCTION:  Calculate a grid of Voigt profiles.                          */
 int
-calcopacity(struct transit *tr,
-            FILE *fp){
+calcprofiles(struct transit *tr){
   struct transithint *th = tr->ds.th; /* transithint struct                 */
   struct opacity *op=tr->ds.op;     /* Opacity struct                       */
-  struct isotopes  *iso=tr->ds.iso; /* Isotopes struct                      */
-  struct molecules *mol=tr->ds.mol; /* Molecules struct                     */
-  struct lineinfo *li=tr->ds.li;    /* Lineinfo struct                      */
-  long Nmol, Ntemp, Nlayer, Nwave,  /* Opacity-grid  dimension sizes        */
-       flag;                        /* Interpolation flag                   */
-  int i, j, t, r,                   /* for-loop indices                     */
-      rn, iso1db;
+  int i, j;                         /* for-loop indices                     */
   int nDop, nLor;                   /* Number of Doppler and Lorentz-widths */
   double Lmin, Lmax, Dmin, Dmax;    /* Minimum and maximum widths           */
   PREC_VOIGT ***profile;            /* Grid of Voigt profiles               */
   float timesalpha=tr->timesalpha;  /* Voigt wings width                    */
-
   struct timeval tv;  /* Time-keeping variables                             */
   double t0=0.0;
-
-  PREC_ATM *density = (PREC_ATM *)calloc(mol->nmol, sizeof(PREC_ATM));
-  double   *Z       = (double   *)calloc(iso->n_i,  sizeof(double));
 
   /* Make logscale grid for the profile widths:                             */
   /* FINDME: Add check that these numbers make sense                        */
@@ -158,8 +145,8 @@ calcopacity(struct transit *tr,
     op->profsize[i] = op->profsize[0] + i*nLor;
 
   /* Allocate grid of Voigt profiles:                                       */
-  op->profile       = (PREC_VOIGT ***)calloc(nDop,     sizeof(PREC_VOIGT **));
-  op->profile[0]    = (PREC_VOIGT  **)calloc(nDop*nLor, sizeof(PREC_VOIGT *));
+  op->profile    = (PREC_VOIGT ***)calloc(nDop,      sizeof(PREC_VOIGT **));
+  op->profile[0] = (PREC_VOIGT  **)calloc(nDop*nLor, sizeof(PREC_VOIGT *));
   for (i=1; i<nDop; i++){
     op->profile[i] = op->profile[0] + i*nLor;
   }
@@ -181,12 +168,35 @@ calcopacity(struct transit *tr,
                              tr->wns.d/tr->owns.o, op->aDop[i], op->aLor[j],
                              timesalpha, tr->owns.n);
       }
-      transitprint(5, verblevel, "Profile[%2d][%2d] size = %4li  (D=%.3g, "
+      transitprint(25, verblevel, "Profile[%2d][%2d] size = %4li  (D=%.3g, "
                                   "L=%.3g).\n", i, j, 2*op->profsize[i][j]+1,
                                    op->aDop[i], op->aLor[j]);
     }
   }
-  t0 = timecheck(verblevel, 0, 0, "End Voigt-profile calculation", tv, t0);
+  t0 = timecheck(verblevel, 0, 0, "End Voigt-profile calculation.", tv, t0);
+  return 0;
+}
+
+/* FUNCTION:  Calculate opacities for the grid of wavenumber, radius,
+   and temperature arrays for each molecule.                                */
+int
+calcopacity(struct transit *tr,
+            FILE *fp){
+  struct transithint *th = tr->ds.th; /* transithint struct                 */
+  struct opacity *op=tr->ds.op;     /* Opacity struct                       */
+  struct isotopes  *iso=tr->ds.iso; /* Isotopes struct                      */
+  struct molecules *mol=tr->ds.mol; /* Molecules struct                     */
+  struct lineinfo *li=tr->ds.li;    /* Lineinfo struct                      */
+  long Nmol, Ntemp, Nlayer, Nwave,  /* Opacity-grid  dimension sizes        */
+       flag;                        /* Interpolation flag                   */
+  int i, j, t, r,                   /* for-loop indices                     */
+      rn, iso1db;
+
+  struct timeval tv;  /* Time-keeping variables                             */
+  double t0=0.0;
+
+  PREC_ATM *density = (PREC_ATM *)calloc(mol->nmol, sizeof(PREC_ATM));
+  double   *Z       = (double   *)calloc(iso->n_i,  sizeof(double));
 
   /* Make temperature array from hinted values:                             */
   maketempsample(tr);

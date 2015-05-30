@@ -159,9 +159,8 @@ void run_transit(double *re_input, int transtint, double *transit_out,
 
 
 void do_transit(double * transit_out){
-    int i;
-    int nspec = (int)transit.wns.n;
-    if (init_run > 0){
+  int i;
+  if (init_run > 0){
     fw(makeipsample, <0, &transit);
     t0 = timecheck(verblevel, itr,  6, "makeipsample", tv, t0);
     if(fw_status>0)
@@ -235,10 +234,10 @@ void do_transit(double * transit_out){
     t0 = timecheck(verblevel, itr, 14, "THE END", tv, t0);
     transitprint(1, verblevel, "----------------------------\n");
     itr++;
-    }
-    else{
-      printf("Transit init not run, please initialize transit\n");
-    }
+  }
+  else{
+    printf("Transit init not run, please initialize transit\n");
+  }
 }
 
 void free_memory(void){
@@ -246,11 +245,13 @@ void free_memory(void){
      called at the end of the program. Check if all these data structures
      can be used when called from bart, In MPItransit not all the frees
      happen.                                                                */
-  freemem_molecules(    transit.ds.mol, &transit.pi);
-  freemem_atmosphere(   transit.ds.at,  &transit.pi);
-  // freemem_lineinfotrans(transit.ds.li,  &transit.pi);
-  freemem_transit(&transit);
+  freemem_molecules( transit.ds.mol, &transit.pi);
+  freemem_atmosphere(transit.ds.at,  &transit.pi);
+  if (transit.fp_opa == NULL)
+    freemem_linetransition(&transit.ds.li->lt,  &transit.pi);
+  freemem_lineinfo(  transit.ds.li,  &transit.pi);
   freemem_cia(       transit.ds.cia, &transit.pi);
+  freemem_transit(&transit);
   init_run = 0;
 }
 

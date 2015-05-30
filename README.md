@@ -90,7 +90,7 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append("../transit/scripts/")
 import readtransit as rt
-wlength, flux = rt.readspectrum("CH4_demo_spectrum.dat.-Flux", 0)
+wlength, flux = rt.readspectrum("CH4_demo_spectrum.dat", 0)
 
 plt.figure(0, (8,5))
 plt.clf()

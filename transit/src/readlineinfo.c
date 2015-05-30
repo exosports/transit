@@ -689,6 +689,7 @@ readlineinfo(struct transit *tr){
   static struct lineinfo li;
   static struct isotopes iso;
   long rn;  /* Sub-routines returned status */
+  int filecheck;  /* Integer to check if opacity file exists */
 
   memset(&li,  0, sizeof(struct lineinfo));
   memset(&iso, 0, sizeof(struct isotopes));
@@ -696,77 +697,60 @@ readlineinfo(struct transit *tr){
   tr->ds.iso = &iso;  /* isotopes                                           */
 
 
-	/* Read hinted info file:                                                 */
-	transitprint(1, verblevel, "Reading info file '%s' ...\n", th->f_line);
-	if((rn=readinfo_tli(tr, &li)) != 1)
-	  transiterror(TERR_SERIOUS, "readinfo_tli() returned an error "
-	               "code %i.\n", rn);
-	transitprint(1, verblevel, " Done.\n\n");
+  /* Read hinted info file:                                                 */
+  transitprint(1, verblevel, "Reading info file '%s' ...\n", th->f_line);
+  if((rn=readinfo_tli(tr, &li)) != 1)
+    transiterror(TERR_SERIOUS, "readinfo_tli() returned an error "
+                 "code %i.\n", rn);
+  transitprint(1, verblevel, " Done.\n\n");
 
-	/* Get the molecule index for the isotopes:                               */
-	/* FINDME: Move this out of readline later.                               */
-	rn = setimol(tr);
+  /* Get the molecule index for the isotopes:                               */
+  /* FINDME: Move this out of readline later.                               */
+  rn = setimol(tr);
 
-	/* Check the remainder range of the hinted values
-	   related to line database reading:                                      */
-	if((rn=checkrange(tr, &li)) < 0)
-	  transiterror(TERR_SERIOUS, "checkrange() returned error code %i.\n", rn);
-	/* Output status so far if the verbose level is enough:                   */
-	if(rn>0 && verblevel>1)
-	  transiterror(TERR_WARNING, "checkrange() modified the suggested "
-	                             "parameters, it returned code 0x%x.\n\n", rn);
+  /* Check the remainder range of the hinted values
+     related to line database reading:                                      */
+  if((rn=checkrange(tr, &li)) < 0)
+    transiterror(TERR_SERIOUS, "checkrange() returned error code %i.\n", rn);
+  /* Output status so far if the verbose level is enough:                   */
+  if(rn>0 && verblevel>1)
+    transiterror(TERR_WARNING, "checkrange() modified the suggested "
+                               "parameters, it returned code 0x%x.\n\n", rn);
 
-	/* Scale factors:                                                         */
-	double fct = li.wavs.fct;
-	double fct_to_microns = fct/1e-4;
+  /* Scale factors:                                                         */
+  double fct = li.wavs.fct;
+  double fct_to_microns = fct/1e-4;
+  transitprint(2, verblevel, "The wavelength range to be used is %g to %g "
+               "cm.\n", fct*tr->ds.li->wavs.i, fct*tr->ds.li->wavs.f);
 
-	/* Integer to check if opacity file exists */
-	int filecheck;
+  /* Check for an opacity file:                                             */
+  filecheck = access(th->f_opa, F_OK);
+  /* Only read the TLI file if there is no opacity file                     */
+  if(filecheck == -1){
+    /* Read data file:                                                      */
+    transitprint(1, verblevel, "Reading data.\n");
+    if((rn=readdatarng(tr, &li))<1)
+      transiterror(TERR_SERIOUS, "readdatarng returned error code %li.\n", rn);
+    transitprint(1, verblevel, "Done.\n\n");
+  }
+  /* If there is an opacity file, update progress indicator so that
+     program may continue:                                                  */
+  else{
+    transitprint(1, verblevel, "Skipping TLI reading.\n");
+    tr->pi |= TRPI_READINFO;
+    tr->pi |= TRPI_READDATA;
+  }
 
-	filecheck = access(th->f_opa, F_OK);
+  /* Status so far:                                                         */
+  transitprint(2, verblevel, "Status so far:\n"
+               " * I read %li records from the datafile.\n"
+               " * The wavelength range read was %.8g to %.8g microns.\n",
+               li.n_l, li.wavs.i*fct_to_microns, li.wavs.f*fct_to_microns);
 
-	transitprint(2, verblevel, "The wavelength range to be used is %g to %g "
-	             "cm.\n", fct*tr->ds.li->wavs.i, fct*tr->ds.li->wavs.f);
-
-	/* Only read the TLI file if there is no opacity file */
-	if(filecheck == -1){
-		/* Read data file:                                      */
-		transitprint(-1, verblevel, "Reading \n");
-		transitprint(1, verblevel, "\nReading data ...\n");
-		if((rn=readdatarng(tr, &li))<1)
-			transiterror(TERR_SERIOUS, "readdatarng returned an error code %li.\n", rn);
-		transitprint(1, verblevel, "Done.\n\n");
-	}
-	/* If there is an opacity file, update progress indicator so that program may continue */
-	else{
-		transitprint(-1,verblevel, "Skipping \n");
-		tr->pi |= TRPI_READINFO;
-		tr->pi |= TRPI_READDATA;
-	}
-
-	/* Status so far:                                                         */
-	transitprint(2, verblevel, "Status so far:\n"
-	             " * I read %li records from the datafile.\n"
-	             " * The wavelength range read was %.8g to %.8g microns.\n",
-	             li.n_l, li.wavs.i*fct_to_microns, li.wavs.f*fct_to_microns);
-
-/* FINDME: Why this indentation? */
-#ifndef NODEBUG_TRANSIT
-	rn = 1; /* A random index to test */
-	struct line_transition *lt = &tr->ds.li->lt;
-	transitDEBUG(21, verblevel,
-	             " * And the record %li has the following info\n"
-	             "Wavelength: %.10g\n"
-	             "Lower Energy Level: %.10g\n"
-	             "Log(gf): %.10g\n"
-	             "Isotope: %i\n",
-	             rn, lt->wl[rn], lt->elow[rn], lt->gf[rn], lt->isoid[rn]);
-#endif
-
-	transitDEBUG(21, verblevel,
-	             "Database min and max: %.10g(%.10g) and %.10g(%.10g)\n",
-	             li.wi, tr->ds.li->wi, li.wf, tr->ds.li->wf);
-	return 0;
+  transitDEBUG(21, verblevel,
+               "Database min and max: %.10g(%.10g) and %.10g(%.10g)\n",
+               li.wi, tr->ds.li->wi, li.wf, tr->ds.li->wf);
+  return 0;
 }
 
 
@@ -799,22 +783,15 @@ freemem_isotopes(struct isotopes *iso,
 }
 
 
-/* \fcnfh
+/* FUNCTION
    Free lineinfo structure.
-   Return: 0 on success                */
+   Return: 0 on success                                                     */
 int
-freemem_lineinfotrans(struct lineinfo *li,
-                      long *pi){
+freemem_lineinfo(struct lineinfo *li,
+                 long *pi){
   int i;
 
-  /* Free the four arrays of lt:        */
-  struct line_transition *lt = &li->lt;
-  free(lt->wl);
-  free(lt->elow);
-  free(lt->gf);
-  free(lt->isoid);
-
-  /* Free isov, dbnoext and samp in li: */
+  /* Free isov, dbnoext and samp in li:                                     */
   free_isov(li->isov);
   free(li->isov);
 
@@ -824,11 +801,26 @@ freemem_lineinfotrans(struct lineinfo *li,
 
   free_samp(&li->wavs);
 
-  /* Zero all the structure:            */
+  /* Zero all the structure:                                                */
   memset(li, 0, sizeof(struct lineinfo));
 
-  /* Unset appropiate flags:            */
-  *pi &= ~(TRPI_READDATA | TRPI_READINFO | TRPI_CHKRNG);
+  /* Unset appropiate flags:                                                */
+  *pi &= ~(TRPI_READINFO | TRPI_CHKRNG);
+  return 0;
+}
+
+/* FUNCTION  */
+int 
+freemem_linetransition(struct line_transition *lt,
+                       long *pi){
+  /* Free the four arrays of lt:                                            */
+  free(lt->wl);
+  free(lt->elow);
+  free(lt->gf);
+  free(lt->isoid);
+
+  /* Unset appropiate flags:                                                */
+  *pi &= ~TRPI_READDATA;
   return 0;
 }
 
