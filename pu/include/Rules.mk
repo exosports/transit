@@ -4,11 +4,8 @@
 sp             := $(sp).x
 dirstack_$(sp) := $(d)
 
-#subdirectories in random order
-d       := $(d)/pu
-include   $(d)/Rules.mk
-
-FILES_PROGRAM_$(d)   := pu
+FILES_PROGRAM_$(d)   := numerical iomisc procopt profile \
+			sampling xmalloc messagep
 
 header_PROGRAM_$(d) := $(FILES_PROGRAM_$(d):%=$(d)/%.h)
 
