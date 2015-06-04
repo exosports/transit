@@ -27,8 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <pu/iomisc.h>
-#include <pu/xmalloc.h>
+#include <iomisc.h>
+#include <xmalloc.h>
 
 #define HELPTITLE    0xff
 #define ADDPARAMFILE 0xfe
