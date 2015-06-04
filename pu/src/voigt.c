@@ -12,7 +12,7 @@ the same name written by Patricio Rojo (Univ. de Chile, Santiago) when
 he was a graduate student at Cornell University under Joseph
 Harrington.
 
-Copyright (C) 2014 University of Central Florida.  All rights reserved.
+Copyright (C) 2015 University of Central Florida.  All rights reserved.
 
 This is a test version only, and may not be redistributed to any third
 party.  Please refer such requests to us.  This program is distributed
@@ -73,7 +73,7 @@ Thank you for using transit!
      the contribution from its of its boundary bin in the first and
      latter \emph{center shift position}*/
 //\omitfh
-#include <pu/profile.h>
+#include <profile.h>
 
 #define SQRTLN2 0.83255461115769775635
 #define TWOOSQRTPI 1.12837916709551257389

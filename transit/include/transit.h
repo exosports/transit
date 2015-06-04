@@ -31,11 +31,11 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <pu/sampling.h>
-#include <pu/profile.h>
-#include <pu/iomisc.h>
-#include <pu/numerical.h>
-#include <pu/xmalloc.h>
+#include <sampling.h>
+#include <profile.h>
+#include <iomisc.h>
+#include <numerical.h>
+#include <xmalloc.h>
 #include <strings.h>
 #include <stdlib.h>
 #include <stdio.h>

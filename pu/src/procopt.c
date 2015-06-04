@@ -12,7 +12,7 @@ the same name written by Patricio Rojo (Univ. de Chile, Santiago) when
 he was a graduate student at Cornell University under Joseph
 Harrington.
 
-Copyright (C) 2014 University of Central Florida.  All rights reserved.
+Copyright (C) 2015 University of Central Florida.  All rights reserved.
 
 This is a test version only, and may not be redistributed to any third
 party.  Please refer such requests to us.  This program is distributed
@@ -99,7 +99,7 @@ Thank you for using transit!
 
 
 
-#include <pu/procopt.h>
+#include <procopt.h>
 #include <errno.h>
 
 //variables that are going to have allocated a space

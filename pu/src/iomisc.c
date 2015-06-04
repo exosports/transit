@@ -12,7 +12,7 @@ the same name written by Patricio Rojo (Univ. de Chile, Santiago) when
 he was a graduate student at Cornell University under Joseph
 Harrington.
 
-Copyright (C) 2014 University of Central Florida.  All rights reserved.
+Copyright (C) 2015 University of Central Florida.  All rights reserved.
 
 This is a test version only, and may not be redistributed to any third
 party.  Please refer such requests to us.  This program is distributed
@@ -83,7 +83,7 @@ double *logspace(double min, double max, int n)
 int     binsearchapprox(double *array, double value, int lo, int hi)
 */
 
-#include <pu/iomisc.h>
+#include <iomisc.h>
 
 char *linepad_break="-";
 int printpad_columns=__PADTO_COLUMNS;
