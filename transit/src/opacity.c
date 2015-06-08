@@ -275,6 +275,8 @@ calcopacity(struct transit *tr,
 
     /* Compute extinction:                                                  */
     for (r=0;   r<Nlayer; r++){  /* For each layer:                         */
+      transitprint(3, verblevel, "\nOpacity Grid at layer %03d/%03d.\n",
+                                 r+1, Nlayer);
       for (t=0; t<Ntemp;  t++){  /* For each temperature:                   */
         /* Get density and partition-function arrays:                       */
         for (j=0; j < mol->nmol; j++)
