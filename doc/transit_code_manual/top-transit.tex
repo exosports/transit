@@ -1,0 +1,410 @@
+%\usepackage{margin}
+\usepackage{graphicx}
+\usepackage{enumitem}
+
+\usepackage{amssymb, amsmath}
+%\usepackage{fancyvrb}
+%\usepackage{fixltx2e}
+
+\usepackage[usenames,dvipsnames]{xcolor}
+%\usepackage{xcolor}
+
+\usepackage{listings}
+%\usepackage{pxfonts}
+%\usepackage[tiny,compact]{titlesec}
+%\usepackage{bera}
+%\usepackage{alltt}
+%\renewcommand{\ttdefault}{txtt}
+
+% To use boldface verbatim:
+%\lstset{basicstyle=\ttfamily,
+%        escapeinside={||},
+%        mathescape=true}
+
+\lstset{
+    language={[LaTeX]TeX},
+    basicstyle=\tt\color{red},
+    escapeinside={||},
+}
+
+%\bibliographystyle{jupiter}
+\bibliographystyle{aa}
+%\bibliographystyle{apj}
+%\bibliographystyle{icarus}
+
+\def\bibAnnoteFile#1{}
+\usepackage{natbib}
+\bibpunct[, ]{(}{)}{,}{a}{}{,}
+\usepackage{astjnlabbrev-jh}
+\usepackage{bibentry}
+\setlength\bibsep{0pt}
+\usepackage{commath}
+\usepackage{rotating}
+
+
+% :::: jhmacs2.tex :::::
+
+\typeout{Joe Harrington's personal setup, Wed Jun 17 10:53:17 EDT 1998}
+% :::::: pato.tex ::::::
+% Joetex character unreservations.
+% This file frees most of TeX's reserved characters, and provides
+% several alternatives for their functions.
+
+% Tue Mar 29 22:23:03 EST 1994
+
+% utility
+\catcode`@=11
+
+% comments are first....
+
+\long\def\comment#1{}
+\def\com{}
+%\def\commenton{\catcode`\%=14}
+%\def\commentoff{\catcode`\%=12}
+
+\comment{$}
+\let\mathshift=$
+\def\mathstart{\begingroup $}
+\def\mathstop{$ \endgroup}
+\def\math#1{$#1$}
+\def\mathshifton{\catcode`\$=3}
+\def\mathshiftoff{\catcode`\$=12}
+
+\def\greek#1{\math{#1}}
+
+\let\oldbackslash=\backslash
+\def\backslash{\ifmmode\oldbackslash\else$\oldbackslash$\fi}
+
+\comment{alignment tab}
+\let\atab=&
+\def\atabon{\catcode`\&=4}
+\def\ataboff{\catcode`\&=12}
+
+\comment{super- and subscripts -- treat as a unit. \sp and \sb already
+exist in plain TeX math mode, but not in regular text.  In fact,
+superscripting and subscripting are automatic only in math mode (see
+TeXbook p. 134.  Elsewhere, they either need to be simulated or faked
+in math mode.  Use math mode or \msb and \msb when dealing with
+numbers or they get too big (compare 10\sb{2} to \math{10\sb{2}}).}
+\let\oldmsp=\sp
+\let\oldmsb=\sb
+\def\sp#1{\ifmmode
+	   \oldmsp{#1}%
+	 \else\strut\raise.85ex\hbox{\scriptsize #1}\fi}
+\def\sb#1{\ifmmode
+	   \oldmsb{#1}%
+	 \else\strut\raise-.54ex\hbox{\scriptsize #1}\fi}
+\newbox\@sp
+\newbox\@sb
+\def\sbp#1#2{\ifmmode%
+	   \oldmsb{#1}\oldmsp{#2}%
+	 \else
+	   \setbox\@sb=\hbox{\sb{#1}}%
+	   \setbox\@sp=\hbox{\sp{#2}}%
+	   \rlap{\copy\@sb}\copy\@sp
+	   \ifdim \wd\@sb >\wd\@sp
+	     \hskip -\wd\@sp \hskip \wd\@sb
+	   \fi
+	\fi}
+\def\msp#1{\ifmmode
+	   \oldmsp{#1}
+	 \else \math{\oldmsp{#1}}\fi}
+\def\msb#1{\ifmmode
+	   \oldmsb{#1}
+	 \else \math{\oldmsb{#1}}\fi}
+\def\supon{\catcode`\^=7}
+\def\supoff{\catcode`\^=12}
+\def\subon{\catcode`\_=8}
+\def\suboff{\catcode`\_=12}
+\def\supsubon{\supon \subon}
+\def\supsuboff{\supoff \suboff}
+
+
+\comment{active character -- seems pointless to have a function to
+replace the single-character-to-replace-a-function.  If you want ~ as
+an active character, reenable it.}
+\def\actcharon{\catcode`\~=13}
+\def\actcharoff{\catcode`\~=12}
+
+
+\comment{parameter -- just turn on and off when needed.  Doing the
+following:
+
+\let\defplain=\def
+\defplain\def{\paramon\afterassignment\paramoff\defplain}
+
+barfs in \long\def.
+
+Putting \paramon \paramoff in \begin{table} and \end{table} might be
+good... amgreene mentionned something about \halign, too.
+
+}
+
+\def\paramon{\catcode`\#=6}
+\def\paramoff{\catcode`\#=12}
+
+\comment{brackets -- now these produce the Spanish inverted
+punctuation.  \spanishoff will return them to their normal English
+function of being angle brackets.}
+
+\let\spanishexcl=<
+\let\spanishques=>
+\let\oldlt=<
+\let\oldgt=>
+\def\spanishexclon{\catcode`\<=12}
+\def\spanishexcloff{\catcode`\<=13
+		\def <{\ifmmode\oldlt\else$\oldlt$\fi}}
+\def\spanishqueson{\catcode`\>=12}
+\def\spanishquesoff{\catcode`\>=13
+		\def >{\ifmmode\oldgt\else$\oldgt$\fi}}
+
+\def\spanishon{\spanishexclon \spanishqueson}
+\def\spanishoff{\spanishexcloff \spanishquesoff}
+
+\comment{ now fix some things this will break}
+
+\comment{ ref
+\let\oldref=\ref
+\def\ref#1{\reservedcharson\oldref{#1}\reservedcharsoff}
+}
+
+\comment{ bibliography }
+\let\oldcite=\cite
+\def\cite#1{\reservedcharson\oldcite{#1}\reservedcharsoff}
+
+\let\oldbibliography=\bibliography
+\def\bibliography#1{\reservedcharson\oldbibliography{#1}\reservedcharsoff}
+
+\comment{ And now to turn us totally on and off... }
+
+\def\reservedcharson{ \mathshifton   \actcharon   \paramon}
+\def\reservedcharsoff{\mathshiftoff  \actcharoff  \paramoff}
+
+\comment{ this doesn't seem to work right for definitions...}
+\def\nojoe#1{\reservedcharson#1\reservedcharsoff}
+
+\catcode`@=12
+\reservedcharson
+
+% ::::::::::::::::::::::
+
+\comment{joe.tex sets up \comment and character reservation stuff.
+  Remember to turn on reserved characters before including other
+  peoples' files, and before defining anything.}
+
+\reservedcharson
+
+\def\atachar{\catcode`@=11}
+\def\atnotachar{\catcode`@=12}
+
+\atachar
+
+\comment{My macros.}
+\comment{technical stuff}
+
+\let\oldpm=\pm
+\def\pm{\ifmmode\oldpm\else\math{\oldpm}\fi}
+\def\by{\ifmmode\times\else\math{\times}\fi}
+\newcommand\lt{\ifmmode<\else\math{<}\fi}
+\newcommand\gt{\ifmmode>\else\math{>}\fi}
+\let\oldsim=\sim
+\def\sim{\ifmmode\oldsim\else\math{\oldsim}\fi}
+\let\oldapprox=\approx
+\def\approx{\ifmmode\oldapprox\else\math{\oldapprox}\fi}
+
+\def\ttt#1{10\sp{#1}}
+\def\tttt#1{\by\ttt{#1}}
+\def\bttt#1{10\sp{{\bfseries #1}}}
+\def\btttt#1{{\by\bttt{#1}}}
+
+\comment{\input{greek.tex}}
+\DeclareSymbolFont{UPM}{U}{eur}{m}{n}
+\DeclareMathSymbol{\umu}{0}{UPM}{"16}
+\let\oldumu=\umu
+\renewcommand\umu{\ifmmode\oldumu\else\math{\oldumu}\fi}
+\newcommand\micro{\umu}
+\comment{\font\greek = psyr
+\def\micro{{\greek m}}}
+\comment{\def\micron{\math{\mu}m}}
+\def\micron{\micro m}
+\let\microns \micron
+\def\microsec{\micro s}
+
+\def\angstrom{\AA}
+\let\angstroms \angstrom
+
+\def\degree{\ifmmode\sp\circ\else\math{\sp{\circ}}\fi}
+\let\degrees \degree
+\def\decdegree{\ifmmode\rlap{.}\sp{\circ}\else\rlap{.}\math{\sp{\circ}}\fi}
+\def\arcmin{\ifmmode\sp{'}\else\math{\sp{'}}\fi}
+\def\decarcmin{\ifmmode\rlap{.}\sp{'}\else\rlap{.}\math{\sp{'}}\fi}
+\def\arcsec{\ifmmode\sp{''}\else\math{\sp{''}}\fi}
+\def\decarcsec{\ifmmode\rlap{.}\sp{''}\else\rlap{.}\math{\sp{''}}\fi}
+
+\def\prim{\ifmmode\sp{\prime}\else\math{\sp{prime}}\fi}
+
+\def\h{\sp{h}}
+\def\m{\sp{m}}
+\def\s{\sp{s}}
+\def\decs{\rlap{.}\sp{s}}
+
+\def\smfrac#1#2{\math{#1\over#2}}
+
+\def\bm#1{{\mbox{\boldmath\math{#1}}}}
+
+\comment{writing}
+
+\comment{
+\def\ie{{\em i.e.,}\ }
+\def\eg{{\em e.g.,}\ }
+}
+\def\etal{{\em et al.}}
+
+\comment{for aligning tables (\i was a dotless i, \ii is for ``naive'')}
+\let\oi=\i
+\def\ii{\"\oi}
+\newbox{\wdbox}
+\def\c{\setbox\wdbox=\hbox{,}\hspace{\wd\wdbox}}
+\def\i{\setbox\wdbox=\hbox{i}\hspace{\wd\wdbox}}
+\def\n{\hspace{0.5em}}
+\def\m{\hspace{1em}}
+\def\d{\phantom{$-$}}
+
+\comment{good for addresses}
+\def\tablebox#1{\begin{tabular}[t]{@{}l@{}}#1\end{tabular}}
+
+\comment{notes}
+\comment{\font\tinytt = cmtt8}
+\def\marnote#1{\marginpar{\raggedright\tiny\ttfamily\baselineskip=9pt #1}}
+\def\herenote#1{{\bfseries #1}\typeout{======================> note on page \arabic{page} <====================}}
+\def\fillin{\herenote{fill in}}
+\def\fillref{\herenote{ref}}
+
+\comment{Page setup like I like it.}
+
+\comment{ % margin settings -- change over to jhmar?
+% \input{simplemargins.sty}
+% \comment{paper isn't really 8.5x11 inches}
+% \setlength{\smpageheight}{7.96875in}
+% \setlength{\smpageheight}{10.96875in}
+% \setallmargins{3.0cm}
+}
+
+\comment{% paragraphs
+% \setlength{\parskip}{\baselineskip}
+% \setlength{\parindent}{0em}
+}
+
+\comment{figs/tables}
+\setcounter{totalnumber}{400}
+
+\def\nocaption{\refstepcounter\@captype \@dblarg{\@nocaption\@captype}}
+
+\long\def\@nocaption#1[#2]#3{\addcontentsline{\csname
+  ext@#1\endcsname}{#1}{\protect\numberline{\csname 
+  the#1\endcsname}{\ignorespaces #2}}{\ignorespaces #3}}
+
+\comment{Date and time format}
+\def\today{\number\day\space \ifcase\month\or
+  January\or February\or March\or April\or May\or June\or
+  July\or August\or September\or October\or November\or December\fi
+  \space\number\year}
+
+\newcount\@timect
+\newcount\@hourct
+\newcount\@minct
+\def\now{\@timect=\time \divide\@timect by 60
+	 \@hourct=\@timect \multiply\@hourct by 60
+	 \@minct=\time \advance\@minct by -\@hourct
+	 \number\@timect:\ifnum \@minct < 10 0\fi\number\@minct}
+
+\comment{optional file inclusion}
+\def\inclopt#1#2{\if#2y#1,\fi}
+\def\texfopt#1#2{\if#2y#1\else null\fi}
+\def\psfopt#1#2{\if#2y#1\else/dev/null\fi}
+
+\comment{page styling}
+\def\clearblankdoublepage{\clearpage\if@twoside \ifodd\c@page\else
+    {\pagestyle{empty}\hbox{}\newpage\if@twocolumn\hbox{}\newpage\fi}\fi\fi}
+
+\def\threehfbox#1#2#3{\hbox to \textwidth{\com
+	\rlap{#1}\com
+	\rlap{\hbox to \textwidth{\hfil #2 \hfil}}\com
+	{\hfil #3}}}
+
+\atnotachar
+\reservedcharsoff
+
+% ::::::::::::::::::::::
+
+
+\def\vs{{\em vs.}}
+\def\p{\phantom{(0)}}
+
+\setcounter{secnumdepth}{3}
+\actcharon
+\renewcommand{\textfraction}{0.1}
+\comment{\paramon\def\herenote#1{}\paramoff}
+\renewcommand{\thepage}{\arabic{page}}
+\reservedcharson
+\comment{Must have ONLY ONE of these...}
+\newcommand\jhauth[1]{{#1}}
+\newcommand\jhstud[1]{{#1}}
+\comment{
+\newcommand\jhauth[1]{{\bfseries #1}}
+\newcommand\jhstud[1]{{\em #1}}
+}
+% :::::::::::: My Additions ::::::::::::::
+\newcommand\Spitzer{{\em Spitzer}}
+\newcommand\SST{{\em Spitzer Space Telescope}}
+\newcommand\chisq{$\chi^2$}
+\newcommand\PT{$P$--$T$}
+\newcommand\itbf[1]{\textit{\textbf{#1}}}
+\newcommand\bftt[1]{\texttt{\textbf{#1}}}
+\newcommand\function[1]{\noindent\texttt{\begin{tabular}{@{}l@{}l}#1\end{tabular}}\newline}
+\newcommand\bfv[1]{|\textbf{#1}|}
+\newcommand\ttred[1]{\textcolor{red}{\ttfamily #1}}
+\newcommand\ttblue[1]{\textcolor{blue}{\ttfamily #1}}
+\definecolor{gray}{gray}{0.6}
+\newcommand\tgray[1]{\textcolor{gray}{#1}}
+
+\newcommand\der{{\rm d}}
+\newcommand\tno{$\sp{-1}$}
+\newcommand\tnt{$\sp{-2}$}
+\newcommand*\Eval[3]{\left.#1\right\rvert_{#2}^{#3}}
+\newcommand\findme[1]{\herenote{(FINDME: #1)}}
+%:::::::::::::::::::::::::::::::::::::::::
+% Next six lines adjust spacing above/below captions and Sections etc
+% Adjust as needed
+% Python style for highlighting
+\DeclareFixedFont{\ttnm}{T1}{txtt}{m}{n}{9.8}  % for normal
+
+\newcommand\plainstyle{\lstset{
+language=Python,
+basicstyle = \ttnm,
+keywordstyle  = \ttnm,      %
+emph        = {MyClass, __init__},     % Custom highlighting
+emphstyle   = \ttnm\color{black},    % Custom  highlighting style
+stringstyle = \color{black},         % Strings highlighting style
+commentstyle=\color{black},         % Comment highlighting style
+frame       = tb,                      % Any extra options here
+showstringspaces = false
+}}
+
+% Plain environment:
+\lstnewenvironment{plain}[1][]{\plainstyle\lstset{#1}}{}
+
+\newcommand\plaininline[1]{{\plainstyle\lstinline!#1!}}
+
+\comment{
+% \setlength{\abovecaptionskip}{0pt}
+% \setlength{\belowcaptionskip}{0pt}
+% \setlength{\textfloatsep}{8pt}
+% \titlespacing{\section}{0pt}{5pt}{*0}
+% \titlespacing{\subsection}{0pt}{5pt}{*0}
+% \titlespacing{\subsubsection}{0pt}{5pt}{*0}
+}
+
+\reservedcharsoff
+\actcharon
+\mathshifton
