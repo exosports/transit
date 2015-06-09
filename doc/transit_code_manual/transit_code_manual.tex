@@ -1,0 +1,3234 @@
+\documentclass[letterpaper,12pt]{article}
+\input{top-transit}
+\usepackage{epsfig}
+\textwidth=6.5in
+\textheight=9.5in
+\topmargin=-0.75in
+\oddsidemargin=0.0in
+\evensidemargin=0.0in
+
+\pagestyle{myheadings}
+\markright{Transit}
+\pagenumbering{arabic}
+
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+
+\textsc{\LARGE University of Central Florida}\\[1.5cm]
+
+% Title
+\rule{\linewidth}{0.5mm} \\[0.4cm]
+{ \huge \bfseries Transit Code Manual \\[0.4cm] }
+\rule{\linewidth}{0.5mm} \\[1.0cm]
+
+\textsc{\Large A Radiative-Transfer Code for Planetary Atmospheres}\\[1.5cm]
+
+% Author and supervisor
+\noindent
+\begin{minipage}{0.4\textwidth}
+\begin{flushleft} \large
+\emph{Authors:}\\
+Patricio \textsc{Cubillos}\\
+Jasmina  \textsc{Blecic}  \\
+Ryan     \textsc{Challener} \\
+\end{flushleft}
+\end{minipage}%
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\emph{Supervisor:} \\
+Dr.~Joseph \textsc{Harrington}
+\end{flushright}
+\end{minipage}
+
+\vfill
+
+% Bottom of the page
+{\large \today}
+
+\end{center}
+\end{titlepage}
+
+
+\section{Introduction IN PROGRESS}
+This document is intended to provide the \texttt{transit} user with the information necessary to modify the code for their own uses. It describes all headers, custom variable types, structures, and functions used within the \texttt{transit} program. We also include information about which functions allocate, fill in, and free data arrays. 
+
+The \texttt{transit} program is structure-oriented. All the variables used by \texttt{transit} are held in structures, as listed in Section \ref{structures}. These structures are passed around to functions which allocate, fill out, and free the variables within the structures. In Section \ref{structures} all arrays within the program are cross-referenced with the functions that alter them.
+(FINDME: Intro is WIP).
+
+\section{List of Headers used by \texttt{transit} IN PROGRESS}
+
+transit.h: \\
+\indent Contains common headers for the \texttt{transit} program.\\
+extraext.h: \\
+\indent Contains function to compute extra extinction contributors (scattering and clouds).\\
+
+	
+\section{List of Custom Variable Types in \texttt{transit} DONE}
+
+Table \ref{table:types} lists the user-defined data types used in
+Transit.  These declarations are located in
+transit/transit/include/types\_tr.h.
+
+\begin{table}[ht]
+\centering
+\caption{Custom Variable Types}
+\label{table:types}
+\begin{tabular}{lll}
+\hline
+\hline
+Name         & Type   & Description \\
+\hline
+PREC\_NSAMP  & int    &  Radius and wavelength indices \\
+PREC\_NREC   & long   &  Record indices \\
+PREC\_ZREC   & double &  Partition-function data \\
+PREC\_LNDATA & double &  Line-transition data  \\
+PREC\_RES    & double &  Partial result  \\
+PREC\_ATM    & double &  Atmospheric data  \\
+PREC\_CS     & double &  Cross-section data  \\
+PREC\_CIA    & double &  Collision-induced absorption data  \\
+PREC\_VOIGT  & float  & Voigt profile data type \\
+PREC\_VOIGTP & double & Voigt profile data type \\
+\hline
+\end{tabular}
+\end{table}
+
+\findme{When is PREC\_VOIGTP used vs PREC\_VOIGT?}
+\newpage
+
+\section{List of Constants in \texttt{transit} DONE}
+Table \ref{table:constants} lists the user-defined constants used in \texttt{transit}. The definitions can be found in transit/transit/include/constants\_tr.h.
+\begin{table}[ht]
+\centering
+\caption{Constants}
+\label{table:constants}
+\begin{tabular}{lll}
+\hline
+\hline
+Name         & Value                                       & Description \\
+\hline
+RHOSTP       & 1.29e-3 g cm\sp{-3}                         &  Density at STP \\
+PI           & 3.141592653589793                           &  Pi \\
+DEGREES      & PI/180.0                                    &  Radians per degree \\
+GGRAV        & 6.673e-8 erg cm g\sp{2}                     &  Gravitational constant  \\
+HOUR         & 3600.0 s                                    &  Seconds per hour   \\
+AU           & 14959786896040.492 cm                       &  Centimeters per AU  \\
+ANGSTROM     & 1e-8 cm                                     &  Centimeters per angstrom  \\
+SUNMASS      & 1.9891e33 g                                 &  Mass of the sun  \\
+SUNRADIUS    & 6.95508e10 cm                               &  Radius of the sun \\
+AMU          & 1.66053886e-24 g                            &  Grams per atomic mass unit \\
+LO           & 2.686763e19 cm\sp{-3}                       &  Loschmidt constant \\
+EC           & 4.8032068e-10 statC                         &  Electron charge \\
+LS           & 2.99792458e10 cm s\sp{-1}                   &  Light speed \\
+ME           & 9.1093897e-28 g                             &  Mass of an electron \\
+KB           & 1.380658e-16 erg K\sp{-1}                   &  Boltzmann constant \\
+H            & 6.6260755e-27 erg s                         &  Planck constant \\
+HC           & H*LS erg cm                                 &  Planck constant $\times$ speed of light \\
+SIGCTE       & (PI*EC\sp{2})/(LS\sp{2}*ME*AMU) cm g\sp{-1} &  Cross-section constant \\
+EXPCTE       & (H*LS)/KB cm K                              &  Exponent constant \\
+ONEOSQRT2PI  & 0.3989422804                                &  1/sqrt(2pi) \\
+SQRTLN2      & 0.83255461115769775635                      &  sqrt(ln(2)) \\
+MAXNAMELEN   & 20                                          &  Maximum length of name strings \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{List of Structures in the \texttt{transit} Files IN PROGRESS}
+\label{structures}
+\subsection{Structure Types}
+
+Sampling properties of impact parameter, wavenumber, etc.
+\begin{plain}                            
+typedef struct {    
+  PREC_NREC n;      /* Number of elements                                   */
+  PREC_RES d;       /* Spacing                                              */
+  PREC_RES i;       /* Initial value                                        */
+  PREC_RES f;       /* Final value                                          */
+  int o;            /* Oversampling                                         */
+  PREC_RES *v;      /* Values of the sampling                               */
+    /* ALLOCATED:	getatm						    */
+    /* ALLOCATED:	readatmfile					    */
+    /* FILLED OUT:	readatmfile					    */
+    /* FILLED OUT:	radpress					    */
+    /* FREED: 								    */
+  double fct;       /* v units factor to cgs                                */
+} prop_samp;
+\end{plain}
+
+\noindent \newline
+Isotopes' variable information.
+\begin{plain}
+typedef struct {    
+  unsigned int n;   /* Arrays' length                                       */
+  double *z;        /* Partition function [radius or temp]                  */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+} prop_isov;
+\end{plain}
+\noindent \newline
+Isotopes' fixed information.
+\begin{plain}
+typedef struct {    
+  int d;            /*  Database to which they belong */
+  char *n;          /*  Isotope name                  */
+  PREC_ZREC m;      /*  Isotope mass                  */
+} prop_isof;
+\end{plain}
+\noindent \newline
+Molecule properties.
+\begin{plain}
+typedef struct{   
+  int n;           /*  Number of elements      */
+  PREC_ATM *d;     /*  Density   [n]           */
+    /* ALLOCATED:	getatm						    */
+    /* ALLOCATED:	readatmfile					    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  PREC_ATM *q;     /*  Abundance [n]           */
+    /* ALLOCATED:	getatm						    */
+    /* ALLOCATED:	readatmfile					    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+} prop_mol;
+\end{plain}
+\noindent \newline
+Atmosphere properties.
+\begin{plain}
+typedef struct {    
+  double *mm;       /*  Mean molecular mass [rad]        */
+    /* ALLOCATED:	getatm						    */
+    /* ALLOCATED:	readatmfile					    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  PREC_ATM *p;      /*  Pressure    [rad]                */
+    /* ALLOCATED:	getatm						    */
+    /* ALLOCATED:	readatmfile					    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  PREC_ATM *t;      /*  Temperature [rad]                */
+    /* ALLOCATED:	getatm						    */
+    /* ALLOCATED:	readatmfile					    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  PREC_ATM pfct;    /*  p units factor to cgs (dyne/cm2) */
+  PREC_ATM tfct;    /*  t units factor to cgs (Kelvin)   */
+} prop_atm;
+\end{plain}
+\noindent \newline
+Database properties.
+\begin{plain}
+typedef struct {    
+  char *n;          /*  Database name                                        */
+  char *molname;    /*  Molecule name                                        */
+  unsigned int i;   /*  Number of isotopes                                   */
+  int s;            /*  Cumulative first isotope's index                     */
+} prop_db;
+\end{plain}
+
+\noindent \newline
+Database temperatures.
+\begin{plain}
+typedef struct {    
+  unsigned int t;   /* Number of temperatures				    */
+  double *T;        /* Temperatures                                         */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */
+} prop_dbnoext;
+\end{plain}
+
+\noindent \newline
+Ray solution parameters and integrator functions.
+\begin{plain}
+typedef struct {
+  const char *name;          /* Ray solution name                           */
+  const char *file;          /* Ray solution source file                    */
+  const short monospace;     /* Request equispaced inpact parameter?        */
+  PREC_RES (*optdepth)       /* Extinction-coefficient integrator function  */
+       (struct transit *tr,
+        PREC_RES b,              /* Height of ray path                      */
+        PREC_RES *ex);           /* Extinction array [rad]                  */
+  PREC_RES (*spectrum)       /* Optical-depth integrator function           */
+        (struct transit *tr,
+         PREC_RES *tau,          /* Optical depth                           */
+         PREC_RES w,             /* Wavenumber value                        */
+         long last,              /* index where tau exceeded toomuch        */
+         PREC_RES toomuch,       /* Cutoff optical depth                    */
+         prop_samp *r);          /* Impact parameter or layers' radius      */
+} ray_solution;	transit.h:
+\end{plain}
+
+
+\subsection{Structures}
+
+Proportional-abundance isotopic parameters.
+\begin{plain}
+struct atm_isoprop{
+  double f;            /* Fractional abundance                        */
+  double m;            /* Isotope mass                                */
+  int eq;              /* Isotope index from transit.ds.isotopes      */
+  char n[maxeisoname]; /* Isotope name                                */
+  char t[maxeisoname]; /* Molecule name                               */
+};
+\end{plain}
+
+\noindent \newline
+Line transition parameters
+\begin{plain}
+struct line_transition{
+  PREC_LNDATA *wl;       /* Wavelength                                      */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  PREC_LNDATA *elow;     /* Lower-state energy                              */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  PREC_LNDATA *gf;       /* gf value                                        */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  short *isoid;          /* Isotope ID (Assumed to be in range)             */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  double wfct;           /* wl units factor to cgs                          */
+  double efct;           /* elow units factor to cgs                        */
+};
+\end{plain}
+
+\noindent \newline
+Line information parameters
+\begin{plain}
+struct lineinfo{
+  struct line_transition lt; /* Line transitions                            */
+  unsigned short tli_ver;    /* TLI version                                 */
+  unsigned short lr_ver;     /* lineread version                            */
+  unsigned short lr_rev;     /* lineread revision                           */
+  prop_samp wavs;            /* Wavelength sampling                         */
+  double wi, wf;             /* Initial and final wavelength in database    */
+  long endinfo;              /* Position at the end of the info part
+                                of the info file                            */
+  int asciiline;             /*  TLI line of first transition.
+                                Zero if a binary file.                      */
+  int ni;                    /* Number of isotopes                          */
+  int ndb;                   /* Number of databases                         */
+  prop_isov *isov;           /* Variable isotope information (w/temp) [iso] */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  prop_dbnoext *db;          /* Temperature info from databases [DB]        */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  PREC_NREC n_l;             /* Number of lines in database                 */
+};
+\end{plain}
+
+\noindent \newline
+Atmospheric data file parameters.
+\begin{plain}
+struct atm_data{
+  int n_aiso;            /* Number of molecules in atmosphere file          */
+  prop_samp rads;        /* Radius sampling                                 */
+  prop_atm atm;          /* Atmospheric properties                          */
+  prop_mol *molec;       /* Molecular information [n_aiso]                  */
+    /* ALLOCATED:	getatm						    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  double *mm;            /* Mean molecular mass [rad]                       */
+    /* ALLOCATED:	getatm						    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  char *info;            /* Optional atmosphere file information or label   */
+  _Bool mass;            /* Abundances in isov by mass (1) of by number (0) */
+  int begline;           /* Line of first radius dependent info             */
+  long begpos;           /* Position of first radius dependent info         */
+};
+\end{plain}
+
+\noindent \newline
+Extinction array and extinction parameters.
+\begin{plain}
+struct extinction{
+  PREC_RES **e;      /* Extinction value [rad][wav]                         */
+    /* ALLOCATED:							    */
+    /* FILLED OUT: extinction						    */
+    /* FREED: 								    */ 
+  int vf;            /* Number of fine-bins of the Voigt function           */
+  float ta;          /* Number of alphas that have to be contained in
+                        the profile                                         */
+  _Bool *computed;   /* Whether the extinction at the given radius was
+                        computed [rad]                                      */
+  double ethresh;    /* Lower extinction-coefficient threshold              */
+};
+\end{plain}
+
+\noindent \newline
+Opacity array and opacity parameters.
+\begin{plain}
+struct opacity{
+  PREC_RES ****o;         /* Opacity grid [temp][iso][rad][wav]             */
+    /* ALLOCATED:							    */
+    /* FILLED OUT: extinction							    */
+    /* FREED: 								    */ 
+  PREC_VOIGT ***profile;  /* Voigt profiles [nDop][nLor][2*profsize+1]      */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  PREC_NREC **profsize;   /* Half-size of Voigt profiles [nDop][nLor]       */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  double *aDop,           /* Sample of Doppler widths [nDop]                */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+         *aLor;           /* Sample of Lorentz widths [nLor]                */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  PREC_RES *temp,         /* Opacity-grid temperature array                 */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+           *press,        /* Opacity-grid pressure array                    */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+           *wns;          /* Opacity-grid wavenumber array                  */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  PREC_ATM **ziso;        /* Partition function per isotope [niso][Ntemp]   */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  int *molID;             /* Opacity-grid molecule ID array                 */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  long Nwave, Ntemp, Nlayer, Nmol, /* Number of elements in opacity grid    */
+      nDop, nLor;         /* Number of Doppler and Lorentz-width samples    */
+};
+\end{plain}
+
+\noindent \newline
+Index of refraction array.
+\begin{plain}
+struct idxref{
+  PREC_RES *n;   /* Index of refraction [rad]                               */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+};
+\end{plain}
+
+\noindent \newline
+Save file information.
+\begin{plain}
+#if 0
+struct savefiles {
+  char *ext;         /* saves extinction            */
+  char *tau;  	     /* after tau() savefile        */
+  char *modulation;  /* after modulation() savefile */
+};
+#endif
+\end{plain}
+
+\noindent \newline
+Optical depth array and related information.
+\begin{plain}
+struct optdepth{
+  PREC_RES **t;     /* Optical depth [wn][ip]                               */
+    /* ALLOCATED: init_optdepth						    */
+    /* FILLED OUT: tau							    */
+    /* FREED: freemem_tau						    */
+  long *last;       /*  Level index where the optical depth reached toomuch
+                       (counting from the top of the atmosphere) [wn]       */
+    /* ALLOCATED: init_optdepth	                                            */
+    /* FILLED OUT: tau							    */
+    /* FREED: freemem_tau						    */
+  double toomuch;   /* Optical depth values greater than this won't be
+                       calculated: the extinction is assumed to be zero.    */
+};
+\end{plain}
+
+\noindent
+Intensity array.
+\begin{plain}
+struct grid{
+  PREC_RES **a;      /* Intensity grid, 2D, [an][wnn]                       */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+};
+\end{plain}
+
+\noindent
+Information about the geometry of the transit or eclipse.
+\begin{plain}
+struct geometry{
+  float smaxis;       /* Semimajor axis                                     */
+  double smaxisfct;   /* 'smaxis' times this gives cgs units.               */
+  double time;        /* this value is 0 when in the middle of the eclipse  */
+  double timefct;     /* 'time' times this gives cgs units                  */
+  float incl;         /* inclination of the planetary orbit with respect
+                         to the observer, 90 degrees is edge on             */
+  float inclfct;      /* Units to convert inclination to radians            */
+  double ecc;         /* eccentricty                                        */
+  double eccfct;      /* eccentricity's units                               */
+  double lnode;       /* longitude of the ascending node                    */
+  double lnodefct;    /* longitude of the ascending node units              */
+  double aper;        /* argument of the pericenter                         */
+  double aperfct;     /* argument of the pericenter units                   */
+
+  double starmass;    /* Mass of the star                                   */
+  double starmassfct; /* 'starmass' times this gives cgs units.             */
+
+  double starrad;     /* Star's radius                                      */
+  double starradfct;  /* 'starrad' times this gives cgs units.              */
+
+  double x, y;        /*  Coordinates of the center of the planet with
+                         respect to the star. 'fct' to convert to cgs is
+                         found in rads.fct. These fields are not hinted.    */
+
+  _Bool transpplanet; /* If true, set maximum optical depth to toomuch      */
+};
+\end{plain}
+
+\noindent
+Isotope information.
+\begin{plain}
+struct isotopes{
+  prop_isof *isof;    /* Fixed isotope information      [n_i]               */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  prop_isov *isov;    /* Variable isotope information   [n_i]               */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  double *isoratio;   /* Isotopic abundance ratio       [n_i]               */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  int *imol;          /* Molecule index for this isotope[n_i]               */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  prop_db *db;        /* Database's info [n_db]                             */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  int n_db,           /* Number of databases                                */
+      n_i,            /* Number of isotopes                                 */
+      nmol;           /* Number of different molecules having a line list   */
+};
+\end{plain}
+
+\noindent
+Molecule information.
+\begin{plain}
+struct molecules{
+  int nmol;           /* Number of molecules                                */
+  prop_mol *molec;    /* Molecular properties                               */
+    /* ALLOCATED:	getatm						    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  char **name;        /* Molecules' names                                   */
+    /* ALLOCATED:	getmnfromfile					    */
+    /* FILLED OUT:	getmnfromfile					    */
+    /* FREED: 								    */ 
+  PREC_ZREC *mass;    /* Molecules' masses                                  */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:	getmoldata					    */
+    /* FREED: 								    */ 
+  PREC_ZREC *radius;  /* Molecules' radii                                   */
+    /* ALLOCATED:	getatm						    */
+    /* FILLED OUT:	getmoldata					    */
+    /* FREED: 								    */ 
+  int *ID;            /* Molecule universal ID                              */
+    /* ALLOCATED:	getatm						    */
+    /* FILLED OUT:	getmoldata					    */
+    /* FREED: 								    */ 
+};
+\end{plain}
+
+\noindent
+Flux
+\begin{plain}
+struct outputray{
+  PREC_RES *o;     /* Output as seen before interaction with telescope      */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+};
+\end{plain}
+
+\noindent
+Cloud extinction information.
+\begin{plain}
+struct extcloud{
+  double maxe;     /* Maximum opacity in [cm-1]                          */
+  double rini;     /* Radius at which clouds start                       */
+  double rfin;     /* Radius at which clouds has it maximum thickness
+                      'maxe'. rfin < rini                                */
+  double rfct;     /* Factor that will make the two radius values above
+                      into cgs                                           */
+};
+\end{plain}
+
+\noindent
+Scattering extinction information.
+\begin{plain}
+struct extscat{
+  double prm;
+};
+\end{plain}
+
+\noindent
+Saved extinction grid name.
+\begin{plain}
+struct saves{
+  char *ext;   /* Extinction grid                                           */
+};
+\end{plain}
+
+\noindent
+Stores requested extinction, optical depth, or CIA detailed information.
+\begin{plain}
+struct detailfld{
+  int n;         /* Number of requested wavenumber samples */
+  PREC_RES *ref; /* Array of wavenumbers requested         */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  char file[80]; /* Output filename                        */
+  char name[30]; /* Name of field                          */
+};
+\end{plain}
+
+\noindent
+Detailed output for extinction, optical depth, or CIA.
+\begin{plain}
+struct detailout{
+  struct detailfld ext, tau, cia;
+};
+\end{plain}
+
+\noindent
+Collision-Induced Absorption (CIA) extinction information.
+\begin{plain}
+struct cia{
+  int nfiles;       /* Number of CIA files                                  */
+  PREC_CIA **e;     /* Extinction from all CIA sources [wn][temp]           */
+    /* ALLOCATED:							    */
+    /* FILLED OUT: interpolatecia					    */
+    /* FREED: freemem_cia						    */ 
+  PREC_CIA ***cia;  /* Tabulated CIA extinction      [nfiles][nwave][ntemp] */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: freemem_cia						    */ 
+  PREC_CIA **wn;    /* Tabulated wavenumber  arrays  [nfiles][nwave]        */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: freemem_cia						    */ 
+  PREC_CIA **temp;  /* Tabulated temperature arrays  [nfiles][ntemp]        */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: freemem_cia						    */ 
+  int *nwave;       /* Number of wavenumber samples  [nfiles]               */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: freemem_cia						    */ 
+  int *ntemp;       /* Number of temperature samples [nfiles]               */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: freemem_cia						    */ 
+  int *mol1, *mol2; /* Pairs of molecule's ID        [nfiles]               */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: freemem_cia						    */ 
+};
+\end{plain}
+
+\noindent
+Structure containing all user-given information that is passed to the transit structure upon approval.
+\begin{plain}                                                 */
+struct transithint{  
+  char *f_atm,          /* Atmosphere filename                              */
+       *f_line,         /* TLI filename                                     */
+       *f_opa,          /* Opacity filename                                 */
+       *f_out,          /* Output (main) filename                           */
+       *f_toomuch,      /* Output toomuch filename                          */
+       *f_outsample,    /* Output sample filename                           */
+       *f_molfile;      /* Known molecular info filename                    */
+  PREC_NREC ot;         /* Radius index at which to print output from tau   */
+  prop_samp rads, ips,  /* Sampling properties of radius, impact parameter, */
+       wavs, wns, temp;   /* wavelength, wavenumber, and temperature        */
+  char *angles;         /* String with incident angles (for eclipse)        */
+  char *qmol, *qscale;  /* String with species scale factors                */
+  float allowrq;        /* How much less than one is accepted, and no warning
+                           is issued if abundances don't ad up to that      */
+  float timesalpha;     /* Number of alphas that have to be contained in a
+                           calculated profile, one side only                */
+  int voigtfine;        /* Fine-binning for Voigt function in kapwl(), if
+                           accepted it goes to tr.ds.op.vf                   */
+  int nDop, nLor;       /* Number of broadening width samples                */
+  float dmin, dmax, lmin, lmax; /* Broadening-width samples boundaries       */
+  int verbnoise;        /* Noisiest verbose level in a non debugging run     */ 
+  _Bool mass;           /* Whether the abundances read by getatm are by
+                           mass or number                                    */
+  _Bool opabreak;       /* Break after opacity calculation flag              */
+  long fl;              /* flags                                             */
+  _Bool userefraction;  /* Whether to use variable refraction                */
+  double p0, r0;        /* Pressure and radius reference level               */
+  double gsurf;         /* Surface gravity                                   */
+
+  double toomuch;       /* Optical depth values greater than this won't be
+                           calculated: the extinction is assumed to be zero  */
+  int taulevel;         /* Tau integration level of precision                */
+  int modlevel;         /* Modulation integration level of precision         */
+  char *solname;        /* Name of the type of solution                      */
+  struct geometry sg;   /* System geometry                                   */
+  struct saves save;    /* Saves indicator of program stats                  */
+
+  struct extcloud cl;
+  struct detailout det;
+
+  double ethresh;       /* Lower extinction-coefficient threshold            */
+  char **ciafile;
+  int ncia;
+};
+\end{plain}
+
+\noindent
+Main data structure. 
+\begin{plain}
+struct transit{  
+  char *f_atm,       /* Atmosphere filename                                 */
+       *f_line,      /* TLI filename                                        */
+       *f_opa,       /* Opacity filename                                    */
+       *f_out,       /* Output (main) filename                              */
+       *f_toomuch,   /* Output toomuch filename                             */
+       *f_outsample, /* Output sample filename                              */
+       *f_molfile;   /* Known molecular info filename                       */
+  PREC_NREC ot;      /* Radius index at which to print output from tau      */
+
+  FILE *fp_atm, *fp_opa, *fp_out, *fp_line; /* Pointers to files            */
+  float allowrq;    /* How much less than one is accepted, so that no warning
+                       is issued if abundances don't ad up to that          */
+  PREC_RES telres;  /* Telescope resolution                                 */
+  long int angleIndex; /* Index of the current angle                        */
+  prop_samp rads, ips, /* Sampling properties of radius, impact parameter,  */
+      owns,            /* oversampled wavenumber,                           */
+      wavs, wns, temp; /* wavelength, wavenumber, and temperature           */
+  prop_atm atm;      /* Sampled atmospheric data                            */
+  _Bool opabreak;    /* Break after opacity calculation                     */
+  int ndivs,         /* Number of exact divisors of the oversampling factor */
+     *odivs;         /* Exact divisors of the oversampling factor           */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  int voigtfine;     /* Number of fine-bins of the Voigt function           */
+  float timesalpha;  /* Broadening profile width in number of Doppler or
+                        Lorentz half width                                  */
+  double p0, r0;     /* Pressure and radius reference level                 */
+  double gsurf;      /* Surface gravity                                     */
+  int ann;           /* Number of angles                                    */
+  double *angles;    /* Array of incident angles for eclipse geometry       */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  int nqmol;         /* Number of species scale factors                     */
+  double *qscale;    /* Species scale factors                               */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  int *qmol;         /* Species with scale factors                          */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+  int taulevel;      /* Tau integration level of precision                  */
+  int modlevel;      /* Modulation integration level of precision           */
+
+  long fl;           /* flags                                               */
+  long interpflag;   /* Interpolation flag                                  */
+  long pi;           /* progress indicator                                  */
+
+  ray_solution *sol; /* Transit solution type                               */
+  PREC_RES *outpret; /* Output dependent on wavelength only as it travels
+                        to Earth before telescope                           */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    */ 
+
+  struct saves save; /* Saves indicator of program stats                    */
+
+  struct {           /* Data structures pointers, this is data that is not
+                        required for the final computation                  */
+    struct transithint *th;
+    struct lineinfo    *li;
+    struct atm_data    *at;
+    struct extinction  *ex;
+    struct opacity     *op;
+    struct grid        *intens;
+    struct optdepth    *tau;
+    struct idxref      *ir;
+    struct geometry    *sg;
+#if 0
+    struct savefiles   *sf;
+#endif
+    struct isotopes    *iso;
+    struct molecules   *mol;
+    struct outputray   *out;
+    struct extcloud    *cl;
+    struct extscat     *sc;
+    struct detailout   *det;
+    struct cia         *cia;
+  }ds;
+};
+\end{plain}
+
+\section{List of Functions in the \texttt{transit} Files}
+
+% \begin{figure}[htb]
+% \centerline{
+% \includegraphics[width=0.59\textwidth, clip]{figs/f8a.ps}}
+% \caption{\small \label{fig:WASP8b} Atmospheric spectral emission
+%   of the dayside of WASP-8b \citep{CubillosEtal2013apjWASP8b}.  The
+%   blue circles with error bars are the measured eclipse depths.  The
+%   red and green curves show two model spectra, one in chemical
+%   equilibrium (green) and one with $10\sp{3}\times$ lower
+%   methane abundance (red).}
+% \end{figure}
+\subsection{transit.c}
+
+The transit code is an object-oriented program. The main structure is
+the {\tt transit struct}.
+The user provided parameters (through the command-line arguments) are
+stored in a {\tt transithint struct} before being handed to {\tt
+  transit}.
+The {\tt transithint} parameters can be modified or not accepted
+(stopping the code) if they don't have an acceptable physical meaning.
+
+Char arrays hold the input ({\tt f\_atm}, atmosphere file; {\tt
+  f\_line}, TLI file), and output filenames ({\tt f\_out}, Modulation
+spectrum; {\tt f\_toomuch}, toomuch; {\tt f\_outsample}, samples).
+
+\subsection{argum.c:}
+\subsubsection{List of Functions Defined in argum.c:}
+\function{
+int processparameters(int argc, char **argv, struct transit *tr)}
+Generate the command-line option parser.  Initialize transithint and
+populate it's variables based on the command-line arguments. \newline
+
+\function{
+int acceptsoltype(transit\_ray\_solution **sol, char *hname)}
+Initialize transit ray solution sol. and determine if any of
+sol->name matches hname. \newline
+
+\function{
+int acceptgenhints(struct transit *tr)}
+Set output file names in transit (out, toomuch, and sample).
+Initialize transit.sol. Set geometry and detailed output variables in
+transit. \newline
+
+\function{
+void savehint(FILE *out, struct transithint *hints)}
+Saves hints structure. \newline
+
+\function{
+int resthint(FILE *in, struct transithint *hint)}
+Restore hints structure, the structure needs to have been allocated
+before. \newline
+
+\function{
+void printintro()}
+Doc me. \newline
+
+\function{
+void freemem\_hints(struct transithint *h)}
+Frees hints structure. \newline
+
+\function{
+void freemem\_cloud(struct extcloud *c)}
+Doc me. \newline
+
+\function{
+void freemem\_detailout(struct detailout *d)}
+Doc me. \newline
+
+\function{
+void freemem\_detailfld(struct detailfld *f)}
+Doc me. \newline
+
+
+\subsubsection{processparameters:}
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Initialize \ttred{tr.ds.th} transithint.
+\item[-] Set \ttred{th.fl, th.verbnoise, th.mass, th.tauiso} with
+  default values (flags, verbose level, mass or number abundance bool,
+  and per isotope optical depth calculation).
+\item[-] Set \ttred{th.det.tau.name, th.det.ext.name, th.det.cia.name}
+  (detailed output default names).
+\item[-] Set \ttred{th.ncia, th.ciafile} from command line
+  arguments (Number of CIA files and CIA filenames).
+\item[-] Set \ttred{th.save.ext} from command line arguments
+  (filename to save extinction array).
+\item[-] Set rest of fields in \ttred{th.det.tau, th.det.ext, th.det.cia}
+  from command line arguments.
+\item[-] Set \ttred{th.minelow, th.solname} from command line
+  arguments (low-energy minimum limit and light-ray path solution
+  type).
+\item[-] Set \ttred{th.f\_atm, th.f\_line, th.f\_out, th.f\_outsample,
+    th.f\_toomuch} from command line arguments (atmosphere, line
+  database, output, samplings, tau too much filenames).
+\item[-] Set \ttred{th.ot} and update \ttred{th.fl} with {\tt
+    TRU\_OUTTAU} from command line arguments (output optical depth
+  instead of modulation bool).
+\item[-] Set \ttred{th.allowrq} from command line arguments
+  (lowest allowed cumulative abundance).
+\item[-] Update \ttred{th.mass} from command line arguments.
+\item[-] Fill \ttred{th.onept} fields.
+\item[-] Update \ttred{th.fl} to include {\tt TRU\_ATMASK1P} flag
+  if set by command line arguments.
+\item[-] Set \ttred{th.rads.i, th.rads.f, th.rads.d, th.rads.fct} from
+  command line arguments (radius sampling parameters).
+\item[-] Set \ttred{th.wavs.i, th.wavs.f, th.wavs.d, th.wavs.fct,
+    th.wavs.o} from command line arguments (wavelength sampling).
+\item[-] Set \ttred{th.wavs.n, th.wavs.v} default values.
+\item[-] Set \ttred{th.wns.i, th.wns.f, th.wns.d, th.wns.fct,
+    th.wns.o} from command line arguments (wavenumber sampling).
+\item[-] Set \ttred{th.wns.n, th.wns.v} default values.
+\item[-] Set \ttred{th.margin, th.wnm} from command line arguments
+  (wavelength and wavenumber margins).
+\item[-] Set \ttred{th.maxratio\_doppler, th.voightfine,
+    th.timesalpha} from command line arguments (Voigt's width to
+  recalculate the profile, fine-binning oversampling, and half-width
+  of profile in number of broadening half-widths).
+\item[-] Update \ttred{th.verblevel} from command line arguments.
+\item[-] Modify \ttred{th.fl} to include {\tt TRU\_EXTINPERISO}
+  from command line arguments (calculate extinction per isotope flag).
+\item[-] Set \ttred{th.blowex} from command line argument (extinction
+  multiplicative factor).
+\item[-] Set \ttred{th.sg} variables except \ttred{x, y, starmass,
+    starmassfct, starradfct} from command line arguments.
+\item[-] Set \ttred{th.toomuch, th.tauiso, th.taulevel, th.modlevel}
+  from command line arguments (max optical depth, calculate tau for
+  the single isotope with this index, optical depth integration level,
+  modulation integration level).
+\item[-] Fill \ttred{th.cl} fields.
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+makes the command-line-argument parser, resets the transithint struct, and fill in its variables with default values and command line arguments.  
+
+The code makes an enum list to define command-line-argument keys;  
+builds up an optdocs struct (command-line-argument parser);  
+resets the transithint memory and sets default values for some parameters;  
+and parses the input command line arguments to transithint.
+
+\subsubsection{acceptgenhints:}
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set \ttred{tr.f\_out} from {\tt th.f\_out} or default (main
+  output filename).
+\item[-] Copy \ttred{tr.f\_toomuch, tr.f\_outsample} from {\tt
+    th.f\_toomuch, th.f\_outsample} (maximum optical depth, and
+  sampling output filenames).
+\item[-] Call to \ttblue{acceptsoltype} to set \ttred{tr.sol}
+  (transit ray solution).
+\item[-] Call to \ttblue{setgeomhint} to set orbital and stellar parameters.
+  % \item[-] Copy \ttred{tr.ds.sg.transpplanet} from {\tt th.sg.transpplanet}.
+  % \item[-] Set All \ttred{tr.ds.sg} variables except {\tt tr.ds.sg.x} and {\tt tr.ds.sg.y} from {\tt th.sg} or default values.
+  % \item[-] Update \ttred{tr.pi} to include {\tt TRPI_GEOMETRYHINT}.
+\item[-] Copy \ttred{tr.ds.det} from {\tt th.det}.
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+Set output file names in transit (out, toomuch, and
+sample). Initialize transit.sol. Set geometry and detailed output
+variables in transit.
+
+\newpage
+\subsection{geometry.c: EDITED}
+This file contains routines which make calculations regarding the geometry of the transit or eclipse.
+\subsubsection{List of Functions Defined in geometry.c:}
+\function{
+int setgeomhint(struct transit *tr)}
+\tgray{Set transit geometry variables (tr.ds.sg) from hint or default
+variables.} \newline
+
+\function{
+int setgeom(struct geometry *sg, double time, long *flags)}
+\tgray{Set $x$ and $y$ geometry variables (coordinates of the planet relative to the star)}. \newline
+
+\function{
+inline PREC\_RES starvariation(double x, double y, double radius)}
+\tgray{Evaluate if $x\sp{2} + y\sp{2} > {\rm radius}\sp{2}$. Return 0 if so. Otherwise return 1.} \newline
+
+\subsubsection{setgeomhint}
+\paragraph{Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Copy {\tt th.sg.transpplanet} into \ttred{tr.ds.sg.transpplanet}.
+\item[-] Set all \ttred{tr.ds.sg} variables except {\tt
+    tr.ds.sg.x} and {\tt tr.ds.sg.y} from {\tt th.sg}. If a hinted value is not given, set them to default values.
+\item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_GEOMETRYHINT}.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Copy hinted transpplanet into the transit structure. This is a boolean which, if true, sets the maximum optical depth to toomuch.
+\item[-] Set all variables in the geometry structure from the hinted structure ({\tt tr.ds.th.sg}) except X and Y values (coordinates of planet relative to the star). If no hinted variable is given, the variables are set to a default value.
+\item[-] Update the progress indicator to account for {\tt TRPI\_GEOMETRYHINT}.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\subsubsection{setgeom}
+\paragraph{Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate \ttred{sg.x, sg.y} by solving the Kepler equation.
+\item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_GEOMETRY}.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate semi-major axis, eccentricity, inclination, observation time, and stellar mass in cgs units.
+\item[-] Set the precision limit for the square of the eccentric anomaly.
+\item[-] Calculate mean motion (orbital angular frequency).
+\item[-] Set the approximate eccentric anomaly and calculate the eccentric anomaly
+\item[-] While the square of the difference between the eccentric anomaly approximation and the eccentric anomaly is greater than the precision limit, set the approximation equal to the eccentric anomaly and recalculate the eccentric anomaly at time t. When the loops exits, the eccentric anomaly at time t will have been calculated.
+\item[-] Calculate orbital parameters.
+\item[-] Calculate the position of the planet relative to the center of the star ({\tt sg.x, sg.y}).
+\item[-] Update the progress indicator to account for {\tt TRPI\_GEOMETRY}.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\subsubsection{starvariation}
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Return 0 if position (x, y) is not within a circle of given radius.
+\item[-] Return 1 otherwise.
+\end{enumerate}
+
+\newpage
+\subsection{readlineinfo.c:}
+This file is concerned with reading TLI files produced by the {\tt pylineread} program. Function \ttblue{savefile, main} are not currently used in {\tt transit}.
+
+\subsubsection{List of Functions Defined in readlineinfo.c:}
+\function{
+static inline void datafileBS(&FILE *fp, PREC\_NREC offs, PREC\_LNDATA target,
+                           \\ &PREC\_NREC *resultp, int reclength)}
+Do a binary search in file pointed by 'fp' between 'off' and
+'off+nfields' looking for 'target' as the first item of a record
+of length 'reclength', result index (with respect to offs) is
+stored in 'resultp'. \newline
+
+\function{
+int readlineinfo(struct transit *tr)}
+Driver function to read TLI: read isotopes info, check margin and
+ranges, and read line transition information. \newline
+
+\function{
+int readinfo\_tli(struct transit *tr, struct lineinfo *li)}
+Check TLI file exists.  Check that machine formating is compatible
+with lineread.  Determine if TLI is ASCII or binary.  Read either
+ASCII or binary TLI file. Declare line\_transition. \newline
+
+\function{
+int readtli\_bin(FILE *fp, struct transit *tr, struct lineinfo *li)}
+Read initial and final wavelength limits and number of databases.
+Allocate pointers to database, and isotope arrays.
+Get databases info: names, number of temperatures, temperatures, number
+of isotopes, isotope names and masses, partition function, and
+cross sections. Get cumulative number of isotopes. \newline
+
+\function{
+int setimol(struct transit *tr)}
+Set each isotope's molecular identifier number. \newline
+
+\function{
+int checkrange(struct transit *tr, struct lineinfo *li)}
+Initialize wavelength sample struct.  Set margin.  
+Set initial and final wavelengths to use.  
+Check that margin leaves a non-zero wavelength range. \newline
+
+\function{
+int readdatarng(struct transit *tr, struct lineinfo *li)}
+Read and store the line transition info (central wavelength, isotope
+ID, lowE, log(gf)) into lineinfo.  Return the number of lines read. \newline
+
+\function{
+int freemem\_isotopes(struct isotopes *iso, long *pi)}
+Frees isotope structure. \newline
+
+\function{
+int freemem\_linetransition(struct line\_transition *lt, long *pi)}
+Frees line transition data.
+
+\function{
+int freemem\_lineinfo(struct lineinfo *li, long *pi)}
+Frees line transition info. \newline
+
+\function{
+void saveline(FILE *fp, struct lineinfo *li)}
+Saves line information. \newline
+
+\function{
+int main(int argc, char **argv)}
+For debugging only. \newline
+
+\subsubsection{readlineinfo}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Reset \ttred{tr.ds.li, tr.ds.iso} (lineinfo and
+  isotopes).
+\item[-] If an opacity file exists, update \ttred{tr.pi} to account for TRPI\_READINFO and TRPI\_READDATA.
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Reset line information and isotopes structures.  
+\item[-] Call \ttblue{readinfo\_tli} to check if TLI file exists, open it, and get header information (all info exept line transitions). 
+\item[-] Call \ttblue{setimol} to set the molecular index of each isotope. 
+\item[-] Call \ttblue{checkrange} to set up the lineinfo wavelength sampling and wavelength margin.
+\item[-] Check if an opacity file exists. If not, call \ttblue{readdatarng} to read the TLI file data. Otherwise, skip reading the TLI file and update the progress indicator to allow the program to continue.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+
+\subsubsection{readinfo\_tli}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set \ttred{tr.f\_line} from {\tt th.f\_line} if file
+  exists and could be opened (TLI filename).
+\item[-] Set \ttred{tr.fp\_line} (pointer to TLI file).
+\item[-] Set \ttred{tr.ds.li.asciiline} according to the format of the TLI file.
+\item[-] Declare \ttred{tr.ds.li.lt}.
+\item[-] Set \ttred{tr.ds.li.lt.wfct, tr.ds.li.lt.efct} from
+  default values (line-transition wavelength and lowE units factor).
+\item[-] Update \ttred{tr.pi} to include {\tt TRPI\_READINFO}.
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Declare a union variable which is used to determine the type of the TLI file (ASCII or binary) and to check endianness compatibility.
+\item[-] Check that a TLI file name was given. If not, raise an error and return -2.
+\item[-] Check if TLI file exists. If not, raise an error and return -1.
+\item[-] Set the TLI file name and file pointer from hint structure.
+\item[-] Read the first four bytes of the TLI file into the union variable.
+\item[-] If the file appears to be an ASCII file:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If the first four bytes of the TLI file indicate the file is ASCII, compare them with '#TLI'. If they match, read the next six bytes, append them to the first four and compare with '#TLI-ascii'. If either compare did not match, raise an error and return -3. 
+\item[-] Set the ASCII file indicator to 1.
+\item[-] Read past the rest of the first line of the TLI file.
+\end{enumerate}
+\item[-] Call to \ttblue{readtli\_bin} to read the binary TLI file. Raise an error and return -6 if \ttblue{readtli\_bin} returns an error.
+\item[-] Set the wavelength and lowE units conversion factor for line transitions.
+\item[-] Update the progress indicator.
+\item[-] Return -1 on success.
+\end{enumerate}
+
+\subsubsection{readtli\_bin:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set \ttred{tr.ds.li.tli\_ver, tr.ds.li.lr\_ver,
+    tr.ds.li.lr\_rev} from TLI file (lineinfo TLI version, lineinfo
+  version and revision).
+\item[-] Allocate \ttred{tr.ds.iso.db} (database structures for each isotope).
+\item[-] Allocate \ttred{tr.ds.li.db} (database structures for temperature information).
+\item[-] Allocate \ttred{tr.ds.iso.isof} (structure for fixed isotope information).
+\item[-] Allocate \ttred{tr.ds.li.isov} (structure for variable isotope information).
+\item[-] Allocate \ttred{tr.ds.iso.isoratio} (isotope abundance ratio).
+\item[-] Allocate \ttred{tr.ds.iso.db.n, tr.ds.iso.db.molname} (database name and molecule name) for each database.
+\item[-] Set \ttred{tr.ds.li.db.t, tr.ds.iso.db.i} (number of temperatures and number of isotopes) for each database.
+\item[-] Allocate \ttred{tr.ds.li.db.T} (temperature points in TLI file) for each database and set from the TLI file.
+\item[-] Reallocate \ttred{tr.ds.li.isov, tr.ds.iso.isof, tr.ds.iso.isoration} to account for new isotopes.
+\item[-] Allocate \ttred{tr.ds.li.isov.z} (partition function).
+\item[-] Set \ttred{tr.ds.iso.isof.d} (database index of the isotope) for each isotope.
+\item[-] Allocate and set \ttred{tr.ds.iso.isof.n} (isotope name) for each isotope.
+\item[-] Set \ttred{tr.ds.iso.isof.m} (mass) for each isotope.
+\item[-] Set \ttred{tr.ds.iso.isoratio} (isotopic ratio) for each isotope.
+\item[-] Set \ttred{tr.ds.li.isov.z} (partition function) for each isotope.
+\item[-] Set \ttred{tr.ds.li.isov.n} (partition function array length) for each isotope.
+\item[-] Set \ttred{tr.ds.iso.db.s} (index of the first isotope) for each database (species).
+\item[-] Set \ttred{tr.ds.li.ni, tr.ds.iso.n\_i} (number of isotopes).
+\item[-] Set \ttred{tr.ds.li.ndb, tr.ds.iso.n\_db} (number of databases).
+\item[-] Set \ttred{tr.ds.li.iniw, tr.ds.li.finw} (initial and final wavelength).
+\item[-] Set \ttred{tr.ds.li.endinfo} (position of beginning of transition data).
+\item[-] Allocate \ttred{tr.ds.iso.isov} (structures for isotopes' variable data).
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Read the TLI version, lineread version, and lineread revision number from the TLI file.
+\item[-] Check that the TLI version is compatible with the transit version. If not, raise an error.
+\item[-] Read the initial wavelength, final wavelength, and number of databases from the TLI file.
+\item[-] Allocate structures for databases for each isotope.
+\item[-] Allocate structures for fixed and variable isotope data.
+\item[-] Allocate isotopic abundance ratios.
+\item[-] Loop over each database (each species):
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Read database name length, allocate space for the name, and read the name from the TLI file.
+\item[-] Read molecule name length, allocate space for the name, and read the name from the TLI file.
+\item[-] Read and set the number of temperatures and number of isotopes.
+\item[-] Allocate array for the temperatures and read from the file.
+\item[-] Reallocate variable isotope data structures, fixed isotope data structures, and isotopic abundance ratio to account for new isotopes.
+\item[-] Allocate array for partition function data.
+\item[-] Loop over each isotope:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set isotope's database index number.
+\item[-] Read isotope name length, allocate space for the name, and read the name from the TLI file.
+\item[-] Read isotope mass and isotopic ratio from the TLI file.
+\end{enumerate}
+\item[-] Set the index of the first isotope in this isotope.
+\item[-] Increment the number of isotopes by the number of isotopes in this database.
+\end{enumerate}
+\item[-] Set the number of total isotopes, number of databases, position of the first transition in the TLI file, initial wavelength, final wavelength, and number of databases (in both the line transition and isotopes structures).
+\item[-] Allocate structures for isotopes' variables data.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+
+\subsubsection{checkrange:}
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set \ttred{tr.ds.li.wavs.fct} from {\tt tr.ds.th.wavs.fct} if
+  provided, else default to cgs units (lineinfo wavelength units
+  factor)..
+\item[-] Set \ttred{tr.ds.li.wavs.f} from {\tt th.wavs.f} if
+  provided, else default to maximum wavelength in database {\tt
+    tr.ds.li.wf*TLI\_WAV\_UNITS/tr.ds.li.wavs.fct} (lineinfo final
+  wavelength).
+\item[-] Set \ttred{tr.ds.li.wavs.i} from {\tt th.wavs.i} if
+  provided, else default to minimum wavelength in database {\tt
+    tr.ds.li.wi*TLI\_WAV\_UNITS/tr.ds.li.wavs.fct} (lineinfo initial
+  wavelength).
+\item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_CHKRNG}.
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Initialize lineinfo's wavelength sample structure.  
+\item[-] Raise an error if the user supplied a negative wavelength factor.
+\item[-] Set the lineinfo wavelength unit conversion factor from the transithint structure
+\item[-] Check that the user supplied a positive final wavelength. If not, raise a warning and set to the default (maximum database wavelength).
+\item[-] If the user supplied a valid final wavelength:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Check that the final wavelength is not lower than the initial wavelngth. If so, raise an error and return -3.
+\item[-] Check that the final wavelength is not higher than the maximum database wavelength. If so, raise a warning.
+\item[-] Set the final wavelength from the hint structure.
+\end{enumerate}
+\item[-] Check that the user supplied a positive inital wavelength. If not, raise a warning and set to the default (minimum database wavelength).
+\item[-] If the user supplied a valid wavelength:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Check that the initial wavelength is not higher than the maximum database wavelength. If so, raise and error and return -2.
+\item[-] Check that the initial wavelength is not smaller than the minimum database wavelength. If so, raise a warning.
+\item[-] Set the initial wavelength from the hint structure.
+\end{enumerate}
+\item[-] Update the progress indicator.
+\end{enumerate}
+
+\subsubsection{readdatarng:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate \ttred{tr.ds.li.lt.wl, tr.ds.li.lt.isoid,
+    tr.ds.li.lt.gf, tr.ds.li.lt.elow} (line-transition's wavelength,
+  isotope ID, gf, and lower state energy).
+\item[-] Set \ttred{tr.ds.li.lt.wl, tr.ds.li.lt.isoid, tr.ds.li.lt.gf, tr.ds.li.lt.elow} from read TLI values.
+\item[-] Set \ttred{tr.ds.li.n\_l} (Number of lines read from TLI).
+\item[-] Update \ttred{tr.pi to} include {\tt TRPI\_READDATA}.
+\end{enumerate}
+
+\paragraph{Walkthrough} 
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call to \ttblue{fileexistopen} from iomisc.c to open the TLI file. Return -1 if the file cannot be opened.
+\item[-] Check if the file is 'seekable'. If not, raise an error and return -2.
+\item[-] Move the file pointer to the beginning of the transition data.
+\item[-] Read the number of transitions from the TLI file.
+\item[-] Call to \ttblue{datafileBS} from readlineinfo.c to do a binary search for the index of the final wavelength.
+\item[-] Loop over subsequent wavelength entries to check that they are greater than the final wavelength. If not, increment the index of the final wavelength until the condition is true.
+\item[-] Store the number of lines.
+\item[-] Allocate arrays for line transition's oscillator strength, central wavelength, isotope ID, and lower-state energy.
+\item[-] Check for allocation errors. Raise an error if any of the allocations failed.
+\item[-] Move file pointer to the beginning of the wavelength info and read into the allocated array. Do the same for isotope IDs, lower-state energy, and oscillator strength (gf).
+\item[-] Close the file.
+\item[-] Update progress indicator.
+\item[-] Return the number of lines read.
+\end{enumerate}
+
+\subsubsection{datafileBS:}
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set the index of the end of the search range to one less than the number of fields to search. Set the index of the beginning of the range to 0.
+\item[-] While the difference between the beginning and end indices is greater than 1:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set the result index to the middle of the search range.
+\item[-] Move the file pointer to the result index.
+\item[-] Read the value at that point.
+\item[-] If the target value is greater than the read value, move the beginning of the search range up to the result index. Otherwise, move then end of the search range to the result index.
+\end{enumerate}
+\item[-] Set the result index to the beginning index of the search range.
+\item[-] Move the file pointer to this point.
+\item[-] Read the value at that point in the file. 
+\end{enumerate}
+
+\newpage
+\subsection{readatm.c:}
+\findme{fill this in}
+\subsubsection{List of Functions Defined in readatm.c:}
+\function{
+int getatm(struct transit *tr)}
+Initialize ds.at (atm\_data).  Set abundance mass and allowrq parameters.
+Check existence, open, and set pointer to atmosphere file.
+Get keyword variables from atm file (list of isotopes among others).
+Get temperature and isotopes abundances per radius from atm file. \newline
+
+\function{
+double checkaddmm(&double *mm, PREC\_NREC r, prop\_isov *isov, prop\_isof *isof,
+               \\ &int n, \_Bool mass, enum isodo *isodo)}
+Compute the mean molecular mass, check that sum of abundances
+is no bigger than 1, and return it. \newline
+
+\function{
+void telldefaults(struct isotopes *iso, struct atm\_data *at)}
+Tell defaults when only one radius is being selected. \newline
+
+\function{
+int freemem\_atmosphere(struct atm\_data *at, long *pi)}
+Free memory from the atmosphere structure. \newline
+
+\function{
+void storename(struct atm\_data *at, char *line)}
+Store info about the atmosphere file. \newline
+
+\function{
+static void atmerr(int max, char *file, int line)}
+Print error message when a line of the file is longer than the max characters. \newline
+
+\function{
+static void invalidfield(char *line, int nmb, int fld, char *fldn)}
+Print an error message when a field with transition info is invalid. \newline
+
+\function{
+static inline void checkposvalue(PREC\_RES val, int field, long line)}
+Chack that a value is positive, and raise an error if it is not. \newline
+
+\function{
+int getmnfromfile(FILE *fp, struct atm\_data *at, struct transit *tr)}
+Get keyword variables from atmosphere file (mass/number abundance bool;
+zero-radius offset; radius, temperature, and pressure units factor;
+atmfile name/info; list isotopes; list of proportional-abundance isotopes).
+Store molecules and proportional isotopes in atm\_data struct.
+Determine which linedb isotope corresponds to such atm\_data isotope.
+Solve non-matched linedb isotope cases.
+Put all non-ignore isotopes in transit.ds.iso structure. \newline
+
+\function{
+int readatmfile(FILE *fp, struct transit *tr, struct atm\_data *at, \\ prop\_samp *rads, int nrad)}
+Read and store radius, pressure, and temperature from file.
+Read abundances for each (non other-factor) isotope.
+Sum fractional abundances. Calculate ramaining (other-factor) abundances.
+Calculate mean molecular mass per radius.
+Calculate densities per isotope at each radius. \newline
+
+\function{
+void getmoldata(struct atm\_data *at, struct molecules *mol, char *filename)}
+Read and store non-layer-dependent molecular data (mass, radius, ID)
+and store in mol struct. \newline
+
+\function{
+int reloadatm(struct transit *tr, double *input)}
+Reload data from array into transit's atm structure.\newline
+
+\function{
+int radpress(double g, double p0, double r0, double *temp, double *mu,\\ double *pressure, double *radius, intnlayer, double rfct)}
+Recalculate radius array according to hydrostatic pressure, and find the radial location of the reference pressure.
+
+\subsubsection{getatm:}
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Initialize \ttred{tr.ds.at, tr.ds.mol}  (atm\_data, molecules).
+\item[-] Set \ttred{tr.ds.at.mass} from {\tt th.mass} (mass or
+  number abundance bool).
+\item[-] Set \ttred{tr.allowrq} from {\tt th.allowrq} (minimum
+  allowed sum of abundances).
+\item[-] Set \ttred{tr.fp\_atm} from {\tt th.f\_atm} if {\tt th.f\_atm} exists and can be
+  opened (atmosphere file pointer).
+\item[-] Set \ttred{tr.f\_atm} (atmosphere file name).
+\item[-] Set \ttred{tr.ds.at.atm.tfct, tr.ds.at.atm.pfct} from
+  default values (temperature and pressure unit factors).
+\item[-] Allocate \ttred{tr.ds.at.rads.v, tr.ds.at.atm.t,
+    tr.ds.at.atm.p} (radius, temperature and pressure array).
+\item[-] Allocate \ttred{tr.ds.mol.nmol, tr.ds.mol.ID, tr.ds.mol.mass, tr.ds.mol.radius, \\ tr.ds.mol.molec} (number of molecules, molecular IDs, molecular masses, molecular radii, and molecular properties).
+\item[-] Allocate \ttred{tr.ds.at.molec, tr.ds.at.mm, tr.ds.at.molec.d, tr.ds.at.molec.q} (molecular properties substructure, mean molecular mass, molecular density, molecular abundance) and set \ttred{tr.ds.at.molec.n} (size of radius sampling)
+\item[-] Set \ttred{tr.ds.at.rads.i, tr.ds.at.rads.f, tr.ds.at.rads.o,
+    tr.ds.at.rads.d} (radius sampling initial value, final value,
+  oversampling, and spacing).
+ \item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_GETATM}.
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Initialize atmosphere and molecular structures by setting memory to 0.
+\item[-] Copy mass boolean from the transithint structure. This boolean indicates whether abundances are in units mass or number.
+\item[-] Copy abundance exactness number from transithint structure. This number determines if an error is raised when the sum of the abundances does not equal one.
+\item[-] If the atmospheric file was not specified, raise an error and return -1.
+\item[-] If the atmospheric file is specified, exists, and can be opened, set the file pointer and file name.
+\item[-] Allocate radius sampling values, temperature, and pressure arrays.
+\item[-] Call \ttblue{getmnfromfile} from readatm.c to get keyword variables from the atmospheric file. Raise an error if the atmospheric file contains less than 1 line read.
+\item[-] Allocate molecular structure variables (number of molecules, molecular ID, molecular masses, molecular radii, and molecular properties substructure).
+\item[-] Call \ttblue{getmoldata} to get molecular data from the molecules file.
+\item[-] Allocate molecular properties substructure of atmospheric data structure, mean molecular mass, molecular density, and molecular density. Set number of elements.
+\item[-] Call to \ttblue{readatmfile} to read per-radius isotopic abundances, temperatures and set number a radius layers.
+\item[-] Close the file.
+\item[-] Set the radius sampling initial value, final value, oversampling, and spacing.
+\item[-] Update progress indicator to show \ttblue{getatm} has been run.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\subsubsection{checkaddmm:}
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Raise an error if given radius layer is beyond the allocated radius layers.
+\item[-] Compute mean molecular mass and sum of abundances.
+\item[-] If the sum of abundances is more than 0.1\% over unity, raise a warning.
+\item[-] Return the sum of the abundances.
+\end{enumerate}
+
+\subsubsection{getmnfromfile:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set \ttred{tr.ds.at.begline} (line where radius-dependent info begins) to 0.
+\item[-] Allocate and fill out \ttred{tr.ds.mol.name} (molecules' names).
+\item[-] Set \ttred{tr.ds.at.mass} according to the atmospheric file.
+\item[-] Set \ttred{tr.ds.at.info} according to the atmospheric file.
+\item[-] Set \ttred{tr.ds.at.begpos} (position of the beginning of data).
+\end{enumerate}
+
+\comment{\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Begin infinite loop.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{fgetupto\_err} from iomisc.c to read given file character by character and place into given string. Each character is treated on a case-by-case basis:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] When a '\textbackslash n' is encountered, continue to the next line.
+\item[-] When a '#' character is encountered:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{getname} from iomisc.c to read the following characters until reaching a blank space, end of line, or end of file, and store those characters in the given string (keyword).
+\item[-] If the keyword is SPECIES:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{fgetupto\_err} from iomisc.c to go to the next line.
+\item[-] Call \ttblue{countfields} from iomisc.c to count the number of words in this line. This is the number of molecules.
+\item[-] Allocate array for molecules' names.
+\item[-] Loop over each molecule. Call \ttblue{getname} from iomisc.c to read the next molecule name and store in the array. Call \ttblue{nextfield} from iomisc.c to move the file pointer to the beginning of the next word (next molecule name).
+\item[-] Continue reading the file.
+\end{enumerate}
+\end{enumerate}
+\item[-] When a '0' character is encountered, raise an error that the end of the file has been reached before data was read.
+\item[-] When a 'q' character is encountered:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Skip past all blank spaces.
+\item[-] If a 'n' character is after the 'q' character, set the mass boolean to false, indicating abundance is a mixing ratio. If a 'm' character is after the 'q' character, set the mass boolean to true, indicating abundance is a mass mixing ratio. Otherwise, raise an error and break.
+\item[-] Continue reading the file.
+\end{enumerate}
+\item[-] When a 'z' character is encountered, set the zero radius value to the following number.
+\item[-] When a 'u' character is encountered:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If the next character is a 'r', set the radius sampling factor to the following number.
+\item[-] If the next character is a 'p', set the pressure factor to the following number.
+\item[-] If the next character is a 't', set the temperature factor to the following number.
+\item[-] Otherwise, raise an error and exit.
+\end{enumerate}
+\item[-] When a 'n' character is encountered, call \ttblue{storename} from readatm.c to store the following string as the file name/label.
+\item[-] If none of these characters are encountered, break case switch and infinite loop.
+\end{enumerate}
+\item[-] Set total number of molecules in the atmosphere.
+\item[-] If the number of species scale factors is greater than 0:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate array for species with scale factors.
+\item[-] Loop over each species. Set the species with scale factor entry to -1. Compare each species with molecular names and if they are the same, fill in the species with scale factor entry, such that all that are present are named, and those not present are listed as -1.
+\end{enumerate}
+\item[-] If no molecules were defined, raise an error.
+\item[-] Set the position in the file of the beginning of data.
+\item[-] Return the line where radius-dependent info begins.
+\end{enumerate}
+}
+
+\subsubsection{readatmfile:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Reallocate \ttred{tr.ds.rads.v, tr.ds.at.atm.t, tr.ds.at.atm.p, tr.ds.at.mm, tr.ds.at.molec.d, tr.ds.at.molec.q} (radius sampling values, temperature, pressure, mean molecular mass, density, and abundance arrays) to accommodate more radius layers.
+\item[-] Set \ttred{tr.ds.at.molec.n} to the new number of radius layers.
+\item[-] Fill in \ttred{tr.ds.rads.v, tr.ds.at.atm.p, tr.ds.at.atm.t} from atmosphere file.
+\item[-] Fill in \ttred{tr.ds.at.molec.q} from atmosphere file.
+\item[-] Calculate \ttred{tr.ds.at.molec.d}.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{valueinarray} to find the indices of H2 and He in the molecular ID array.
+\item[-] Move the stream position to the beginning of data in the atmosphere file.
+\item[-] Call \ttblue{fgetupto\_err} to read past all blank lines and comments.
+\item[-] Call \ttblue{countfields} to count the number of values per line, minus the radius, pressure, and temperature columns.
+\item[-] Move the stream position back to the beginning of data in the atmosphere file.
+\item[-] Begin infinite loop.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If the current radius index reaches the total number of radius layers:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Perform a binary left shift to double the number of radius layers.
+\item[-] Reallocate radius sampling values, temperature, pressure, mean molecular mass, density, and abundance arrays according to the new number of radius layers.
+\item[-] Set the number of radius elements in the molecules' substructures to the new number of radius layers.
+\end{enumerate}
+\item[-] Call \ttblue{fgetupto\_err} to skip past comments and blank lines.
+\item[-] Break loop when the end of the file is reached.
+\item[-] Store radius values in the radius sampling values array. Call \ttblue{checkposvalue} from readatm.c to check that the stored value is positive
+\item[-] If there was a problem converting the read value to a double, call \ttblue{invalidfield} from readatm.c to warn that an invalid value was given in the file.
+\item[-] Loop over each abundance.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Read the abundance for this particular isotope and radius into the corresponding molecular abundance array.
+\item[-] Convert abundances using the scale factor.
+\item[-] Sum up abundances and metal abundances (everything but H2 and He).
+\item[-] Check that the abundances are positive, and raise an error if there was a problem reading the abundance into the array.
+\end{enumerate}
+\item[-] Calculate H2/He ratio, Helium abundance, and diatomic Hydrogen abundance.
+\item[-] Call \ttblue{checkaddmm} from readatm.c to calculate mean molecular mass and check that the sum of abundances is within the permitted range of one. If not, raise a warning.
+\item[-] For each isotope, call \ttblue{stateeqnford} \findme{where is this defined?} to calculate densities using the ideal gas law.
+\item[-] Increment to the next radius layer.
+\end{enumerate}
+\item[-] Reallocate the arrays down to the final size according to the number of radius layers incremented in the infinite loop.
+\item[-] Return the number of radius layers.
+\end{enumerate}
+
+\subsubsection{getmoldata:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Fill in \ttred{tr.ds.mol.radius, tr.ds.mol.ID, tr.ds.mol.mass} from the molecular information file.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{verbfileopen} from messagep.c to open the molecular info file if it exists.
+\item[-] Skip past all comments and blank lines.
+\item[-] Allocate arrays for alias names and molecules.
+\item[-] For each alias, call \ttblue{getname} and \ttblue{nextfield} from iomisc.c to read the aliases and molecule names from file.
+\item[-] Allocate arrays for molecule ID, mass, names, and radii.
+\item[-] Skip past all comments and blank lines.
+\item[-] Read molecular info from file by calling \ttblue{getname} and \ttblue{nextfield} from iomisc.c. Place into the allocated arrays.
+\item[-] Loop over each molecule.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{findstring} from iomisc.c to check if the molecule's name matches any aliases from the file. If so, use the alias as the molecule's name. Otherwise, use the molecule's name from the molecule structure.
+\item[-] Call \ttblue{findstring} from iomisc.c to find the index of the molecule. Use that index to set the radius, molecular ID, and mass in the molecule structure. 
+\end{enumerate}
+\end{enumerate} 
+
+\subsubsection{reloadatm:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set \ttred{tr.ds.at.rads.i, tr.ds.at.rads.f} (initial and final radius sampling values) according to the new radius array.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Update temperature array at every layer.
+\item[-] Update abundance array at every layer and for every molecule.
+\item[-] Call \ttblue{checkaddmm} to recalculate mean molecular mass and check whether the sum of abundances is sufficiently close to one. If not, print a warning.
+\item[-] Check that radius reference level, pressure reference level, and surface gravity were defined. If not, raise an error.
+\item[-] Call \ttblue{radpress} from readatm.c to recalculate the radius array
+\item[-] Set the initial radius value and final radius values according to the new radius array.
+\item[-] Call \ttblue{makeradsample} to make a new radius sampling array.
+\end{enumerate}
+
+\subsubsection{radpress:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Recalculate \ttred{tr.ds.at.rads.v}.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set the first element of the radius array to 0.
+\item[-] Loop over each radius layer.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Use cumulative trapezoidal integration to fill out the rest of the radius array using Equation \ref{eqn:hydrostatic}.
+\item[-] Find the indices of the layers with pressures just above and below the reference pressure.
+\end{enumerate}
+\item[-] Raise an error if the reference pressure was not found to be between any two layers in the pressure array and return 0.
+\item[-] Log-linearly interpolate (linear in radius, logarithmic in pressure) to find the radius at the reference pressure.
+\item[-] Shift the radius array to force the radius at the reference pressure equal to the reference radius.
+\end{enumerate}
+
+\newpage
+\subsection{at\_file.c:}
+\subsubsection{List of Functions Defined in at\_file.c:}
+\function{
+static void isisoline(&char *name, PREC\_ATM mass, int *isoeq, 
+                   \\ &enum isodo atisodo, prop\_isof *isof, enum isodo *isodo,
+                   \\ &PREC\_NREC nliso)}
+Check whether the isotope with 'name' corresponds to an isotope in
+lineinfofile. If yes, set's its isodo parameter. \newline
+
+\function{
+static int checknonmatch(&struct transit *tr, struct atm\_data *at,
+                      \\ &enum isodo *isodo)}
+Ask what to do with lineinfo isotopes that don't have a match in 
+the atmosphere file. \newline
+
+\function{
+static inline double findfactq(&char *iso, prop\_isof *isof, prop\_isov *isov,
+                            \\ &int n, PREC\_NREC r)}
+Find the isotope in 'isof'  with name 'iso' and get its abundance at
+radius given by index 'r'. \newline
+
+\function{
+static inline double addq(&prop\_isov *isov, enum isodo *isodo,
+                       \\ &\_Bool *other, int n, PREC\_NREC r)}
+Add the (fractional) abundance from all isotopes except for the
+other'-factor isotopes. \newline
+
+\function{
+static void atmerr(int max, char *file, int line)}
+Print error message when a line of 'file' is longer than 'max' characters. \newline
+
+\function{
+static void invalidfield(char *line, int nmb, int fld, char *fldn)}
+Print error message when a field with transition info is invalid. \newline
+
+\function{
+static inline void checkposvalue(PREC\_RES val, int field, long line)}
+Check that val is positive. throw error message if not. \newline
+
+\function{
+int getmnfromfile(FILE *fp, struct atm\_data *at, struct transit *tr, int nmb)}
+Get keyword variables from atmosphere file (mass/number abundance bool;
+zero-radius offset; radius, temperature, and pressure units factor;
+atmfile name/info; list isotopes; list of proportional-abundance isotopes).
+Store molecules and proportional isotopes in atm\_data struct. 
+Determine which linedb isotope corresponds to such atm\_data isotope.
+Solve non-matched linedb isotope cases.
+Put all non-ignore isotopes in transit.ds.iso structure. \newline
+
+\function{
+int readatmfile(&FILE *fp, struct transit *tr, struct atm\_data *at,
+             \\ &prop\_samp *rads, int nrad)}
+Read radius, pressure, temperature, and abundances and store it into
+at\_data of transit.  Calculate mean molecular mass and densities.
+(Detailed): Read and store radius, pressure, and temperature from
+file.  Read abundances for each (non other-factor) isotope.  Sum
+fractional abundances. Calculate ramaining (other-factor) abundances.
+Calculate mean molecular mass per radius.  Calculate densities per
+isotope at each radius. \newline
+
+\subsubsection{Variables Modified in getmnfromfile:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate \ttred{tr.ds.at.isoprop} (Atmosphere's
+  proportional-isotopes array)
+\item[-] Allocate \ttred{tr.ds.at.isodo, tr.ds.at.isoeq, tr.ds.at.m,
+    tr.ds.at.n} (atmosphere's file isotope type, lineinfo's isotope
+  index, isotope's mass, isotope's name).
+\item[-] Set \ttred{tr.ds.at.mass} (abundance by mass (True) or number
+  (False) boolean) from file.
+\item[-] Set \ttred{tr.ds.at.rads.fct, tr.ds.at.atm.pfct,
+    tr.ds.at.atm.tfct} (units factor of radius, pressure, and
+  temperature arrays) from file.
+\item[-] Call to {\tt storename} to set \ttred{tr.ds.at.info} from
+  file.
+\item[-] Re-allocate \ttred{tr.ds.at.isodo, tr.ds.at.isoeq,
+    tr.ds.at.m, tr.ds.at.n} from file.
+\item[-] Set \ttred{tr.ds.at.m, tr.ds.at.n} from file.
+\item[-] Call to {\tt isisoline} to set \ttred{tr.ds.at.isoeq,
+    tr.ds.at.isodo} from file.
+\item[-] Re-allocate \ttred{tr.ds.at.isoprop} from file.
+\item[-] Set \ttred{tr.ds.at.isoprop.m, tr.ds.at.isoprop.n} from file.
+\item[-] Set \ttred{tr.ds.at.isoprop.f} (proportional factor) from
+  file.
+\item[-] Set \ttred{tr.ds.at.isoprop.t} (name of referenced isotope)
+  from file.
+\item[-] Call to {\tt isisoline} to set \ttred{tr.ds.at.isoprop.eq,
+    tr.ds.at.isoprop.isodo} (lineinfo's isotope index, and isotope's
+  type) from file.
+\item[-] Set \ttred{tr.ds.at.begline} (position where tabulated
+  data begins in atm file).
+\item[-] Set \ttred{tr.ds.at.ipa, tr.ds.at.n\_aiso} (number of
+  proportional isotopes, total number of isotopes in atmosphere file).
+\item[-] Copy {\tt tr.ds.at.isoprop} isotopes into {\tt tr.ds.at}.
+\item[-] Set \ttred{tr.ds.at.n\_niso} (number of non-ignored
+  isotopes with no linelist).
+\item[-] Add non-ignored non-linedb isotopes into {\tt tr.ds.at.iso}:
+\item[-] Re-allocate 
+  \ttred{tr.ds.iso.isodo, tr.ds.iso.isof, tr.ds.iso.isof.n}.
+\item[-] Set \ttred{tr.ds.at.isoeq}.
+\item[-] Copy \ttred{tr.ds.iso.isodo, tr.ds.iso.isof.m,
+    tr.ds.iso.isof.n} from {\tt tr.ds.at.isodo, tr.ds.at.m,
+    tr.ds.at.n}.
+\item[-] Set \ttred{tr.ds.iso.n\_e} (number of non-ignored isotopes).
+\end{enumerate}
+
+\subsubsection{Variables Modified in readatmfile:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Re-allocate \ttred{tr.ds.at.rads.v, tr.ds.at.atm.t,
+    tr.ds.at.atm.p, tr.ds.at.mm,}\newline \ttred{tr.ds.iso.at.isov.d,
+    tr.ds.at.isov.q} (atmosphere radius temperature, pressure,
+  meanmolecular mass, isotopes' density, and isotopes' abundance
+  arrays).
+\item[-] Set \ttred{tr.ds.at.isov.n} (number of layers in the
+  atmosphere).
+\item[-] Set \ttred{tr.ds.at.rads.v, tr.ds.at.atm.p, tr.ds.at.atm.t}
+  reading from file.
+\item[-] Set \ttred{tr.ds.at.isov.q} interactively
+  (tr.ds.at.isodo=fixed), from isoprop (factor), from file (atmfile),
+  or call to {\tt addq} and calculate from isoprop (factor/other).
+\item[-] Call to {\tt checkaddmm} to set \ttred{tr.ds.at.mm}.
+\item[-] Call to {\tt stateeqnford} to set
+  \ttred{tr.ds.at.isov.d}.
+\end{enumerate}
+
+\newpage
+\subsection{makesample.c:}
+\subsubsection{List of Functions Defined in makesample.c:}
+\function{
+int makesample(&prop\_samp *samp, prop\_samp *hint, prop\_samp *ref, const long fl,
+            \\ &const float margini, const float marginf)}
+Get units factor.  Get inital and final values.
+Check that there is a non-zero interval.
+Check that only the spacing or the number of points have been defined.
+If numpoints was provided, use the given array of values and ommit
+oversampling.  If spacing was provided, calculate numpoints, oversample,
+and fill in values. \newline
+
+\function{
+int makewavsample(struct transit *tr)}
+Call makesample to create the wavelength sampling using
+lineinfo.wavs as reference. \newline
+
+\function{
+int makewnsample(struct transit *tr)}
+Call makesample to create the wavenumber sampling using the
+inverse-wavelength values as reference. \newline
+
+\function{
+int makeradsample(struct transit *tr)}
+Call makesample to create the radius sampling using tr.ds.at.rads
+as reference.  
+Interpolate to set tr.atm pressure, temperature, and mean molecular mass.  
+Interpolate to set all isotopes density and abundance per radius.  
+Interpolate to set linedb isotopes partition function and cross section. \newline
+
+\function{
+int makeipsample(struct transit *tr)}
+Call makesample to create the impact parameter sampling using the
+reversed radius limits and spacing as reference (produce always an
+equispaced sampling). \newline
+
+\function{
+static void printsample(FILE *out, prop\_samp *samp, char *desc, long fl)}
+Print a sampling's information to file. \newline
+
+\function{
+void savesample(FILE *out, prop\_samp *samp)}
+Save in binary the sample structure. \newline
+
+\function{
+void savesample\_arr(FILE *out, prop\_samp *samp)}
+Saves in binary the sample structure's arrays. \newline
+
+\function{
+int restsample(FILE *in, prop\_samp *samp)}
+Restore a binary sample structure. \newline
+
+\function{
+int restsample\_arr(FILE *in, prop\_samp *samp)}
+Restore a binary sample structure. \newline
+
+\function{
+int outsample(struct transit *tr)}
+Print the sample data to file. \newline
+
+\function{
+void freemem\_samp(prop\_samp *samp)}
+Frees the sampling structure. \newline
+
+\function{
+int main(int argc, char *argv[])}
+De-bugging. \newline
+
+\subsubsection{makewnsample0:}
+\paragraph{Variables Modified:}
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Create a reference wavenumber sample (\texttt{rsamp}).
+\item[-] Set the initial \texttt{rsamp} wavenumber point from hinted
+  wavenumber (or else from the inverted hited wavelength).
+\item[-] Set the final \texttt{rsamp} wavenumber point from hinted
+  wavenumber (or else from the inverted hited wavelength).
+\item[-] Set the \texttt{rsamp} spacing from hinted wavenumber
+  spacing.
+\item[-] Call to \ttblue{makesample1} to set \ttred{tr.wns}.
+\item[-] Updates the transit progress indicator (\ttred{tr.pi}) with
+  \texttt{TRPI\_MAKEWN}. \newline
+\end{itemize}
+\paragraph{Walkthrough:}
+
+\subsubsection{makewnsample0:}
+Set wavenumber sampling variables and array.  Take values from hint
+sampling.
+
+\paragraph{Variables Modified:}
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set units factor \ttred{tr.samp.fct}.
+\item[-] Set initial value \ttred{tr.samp.i}.
+\item[-] Set final value \ttred{tr.samp.f}.
+\item[-] Check that there is a non-zero interval. 
+\item[-] Set spacing \ttred{tr.samp.d}.
+\item[-] Calculate numpoints (\ttred{tr.samp.n}), oversample
+    (\ttred{tr.samp.o}), and fill in the array values
+    (\ttred{tr.samp.v}).
+\end{itemize}
+\paragraph{Walkthrough:}
+
+
+\subsubsection{makewavsample:}
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call to makesample to set \ttred{tr.wavs} values.
+\item[-] Modify \ttred{tr.pi} to account for {\tt TRPI\_MAKEWAV}.
+\end{enumerate}
+\paragraph{Walkthrough:}
+
+\subsubsection{makewnsample:}
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set \ttred{tr.wnmf, tr.wnmi} from {\tt th.wnm}
+  (wavenumber margins) if defined, else set the margins from the
+  inverse wavelength margin values.
+\item[-] Call to makesample to set \ttred{tr.wns} values.
+\item[-] Modify \ttred{tr.pi} to account for {\tt TRPI\_MAKEWN}.
+\end{enumerate}
+
+
+\subsubsection{makeradsample:}
+This function makes the radius sample.  Take values from hint or else
+from the atmospheric file.  Then the temperature, pressure, mean
+molecular mass, itostopes' density, abundance, partition function, and
+cross section are also resampled are resampled into an using a linear
+or spline interpolation, in case the radius array differ from the
+atmospheric radius array (i.e., hint given). \newline
+
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call to makesample to set \ttred{tr.rads} values.
+\item[-] Allocate \ttred{tr.ds.iso.isov.d, tr.ds.iso.isov.q,
+    tr.ds.iso.isov.c, tr.ds.iso.isov.z} (isotope's density, abundance,
+  cross section, partition function).
+\item[-] Allocate \ttred{tr.atm.t, tr.atm.p, tr.atm.mm} (transit's
+  atmospheric temperature, pressure, and mean molecular mass)
+\item[-] Set \ttred{tr.atm.t, tr.atm.p, tr.atm.mm} interpolating
+  {\tt tr.ds.at.atm} values into {\tt tr.rads} sampling.
+\item[-] Set \ttred{tr.ds.iso.isov.d, tr.ds.iso.isov.q}
+  interpolating {\tt tr.ds.at.isov} values into {\tt tr.rads}
+  sampling.
+\item[-] Set \ttred{tr.ds.iso.isov.c, tr.ds.iso.isov.z}
+  interpolating {\tt tr.ds.at.isov} values into {\tt tr.atm.t} array.
+\item[-] Modify \ttred{tr.pi} to account for {\tt TRPI\_MAKERAD}.
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Check that \ttblue{getatm} and \ttblue{readinfo\_tli} have
+  been executed.
+\item[-] Set flag (\texttt{SAMP\_LINEAR} or \texttt{SAMP\_SPLINE}) to
+  define linear or spline interpolation.
+\item[-] Call to \ttblue{makesample0} to set \ttred{tr.rads} (uses
+  atmosphere data radius sampling as reference when there are no
+  hinted values).
+\item[-] Call to \ttblue{resamplex} and \ttblue{resampley} to
+  interpolate atmospheric's temperature (\ttred{tr.atm.t}), pressure
+  (\ttred{tr.atm.p}), and mean molecular mass (\ttred{tr.atm.mm})
+  profiles according to the equispaced radius sampling (\ttred{tr.rads.v}).
+\item[-] Call to \ttblue{resamplex} and \ttblue{resampley} to
+  interpolate the isotopes density (\ttred{tr.ds.iso.isov.d}) and
+  abundance (\ttred{tr.ds.iso.isov.q}) profiles according to the
+  radius sampling.
+\item[-] Interpolate the isotopes' collisional cross-section
+  (\ttred{tr.ds.iso.isov.c}) and partition-function
+  (\ttred{tr.ds.iso.isov.z}) profiles according to the atmospheric
+  thermal profile.
+\item[-] Updates the transit progress indicator (\ttred{tr.pi}) with
+  \texttt{TRPI\_MAKERAD}. \newline
+\end{itemize}
+
+
+\subsubsection{makeipsample:}
+This function makes the impact parameter sampling that determines the
+radii at which the planet probed for the transit geometry.  Must be a
+decreasing array. If there is no hinted values, it uses the reversed
+radius array.
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call to makesample to set \ttred{tr.ips} values.
+\item[-] Modify \ttred{tr.pi} to account for {\tt TRPI\_MAKEIP}.
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Create a mock impact parameter sample (\texttt{usamp}) from hint
+  values.
+\item[-] Create a mock impact parameter sample (\texttt{rsamp}) as
+  reference from reversed radius sampling.
+\item[-] Check that final value is smaller than the initial value in
+  hint sample.
+\item[-] Check that \ttblue{makeradsample} has been called.
+\item[-] Call to \ttblue{makesample0} to set \ttred{tr.ips} (uses
+  rsamp sampling as reference when there are no hinted values).
+\item[-] Updates the transit progress indicator (\ttred{tr.pi}) with
+  \texttt{TRPI\_MAKEIP}.
+\end{itemize}
+
+
+\subsubsection{makesample:}
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set \ttred{tr.samp.fct} from hint sample, else from
+  reference sample (sample units factor).
+\item[-] Set \ttred{tr.samp.i, tr.samp.f} from hint sample or from
+  reference sample (sample initial and final values).
+\item[-] Set \ttred{tr.samp.n, tr.samp.v} from hint, else from
+  reference sample if \ttred{n} given. Set \ttred{tr.samp.d}
+  to 0 or $-1$.
+\item[-] Set \ttred{tr.samp.d} from hint, else from reference
+  sample if d given. Calculate \ttred{tr.samp.n, tr.samp.v} based
+  on {\tt tr.samp.d}. Set \ttred{tr.samp.o} from hint, else from
+  reference sample.
+\end{enumerate}
+
+
+\subsubsection{makesample0:}
+Set (radius or impact parameter) sampling variables and array.  Take
+values from hint or else from the reference sampling. \newline
+
+\paragraph{Variables Modified:}
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set units factor (\ttred{tr.samp.fct}).
+\item[-] Set initial value \ttred{tr.samp.i} from hint (or else from
+  reference).
+\item[-] Set final value \ttred{tr.samp.f} from hint (or else from
+  reference).
+\item[-] If no sampling was provided and reference numpoints was
+  provided, assume an array of values exists, set \ttred{tr.samp.n}
+  and \ttred{tr.samp.v}, set oversampling (\ttred{tr.samp.o}), and
+  return.
+\item[-] If spacing was provided in hint or reference:
+  \begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+  \item[-] Set \ttred{tr.samp.d}.
+  \item[-] Check that there is a non-zero interval. 
+  \item[-] Set \ttred{tr.samp.o} from hint or reference.
+  \item[-] Calculate numpoints (\ttred{tr.samp.n}), oversample
+    (\ttred{tr.samp.o}), and fill in the array values
+    (\ttred{tr.samp.v}). \newline
+  \end{itemize}
+\end{itemize}
+\paragraph{Walkthrough:}
+
+
+\subsubsection{outsample and printsample:}
+\paragraph{Variables Modified:}
+  - Set pointer to file \ttred{tr.f\_outsample}. \\
+  - Call to {\tt printsample} to print each sampling: \\
+   - Print the sample's \ttred{fct, i, f, d, o, n} parameters. \\
+   - Print the sample's \ttred{v} array.
+
+\paragraph{Walkthrough:}
+outsample opens the file tr.f\_outsample to write the wavelength,
+wavenumber, radius, and impact sampling parameters. It calls to
+printsample to print each one.
+
+\newpage
+\subsection{opacity.c: EDITED}
+This file contains routines which calculate opacities, read opacity files, and write opacity files.
+\subsubsection{List of Functions Defined in opacity.c:}
+\function{
+int opacity(struct transit *tr)}
+Driver routine to calculate or read the opacity. \newline
+
+\function{
+int calcopacity(struct transit *tr, FILE *fp)}
+Calculate a grid of opacities and Voigt profiles. \newline
+
+\function{
+int readopacity(struct transit *tr, FILE *fp)}
+Read an opacity grid from file. \newline
+
+\function{
+int extinction(struct transit *tr, int r, int t)}
+Calculate the opacity spectrum at a specific layer. \newline
+
+\function{
+int freemem\_opacity(struct opacity *op, long *pi)}
+Free index of refraction array. \newline
+
+\subsubsection{opacity:}
+\paragraph{Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Copy {\tt th.f\_opa} into \ttred{tr.f\_opa}
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Check that the radius array has been sampled.
+\item[-] Check if an opacity file was specified.
+\item[-] Call \ttblue{fileexistopen} to check if an opacity file exists and if so, open it.
+\item[-] Set the opacity file name in the transit structure from the hint structure.
+\item[-] Call \ttblue{readopacity} to read the opacity file if it exists.
+\item[-] If the opacity file does not exist:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Open a file for writing.
+\item[-] Call \ttblue{calcopacity} from opacity.c to calculate Voigt profiles and the opacity grid if requested.
+\end{enumerate}
+\item[-] Update the progress indicator to account for {\tt TRPI\_OPACITY}.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\subsubsection{calcopacity:}
+\paragraph{Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Copy {\tt tr.ds.th.nDop, tr.ds.th.nLor} into \ttred{tr.ds.op.nDop, tr.ds.op.nLor}.
+\item[-] Set \ttred{tr.ds.op.aDop, tr.ds.op.aLor} equal to logspaces from given minimum and maximum ({\tt tr.ds.th.dmin, tr.ds.th.dmax, tr.ds.th.lmin, tr.ds.th.lmax}).
+\item[-] Allocate \ttred{tr.ds.op.profsize} (Voigt profile half-size).
+\item[-] Allocate \ttred{tr.ds.op.profile} (Voigt profiles).
+\item[-] Call \ttblue{getprofile} from extinction.c to fill out \ttred{tr.ds.op.profsize}.
+\item[-] Copy {\tt tr.temp.n} into \ttred{tr.ds.op.Ntemp}.
+\item[-] Allocate \ttred{tr.ds/aeoprsuv.op.temp} (temperature array) and copy from {\tt tr.temp.v}.
+\item[-] Allocate and evaluate \ttred{tr.ds.op.ziso} (Partition function for each isotope and temperature).
+\item[-] Copy {\tt tr.rads.n} into \ttred{tr.ds.op.Nlayer} (number of radius layers).
+\item[-] Allocate \ttred{tr.ds.op.press} (pressure array) and copy from {\tt tr.atm.p} in CGS units.
+\item[-] Copy {\tt tr.ds.iso.nmol} into \ttred{tr.ds.op.Nmol} (number of molecules).
+\item[-] Allocate \ttred{tr.ds.op.molID} (molecule IDs).
+\item[-] Add molecule IDs to \ttred{tr.ds.op.molID} if not there.
+\item[-] Copy {\tt tr.wns.n} into \ttred{tr.ds.op.Nwave} (number of wavenumber samples).
+\item[-] Allocate \ttred{tr.ds.op.wns} and copy from {\tt tr.wns.v} (wavenumber samples).
+\item[-] Allocate \ttred{tr.ds.op.o} (4D opacity array).
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Make a logscale grid for the profile widths according to given min and max values.
+\item[-] Allocate an array for the profile half-size.
+\item[-] Allocate grid of Voigt profiles.
+\item[-] Loop over all Doppler and Lorentz widths to calculate Voigt profiles
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If the Doppler width is an order of magnitude smaller than the Lorentz width, and this is not the first calculation performed, set the profile half-size equal to the previous profile(skipping the calculation)
+\item[-] Otherwise, call to \ttblue{getprofile} in extinction.c to calculate Voigt profile half-size.
+\end{enumerate}
+\item[-] Call \ttblue{maketempsample} from makesample.c to create a temperature array from hinted values and put the temperature array in the opacity structure.
+\item[-] Allocate the partition function array.
+\item[-] Set the interpolation function flag.
+\item[-] Interpolate the isotope partition function. (FINDME: be more specific here.)
+\item[-] Get pressure array from the transit structure and place in the opacity structure.
+\item[-] Get molecule array from the transit structure and place in the opacity structure.
+\item[-] For each molecule, check if its ID is in the molecule ID array. If not, add it.
+\item[-] Get wavenumber array from the transit structure and place in the opacity structure.
+\item[-] Allocate the 4-dimensional opacity array ([mol][temp][rad][wn])
+\item[-] For each radius layer and temperature, call to \ttblue{extinction} in opacity.c to compute extinction.
+\item[-] Write dimension sizes to file.
+\item[-] Write molecular ID, temperature, pressure, and wavenumber sampling arrays to file.
+\item[-] Write the opacity array to file.
+\item[-] Close the file.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\subsubsection{readopacity:}
+\paragraph{Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate \ttred{tr.ds.op.molID, tr.ds.op.temp, tr.ds.op.press, tr.ds.op.wns} and fill in from file.
+\item[-] Allocate \ttred{tr.ds.op.o} and fill in from file.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Read the dimension sizes (number of molecules, temperatures, radius layers, and wavenumbers) from file.
+\item[-] Allocate molecular ID, temperature, pressure, and wavenumber sampling arrays.
+\item[-] Read molecular ID, temperature, pressure, and wavenumber sampling arrays from file.
+\item[-] Allocate the 4D opacity grid.
+\item[-] Read the opacity grid from file.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\subsubsection{extinction:}
+Calculates the extinction coeffecient for a given radius layer and temperature.
+\paragraph{Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate extinction and fill \ttred{tr.ds.op.o} for a single radius layer and temperature.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate constant factors for Doppler and Lorentz line widths.
+\item[-] Allocate temporary arrays for line widths, extinction, and line width indices.
+\item[-] Loop over isotopes.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Loop over molecules.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate the isotope's collision diameter. (FINDME: cross section?)
+\item[-] Call to \ttblue{stateeqnford} to calculate the density of molecule colliding with the isotope. (FINDME: where is this defined?)
+\item[-] Calculate Lorentz line width for this molecule and add it to the total line width for this isotope.
+\end{enumerate}
+\item[-] Multiply the Lorentz line width for this isotope by the constant factor.
+\item[-] Calculate Doppler width divided by central wavenumber for this isotope.
+\item[-] Find the maximum between the Doppler and Lorentz widths.
+\item[-] Find the minimum between the maximum width and the previous minimum width. The first minimum width is set at the beginning of the function.
+\item[-] Call \ttblue{binsearchapprox} from iomisc.c to perform a binary search to find the indices of the Doppler and Lorentz widths in the Doppler and Lorentz width samples.
+\end{enumerate}
+\item[-] Set oversampling resolution by looping through the exact divisors of the oversampling factor until the divisor times the spacing of the finest oversampling is greater than half the width of the smallest profile.
+\item[-] Loop over every line to calculate the maximum extinction coefficient for each molecule.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate the wavenumber of the line transition.
+\item[-] Call \ttblue{valueinarray}  to find the molecule index in the opacity grid for this isotope.
+\item[-] Skip calculation for this line transition if it is not within the given limits.
+\item[-] Calculate the extinction coefficient divided by the molecular abundance.
+\item[-] If the maximum extinction for this molecule has not been calculated yet, set it equal to the extinction coefficient that was just calculated. Otherwise, set the maximum and minimum extinction for this molecule equal to the maximum and minimum between the recently calculated extinction and the previously calculated maximum and minimum.
+\end{enumerate}
+\item[-] Loop over each line to calculate extinction coefficients.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate the wavenumber of the line transition.
+\item[-] Call \ttblue{valueinarray} to find the molecule index in the opacity grid for this isotope.
+\item[-] Skip calculation for this line transition if it is not within the given limits.
+\item[-] Calculate the extinction coefficient divided by the molecular abundance (FINDME: reference equation).
+\item[-] Find the index of the closest oversampled wavenumber.
+\item[-] Check if the next line falls within the same sampling unit (same sampling index). If so, co-add the next line with the current line (add the next line's extinction to the opacity for this line) and skip the next line's calculations.
+\item[-] If the extinction for this line is less than the defined threshold factor times the maximum extinction, disregard this line and continue to the next.
+\item[-] Calculate the closest dynamic sampling wavenumber.
+\item[-] Check if the ratio of Doppler width to Lorentz width is greater than a given threshold. If so, call to \ttblue{binsearchapprox} to do a binary search to recalculate the index for the Doppler width. If not, then the exact width of the Doppler profile is unimportant and the calculation is skipped.
+\item[-] Calculate the offset between the center of the line and the dynamic wavenumber sample (in units of oversampled wavenumber spacing).
+\item[-] Calculate the offset between the edge of the profile and the beginning of the wavenumber array (in units of oversampled wavenumber spacing)
+\item[-] Calculate the lower and upper indices of the profile (in units of dynamically sampled wavenumber)
+\item[-] Fix the lower and upper indices to the boundaries if they go outside the bounds of the wavenumber sampling.
+\item[-] Add the contribution from this line (and any co-added lines) to the opacity spectrum.
+\end{enumerate}
+\item[-] Call \ttblue{downsample} to downsample the temporary extinction array to the final sampling size and fill in the opacity grid.
+\item[-] Free all temporary arrays.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\newpage
+\subsection{cia.c: EDITED}
+This file contains routines which are used to calculate extinction due to Collision-Induced Absorption (CIA).
+\subsubsection{List of Functions Defined in cia.c:}
+\function{
+int readcia(struct transit *tr)}
+Read CIA infor from tabulated files. \newline
+
+\function{
+int interpolatecia(struct transit *tr)}
+\tgray{Get number of CIA files from hint. Allocate tr.ds.cia variables.
+Open files, read isotope names and sampled temperatures.
+Read tabulated data (wavenumber x temperatures).
+Interpolate values from tabulated sample to transit sample.
+Get density arrays of the isotopes from transit.
+Calculate absorption coefficients in cm$\sp{-1}$.} \newline
+
+\function{
+int bicubicinterpolate(&double **res, double **src, double *x1, long nx1, 
+                    \\ &double *x2, long nx2, double *t1, long nt1, 
+                    \\ &double *t2, long nt2)}
+\tgray{Interpolates 'src' into 'res' according to the new dimensions, first
+interpolates the second dimension and then the first. The result is
+added to 'res'.} \newline
+
+\function{
+void ciaerr(int max, char *name, int line)}
+\tgray{Error printing function for lines longer than maxline in the CIA file.} \newline
+
+\function{
+int freemem\_cia(struct cia *cia, long *pi)}
+\tgray{Free cia structure.} \newline
+
+\subsubsection{readcia:}
+\paragraph{Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Copy {\tt tr.ds.th.ncia} into \ttred{tr.ds.cia.ncia}.
+\item[-] Fill in \ttred{tr.ds.cia.cia} from file.
+\item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_CIA}.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Check that radius and wavenumber samples have been made.
+\item[-] Allocate extinction array in static cia structure.
+\item[-] If there are no CIA files, return 0.
+\item[-] Allocate molecule names, molecule IDs, number of temperatures and wavenumber samples per file, and CIA array.
+\item[-] Loop over each CIA file (each molecule pair):
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Read the file name from the transit hint structure.
+\item[-] Open the file.
+\item[-] Skip any comments and blank lines at the top of the file.
+\item[-] When an 'i' character is encountered:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If pointing to a blank space, increment the pointer to the next character.
+\item[-] Count the number of words in the line. If not 2, raise an error.
+\item[-] Copy the name of the first molecule.
+\item[-] Find the ID of the first molecule by comparing its name with the molecule IDs.
+\item[-] Raise an error if the molecule from file does not match any IDs.
+\item[-] Copy the name of the second molecule.
+\item[-] Find the ID of the second molecule by comparing its name with the molecule IDs.
+\item[-] Raise an error if the molecule from file does not match any IDs.
+\item[-] Continue reading the file.
+\end{enumerate}
+\item[-] When a 't' character is encountered:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If pointing to a blank space, increment the pointer to the next character.
+\item[-] Count the number of temperature samples in the file.
+\item[-] Raise an error if no temperature samples are found.
+\item[-] Loop over the temperatures and copy them into the static cia temperature array.
+\item[-] Continue reading the file.
+\end{enumerate}
+\item[-] Set the initial value for allocated wavenumber fields. This must be a power of 2 for sizing purposes.
+\item[-] Allocate the wavenumber and extinction arrays.
+\item[-] Begin infinite loop to read in data:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Increment the pointer past all comments and blank lines.
+\item[-] Check if the end of the file has been reached. If so, break the loop.
+\item[-] Check if the number of read wavelengths is equal to the allocated wavenumber fields. If so, reallocate the array to double its size by bitwise left-shifting the number of fields. Since this was initally set to a power of two, a bitwise left-shift will double the value.
+\item[-] Increment the pointer past all blank spaces
+\item[-] Read in the wavenumber at pointer location.
+\item[-] Loop over each temperature and copy the corresponding extinction value to the extinction array.
+\item[-] Increment looping indices.
+\end{enumerate}
+\item[-] Reallocate the arrays to remove extra rows added when doubling the size.
+\item[-] Store the extinction array in the CIA structure.
+\item[-] Close the file.
+\end{enumerate}
+\item[-] Update the progress indicator to account for {\tt TRPI\_CIA}.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\subsubsection{interpolatecia:}
+\paragraph{Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Fill out \ttred{tr.ds.cia.e} by calling \ttblue{bicubicinterpolate} for each CIA file.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate temporary temperature and wavenumber arrays.
+\item[-] Reset CIA opacity to zero.
+\item[-] Allocate temporary array for opacity.
+\item[-] Set tempoarary temperature and wavenumber arrays from the transit structure.
+\item[-] For each CIA file:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{bicubicinterpolate} from cia.c to interpolate CIA data to the wavenumber and temperature sampling.
+\item[-] Get density profiles of isotopes from molecular information structure.
+\item[-] Calculate CIA absorption coefficients at each radius and wavenumber.
+\end{enumerate}
+\item[-] Free temporary arrays.
+\item[-] Return 0 on success. 
+\end{enumerate}
+
+\subsubsection{bicubicinterpolate:}
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set the first and last values of the source array.
+\item[-] Check that the sampling regions match. If not, return 0.
+\item[-] Find indices where the target array is within the source array boundaries (so that the result is an interpolation, not an extrapolation).
+\item[-] Use GSL to perform cubic interpolation over the first index.
+\item[-] Use GSL to perform cubic interpolation over the second index.
+\item[-] Free temporary arrays.
+\item[-] Return 0.
+\end{enumerate}
+
+\newpage
+\subsection{idxrefraction.c:}
+\subsubsection{List of Functions Defined in idxrefraction.c:}
+\function{
+int idxrefrac(struct transit *tr)}
+Calculates the index of refraction.  Currently, it sets an index of
+refraction of 1.0 at all levels (no light bending). \newline
+
+\function{
+int freemem\_idexrefrac(struct idxref *ir, long *pi)}
+Free index of refraction array. \newline
+
+\function{
+int restidxref(FILE *in, PREC\_NREC nrad, struct idxref *ir)}
+Restore hints structure, the structure needs to have been
+allocated before. \newline
+
+\function{
+void saveidxref(FILE *out, PREC\_NREC nrad, struct idxref *ir)}
+Write index of refraction values to file pointed by out. \newline
+
+\subsubsection{idxrefrac:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate and set values of \ttred{tr.ds.ir.n} (Index of
+  refraction per radius array)
+\item[-] Modify \ttred{tr.pi} to account for {\tt TRPI\_IDXREFRAC}.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+Should calculate the index of refraction at each radius in the
+atmosphere. Currently, it sets an index of refraction of 1.0 at all
+levels (no light bending).
+
+\newpage
+\subsection{extinction.c: EDITED}
+This file contains routines associated with computing molecular extinction.
+\subsubsection{ List of Functions Defined in extinction.c:}
+\function{
+inline int getprofile(&PREC\_VOIGT **pr, int vf, PREC\_RES dwn, PREC\_VOIGT dop,
+                   \\ & PREC\_VOIGT lor, float ta)}
+\tgray{Driver to calculate a Voigt profile.} \\
+
+\function{
+void savefile\_extinct(&char *filename, PREC\_RES **e, \_Bool *c, long nrad, 
+                    \\ &long nwav)}
+\tgray{Saving extinction for a possible next run} \newline
+
+\function{
+void restfile\_extinct(&char *filename, PREC\_RES **e, \_Bool *c, long nrad,
+                    \\ &long nwav)}
+\tgray{Restoring extinction for a possible next run} \\
+
+\function{
+int extwn(struct transit *tr)}
+\tgray{Fill up the extinction information} \\
+
+\function{
+void printone(struct transit *tr)}
+\tgray{Printout for one P,T conditions} \\
+
+\function{
+int freemem\_extinction(struct extinction *ex, long *pi)}
+\tgray{Free extinction coefficient structure arrays} \\
+
+\function{
+int restextinct(&FILE *in, PREC\_NREC nrad, short niso, PREC\_NREC nwn, 
+             \\ &struct extinction *ex)}
+\tgray{Restore hints structure, the structure needs to have been allocated before} \\
+
+\function{
+int computemolext(struct transit *tr, PREC\_NREC r, PREC\_RES **kiso)}
+\tgray{Compute the molecular extinction.}
+
+\function{
+int interpolmolext(struct transit *tr, PREC\_NREC r, PREC\_RES **kiso)}
+\tgray{Interpolate the opacity grid at the specified layer to obtain
+  molecular extinction.}  \\
+
+
+\subsubsection{getprofile}
+\textbf{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate \ttred{op.profile} (**pr).
+\end{enumerate}
+
+\noindent
+\textbf{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Find the largest width between Doppler and Lorentz
+\item[-] Calculate the range for computation in half-widths.
+\item[-] Calculate the number of points in the profile.
+\item[-] Check that the profile contains at least 3 elements. If not, set to 3.
+\item[-] If the profile is larger than the wavenumber range, shrink the profile.
+\item[-] Allocate the profile array.
+\item[-] Calculate the Voigt profile using a width that gives and integer number of {\tt dwn} spaced bins.
+\item[-] Return the number of points in half the profile.
+\end{enumerate}
+% OLD GETPROFILE:
+% Calculates an oversampled Voigt profile in a two-dimensional array of
+% shape: oversampling factor $\times$ (non-oversampled) wavenumber
+% samples.  Each non-oversampled profile spacing matches the
+% \texttt{transit} wavenumber array spacing, and its values are
+% evaluated slightly away one from another in order to account for the
+% sub-sampling distance between the wavenumber sampling and the profile
+% central wavenumber. \newline
+
+% Code details:
+% \begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+% \item[-] Get the largest (Doppler or Lorentz) width (\texttt{bigalpha}).
+% \item[-] Calculate the profile half width (\texttt{wvgt}) and number
+%   of point per profile (\texttt{nvgt}).
+% \item[-] Allocate the profile.
+% \item[-] Call to \ttblue{voigtn} to calculate the Voigt profile
+%   following Equations (C-37) -- (C-44).
+% \item[-] Return \texttt{nvgt}/2. \newline
+% \end{itemize}
+
+\subsubsection{extwn:}
+Set up the variables to calculate the line profile and extinction
+coefficient (\ttred{tr.ds.ex}).
+
+\paragraph{Modified:}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Copy {\tt th.ethresh} into \ttred{ex.ethresh} (extinction threshold).
+\item[-] Allocate \ttred{ex.e}.
+\item[-] Allocate \ttred{ex.computed}.
+\item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_EXTWN}.
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Check that \ttblue{readlineinfo\_tli, readdatarng, makewnsample,
+    makeradsample} have been executed.
+\item[-] \findme{There's a note here that some of this function should be in readatm}
+\item[-] Set extinction coefficient threshold from transithint structure.
+\item[-] Allocate extinction coefficient array.
+\item[-] Allocate boolean for checing if extinction has been computed.
+\item[-] Update progress indicator to account for {\tt TRPI\_EXTWN}.
+\end{enumerate}
+
+\subsubsection{computemolext:}
+This routine computes the molecular extinction coefficient ($e_m$, in
+cm$^{-1}$) at one specific atmospheric radius, Equations
+(3.36)--(3.37) of P. Rojo's thesis (see also Equation
+\ref{eq:extinction}).  Initially, the code calculates the Doppler and
+Lorentz line-broadening widths (Equations \ref{eq:doppler} and
+\ref{eq:lorentz}), to later calculate the Voigt profile.
+
+\paragraph{Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate \ttred{tr.ds.ex.e} (Extinction coefficient) for the given radius layer.
+\item[-] Set \ttred{tr.ds.ex.computed} of given radius to True.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate a temporary extinction array.
+\item[-] Calculate the dynamic wavenumber sampling interval and the oversampled dynamic wavenumber sampling interval.
+\item[-] Calculate constant factors for Doppler and Lorentz line widths.
+\item[-] Allocate arrays for the Doppler and Lorentz line widths and arrays for line width indices.
+\item[-] Loop over each isotope.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Loop over each molecular species.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate the isotope's collisional cross-section with this molecule and add the resulting Lorentz width to the Lorentz width for this isotope.
+\end{enumerate}
+\item[-] Multiply by the constant factor to get the Lorentz width for this isotope.
+\item[-] Calculate the Doppler width divided by the central wavenumber (because Doppler width is wavenumber-dependent).
+\item[-] Find the maximum between the Lorentz width and Doppler width.
+\item[-] Find the minimum between this maximum and the previously calculated minimum (this minimum is set to the maximum between the widths on the first iteration).
+\item[-] Call \ttblue{binsearchapprox} from iomisc.c to perform a binary search to find the indices of the Doppler and Lorentz widths in the Doppler and Lorentz width samples.
+\end{enumerate}
+\item[-] Set oversampling resolution by looping through the exact divisors of the oversampling factor until the divisor times the spacing of the finest oversampling is greater than half the width of the smallest profile.
+\item[-] Loop over every line to calculate the maximum extinction coefficient for each molecule.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate the wavenumber of the line transition.
+\item[-] Skip calculation for this line transition if it is not within the given limits.
+\item[-] Calculate the extinction coefficient except the broadening factor. (FINDME: ?)
+\item[-] If the maximum extinction for this molecule has not been calculated yet, set it equal to the extinction coefficient that was just calculated. Otherwise, set the maximum and minimum extinction for this molecule equal to the maximum and minimum between the recently calculated extinction and the previously calculated maximum and minimum.
+\end{enumerate}
+\item[-] Loop over each line to calculate extinction coefficients.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate the wavenumber of the line transition.
+\item[-] Skip calculation for this line transition if it is not within the given limits.
+\item[-] Calculate the extinction coefficient. (FINDME: reference equation)
+\item[-] Find the index of the closest oversampled wavenumber.
+\item[-] Check if the next line falls within the same sampling unit (same sampling index). If so, co-add the next line with the current line (add the next line's extinction to the opacity for this line) and skip the next line's calculations.
+\item[-] If the extinction for this line is less than the defined threshold factor times the maximum extinction, disregard this line and continue to the next.
+\item[-] Calculate the closest dynamic sampling wavenumber.
+\item[-] Check if the ratio of Doppler width to Lorentz width is greater than a given threshold. If so, call to \ttblue{binsearchapprox} to do a binary search to recalculate the index for the Doppler width. If not, then the exact width of the Doppler profile is unimportant and the calculation is skipped.
+\item[-] Calculate the offset between the center of the line and the dynamic wavenumber sample (in units of oversampled wavenumber spacing).
+\item[-] Calculate the offset between the edge of the profile and the beginning of the wavenumber array (in units of oversampled wavenumber spacing).
+\item[-] Calculate the lower and upper indices of the profile (in units of dynamically sampled wavenumber)
+\item[-] Fix the lower and upper indices to the boundaries if they go outside the bounds of the wavenumber sampling.
+\item[-] Add the contribution from this line (and any co-added lines) to the opacity spectrum.
+\end{enumerate}
+\item[-] Call \ttblue{downsample} to downsample the temporary extinction array to the final sampling size and fill in the extinction array for this radius.
+\item[-] Free all temporary arrays.
+\item[-] Update the boolean that indicates extinction has been computer for this layer.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+
+\subsubsection{interpolmolext:}
+\paragraph{Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Fill in \ttred{tr.ds.ex.e}. 
+\item[-] Set the radius index of \ttred{tr.ds.ex.computed} equal to 1.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Perform a binary search to find the index of grid-temperature immediately lower than layer temperature.
+\item[-] Loop over wavenumber
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Loop over molecules
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate extinction coefficient by linear interpolation of the opacity grid between the index found by the binary search and the next one.
+\item[-] Call \ttblue{valueinarray} to find the index of the molecule.
+\item[-] Add the extinction for this molecule to extinction
+\end{enumerate}
+\end{enumerate}
+\item[-] Update boolean to show extinction has been computed.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\newpage
+\subsection{tau.c: EDITED}
+This file contains all routines associated with calculation of optical depth. Functions \ttblue{detailout}, \ttblue{outdebtauex}, \ttblue{outdebex}, and \ttblue{outdebtau} are unused.
+FINDME: reference the equation in BART theory doc
+\subsubsection{List of Functions Defined in tau.c:}
+
+\function{
+int init\_optdepth(struct transit *tr)}
+\tgray{Initialize the optical depth structure for eclipse and transit geometry.} \newline
+
+\function{
+int tau(struct transit *tr)}
+\tgray{Calculate the extinction coefficient and optical depth as a function
+of layer/impact parameter and wavelength.} \newline
+
+\function{
+int detailout(&prop\_samp *wn, prop\_samp *rad, struct detailfld *det,
+           \\ &PREC\_RES **arr, short flag)}
+\tgray{Print to file the optical depth, cia, or extinction at the
+requested wavenumbers (given by det).} \newline
+
+\function{
+void printtoomuch(&char *file, struct optdepth *tau, prop\_samp *wn,
+               \\ &prop\_samp *rad)}
+\tgray{Print (to file or stdout) the impact parameter where the optical depth
+reached toomuch (for each wavenumber).} \newline
+
+\function{
+int freemem\_tau(struct optdepth *tau, long *pi)}
+\tgray{Free tau structure.} \newline
+
+\function{
+void outdebtauex(&char *name, PREC\_RES **e, prop\_samp *ip, PREC\_RES **t,
+              \\ &long rn, long w)}
+\tgray{Print to file (name) the optical depth and extinction as a function of
+impact parameter (up to layer index rn), for given wavenumber (with
+index w).} \newline
+
+\function{
+void outdebex(&char *name, PREC\_RES **e, PREC\_RES *r, long rn, long wi,
+           \\ &long wf)}
+\tgray{Print to file (name) the extinction coefficient as a function of radius
+   (up to layer index rn) for the specified wavenumber range (indices from
+    wi to wf).} \newline
+
+\function{
+void outdebtau(char *name, prop\_samp *ip, PREC\_RES **t, long wi, long wf)}
+\tgray{Print to file (name) the optical depth as function of impact parameter
+   for the specified wavenumber range (indices from wi to wf).} \newline
+
+
+\subsubsection{tau:}
+Main routine where the extinction coefficient and the optical depth
+are calculated.  This function sets up the optical depth parameters and
+then calls to the \ttblue{computeextradius} and \ttblue{totaltau}
+subroutines to do the calculations.
+
+In the code, \ttblue{transittau} or \ttblue{eclipsetau} is pointed by
+the variable \ttblue{fcn}. \ttblue{transittau} is defined in the
+\texttt{transit\_ray\_solution slantpath} variable at the end of
+\texttt{slantpath.c}.  \texttt{slantpath} is assigned to the transit
+variable \ttred{tr.sol} in the function \ttblue{acceptgenhints} from
+\texttt{argum.c}. \findme{update to include eclipse ray solution}.
+
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Copy \ttred{tr.save.ext} from {\tt th.save.ext} (extinction
+  output filename).
+\item[-] Call to {\tt init\_optdepth} to initialize {\tt tr.tau}.
+\item[-] Set \ttred{tr.cl.maxe, tr.cl.rini, tr.cl.rfin, tr.cl.rfct}
+  (Cloud maximum opacity, top layer radius, layer radius of maxe, and
+  radius units factor).
+\item[-] Call to {\tt computemolext} or {\tt interpolmolext} to calculate
+  \ttred{tr.ds.ex.e} (extinction coefficient).
+\item[-] Call to {\tt eclipsetau} or {\tt transittau} to calculate
+  \ttred{tr.tau.t} (optical depth).
+\item[-] Set \ttred{tr.tau.last} if {\tt tr.tau.t > toomuch}
+  (radius index of last calculated tau).
+\item[-] Call to {\tt savefile\_extinct} to store {\tt tr.ds.ex.e} in
+  file.
+\item[-] Call to {\tt printtoomuch} to store the radius where the
+  optical depth reached toomuch.
+\item[-] Call to {\tt freemem\_lineinfotrans} to free
+  \ttred{tr.ds.li} (line info struct).
+\item[-] Call to {\tt freemem\_localextinction} to free
+  \ttred{tr.ds.ex.e} and related static variables (extinction
+  coefficient).
+\item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_TAU}.
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Store the height of each layer (eclipse) or impact parameter (transit)
+     starting from the outermost layer in local variable h.
+\item[-] Check that there are enough radius layers for interpolation (4+).  If not, raise an error.
+\item[-] Check that idxrefrac and extwn functions have been called.
+\item[-] Pass TAU flags from transithint structure to transit structure.
+\item[-] Declare arrays for cloud and scattering extinction (per wavenumber).
+\item[-] Restore extinction save file (if requested).
+\item[-] Compute molecular extinction at the outermost layer.
+\item[-] Start loop, over wavenumber, to calculate the extinction:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+  \item[-] Compute the scattering and cloud extinction for all layers at
+    given wavenumber.
+  \item[-] Start loop, over the layers/impact parameters:
+  \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+  \item[-] Check if the molecular extinction has been calculated at this
+    layer, if not calculate it for all wavenumbers at this layer.
+  \item[-] Call transittau or eclipsetau (as fcn) to calculate the
+    optical depth at given wavenumber and layer/impact parameter. See Equation \ref{eqn:tau}.
+  \item[-] If the optical depth reached toomuch, end the
+    layer/impact-parameter loop.
+  \end{enumerate}
+\end{enumerate}
+\item[-] Print to file detailed output of tau, extinction, and CIA if requested.
+\item[-] Print to file the lowest layer/impact parameter reached before
+  optical depth reached toomuch.
+\item[-] Update the progress indicator.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+
+\subsubsection{init\_optdepth:}
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Initialize \ttred{tr.ds.tau} and \ttred{tr.ds.intens}.
+\item[-] Set \ttred{tr.tau.toomuch} from {\tt th.toomuch} (max
+  optical depth to calculate).
+\item[-] Allocate \ttred{tr.tau.t, tr.tau.last} (optical depth and
+  index of toomuch).
+\item[-] Allocate \ttred{tr.ds.intens.a} (intensity grid).
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate the optical depth structure.
+\item[-] Pull maximum optical depth from transithint structure into optical depth structure.
+\item[-] Allocate array for the layer index where tau reaches toomuch (max optical depth).
+\item[-] Allocate the optical depth array
+\item[-] Allocate the intensity grid structure and intensity array if using eclipse geometry.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\subsubsection{detailout:}
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Check that there a file name has been given.
+\item[-] Perform a binary search to find the indices of the requested wavenumbers.
+\item[-] Print wavenumber.
+\item[-] Print radii and corresponding value.
+\item[-] Close the file.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\subsubsection{freemem\_tau:}
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Free tau.t and tau.last.
+\item[-]  Update \ttred{tr.pi} to remove for {\tt TRPI\_TAU}.
+\end{enumerate}
+\newpage
+
+\subsection{eclipse.c: EDITED}
+This file contains routines associated with calculating flux from an eclipse. This includes calculating optical depth at each wavenumber and incident angle, emergent intensity at each wavenumber, emergent intensity over all wavenumbers, and flux over all angles. 
+\subsubsection{List of Functions Defined in eclipse.c:}
+\function{
+static PREC\_RES eclipsetau(struct transit *tr, PREC\_RES height, PREC\_RES *ex)}
+\tgray{Computes optical depth for eclipse geometry for one ray and one wavenumber at various incident angles on the planet surface, between a certain layer in the atmosphere up to the top layer.}\newline
+
+\function{
+static PREC\_RES eclipse\_intens(struct transit *tr, PREC\_RES *tau, PREC\_RES w, 
+long last, double toomuch, prop\_samp *rad)}
+\tgray{Calculates emergent intensity for one wavenumber.}\newline
+
+\function{
+int emergent\_intens(struct transit *tr)}
+\tgray{Driver function that calculates emergent intensity for the whole range of wavenumbers at various points on the planet.}\newline
+
+\function{
+int flux(struct transit *tr)}
+\tgray{Calculates flux by integrating intensity over predefined angles.}\newline
+
+\function{
+void printintens(struct transit *tr)}
+\tgray{Print (to file or stdout) the emergent intensities as a function of wavelength for each angle.}\newline
+
+\function{
+void printflux(struct transit *tr)}
+\tgray{Print (to file or stdout) the flux as a function of wavenumber.}\newline
+
+\function{
+freemem\_localeclipse()}
+\tgray{Free eclipse pointer arrays.}\newline
+
+\function{
+freemem\_intensityGrid(struct grid *intens, long *pi)}
+\tgray{Free intensity grid structure arrays.}\newline
+
+\subsubsection{eclipsetau}
+\noindent
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Use a binary search to find the index of the sampled radius immediately below or equal to the height.
+\item[-] Check if the sampled radius is the outer layer, and if so return 0.
+\item[-] Move pointers to the location of height.
+\item[-] Check that there are sufficient points for spline integration. If not, create them halfway between the given points.
+\item[-] Calculate the distance along the path for each radius.
+\item[-] Use trapezoidal integration along the path to calculate optical depth per unit radius.
+\item[-] Return optical depth per unit radius.
+\end{enumerate}
+
+\subsubsection{eclipse\_intens:}
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate the Planck blackbody function for each radial layer. See Equation \ref{eqn:planck}.
+\item[-] Calculate the transmission function for each layer of the planet. This is the integrand of the integral in Equation \ref{eqn:intens}.
+\item[-] After tau reaches toomuch, fill remaining layers with 0 flux.
+\item[-] Use GSL to integrate tau up to maximum tau. See Equation \ref{eqn:intens}.
+\item[-] Return integration result (intensity).
+\end{enumerate}
+
+\subsubsection{emergent\_intens:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call {\tt eclipse\_intens} to calculate \ttred{tr.ds.intens.a} (intensity[angle][wn]).
+\item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_MODULATION}.
+\end{enumerate}
+
+\noindent
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{eclipse\_intens} from eclipse.c as sol.spectrum to calculate the intensity at every wavenumber.
+\item[-] Update the progress indicator to account for {\tt TRPI\_MODULATION}
+\item[-] Call \ttblue{printintens} from eclipse.c to print the emergent intensity as a function of wavenumber to file.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\subsubsection{flux:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate \ttred{tr.ds.out.o} (emergent flux) (FINDME: how to say this? It creates and fills out a local out structure).
+\item[-] Calculate \ttred{tr.ds.out.o} (flux). See Equation \ref{eqn:flux}.
+\end{enumerate}
+
+\noindent
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate area grid and fill (local variable).
+\item[-] Allocate array for emergent flux.
+\item[-] Calculate flux from intensity grid and area.
+\item[-] Call freemem\_localeclipse to free area grid.
+\item[-] Call printflux to print the flux.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\newpage
+\subsection{slantpath.c: PC-EDITED}
+This file contains routines that calculate tau at a specific impact parameter and wavenumber, and routines that calculate modulation for a specific wavenumber. \ttblue{totaltau2}, which is intended to calculate tau taking into account a variable index of refraction, is unused and untested.
+\subsubsection{List of Functions Defined in slantpath.c:}
+\function{
+static PREC\_RES totaltau1(&PREC\_RES b, PREC\_RES *rad, PREC\_RES refr,
+                        \\ &PREC\_RES *ex, long nrad)}
+\tgray{Compute the light path and optical depth at a given impact parameter
+     and wavenumber, for a medium with constant index of refraction.} \newline
+
+\function{
+static PREC\_RES totaltau2(&PREC\_RES b, PREC\_RES *rad, PREC\_RES *refr,
+                        \\ &PREC\_RES *ex, long nrad)}
+\tgray{Compute the light path and optical depth at a given impact parameter
+     and wavenumber, for a medium with variable index of refraction.} \newline
+
+\function{
+static inline PREC\_RES transittau(&PREC\_RES b, PREC\_RES *rad, PREC\_RES *refr,
+                              \\ &PREC\_RES *ex, long nrad, int exprlevel)}
+\tgray{Driver function to calculate the optical depth at a given impact
+       parameter at a specific wavenumber.} \newline
+
+\function{
+static PREC\_RES modulationperwn(&PREC\_RES *tau, long last, double toomuch,
+                              \\ &prop\_samp *ip, struct geometry *sg,
+                              \\ &int exprlevel)}
+\tgray{Driver function to calculate the modulation in/out-of-transit ratio for a single wavenumber.} \newline
+
+\function{
+static PREC\_RES modulation1(&PREC\_RES *tau, long last, double toomuch,
+                          \\ &prop\_samp *ip, struct geometry *sg)}
+\tgray{Calculate the transit's modulation at a given wavenumber for
+no-limb darkening nor emitted flux.} \newline
+
+\function{
+static inline PREC\_RES modulationm1(&PREC\_RES *tau, long last, double toomuch,
+                                  \\ &prop\_samp *ip, struct geometry *sg)}
+\tgray{Calculate the modulation at a given wavenumber, considering the planet
+as an opaque disc of radius r = r(tau=toomuch), for no-limb darkening
+nor planet emission.} \newline
+
+
+\subsubsection{totaltau1:}
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Calculate the minimum distance of the ray path to the center
+  of the planet ({\tt r0}).
+\item[-] Get the index ({\tt rs}) of the sampled radius below or equal
+  to {\tt r0}.
+\item[-] Move the extinction and radius pointers to {\tt rs}.
+\item[-] Calculate the extinction coefficient at the closest approach
+  radius by parabolic interpolation.
+\item[-] If there are only two elements in the extinction and radius
+  arrays, create a 3rd temporary element between the two values.
+\item[-] Calculate the distance along the lightray path.
+\item[-] Calculate the optical depth by integrating (with GSL) the
+  extinction along the ray path (up to the closest approach). See Equation \ref{eqn:tau}.
+\item[-] Reset the original values of the extinction and radius arrays
+  (in case of 2 elements).
+\item[-] Return the result of integration to account for full
+ multiplied by 2.
+\end{enumerate}
+
+\subsubsection{totaltau2:}
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Warn user that this routine is untested (and surely will not work).
+\item[-] Calculate the minimum distance of the ray path to the center
+  of the planet ({\tt r0}).
+\item[-] Get the index ({\tt rs}) of the sampled radius below or equal
+  to {\tt r0}.
+\item[-] Move the radius pointer to the element corresponding to the
+  sampled radius index.
+\item[-] Calculate the analytical part of the extinction integral.
+\item[-] Calculate the optical depth by integrating (with GSL) if
+  there are at least 3 points available. See Equation \ref{eqn:tau}. \findme{is this right?}
+\item[-] If there are only two points available, use Trapezium integration.
+\item[-] Return the result of integration to account for full
+ multiplied by 2.
+\end{enumerate}
+
+
+\subsubsection{transittau:}
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set \ttred{tr.taulevel} from {\tt th.taulevel} (Constant or
+  variable index of refraction per layer).
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Read the taulevel flag to determine a constant or variable
+  index of refraction.
+\item[-] Call to \ttblue{totaltau1} or \ttblue{totaltau2} depending on
+  taulevel.
+\item[-] Return the value given by \ttblue{totaltau1} or \ttblue{totaltau2}.
+\end{enumerate}
+
+
+\subsubsection{modulation1:}
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Get the stellar radius.
+\item[-] Calculate integrand of modulation. See Equation \ref{eqn:mod}.
+\item[-] Add a layer with an integrand value of 0.
+\item[-] Raise an error if there are not enough points for integration.
+\item[-] Integrate the integrand along radius using GSL.
+\item[-] Subtract the total area blocked by the planet.
+\item[-] Adjust the result if the planet is transparent.
+\item[-] Normalize to the stellar radius.
+\item[-] Return the modulation.
+\end{enumerate}
+
+\subsubsection{modulationm1:}
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If toomuch was not reached, return -1.
+\item[-] Find the impact parameter before and after tau reached toomuch.
+\item[-] Use linear interpolation to calculate planet radius.
+\item[-] Calculate and return the modulation assuming the planet is an opaque disc (R\sp{2}/R\sp{2}\sb{*}).
+\end{enumerate}
+
+\subsubsection{modulationperwn:}
+\paragraph{Variables Modified:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set \ttred{tr.modlevel} from {\tt th.modlevel}.
+\end{enumerate}
+
+\paragraph{Walkthrough:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Read the modlevel flag to calculate the modulation using the
+  optical-depth per impact parameter (modulation1) or an opaque disk
+  of radius r = r(tau=toomuch).
+\item[-] Call to \ttblue{modulation1} or \ttblue{modulationm1} depending on
+  modlevel.
+\item[-] Return the value given by \ttblue{modulation1} or \ttblue{modulationm1}.
+\end{enumerate}
+
+
+\newpage
+\subsection{observable.c: EDITED}
+This file contains \ttblue{modulation}, a routine which uses \ttblue{modulationperwn} to calculate modulation at each wavenumber.
+\subsubsection{List of Functions Defined in observable.c:}
+\function{
+int modulation(struct transit *tr)}
+\tgray{Calculate the transit modulation at each wavenumber.} \newline
+
+\function{
+void printmod(struct transit *tr)}
+\tgray{Print (to file or stdout) the modulation as function of wavelength.} \newline
+
+\function{
+int freemem\_outputray(struct outputray *out, long *pi)}
+\tgray{Free the transit modulation array.} \newline
+
+\subsubsection{modulation}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate \ttred{tr.ds.out.o} (modulation output) (FINDME: same issue as before).
+\item[-] Call to {\tt setgeom} from geometry.c to calculate \ttred{tr.ds.sg.x, tr.ds.sg.y} (coordinates of the center of the planet with respect to the star).
+\item[-] Call to {\tt modulationperwn} to calculate \ttred{tr.ds.out.o} (modulation).
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate modulation output.
+\item[-] Check that tau, makeipsample, and makewnsample functions have been called.
+\item[-] Call \ttblue{setgeom} to calculate X and Y values (center of the planet with respect to the star). Note that these values are not currently used by the function, and are intended to be used to account for limb-darkening.
+\item[-] Call \ttblue{moldulationperwn} as sol.spectrum from slantpath.c to calculate modulation.
+\item[-] Update the progress indicator to account for {\tt TRPI\_MODULATION}.
+\item[-] Call printmod to print the modulation to file.
+\end{enumerate}
+
+\subsubsection{FINDME:}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] {\tt sg.x and sg.y} are not used. (also, {\tt x, y} equations
+  look fishy).
+\end{enumerate}
+
+\newpage
+\subsection{Loose ends:}
+
+\textbf{computeextradius:}
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Driver routine for \ttblue{extradius} to calculate the
+  extinction coefficient at an specific radius.
+\item[-] Set \ttred{tr.ds.ex.computed} of the given layer to True on
+  success.
+  \newline
+\end{itemize}
+
+\textbf{computeextcloud:}
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set gray extinction increasing linearly from zero at a top
+  layer radius (\texttt{rini}) up to a maximum extinction
+  (\texttt{maxe}) at a given radius (\texttt{rfin}). From there, the
+  lower layers have a constant extinction coefficient.  \newline
+\end{itemize}
+
+
+\newpage
+
+\section{These Sections do not belong to the Code Doc!}
+
+\subsection{Extinction Coefficient:}
+The molecular extinction coefficient is calculated following Equations
+(3.36)--(3.37) in cgs-Gaussian units as:
+\begin{equation}
+\label{eq:extinction}
+  e_m = \frac{\pi e^2}{c^2 m_e} \sum_i \frac{\rho_i}{m_i} \frac{gf_i}{Z_i}
+      \exp\left(-\frac{hcE_{\rm low}^i}{kT}\right)
+      \left(1-\exp\left(\frac{hc\bar\nu_0^i}{kT}\right)\right)
+      \Psi(\bar\nu, \alpha_D, \alpha_L),
+\end{equation}
+where $gf_i$ is the weighted oscillator strength (\texttt{ltgf =
+}\ttred{tr.ds.li.lt.gf}), $Z_i$ is the partition function
+(\texttt{ziso = }\ttred{tr.ds.iso.isov.z}), $\bar\nu_0^i$ is the line
+wavenumber (\texttt{wavn = 1/}\ttred{tr.ds.li.lt.wl}), $E_{\rm low}^i$
+the lower state energy level (\texttt{ltelow =
+}\ttred{tr.ds.li.lt.elow}, in cm$^{-1}$), $T$ is the atmospheric
+temperature (\texttt{temp = }\ttred{tr.atm.t}), $\rho_i$ is the
+isotopic density (\texttt{densiso = }\ttred{tr.ds.iso.isov.d}), and
+$m_i$ is the isotope's mass (\texttt{mass =
+}\ttred{tr.ds.iso.isov.m}).  $\Psi$ is the Voigt line profile
+(\texttt{profwn = profile}, in cm), where $\alpha_D$, and $\alpha_L$
+are the Doppler and Lorentz line-broadening widths.  The constants in
+the equation are: $e$ is the electron charge (in statC), $m_e$ the
+electron mass, $k$ the Boltzmann constant, $h$ the Planck constant,
+$c$ the speed of light.
+
+
+The Doppler and Lorentz widths:
+\begin{eqnarray}
+\label{eq:doppler}
+ \alpha_D &=& \underbrace{\frac{\sqrt{2k T \ln{2}}}{c}}_{\rm{propto\_adop}}
+              \frac{\bar\nu_0}{\sqrt{m_i}} \label{dopbr} \\
+\label{eq:lorentz}
+ \alpha_L &=& \underbrace{\sqrt{\frac{2k T}{\pi^3c^2}}}_{\rm{propto\_alor}}
+              \sigma_c\sum_{\rm coll}\frac{\rho_j}{m_j}
+              \sqrt{\left(\frac{1}{m_j} + \frac{1}{m_i}\right)}
+              + \underbrace{\alpha_{N}}_{\mathrm{ignored}}
+\end{eqnarray}
+where $\sigma_c$ is the cross section of the isotope (\texttt{csiso =
+}\ttred{tr.ds.iso.isov.c}), $m_j$ is the mass of the colliding
+isotope, $\rho_j$ is the density of the colliding isotope, and
+$\alpha_N$ is the natural broadening (which is negligible compared to
+the collisional broadening).
+
+Note that, actually, $\alpha_D$ is the Doppler half-width at half
+maximum (where the Doppler width is defined as HWHM/$\sqrt{\ln 2}$).
+Since the Doppler profile depends on the wavenumber, the profile must
+be recalculated every certain range in wavenumber. \newline
+
+\subsection{HITRAN Line Strength to $gf$ Conversion:}
+
+The HITRAN database \citep{Rothman2013JqsrtHITRAN} provides the line
+intensity (cm$^{-1}$/(molecule cm$^{-2}$)), which needs to be
+converted to the dimensionless $gf$ value.  Equation (20) of
+\citet{Simeckova2006JqsrtHITRAN} gives the line intensity ($S$) in
+terms of the Einstein $A_{21}$ coefficient:
+
+\begin{equation}
+S = A_{21} \frac{I_a g_2}{8\pi c \nu_0^2}
+           \frac{1}{Z(T_0)}
+           \exp\left(\frac{-hcE_1}{kT_0}\right)
+           \left(1-\exp\left(\frac{-hc\nu_0}{kT_0}\right)\right),
+\end{equation}
+where $I_a$ is the isotopic abundance, $g_i$ the statistical weight of
+the level $i$, $c$ the speed of light, $\nu_0$ is the line wavenumber,
+$Z$ is the partition function, $T_0$ is the HITRAN standard
+temperature, $h$ the Planc constant, $E_1$ the lower state energy
+level (in cm$^{-1}$), and $k$ the Boltzmann constant.
+
+Replacing the Einstein $A_{21}$ coefficient by the
+oscillator strength ($f_{12}$) from her Equation (36), where
+$epsilon_0$ is replaced by $1/(4\pi)$ when working in cgs units:
+\begin{equation}
+A_{21} = \frac{g_1}{g_2}\frac{8 \pi^2 e^2 \nu_0^2}{m_e c} f_{12},
+\end{equation}
+where $e$ is the electron charge (in statCoulomb), $m_e$ the
+electron charge, and $f_{12}$ the oscillator strength.
+Then, we have for the line intensity:
+\begin{equation}
+S = I_a \frac{g_1 f_{12}}{Z(T_0)} \frac{\pi e^2} {m_e c^2}
+        \exp\left(\frac{-hcE_1}{kT_0}\right)
+        \left(1-\exp\left(\frac{-hc\nu_0}{kT_0}\right)\right),
+\end{equation}
+and finally:
+\begin{equation}
+gf = g_1 f_{12} = S \frac{m_e c^2} {\pi e^2} \frac{Z(T_0)}{I_a} 
+        \exp\left(\frac{hcE_1}{kT_0}\right)
+        \left(1-\exp\left(\frac{-hc\nu_0}{kT_0}\right)\right)^{-1}.
+\end{equation}
+
+\subsection{Density Calculation:}
+
+The abundances in the atmosphere file can be given either as a mass
+fraction ($\mu$, mass mixing ratio) or as a number fraction ($\nu$,
+mixing ratio):
+\begin{equation}
+\mu_i = \frac{m_in_i}{m}; \qquad \nu_i = \frac{n_i}{n},
+\end{equation}
+with $n_i$ and $m_i$ the mass and number of molecules of species $i$,
+$m$ and $n$ the total mass and number of molecules in the layer.
+
+The density profiles are calculated using the ideal gas law in the form:
+\begin{equation}
+p = \frac{n}{V}kT,
+\label{eq:igaslaw}
+\end{equation}
+with $p$, $T$, $V$ the total pressure, temperature, and volume of the
+layer.  Recognizing that the partial density can be written as:
+\begin{equation}
+\rho_i = \frac{m_in_i}{V},
+\end{equation}
+and replacing the volume from Equation (\ref{eq:igaslaw}), we have:
+\begin{equation}
+  \rho_i = \frac{m_in_i}{n}\frac{P}{kT},
+\end{equation}
+wich can be restated as:
+\begin{equation}
+  \rho_i = m_i\frac{n_i}{n}\frac{P}{kT} = m_i\nu_i\frac{P}{kT},
+\end{equation}
+or as:
+\begin{equation}
+  \rho_i = \frac{\mu_im}{n}\frac{P}{kT} = \bar{m}\mu_i\frac{P}{kT},
+\end{equation}
+with $\bar{m} = m/n$, the mean molecular mass in the layer.
+
+
+\subsection{Radiative Transfer:}
+
+\subsubsection{Some definitions to begin:}
+The specific intensity ($I\sb{\nu}$) is the
+energy (d$E$) between frequencies $\nu$ and $\nu$ + d$\nu$ per unit
+time (d$t$) that flows through a unit surface area (d$A$) at an angle
+$\theta$ (measured with respect to the normal) contained in a solid
+angle (d$\Omega$):
+
+\begin{equation}
+I\sb{\nu} = \frac{\der E}{\cos\theta \der A \der\Omega \der\nu \der t},
+\end{equation}
+with units of ergs s\tno cm\tnt sr\tno Hz\tno.  The specific flux
+($F\sb{\nu}$) is the net energy between frequencies $\nu$ and $\nu$ +
+d$\nu$ per unit time that flows perpendicularly through a unit surface
+area, i.e., the specific intensity integrated over solid angle:
+
+\begin{equation}
+F\sb{\nu} = \int I\sb{\nu} cos\theta \der\Omega
+\end{equation}
+with units of ergs s\tno cm\tnt Hz\tno.
+
+\subsubsection{On to the radiative transfer equation:} 
+When a ray of light passes
+through a medium its intensity decreases due to the absorption or
+scattering from particles. This is proportional to the intensity
+itself, to the medium density ($\rho$), to the absorption coefficient
+(or opacity, $\kappa\sb{\nu}$) and the path traveled ($\der s$):
+
+\begin{equation}
+\der I\sb{\nu} = - I\sb{\nu} \kappa\sb{\nu} \rho \der s.
+\end{equation}
+The opacity is the cross section of photons at frequency $\nu$ per
+unit mass.  Additionally, the medium can also contribute to the
+intensity, this is described by the emission coefficient
+($j\sb{\nu}$), the rate of change in intensity by the emission
+coefficient is proportional to the density and the path traveled:
+
+\begin{equation}
+\der I\sb{\nu} =  j\sb{\nu} \rho \der s.
+\end{equation}
+Let's define the source function $S\sb{\nu} =
+j\sb{\nu}/\kappa\sb{\nu}$ and the optical depth ($\chi$) as $\der
+\chi = \kappa\sb{\nu} \rho \der s$, the transfer equation becomes:
+\begin{equation}
+\frac{\der I\sb{\nu}}{\der \chi} = - I\sb{\nu}  +  S\sb{\nu}.
+\end{equation}
+
+\subsubsection{Emergent Flux:} 
+
+To study the case of the flux emitted by a planet (or star), first
+assume the plane-parallel approximation, which is valid when the
+vertical scale is much smaller than the horizontal scale.  In this
+case we can safely assume that the atmosphere is composed by a
+stratified set of plane slabs with uniform properties.
+
+Defining $\tau = -\kappa\sb{\nu} \rho \der z$ as the vertical optical
+depth (note the negative sign in the definition, that implies that
+$\tau=0$ at the top of the atmosphere, increasing inward).  The path
+for a ray ($\der s$) with an angle $\theta$ with respect to the
+vertical is related to the vertical path as: $\der s = \der
+z/\cos\theta \equiv \der z / \mu$, and thus the RT equation becomes:
+\begin{equation}
+-\mu\frac{\der I\sb{\nu}}{\der \tau} = - I\sb{\nu}  +  S\sb{\nu}.
+\end{equation}
+To sove, multiply by $\exp(-\tau/\mu)$:
+\begin{eqnarray}
+-\mu\frac{\der I\sb{\nu}}{\der \tau}e\sp{-\tau/\mu} + I\sb{\nu}e\sp{-\tau/\mu}  & = & S\sb{\nu}e\sp{-\tau/\mu} \\
+-\mu\frac{\der}{\der \tau}\left( I\sb{\nu}e\sp{-\tau/\mu} \right)  & = & S\sb{\nu}e\sp{-\tau/\mu}
+\end{eqnarray}
+
+For the emerging intensity at the top of the atmosphere ($\tau=0$),
+consider a depth where the atmosphere is well optically thick,
+$\tau=\tau\sb{b}$, such $exp{-\tau\sb{b}/\mu} \to 0$, then:
+\begin{eqnarray}
+\Eval{-I\sb{\nu}e\sp{-\tau/\mu}}{0}{\tau\sb{b}}  & = &
+     \int\sb{0}\sp{\tau\sb{b}}S\sb{\nu}e\sp{-\tau/\mu}\der\tau/\mu \\
+I(0)  & = &
+     \int\sb{0}\sp{\tau\sb{b}}S\sb{\nu}e\sp{-\tau/\mu}\der\tau/\mu
+\label{eq:topatmint}
+\end{eqnarray}
+
+Under LTE, the source function becomes the Planck function $B\sb{\nu}(T)$.
+To obtain the emergent flux, integrate the solid angle over the half sphere:
+\begin{equation}
+F\sb{\nu} =      \int\sb{0}\sp{2\pi}\int\sb{0}\sp{\pi/2} I\sb{\nu} \cos\theta\sin\theta \der\theta \der\phi 
+          = 2\pi \int\sb{0}\sp{\pi/2} I\sb{\nu} \cos\theta\sin\theta \der\theta
+          = 2\pi \int\sb{0}\sp{1}     I\sb{\nu} \mu\der\mu.
+\end{equation}
+
+Combined with Equation \ref{eq:topatmint}:
+\begin{equation}
+F\sb{\nu}(0) = 2\pi \int\sb{0}\sp{1} \int\sb{0}\sp{\tau\sb{b}} B\sb{\nu}e\sp{-\tau/\mu}\der(\tau/\mu)\, \mu\der\mu
+\end{equation}
+
+To solve this equation, use the diffuse approximation where we
+replace $\tau/\mu \approx \tau/\bar{\mu}$, with $1/\bar{\mu} = 5/3 =
+1.66$, the diffusivity factor.  Then:
+\begin{eqnarray}
+F\sb{\nu}(0) & = & 2\pi \int\sb{0}\sp{\tau\sb{b}} B\sb{\nu}e\sp{-\tau/\bar{\mu}}\der(\tau/\bar{\mu})\, \int\sb{0}\sp{1}\mu\der\mu \\
+             & = & 2\pi \int\sb{0}\sp{\tau\sb{b}} B\sb{\nu}e\sp{-\tau/\bar{\mu}}\der(\tau/\bar{\mu})\, \frac{1}{2}
+\end{eqnarray}
+
+Finally the emerging flux at the top of the atmosphere is:
+\begin{equation}
+F\sb{\nu}(0) = \pi \int\sb{0}\sp{\tau\sb{b}} B\sb{\nu}e\sp{-\tau/\bar{\mu}}\der(\tau/\bar{\mu})
+\end{equation}
+
+\section{Equations}
+Optical depth:
+
+\begin{equation}
+\label{eqn:tau}
+\tau = \int e \cdot \mathrm{d}s
+\end{equation}
+\noindent
+where $e$ is extinction and d$s$ is the differential path element. \newline
+
+\noindent
+Extinction:
+
+\begin{equation}
+\label{eqn:ext}
+e = (FINDME)
+\end{equation}
+\noindent
+where (FINDME) \newline
+
+\noindent
+Modulation:
+\begin{equation}
+\label{eqn:mod}
+M_{\lambda} = \frac{1}{R_\star^2}\left(R^2 - 2\int_{0}^{R} \exp^{-\tau_\lambda(r)} r\,{\rm d}r\right)
+\end{equation}
+
+\noindent
+where $R_{*}$ is the stellar radius, $\tau_\lambda$ is optical depth at a particular wavelength as a function of radius, and $R$ is the planetary radius. \newline
+
+\noindent
+Planck function for wavenumbers:
+\begin{equation}
+\label{eqn:planck}
+B_\nu = 2 h {\bar\nu}^3 c^2 \frac{1}{\exp(\frac{h \bar \nu c}{k_B T})-1}
+\end{equation}
+
+\noindent
+where $\nu$ is wavenumber, $h$ is the Planck constant, $c$ is the speed of light, $k_B$ is the Boltzmann constant, and $T$ is temperature. \newline
+
+\noindent
+Emergent intensity:
+\begin{equation}
+\label{eqn:intens}
+I = \int_0\sp{\tau\sb{max}} B_\nu \mathrm{e}^{-\tau} \mathrm{d}\tau
+\end{equation}
+
+\noindent
+where $B_\nu$ is the Planck blackbody function and $\tau$ is optical depth. The integral is from $0$ to {\tt tr.toomuch}.
+
+\noindent
+Flux:
+\begin{equation}
+\label{eqn:flux}
+F = \sum\limits_{i=1} \pi I_i ((\sin{\theta_{fin}})^2 - (\sin{\theta_{in}})^2)
+\end{equation}
+
+\noindent
+where $I$ is intensity, $A$ is area, $n$ is the number of angles, and $w_n$ is the number of wavenumbers.
+
+\noindent
+Hydrostatic pressure:
+\begin{equation}
+\label{eqn:hydrostatic}
+\frac{dP}{P} = -\frac{dz}{H}
+\end{equation}
+
+\noindent
+where $P$ is pressure, $z$ is height, and $H$ is scale height.
+\bibliography{transit}
+\end{document}
+
+
