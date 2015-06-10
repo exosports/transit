@@ -30,9 +30,9 @@
 \begin{minipage}{0.4\textwidth}
 \begin{flushleft} \large
 \emph{Authors:}\\
+Ryan     \textsc{Challener} \\
 Patricio \textsc{Cubillos}\\
 Jasmina  \textsc{Blecic}  \\
-Ryan     \textsc{Challener} \\
 \end{flushleft}
 \end{minipage}%
 \begin{minipage}{0.4\textwidth}
@@ -162,8 +162,8 @@ Isotopes' variable information.
 typedef struct {    
   unsigned int n;   /* Arrays' length                                       */
   double *z;        /* Partition function [radius or temp]                  */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
+    /* ALLOCATED:	readtli_bin					    */
+    /* FILLED OUT:	readtli_bin					    */
     /* FREED: 								    */ 
 } prop_isov;
 \end{plain}
@@ -233,7 +233,7 @@ Database temperatures.
 typedef struct {    
   unsigned int t;   /* Number of temperatures				    */
   double *T;        /* Temperatures                                         */
-    /* ALLOCATED:							    */
+    /* ALLOCATED:	readtli_bin					    */
     /* FILLED OUT:							    */
     /* FREED: 								    */
 } prop_dbnoext;
@@ -279,21 +279,21 @@ Line transition parameters
 \begin{plain}
 struct line_transition{
   PREC_LNDATA *wl;       /* Wavelength                                      */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	readdatarng					    */
+    /* FILLED OUT:	readdatarng					    */
+    /* FREED: 		freemem_linetranstion				    */ 
   PREC_LNDATA *elow;     /* Lower-state energy                              */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	readdatarng					    */
+    /* FILLED OUT:	readdatarng					    */
+    /* FREED: 		freemem_linetranstion				    */ 
   PREC_LNDATA *gf;       /* gf value                                        */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	readdatarng					    */
+    /* FILLED OUT:	readdatarng					    */
+    /* FREED: 		freemem_linetransition				    */ 
   short *isoid;          /* Isotope ID (Assumed to be in range)             */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	readdatarng					    */
+    /* FILLED OUT:	readdatarng					    */
+    /* FREED: 		freemem_linetransition				    */ 
   double wfct;           /* wl units factor to cgs                          */
   double efct;           /* elow units factor to cgs                        */
 };
@@ -316,13 +316,13 @@ struct lineinfo{
   int ni;                    /* Number of isotopes                          */
   int ndb;                   /* Number of databases                         */
   prop_isov *isov;           /* Variable isotope information (w/temp) [iso] */
-    /* ALLOCATED:							    */
+    /* ALLOCATED:	readtli_bin					    */
     /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* FREED: 		freemem_lineinfo				    */ 
   prop_dbnoext *db;          /* Temperature info from databases [DB]        */
-    /* ALLOCATED:							    */
+    /* ALLOCATED:	readtli_bin					    */
     /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* FREED: 		freemem_lineinfo				    */ 
   PREC_NREC n_l;             /* Number of lines in database                 */
 };
 \end{plain}
@@ -443,9 +443,9 @@ Optical depth array and related information.
 \begin{plain}
 struct optdepth{
   PREC_RES **t;     /* Optical depth [wn][ip]                               */
-    /* ALLOCATED: init_optdepth						    */
-    /* FILLED OUT: tau							    */
-    /* FREED: freemem_tau						    */
+    /* ALLOCATED:       init_optdepth					    */
+    /* FILLED OUT:      tau						    */
+    /* FREED:           freemem_tau					    */
   long *last;       /*  Level index where the optical depth reached toomuch
                        (counting from the top of the atmosphere) [wn]       */
     /* ALLOCATED: init_optdepth	                                            */
@@ -504,25 +504,25 @@ Isotope information.
 \begin{plain}
 struct isotopes{
   prop_isof *isof;    /* Fixed isotope information      [n_i]               */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	readtli_bin					    */
+    /* FILLED OUT:	readtli_bin					    */
+    /* FREED: 		freemem_isotopes				    */ 
   prop_isov *isov;    /* Variable isotope information   [n_i]               */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	readtli_bin			                    */
+    /* FILLED OUT:	readdatarng					    */
+    /* FREED: 		freemem_isotopes				    */ 
   double *isoratio;   /* Isotopic abundance ratio       [n_i]               */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	readtli_bin      				    */
+    /* FILLED OUT:	readtli_bin					    */
+    /* FREED: 		freemem_isotopes				    */ 
   int *imol;          /* Molecule index for this isotope[n_i]               */
     /* ALLOCATED:							    */
     /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* FREED: 		freemem_isotopes				    */ 
   prop_db *db;        /* Database's info [n_db]                             */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	readtli_bin					    */
+    /* FILLED OUT:	readtli_bin					    */
+    /* FREED: 		freemem_isotopes				    */ 
   int n_db,           /* Number of databases                                */
       n_i,            /* Number of isotopes                                 */
       nmol;           /* Number of different molecules having a line list   */
@@ -723,9 +723,30 @@ struct transit{
                        is issued if abundances don't ad up to that          */
   PREC_RES telres;  /* Telescope resolution                                 */
   long int angleIndex; /* Index of the current angle                        */
-  prop_samp rads, ips, /* Sampling properties of radius, impact parameter,  */
-      owns,            /* oversampled wavenumber,                           */
-      wavs, wns, temp; /* wavelength, wavenumber, and temperature           */
+  prop_samp rads,      /* Sampling properties of radius,                    */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:	makeradsample					    */
+    /* FREED: 								    *?
+            ips,       /* impact parameter,                                 */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:	makeipsample					    */
+    /* FREED: 								    */
+            owns,      /* oversampled wavenumber,                           */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:	makewnsample					    */
+    /* FREED: 								    */
+            wavs,      /* wavelength,                                       */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:							    */
+    /* FREED: 								    *
+            wns,       /* wavenumber,                                       */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:	makewnsample					    */
+    /* FREED: 								    */
+            temps;     /* temperature                                       */
+    /* ALLOCATED:							    */
+    /* FILLED OUT:	maketempsample						    */
+    /* FREED: 								    */
   prop_atm atm;      /* Sampled atmospheric data                            */
   _Bool opabreak;    /* Break after opacity calculation                     */
   int ndivs,         /* Number of exact divisors of the oversampling factor */
@@ -1024,70 +1045,70 @@ This file is concerned with reading TLI files produced by the {\tt pylineread} p
 \function{
 static inline void datafileBS(&FILE *fp, PREC\_NREC offs, PREC\_LNDATA target,
                            \\ &PREC\_NREC *resultp, int reclength)}
-Do a binary search in file pointed by 'fp' between 'off' and
+\tgray{Do a binary search in file pointed by 'fp' between 'off' and
 'off+nfields' looking for 'target' as the first item of a record
 of length 'reclength', result index (with respect to offs) is
-stored in 'resultp'. \newline
+stored in 'resultp'.} \newline
 
 \function{
 int readlineinfo(struct transit *tr)}
-Driver function to read TLI: read isotopes info, check margin and
-ranges, and read line transition information. \newline
+\tgray{Driver function to read TLI: read isotopes info, check margin and
+ranges, and read line transition information.} \newline
 
 \function{
 int readinfo\_tli(struct transit *tr, struct lineinfo *li)}
-Check TLI file exists.  Check that machine formating is compatible
+\tgray{Check if a TLI file exists.  Check that machine formating is compatible
 with lineread.  Determine if TLI is ASCII or binary.  Read either
-ASCII or binary TLI file. Declare line\_transition. \newline
+ASCII or binary TLI file. Declare line\_transition.} \newline
 
 \function{
 int readtli\_bin(FILE *fp, struct transit *tr, struct lineinfo *li)}
-Read initial and final wavelength limits and number of databases.
+\tgray{Read initial and final wavelength limits and number of databases.
 Allocate pointers to database, and isotope arrays.
 Get databases info: names, number of temperatures, temperatures, number
 of isotopes, isotope names and masses, partition function, and
-cross sections. Get cumulative number of isotopes. \newline
+cross sections. Get cumulative number of isotopes.} \newline
 
 \function{
 int setimol(struct transit *tr)}
-Set each isotope's molecular identifier number. \newline
+\tgray{Set each isotope's molecular identifier number.} \newline
 
 \function{
 int checkrange(struct transit *tr, struct lineinfo *li)}
-Initialize wavelength sample struct.  Set margin.  
+\tgray{Initialize wavelength sample struct.  Set margin.  
 Set initial and final wavelengths to use.  
-Check that margin leaves a non-zero wavelength range. \newline
+Check that margin leaves a non-zero wavelength range.} \newline
 
 \function{
 int readdatarng(struct transit *tr, struct lineinfo *li)}
-Read and store the line transition info (central wavelength, isotope
-ID, lowE, log(gf)) into lineinfo.  Return the number of lines read. \newline
+\tgray{Read and store the line transition info (central wavelength, isotope
+ID, lowE, log(gf)) into lineinfo.  Return the number of lines read.} \newline
 
 \function{
 int freemem\_isotopes(struct isotopes *iso, long *pi)}
-Frees isotope structure. \newline
+\tgray{Frees isotope structure.} \newline
 
 \function{
 int freemem\_linetransition(struct line\_transition *lt, long *pi)}
-Frees line transition data.
+\tgray{Frees line transition data.} \newline
 
 \function{
 int freemem\_lineinfo(struct lineinfo *li, long *pi)}
-Frees line transition info. \newline
+\tgray{Frees line transition info.} \newline
 
 \function{
 void saveline(FILE *fp, struct lineinfo *li)}
-Saves line information. \newline
+\tgray{Saves line information.} \newline
 
 \function{
 int main(int argc, char **argv)}
-For debugging only. \newline
+\tgray{For debugging only.} \newline
 
 \subsubsection{readlineinfo}
 \paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Reset \ttred{tr.ds.li, tr.ds.iso} (lineinfo and
-  isotopes).
+  isotopes structures).
 \item[-] If an opacity file exists, update \ttred{tr.pi} to account for TRPI\_READINFO and TRPI\_READDATA.
 \end{enumerate}
 
@@ -1200,7 +1221,7 @@ For debugging only. \newline
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Set \ttred{tr.ds.li.wavs.fct} from {\tt tr.ds.th.wavs.fct} if
   provided, else default to cgs units (lineinfo wavelength units
-  factor)..
+  factor).
 \item[-] Set \ttred{tr.ds.li.wavs.f} from {\tt th.wavs.f} if
   provided, else default to maximum wavelength in database {\tt
     tr.ds.li.wf*TLI\_WAV\_UNITS/tr.ds.li.wavs.fct} (lineinfo final
@@ -1690,40 +1711,36 @@ isotope at each radius. \newline
 
 \newpage
 \subsection{makesample.c:}
+This file is concerned with producing samplin arrays for parameters including wavenumber, radius, temperature, and impact parameter. 
+
 \subsubsection{List of Functions Defined in makesample.c:}
 \function{
-int makesample(&prop\_samp *samp, prop\_samp *hint, prop\_samp *ref, const long fl,
-            \\ &const float margini, const float marginf)}
-Get units factor.  Get inital and final values.
-Check that there is a non-zero interval.
-Check that only the spacing or the number of points have been defined.
-If numpoints was provided, use the given array of values and ommit
-oversampling.  If spacing was provided, calculate numpoints, oversample,
-and fill in values. \newline
+int makesample1(prop\_samp *samp, prop\_samp *ref, const long fl)}
+\tgray{Create a sampling array. Take values from a reference sampling.} \newline
 
 \function{
-int makewavsample(struct transit *tr)}
-Call makesample to create the wavelength sampling using
-lineinfo.wavs as reference. \newline
+int makesample(prop\_samp *samp, prop\_samp *hint, prop\_samp *ref, const long fl)}
+\tgray{Create a sampling array. Take values from hint or else from a 
+   reference sampling.} \newline
 
 \function{
 int makewnsample(struct transit *tr)}
-Call makesample to create the wavenumber sampling using the
-inverse-wavelength values as reference. \newline
+\tgray{Call makesample to create the wavenumber sampling using the
+inverse-wavelength values as reference.} \newline
 
 \function{
 int makeradsample(struct transit *tr)}
-Call makesample to create the radius sampling using tr.ds.at.rads
-as reference.  
-Interpolate to set tr.atm pressure, temperature, and mean molecular mass.  
-Interpolate to set all isotopes density and abundance per radius.  
-Interpolate to set linedb isotopes partition function and cross section. \newline
+\tgray{Call makesample to create the radius sampling.} \newline
 
 \function{
 int makeipsample(struct transit *tr)}
 Call makesample to create the impact parameter sampling using the
-reversed radius limits and spacing as reference (produce always an
+reversed radius limits and spacing as reference (always produce an
 equispaced sampling). \newline
+
+\function{
+int maketempsample(struct transit *tr)}
+\tgray{Call makesample to create the temperature sampling.} \newline
 
 \function{
 static void printsample(FILE *out, prop\_samp *samp, char *desc, long fl)}
@@ -1757,58 +1774,119 @@ Frees the sampling structure. \newline
 int main(int argc, char *argv[])}
 De-bugging. \newline
 
-\subsubsection{makewnsample0:}
-\paragraph{Variables Modified:}
-\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Create a reference wavenumber sample (\texttt{rsamp}).
-\item[-] Set the initial \texttt{rsamp} wavenumber point from hinted
-  wavenumber (or else from the inverted hited wavelength).
-\item[-] Set the final \texttt{rsamp} wavenumber point from hinted
-  wavenumber (or else from the inverted hited wavelength).
-\item[-] Set the \texttt{rsamp} spacing from hinted wavenumber
-  spacing.
-\item[-] Call to \ttblue{makesample1} to set \ttred{tr.wns}.
-\item[-] Updates the transit progress indicator (\ttred{tr.pi}) with
-  \texttt{TRPI\_MAKEWN}. \newline
-\end{itemize}
-\paragraph{Walkthrough:}
-
-\subsubsection{makewnsample0:}
-Set wavenumber sampling variables and array.  Take values from hint
-sampling.
-
-\paragraph{Variables Modified:}
-\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Set units factor \ttred{tr.samp.fct}.
-\item[-] Set initial value \ttred{tr.samp.i}.
-\item[-] Set final value \ttred{tr.samp.f}.
-\item[-] Check that there is a non-zero interval. 
-\item[-] Set spacing \ttred{tr.samp.d}.
-\item[-] Calculate numpoints (\ttred{tr.samp.n}), oversample
-    (\ttred{tr.samp.o}), and fill in the array values
-    (\ttred{tr.samp.v}).
-\end{itemize}
-\paragraph{Walkthrough:}
-
-
-\subsubsection{makewavsample:}
-\paragraph{Variables Modified:}
+\subsubsection{makesample1:}
+\paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Call to makesample to set \ttred{tr.wavs} values.
-\item[-] Modify \ttred{tr.pi} to account for {\tt TRPI\_MAKEWAV}.
+\item[-] \findme{this function allocates and modifies sampling stuff but does it for a number of parameters. Should we say those variables are modified here, or in the function which calls this one?}
 \end{enumerate}
-\paragraph{Walkthrough:}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set the acceptable ratio that the final value must fall in to not be truncated.
+\item[-] Get sampling units factor, initial value, and final value from the given reference sampling.
+\item[-] Raise an error and return -3 if the final value is less than the initial value.
+\item[-] Raise an error and return -5 if the reference sampling has no spacing.
+\item[-] If the reference sampling has spacing, set the sampling spacing equal to the reference spacing.
+\item[-] If the spacing is negative, switch the sign on the acceptable ratio.
+\item[-] Set the number of points for the sampling.
+\item[-] Ensure that the number of points is positive.
+\item[-] Check that the reference sampling has a valid oversampling factor (positive). If not, raise an error and return -6.
+\item[-] Set the oversampling factor from the reference oversampling factor.
+\item[-] Calculate the number of oversampled points and the spacing between oversampled points.
+\item[-] Allocate and fill in sampling values.
+\item[-] Check that the final sampling point coincides with the final value. If not, raise a warning.
+\item[-] Return 0 (res is 0 for all cases) on success.
+\end{enumerate}
+
+\subsubsection{makesample:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] \findme{this function allocates and modifies sampling stuff but does it for a number of parameters. Should we say those variables are modified here, or in the function which calls this one?}
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set the acceptable ratio that the final value must fall in to not be truncated.
+\item[-] Get sampling units factor from the reference sampling if the hinted sampling is unset or invalid. Otherwise, use the hinted sampling.
+\item[-] Get inital and final sampling values from hinted sampling. If hinted sampling is unset or invalid, get them from the reference sampling and update a flag to make note of this.
+\item[-] Raise an error and return -5 if the reference sampling has no spacing.
+\item[-] If the reference sampling has spacing:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set the sampling spacing equal to the reference spacing.
+\end{enumerate}
+\item[-] If the reference sampling does not have spacing:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If the initial and/or final values were taken from the reference sampling rather than the hinted sampling, raise a warning that this happened and that the initial or final values may have been modified.
+\item[-] Set the number of samples from the reference sampling.
+\item[-] Set the sampling spacing to 0.
+\item[-] Allocate sampling values, and copy from reference sampling values.
+\item[-] If an oversampling factor was given, raise a warning that this factor will be ignored.
+\item[-] Set oversampling factor to 0.
+\item[-] Return a flag indicating whether the reference inital and final values were used or not.
+\end{enumerate}
+\item[-] If a spacing was hinted:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[]- Set sampling spacing to hinted spacing.
+\end{enumerate}
+\item[-] If none of these spacing conditions are true, raise an error that the sampling inputs are invalid.
+\item[-] Raise an error and return -3 if the accepted inital and final sampling values create an invalid (zero or negative) interval.
+\item[-] If the sampling spacing is negative, switch the sign on the acceptable ratio.
+\item[-] Set the number of points for the sampling.
+\item[-] Ensure that the number of points is positive.
+\item[-] If the hinted oversampling factor is not given or invalid:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If the reference oversampling factor is not given or invalid, raise an error and return -6.
+\end{enumerate}
+\item[-] If the hinted oversampling factor is valid, set the sampling oversampling factor equal to the hinted oversampling factor.
+\item[-] Calculate the number of oversampled points and the oversampled spacing.
+\item[-] Allocate and fill in sampling values.
+\item[-] Check that the final sampling point coincides with the final value. If not, raise a warning.
+\item[-] Return a flag indicating whether the reference initial and final values were used or not.
+\end{enumerate}
 
 \subsubsection{makewnsample:}
 \paragraph{Variables Modified:}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Set \ttred{tr.wnmf, tr.wnmi} from {\tt th.wnm}
-  (wavenumber margins) if defined, else set the margins from the
-  inverse wavelength margin values.
-\item[-] Call to makesample to set \ttred{tr.wns} values.
+\item[-] Call to \ttblue{makesample} from makesample.c to set \ttred{tr.wns} values.
 \item[-] Modify \ttred{tr.pi} to account for {\tt TRPI\_MAKEWN}.
 \end{enumerate}
 
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If the hinted inital wavenumber sampling value is positive:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If the hinted wavenumber sampling factor is negative, raise an error.
+\item[-] Set the reference initial wavenumber sampling value from the hinted initial wavenumber sampling value.
+\end{enumerate}
+\item[-] Otherwise, if the hinted initial wavelength sampling value is positive:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If the hinted wavenumber sampling factor is negative, raise an error.
+\item[-] Set the reference initial wavelength sampling value from the hinted initial wavelength sampling value.
+\end{enumerate}
+\item[-] Otherwise, if no valid inital wavenumber or wavelength were given, raise an error.
+\item[-] If the hinted final wavenumber sampling value is positive:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If the hinted wavenumber sampling factor is negative, raise an error.
+\item[-] Set the reference final wavenumber sampling value from the hinted final wavenumber sampling value.
+\end{enumerate}
+\item[-] Otherwise, if the hinted final wavelength sampling value is positive:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If the hinted wavenumber sampling factor is negative, raise an error.
+\item[-] Set the reference final wavelength sampling value from the hinted final wavelength sampling value.
+\end{enumerate}
+\item[-] Otherwise, if no valid final wavenumber or wavelength were given, raise an error.
+\item[-] Set reference oversampling factor from hinted oversampling factor.
+\item[-] Set reference unit conversion factor (1).
+\item[-] Set reference number of samples to 0.
+\item[-] Raise an error if no hinted sampling spacing is given.
+\item[-] Set reference sampling spacing from hinted sampling spacing.
+\item[-] Call \ttblue{makesample1} from makesample.c to make the oversampled wavenumber sampling.
+\item[-] Set reference oversampling factor to 1 (no oversampling).
+\item[-] Call \ttblue{makesample1} from makesample.c to make the wavenumber sampling.
+\item[-] Call \ttblue{divisors} from iomisc.c to calculate the exact divisors of the oversampling factor.
+\item[-] Update progress indicator if sampling was successful.
+\item[-] Return the result of \ttblue{makesample1}.
+\end{enumerate}
 
 \subsubsection{makeradsample:}
 This function makes the radius sample.  Take values from hint or else
@@ -1822,10 +1900,10 @@ atmospheric radius array (i.e., hint given). \newline
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Call to makesample to set \ttred{tr.rads} values.
 \item[-] Allocate \ttred{tr.ds.iso.isov.d, tr.ds.iso.isov.q,
-    tr.ds.iso.isov.c, tr.ds.iso.isov.z} (isotope's density, abundance,
-  cross section, partition function).
+    tr.ds.iso.isov.z} (isotope's density, abundance, partition function).
+\item[-] Set \ttred{tr.ds.atm.tfct, tr.ds.atm.pfct} from {\tt tr.ds.at.atm.tfct, tr.ds.at.atm.pfct} (atmospheric unit factor for temperature and pressure).
 \item[-] Allocate \ttred{tr.atm.t, tr.atm.p, tr.atm.mm} (transit's
-  atmospheric temperature, pressure, and mean molecular mass)
+  atmospheric temperature, pressure, and mean molecular mass).
 \item[-] Set \ttred{tr.atm.t, tr.atm.p, tr.atm.mm} interpolating
   {\tt tr.ds.at.atm} values into {\tt tr.rads} sampling.
 \item[-] Set \ttred{tr.ds.iso.isov.d, tr.ds.iso.isov.q}
@@ -1838,27 +1916,39 @@ atmospheric radius array (i.e., hint given). \newline
 
 \paragraph{Walkthrough:}
 \begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set the reference sampling equal to the atmospheric structure sampling.
 \item[-] Check that \ttblue{getatm} and \ttblue{readinfo\_tli} have
   been executed.
-\item[-] Set flag (\texttt{SAMP\_LINEAR} or \texttt{SAMP\_SPLINE}) to
-  define linear or spline interpolation.
-\item[-] Call to \ttblue{makesample0} to set \ttred{tr.rads} (uses
-  atmosphere data radius sampling as reference when there are no
-  hinted values).
-\item[-] Call to \ttblue{resamplex} and \ttblue{resampley} to
-  interpolate atmospheric's temperature (\ttred{tr.atm.t}), pressure
-  (\ttred{tr.atm.p}), and mean molecular mass (\ttred{tr.atm.mm})
-  profiles according to the equispaced radius sampling (\ttred{tr.rads.v}).
-\item[-] Call to \ttblue{resamplex} and \ttblue{resampley} to
-  interpolate the isotopes density (\ttred{tr.ds.iso.isov.d}) and
-  abundance (\ttred{tr.ds.iso.isov.q}) profiles according to the
-  radius sampling.
-\item[-] Interpolate the isotopes' collisional cross-section
-  (\ttred{tr.ds.iso.isov.c}) and partition-function
-  (\ttred{tr.ds.iso.isov.z}) profiles according to the atmospheric
-  thermal profile.
-\item[-] Updates the transit progress indicator (\ttred{tr.pi}) with
-  \texttt{TRPI\_MAKERAD}. \newline
+\item[-] If a radius sample has already been generated, free the needed memory and unset the corresponding flag.
+\item[-] Set flag  to define linear or spline interpolation.
+\item[-] If there is only one reference sampling (atmospheric sampling) point:
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set all radius sampling parameters to those in the atmospheric radius sampling structure. Allocate and set sampling values.
+\item[-] Set result flag to 0.
+\end{itemize}
+\item[-] Otherwise, if no hinted radius sampling spacing is given:
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set all radius sampling parameters to those in the atmospheric radius sampling structure. Allocate and set sampling values.
+\item[-] Set result flag to 0.
+\end{itemize}
+\item[-] Otherwise call \ttblue{makesample} from makesample.c to make the radius sampling.
+\item[-] Allocate arrays for molecular density and abundance, and set the number of layers for each molecule.
+\item[-] Allocate array for partition function and set the number of layers for each isotope.
+\item[-] Allocate arrays for atmospheric temperature, pressure, and mean molecular mass.
+\item[-] Call \ttblue{resamplex} from sampling.c to interpolate the radius sampling.
+\item[-] Call \ttblue{resampley} from sampling.c to interpolate the atmospheric pressure, temperature, and mean molecular mass.
+\item[-] Call \ttblue{resample\_free} \findme{from where?} to free the resampling arrays.
+\item[-] Loop over each database (species):
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{resamplex} from sampling.c to interpolate temperatures from the TLI file.
+\item[-] Loop over each isotope:
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{resampley} from sampling.c to interpolate the partition function from the TLI file.
+\end{itemize}
+\end{itemize}
+\item[-] Call \ttblue{resample\_free} \findme{from where?} to free the resampling arrays.
+\item[-] If sampling was successful, update the progress indicator.
+\item[-] Return the result flag.
 \end{itemize}
 
 
@@ -1869,82 +1959,66 @@ decreasing array. If there is no hinted values, it uses the reversed
 radius array.
 \paragraph{Variables Modified:}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Call to makesample to set \ttred{tr.ips} values.
+\item[-] Call to \ttblue{makesample} from makesample.c to set \ttred{tr.ips} values.
 \item[-] Modify \ttred{tr.pi} to account for {\tt TRPI\_MAKEIP}.
 \end{enumerate}
 
 \paragraph{Walkthrough:}
 \begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Create a mock impact parameter sample (\texttt{usamp}) from hint
-  values.
-\item[-] Create a mock impact parameter sample (\texttt{rsamp}) as
-  reference from reversed radius sampling.
-\item[-] Check that final value is smaller than the initial value in
-  hint sample.
-\item[-] Check that \ttblue{makeradsample} has been called.
-\item[-] Call to \ttblue{makesample0} to set \ttred{tr.ips} (uses
-  rsamp sampling as reference when there are no hinted values).
-\item[-] Updates the transit progress indicator (\ttred{tr.pi}) with
-  \texttt{TRPI\_MAKEIP}.
-\end{itemize}
-
-
-\subsubsection{makesample:}
-\paragraph{Variables Modified:}
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Set \ttred{tr.samp.fct} from hint sample, else from
-  reference sample (sample units factor).
-\item[-] Set \ttred{tr.samp.i, tr.samp.f} from hint sample or from
-  reference sample (sample initial and final values).
-\item[-] Set \ttred{tr.samp.n, tr.samp.v} from hint, else from
-  reference sample if \ttred{n} given. Set \ttred{tr.samp.d}
-  to 0 or $-1$.
-\item[-] Set \ttred{tr.samp.d} from hint, else from reference
-  sample if d given. Calculate \ttred{tr.samp.n, tr.samp.v} based
-  on {\tt tr.samp.d}. Set \ttred{tr.samp.o} from hint, else from
-  reference sample.
-\end{enumerate}
-
-
-\subsubsection{makesample0:}
-Set (radius or impact parameter) sampling variables and array.  Take
-values from hint or else from the reference sampling. \newline
-
-\paragraph{Variables Modified:}
+\item[-] If the hinted radius sampling spacing is -1:
 \begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Set units factor (\ttred{tr.samp.fct}).
-\item[-] Set initial value \ttred{tr.samp.i} from hint (or else from
-  reference).
-\item[-] Set final value \ttred{tr.samp.f} from hint (or else from
-  reference).
-\item[-] If no sampling was provided and reference numpoints was
-  provided, assume an array of values exists, set \ttred{tr.samp.n}
-  and \ttred{tr.samp.v}, set oversampling (\ttred{tr.samp.o}), and
-  return.
-\item[-] If spacing was provided in hint or reference:
-  \begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-  \item[-] Set \ttred{tr.samp.d}.
-  \item[-] Check that there is a non-zero interval. 
-  \item[-] Set \ttred{tr.samp.o} from hint or reference.
-  \item[-] Calculate numpoints (\ttred{tr.samp.n}), oversample
-    (\ttred{tr.samp.o}), and fill in the array values
-    (\ttred{tr.samp.v}). \newline
-  \end{itemize}
+\item[-] Set impact parameter sampling from radius sampling, but reverse the values array.
 \end{itemize}
-\paragraph{Walkthrough:}
+\item[-] Otherwise:
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Create impact parameter sampling from the hinted sampling parameters.
+\item[-] Create reference impact parameter sampling from the radius sampling.
+\item[-] Raise an error if the hinted final sampling value is less than the initial sampling value.
+\item[-] Check that \ttblue{makeipsample, makeradsample} have been called.
+\item[-] Call \ttblue{makesample} from makesample.c to create the impact parameter sampling.
+\end{itemize}
+\item[-] If desired, call \ttblue{outsample} from makesample.c to print sample information to a file.
+\item[-] Update the progress indicator if sampling was successful.
+\item[-] Return the result flag.
+\end{itemize}
 
 
-\subsubsection{outsample and printsample:}
-\paragraph{Variables Modified:}
-  - Set pointer to file \ttred{tr.f\_outsample}. \\
-  - Call to {\tt printsample} to print each sampling: \\
-   - Print the sample's \ttred{fct, i, f, d, o, n} parameters. \\
-   - Print the sample's \ttred{v} array.
+\subsubsection{maketempsample:}
+\paragraph{Variables Modified}
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call to \ttblue{makesample} from makesample.c to set \ttred{tr.temps} values.
+\item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_MAKEIP}.
+\end{itemize}
 
-\paragraph{Walkthrough:}
-outsample opens the file tr.f\_outsample to write the wavelength,
-wavenumber, radius, and impact sampling parameters. It calls to
-printsample to print each one.
+\paragraph{Walkthrough}
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Create temperature sampling from hinted sampling parameters.
+\item[-] Create an empty reference temperature sample.
+\item[-] Raise an error if the final sampling value is less than the initial sampling value.
+\item[-] Call \ttblue{makesample} from makesample.c to create the temperature sampling.
+\item[-] Update the progress indicator if sampling was successful.
+\item[-] Return the result flag.
+\end{itemize}
+
+\subsubsection{outsample:}
+\paragraph{Walkthrough}
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Check that a filename exists. If not, return 0.
+\item[-] If the filename is default and cannot be opened, raise a warning and return 1.
+\item[-] Call \ttblue{printsample} from makesample.c to print the following sampling structures:  wavenumber, wavelength, radius, and impact parameter.
+\item[-] Close the file.
+\item[-] Return 0 on success.
+\end{itemize}
+
+\subsubsection{printsample:}
+\paragraph{Walkthrough}
+\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Print file header.
+\item[-] Print sampling factor, inital value, final value, and spacing to file.
+\item[-] Print oversampling to file if necessary.
+\item[-] Print number of array elements to file.
+\item[-] Print sampling values array to file.
+\end{itemize}
 
 \newpage
 \subsection{opacity.c: EDITED}
