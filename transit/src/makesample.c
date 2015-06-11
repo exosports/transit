@@ -651,7 +651,7 @@ maketempsample(struct transit *tr){
 
   /* Set progress indicator:                                                */
   if (res >= 0)
-    tr->pi |= TRPI_MAKEIP;
+    tr->pi |= TRPI_MAKETEMP;
   return res;
 }
 

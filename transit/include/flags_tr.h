@@ -112,15 +112,16 @@
 #define TRPI_MAKEWAV      0x000020 /* makewavsample()  completed */
 #define TRPI_MAKEWN       0x000040 /* makewnsample()   completed */
 #define TRPI_MAKEIP       0x000080 /* makeipsample()   completed */
-#define TRPI_IDXREFRAC    0x000100 /* idxrefrac()      completed */
-#define TRPI_EXTWN        0x000200 /* extwn()          completed */
-#define TRPI_TAU          0x000400 /* tau()            completed */
-#define TRPI_GEOMETRY     0x000800 /* setgeom()        completed */
-#define TRPI_GEOMETRYHINT 0x001000 /* setgeomhint()    completed */
-#define TRPI_MODULATION   0x002000 /* modulation()     completed */
-#define TRPI_CIA          0x004000 /* interpolatecia() completed */
-#define TRPI_GRID         0x008000 /* intens_grid()    completed */
-#define TRPI_OPACITY      0x010000 /* idxrefrac()      completed */
+#define TRPI_MAKETEMP     0x000100 /* maketempsample() completed */
+#define TRPI_IDXREFRAC    0x000200 /* idxrefrac()      completed */
+#define TRPI_EXTWN        0x000400 /* extwn()          completed */
+#define TRPI_TAU          0x000800 /* tau()            completed */
+#define TRPI_GEOMETRY     0x001000 /* setgeom()        completed */
+#define TRPI_GEOMETRYHINT 0x002000 /* setgeomhint()    completed */
+#define TRPI_MODULATION   0x004000 /* modulation()     completed */
+#define TRPI_CIA          0x008000 /* interpolatecia() completed */
+#define TRPI_GRID         0x010000 /* intens_grid()    completed */
+#define TRPI_OPACITY      0x020000 /* idxrefrac()      completed */
 
 /* flags for transiterror:  */
 #define TERR_MESSAGE      0x000000
