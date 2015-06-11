@@ -151,7 +151,7 @@ typedef struct {
     /* ALLOCATED:	readatmfile					    */
     /* FILLED OUT:	readatmfile					    */
     /* FILLED OUT:	radpress					    */
-    /* FREED: 								    */
+    /* FREED: 		freemem_samp					    */
   double fct;       /* v units factor to cgs                                */
 } prop_samp;
 \end{plain}
@@ -726,33 +726,33 @@ struct transit{
   prop_samp rads,      /* Sampling properties of radius,                    */
     /* ALLOCATED:							    */
     /* FILLED OUT:	makeradsample					    */
-    /* FREED: 								    *?
+    /* FREED: 		freemem_samp					    */
             ips,       /* impact parameter,                                 */
     /* ALLOCATED:							    */
     /* FILLED OUT:	makeipsample					    */
-    /* FREED: 								    */
+    /* FREED: 		freemem_samp					    */
             owns,      /* oversampled wavenumber,                           */
     /* ALLOCATED:							    */
     /* FILLED OUT:	makewnsample					    */
-    /* FREED: 								    */
+    /* FREED: 		freemem_samp					    */
             wavs,      /* wavelength,                                       */
     /* ALLOCATED:							    */
     /* FILLED OUT:							    */
-    /* FREED: 								    *
+    /* FREED: 		freemem_samp					    *
             wns,       /* wavenumber,                                       */
     /* ALLOCATED:							    */
     /* FILLED OUT:	makewnsample					    */
-    /* FREED: 								    */
+    /* FREED: 		freemem_samp					    */
             temps;     /* temperature                                       */
     /* ALLOCATED:							    */
-    /* FILLED OUT:	maketempsample						    */
-    /* FREED: 								    */
+    /* FILLED OUT:	maketempsample					    */
+    /* FREED: 		freemem_samp					    */
   prop_atm atm;      /* Sampled atmospheric data                            */
   _Bool opabreak;    /* Break after opacity calculation                     */
   int ndivs,         /* Number of exact divisors of the oversampling factor */
      *odivs;         /* Exact divisors of the oversampling factor           */
     /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
+    /* FILLED OUT:	makewnsample						    */
     /* FREED: 								    */ 
   int voigtfine;     /* Number of fine-bins of the Voigt function           */
   float timesalpha;  /* Broadening profile width in number of Doppler or
@@ -827,18 +827,151 @@ struct transit{
 %   methane abundance (red).}
 % \end{figure}
 \subsection{transit.c}
+\subsubsection{List of Functions Defined in transit.c}
+\function{
+void transit\_init(int argc, char **argv)}
+\tgray{This function initializes the structures used in \tt{transit}.} \newline
 
-The transit code is an object-oriented program. The main structure is
-the {\tt transit struct}.
-The user provided parameters (through the command-line arguments) are
-stored in a {\tt transithint struct} before being handed to {\tt
-  transit}.
-The {\tt transithint} parameters can be modified or not accepted
-(stopping the code) if they don't have an acceptable physical meaning.
+\function{
+int get\_no\_samples(void)}
+\tgray{Returns the size of the wavenumber sampling array.} \newline
 
-Char arrays hold the input ({\tt f\_atm}, atmosphere file; {\tt
-  f\_line}, TLI file), and output filenames ({\tt f\_out}, Modulation
-spectrum; {\tt f\_toomuch}, toomuch; {\tt f\_outsample}, samples).
+\function{
+void get\_waveno\_arr(double *waveno\_arr, int waveno)}
+\tgray{Fills the given array with the wavenumber sampling values.} \newline
+
+\function{
+void set\_radius(double refradius)}
+\tgray{Set the reference radius in the transit structure}.
+
+\function{
+void run\_transit(double *re\_input, int transitint, double *transit\_out, \\ int transit\_out\_size)}
+\tgray{Driver function that loads the atmospheric file and runs transit.} \newline
+
+\function{
+void do\_transit(double *transit\_out)}
+\tgray{Driver function that calls all the functions to do calculations and then free the created arrays.} \newline
+
+\function{
+void free\_memory(void)}
+\tgray{Driver function that calls functions which free the rest of memory using in {\tt transit}.} \newline
+
+\function{
+int main(int argc, char **argv)}
+\tgray{Main driver function which calls functions to initialize, run, and then free {\tt transit}.} \newline
+
+\function{
+void freemem\_transit(struct transit *tr)} 
+\tgray{Free the transit structure} \newline
+
+\subsubsection{transit\_init}
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Initialize the transit structure to 0.
+\item[-] Call \ttblue{processparameters} from argum.c to process the command line arguments and store them in the hint structure.
+\item[-] Call \ttblue{acceptgenhints} from argum.c to accept general hints from the hint structure.
+\item[-] Call \ttblue{printintro} from argum.c to print the introductory message.
+\item[-] Turn off program warnings if verbosity is sufficiently low.
+\item[-] Call \ttblue{makewnsample} from makesample.c to create the wavenumber sampling.
+\item[-] Call \ttblue{getatm} from readatm.c to read the atmospheric file.
+\item[-] Call \ttblue{readlineinfo} from readlineinfo.c to read the TLI file.
+\item[-] Call \ttblue{makeradsample} from makesample.c to create the radius sampling.
+\item[-] Call \ttblue{opacity} from opacity.c to calculate the opacity grid.
+\item[-] Call \ttblue{readcia} from cia.c to read CIA file(s).
+\item[-] Set boolean to indicate that {\tt transit} has been initiated.
+\end{enumerate}
+
+\subsubsection{get\_no\_samples}
+\paragraph{Walkthough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Return the size of the wavenumber array
+\end{enumerate}
+
+\subsubsection{get\_waveno\_arr}
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If \ttblue{transit\_init} has been run, fill out the given array with the wavenumber sampling values.
+\item[-] Otherwise, indicate that \ttblue{transit\_init} has not been run and fill the given array with -1.
+\end{enumerate}
+
+\subsubsection{set\_radius}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set \ttred{tr.r0} to the reference radius.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set the reference radius in the transit structure.
+\end{enumerate}
+
+\subsubsection{run\_transit}
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{realoadatm} from readatm.c to reload the atmospheric data.
+\item[-] Call \ttblue{do\_transit} to run calculations.
+\end{enumerate}
+
+\subsubsection{do\_transit}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Fill in \ttred{tr.angleIndex}.
+\item[-] Free \ttred{tr.save.ext}.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If \ttblue{transit\_init} has been run:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{makeipsample} from makesample.c to create the impact parameter sampling.
+\item[-] Call \ttblue{interpolatecia} from cia.c to interpolate the CIA grid.
+\item[-] Call \ttblue{idxrefrac} from idxrefraction.c to compute the index of refraction.
+\item[-] Call \ttblue{extwn} from extinction.c to calculate the extinction coefficient.
+\item[-] Call \ttblue{init\_optdepth} to initialize optical depth structures.
+\item[-] If using eclipse geometry:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{tau} from tau.c to calculate optical depth as a function of radius.
+\item[-] Loop over each angle.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Fill in angle indices.
+\item[-] Call to \ttblue{emergent\_intens} from eclipse.c to calculate emergent intensity over the entire wavenumber range.
+\end{enumerate}
+\item[-] Call to \ttblue{flux} from eclipse.c to calculate the flux spectrum.
+\item[-] Call to \ttblue{freemem\_intensityGrid} to free the intensity grid.
+\end{enumerate}
+\item[-] If using transit geometry:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call to \ttblue{tau} to calculate optical depth as a fnction of radius.
+\item[-] Call to \ttblue{modulation} to calculate transit modulation at each wavenumber.
+\end{enumerate}
+\item[-] Free the saved extinction grid.
+\item[-] Call to \ttblue{freemem\_samp, freemem\_idexrefrac, freemem\_extinction, freemem\_tau, freemem\_outputray} to free the impact parameter sampling, index of refraction, extinction, optical depth, and output.
+\item[-] Increment the number of iterations.
+\end{enumerate}
+\item[-] Otherwise warn that \ttblue{transit\_init} has not been run.
+\end{enumerate}
+
+\subsubsection{free\_memory}
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call to \ttblue{freemem\_molecules} to free molecular information.
+\item[-] Call to \ttblue{freemem\_atmosphere} to free atmospheric data.
+\item[-] If no opacity file was given (it was created), then call to \ttblue{freemem\_linetransition} to free the line transition data.
+\item[-] Call to \ttblue{freemem\_lineinfo} to free line transition information.
+\item[-] Call to \ttblue{freemem\_cia} to free CIA data.
+\item[-] Call to \ttblue{freemem\_transit} to free the transit structure.
+\item[-] Reset transit initiation boolean to 0.
+\end{enumerate}
+
+\subsubsection{main}
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call to \ttblue{transit\_init} from transit.c to initialize the transit structures.
+\item[-] Call to \ttblue{get\_no\_samples} from transit.c to get the number of wavenumber samples.
+\item[-] Call to \ttblue{do\_transit} from transit.c to run the main calculations.
+\item[-] Call to \ttblue{free\_memory} to free all remaining allocated memory.
+\item[-] Return success.
+\end{enumerate}
 
 \subsection{argum.c:}
 \subsubsection{List of Functions Defined in argum.c:}
