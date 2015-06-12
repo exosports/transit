@@ -977,32 +977,32 @@ void freemem\_transit(struct transit *tr)}
 \subsubsection{List of Functions Defined in argum.c:}
 \function{
 int processparameters(int argc, char **argv, struct transit *tr)}
-Generate the command-line option parser.  Initialize transithint and
-populate it's variables based on the command-line arguments. \newline
+\tgray{Generate the command-line option parser.  Initialize transithint and
+populate it's variables based on the command-line arguments.} \newline
 
 \function{
 int acceptsoltype(transit\_ray\_solution **sol, char *hname)}
-Initialize transit ray solution sol. and determine if any of
-sol->name matches hname. \newline
+\tgray{Initialize transit ray solution sol. and determine if any of
+sol->name matches hname.} \newline
 
 \function{
 int acceptgenhints(struct transit *tr)}
-Set output file names in transit (out, toomuch, and sample).
+\tgray{Set output file names in transit (out, toomuch, and sample).
 Initialize transit.sol. Set geometry and detailed output variables in
-transit. \newline
+transit.} \newline
 
 \function{
 void savehint(FILE *out, struct transithint *hints)}
-Saves hints structure. \newline
+\tgray{Saves hints structure.} \newline
 
 \function{
 int resthint(FILE *in, struct transithint *hint)}
-Restore hints structure, the structure needs to have been allocated
-before. \newline
+\tgray{Restore hints structure, the structure needs to have been allocated
+before.} \newline
 
 \function{
 void printintro()}
-Doc me. \newline
+\tgray{Print the introductory message.} \newline
 
 \function{
 void freemem\_hints(struct transithint *h)}
@@ -1010,15 +1010,15 @@ Frees hints structure. \newline
 
 \function{
 void freemem\_cloud(struct extcloud *c)}
-Doc me. \newline
+\tgray{Free cloud structure. This function is intended to be used when cloud functionality is added but is not used currently.} \newline
 
 \function{
 void freemem\_detailout(struct detailout *d)}
-Doc me. \newline
+\tgray{Driver function to free stored extinction, optical depth, and CIA data.} \newline
 
 \function{
 void freemem\_detailfld(struct detailfld *f)}
-Doc me. \newline
+\tgray{Free a single field of data stored in detailout structure.} \newline
 
 
 \subsubsection{processparameters:}
@@ -1087,27 +1087,94 @@ builds up an optdocs struct (command-line-argument parser);
 resets the transithint memory and sets default values for some parameters;  
 and parses the input command line arguments to transithint.
 
-\subsubsection{acceptgenhints:}
-\paragraph{Variables Modified:}
+\subsubsection{acceptsoltype:}
+\paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Set \ttred{tr.f\_out} from {\tt th.f\_out} or default (main
+\item[-] \findme{anything?}
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Loop over each element in the ray solutions array.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Compare each solution with the given string.
+\item[-] If they match, set the solution and return 0.
+\end{enumerate}
+\item[-] Return -1.
+\end{enumerate}
+
+\subsubsection{acceptgenhints:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Copy \ttred{tr.f\_outmod} from {\tt th.f\_outmod} or default (modulation
   output filename).
-\item[-] Copy \ttred{tr.f\_toomuch, tr.f\_outsample} from {\tt
-    th.f\_toomuch, th.f\_outsample} (maximum optical depth, and
-  sampling output filenames).
-\item[-] Call to \ttblue{acceptsoltype} to set \ttred{tr.sol}
-  (transit ray solution).
-\item[-] Call to \ttblue{setgeomhint} to set orbital and stellar parameters.
-  % \item[-] Copy \ttred{tr.ds.sg.transpplanet} from {\tt th.sg.transpplanet}.
-  % \item[-] Set All \ttred{tr.ds.sg} variables except {\tt tr.ds.sg.x} and {\tt tr.ds.sg.y} from {\tt th.sg} or default values.
-  % \item[-] Update \ttred{tr.pi} to include {\tt TRPI_GEOMETRYHINT}.
-\item[-] Copy \ttred{tr.ds.det} from {\tt th.det}.
+\item[-] Copy \ttred{tr.f\_outflux} from {\tt th\_outflux} or default (flux output filename).
+\item[-] Copy \ttred{tr.f\_toomuch, tr.f\_outsample, tr.outintens} from {\tt
+    th.f\_toomuch, th.f\_outsample, th.f\_outintens} (maximum optical depth,
+  sampling output, and intensity output filenames).
+\item[-] Copy \ttred{tr.ds.det} from {\tt th.det} (detailed output structure).
+\item[-] Copy \ttred{tr.timesalpha} from {\tt th.timesalpha} (Voigt profile width).
+\item[-] Copy \ttred{tr.opabreak} from {\tt th.opabreak}.
+\item[-] Set \ttred{tr.interpflag} to SAMP\_LINEAR or SAMP\_SPLINE depending on {\tt tr.fl} (flag).
+\item[-] Copy \ttred{tr.r0} from {\tt th.r0} (reference radius).
+\item[-] Copy \ttred{tr.p0} from {\tt th.p0} (reference radius).
+\item[-] Copy \ttred{tr.gsurf} from {\tt th.gsurf} (surface gravity).
+\item[-] Call \ttblue{parseArray} from iomisc.c to copy  \ttred{tr.qscale} from {\tt th.qscale} and set \ttred{tr.nqmol} to the size of {\tt th.qscale}. If {\tt th.qscale} was not given, set \ttred{tr.nqmol} to 0.
 \end{enumerate}
 
 \paragraph{Walkthrough:}
-Set output file names in transit (out, toomuch, and
-sample). Initialize transit.sol. Set geometry and detailed output
-variables in transit.
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Set output filenames for modulation, flux, radius where maximum tau was reached, sampling, and intensity from hint structure.
+\item[-] Set molecular filename from hint structure.
+\item[-] Call to \ttblue{acceptsoltype} from argum.c to get the solution type. Raise an error if an invalid type was provided, and exit program.
+\item[-] Call to \ttblue{setgeomhint} from geometry.c to set hinted geometry information.
+\item[-] Copy the hinted detailed output structure.
+\item[-] Check that the given number of alpha units in Voigt profile width is more than 1. If not, raise an error and return -1.
+\item[-] Set the number of alpha units in Voigt profile width.
+\item[-] Check that the transition line strength threshold is positive. If not, raise an error and return -1.
+\item[-] Call \ttblue{transitacceptflag} (defined in transit.h) to pass atmospheric flags into the transit structure.
+\item[-] Set the flag to break {\tt transit} after the opacity grid has been calculated from the hint structure.
+\item[-] Set the interpolation function flag. Raise an error if invalid function specified.
+\item[-] Raise an error and return -1 if the specified reference radius is negative.
+\item[-] Set the reference radius from the hint structure.
+\item[-] Raise an error and return -1 if the specified reference pressure is negative.
+\item[-] Set the reference pressure from the hint structure.
+\item[-] Raise an error and return -1 if the specified surface gravity is negative.
+\item[-] Set the surface gravity from the hint structure.
+\item[-] If abundance scale factors were specified:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call \ttblue{parseArray} from iomisc.c to set the abundance scale factors from the hint structure and set the number of scale factors.
+\item[-] If the number of molecules with scale factors does not match the size of the scale factors array, raise an error.
+\end{enumerate}
+\item[-] Otherwise, set the number of scale factors to 0.
+\item[-] Return 0 on success.
+\end{enumerate}
+
+\subsubsection{savehint:}
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Write the hint structure to file.
+\item[-] Call to \ttblue{savestr} from transitstd.c to write input and output filenames, in binary, to file (atmosphere, TLI, CIA, modulation, flux, intensity, radius where maximum tau was reached, and sampling files). Write the solution name to file.
+\item[-] Call to \ttblue{savesample\_arr} from makesample.c to save the radius, wavelength, wavenumber, and impact parameter sampling to file.
+\end{enumerate}
+
+\subsubsection{resthint:}
+\findme{do we doc this one?}
+
+\subsubsection{freemem\_hints:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Free \ttred{th.f\_atm, th.f\_line, th.f\_outmod, th.f\_outflux, th.f\_outintens,\\ th.f\_toomuch, th.f\_outsample, th.f\_molfile, th.solname, th.ciafile}.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Free all filenames in the hint structure.
+\item[-] Free the solution name.
+\item[-] Call to \ttblue{freemem\_samp} from makesample.c to free the hinted sampling for radius, wavelength, wavenumber, and impact parameter.
+\item[-] Call to \ttblue{freemem\_cloud} from argum.c to free hinted cloud info.
+\item[-] Call to \ttblue{freemem\_detailout} from argum.c to free hinted detailed output structure.
+\end{enumerate}
 
 \newpage
 \subsection{geometry.c: EDITED}
