@@ -14,7 +14,7 @@
 # he was a graduate student at Cornell University under Joseph
 # Harrington.
 # 
-# Copyright (C) 2014 University of Central Florida.  All rights reserved.
+# Copyright (C) 2015 University of Central Florida.  All rights reserved.
 # 
 # This is a test version only, and may not be redistributed to any third
 # party.  Please refer such requests to us.  This program is distributed
@@ -64,13 +64,12 @@ import argparse
 import struct
 import heapq as hq
 
-#import hitran    as hit
 import constants as c
 import utils     as ut
 import db_pands  as ps
 import db_hitran as hit
 import db_tioschwenke as ts
-sys.path.append("/home/patricio/ast/esp01/code/bart/fortran/TIPS_2011")
+import db_voplez as vo
 
 
 def parseargs():
@@ -192,11 +191,13 @@ if __name__ == "__main__":
   driver = []
   for i in np.arange(Nfiles):
     if   dbtype[i] == "ps":
-      driver.append(ps.pands(dblist[i], pflist[i]))
+      driver.append(ps.pands(dblist[i],       pflist[i]))
     elif dbtype[i] == "hit":
-      driver.append(hit.hitran(dblist[i], pflist[i]))
+      driver.append(hit.hitran(dblist[i],     pflist[i]))
     elif dbtype[i] == "ts":
       driver.append(ts.tioschwenke(dblist[i], pflist[i]))
+    elif dbtype[i] == "vo":
+      driver.append(vo.voplez(dblist[i],      pflist[i]))
     else:
       ut.printexit("Unknown Database type (%d): '%s'"%(i+1, dbtype[i]))
     ut.lrprint(verbose-10, "File %d, database name: '%s'"%(i+1, driver[i].name))

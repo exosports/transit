@@ -77,3 +77,9 @@ LR_REVISION = 0  # Lineread revision
 # H2O Isotopic Physical Constants:
 PS_CROSS = np.pi * ((3.2e-08)/2)**2.0 # Collision cross section
 
+# Convert from eV to cm-1 (kayser):
+# planck   = 6.62620e-34  # Planck constant [J * s]
+# lumiere  = 2.997925e10  # speed of light  [cm / s]
+# electron = 1.602192e-19 # elementary charge [Coulomb]
+# kayser2eV = planck * lumiere / electron
+eV2kayser = 8065.49179

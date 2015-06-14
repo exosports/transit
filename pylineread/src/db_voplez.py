@@ -12,7 +12,7 @@
 # he was a graduate student at Cornell University under Joseph
 # Harrington.
 # 
-# Copyright (C) 2014 University of Central Florida.  All rights reserved.
+# Copyright (C) 2015 University of Central Florida.  All rights reserved.
 # 
 # This is a test version only, and may not be redistributed to any third
 # party.  Please refer such requests to us.  This program is distributed
@@ -53,90 +53,92 @@
 
 import struct, time
 import numpy as np
+
 import utils as ut
 import constants as c
+from driver import dbdriver
 
-class tioschwenke():
+class voplez(dbdriver):
   """
   Notes:
   ------
-  Download the linelist from:
-  The binary linelist:
-    http://kurucz.harvard.edu/molecules/tio/tioschwenke.bin
-  and the partition function:
-    http://kurucz.harvard.edu/molecules/tio/tiopart.dat
-
-  There might be a problem with the linebreak character of the partition
-  function.  One way to fix is, on vim do: :%s/\r/\r/g
+  Data obtained from private communication with B. Plez:
+    http://www.pages-perso-bertrand-plez.univ-montp2.fr/
   """
-  def __init__(self):
-    pass
-
-  def getpf(self, dbfile, pffile, verbose):
+  def __init__(self, dbfile, pffile):
     """
-    Open, read, and store values from a partition function file pffile.
+    """
+    super(voplez, self).__init__(dbfile, pffile)
+
+    # Database name:
+    self.name = "Bertrand Plez VO"
+    # Isotopic names:
+    self.isotopes = ["16"]  # I'm Using AFGL naming convention
+    # Isotopic masses:
+    self.mass     = [66.941]
+    # Isotopic abundance ratio:
+    self.isoratio = [1.0]
+
+    # Molecule name:
+    self.molecule = "VO"
+
+    # Other utilities:
+    self.recsize  = 53  # Record length
+    self.recwnpos = 33  # Wavenumber position in record
+    self.recelpos = 44  # Elow       position in record
+    self.recgfpos = 21  # gf         position in record
+    self.recwnlen = 10  # Record lengths
+    self.recwnend = 43  # Record lengths
+    self.recelend = 50
+    self.recgfend = 32
+
+  def readwl(self, dbfile, irec):
+    """
+    """
+    # Set pointer at required wavenumber record:
+    dbfile.seek(irec*self.recsize + self.recwnpos)
+    # Read:
+    wavenumber = dbfile.read(self.recwnlen)
+    # Convert to float:
+    rec_wl = 1.0 / (float(wavenumber) * c.MTC)
+
+    return rec_wl
+
+
+  def getpf(self, verbose):
+    """
+    Calculate the partition function for a grid of temperatures for VO.
  
     Parameters:
     -----------
-    dbfile: String
-      Database filename.
-    pffile: String
-      Partition Function filename.
     verbose: Integer
       Verbosity threshold.
  
     Returns:
     --------
-    PF: 2D ndarray
-       A 2D array (N temperatures, N isotopes + 1) with the partition
-      function values for each isotope (columns) as function of temperature
+    Temp: 1D float ndarray
+       The array of temeratures where the partition function was evaluated.
+    PF: 2D float ndarray
+       A 2D array (N temperatures, N isotopes) with the partition
+       function values for each isotope (columns) as function of temperature
        (first column).
-    DBname: String
-       The database name.
-    isoNames: List
-       List with the P&S isotope names.
-    mass: List
-       List with the P&S isotope masses.
 
     Modification History:
     ---------------------
-    2012-11-30  patricio  Initial implementation.  pcubillos@fulbrightmail.org
-    2014-03-11  patricio  Adapted to work with pylineread.
+    2015-06-14  patricio  Initial implementation.  pcubillos@fulbrightmail.org
     """
-    # Open partition function file:
-    partDB = open(pffile)
-    ut.lrprint(verbose, "Parsing the partition function file.")
- 
-    # Read partition function file lines:
-    PFlines = partDB.readlines()
-    partDB.close()
-
-    # Get isotopes names from first line:
-    isoNames = PFlines[0].split()[1:]  # Skip first word
-    # Skip header lines (first 5 lines):
-    PFlines = PFlines[c.TS_PF_IGNORE:]
-    # Number of Temperatures (number of lines):
-    Ntemp = len(PFlines)
-    # Allocate array for table of Temperature and PF values:
-    PF = np.zeros((Ntemp, len(isoNames)+1), np.double)
- 
-    for i in np.arange(Ntemp):
-      # Store values in array (automatic casting, wow!):
-      PF[i] = PFlines[i].split()
-      ut.lrprint(verbose-10, "Reading line %d: T=%4d."%(i, PF[i,0]))
- 
-    return PF, c.TS_NAME, isoNames, c.TS_MASS
+    # FINDME: Implement me
+    Temp = np.array([1000.0, 7000.0])
+    PF   = np.array([[1.0, 10.0]])
+    return Temp, PF
 
 
-  def dbread(self, dbfile, iwl, fwl, verbose, *args):
+  def dbread(self, iwl, fwl, verbose, *args):
     """
-    Read the Partridge and Schwenke H2O database (dbfile) between the
-    wavelengths iwl and fwl.
+    Read the B. Plez VO database between the wavelengths iwl and fwl.
  
     Parameters:
     -----------
-    dblist: String
-       Partridge & Schwenke database filename.
     iwl: Scalar
        Initial wavelength limit (in microns).
     fwl: Scalar
@@ -144,7 +146,7 @@ class tioschwenke():
     verbose: Integer
        Verbosity threshold.
     args:
-       Additional arguments, not needed for pands.
+       Additional arguments, not needed for voplez.
  
     Returns:
     --------
@@ -160,31 +162,29 @@ class tioschwenke():
     Modification History:
     ---------------------
     2012-11-30  patricio  Initial implementation.  pcubillos@fulbrightmail.org
-    2014-03-11  patricio  Adapted to work with pylineread.
-    2014-07-06  patricio  Updated return statement.
     """
  
-    # Create a table of logarithms:
-    ut.lrprint(verbose-1, "Creating log table.")
-    tablog = 10.0**(0.001*(np.arange(c.TS_NCODIDX+1) - 16384))
- 
     # Open the file:
-    data = open(dbfile, "rb")
- 
-    # Get the number of lines in the file:
-    data.seek(0, 2)                     # Set pointer at the file's end
-    nlines = data.tell() / c.TS_RECSIZE # Number of lines (bytes/record_size)
- 
-    # Rewrite wavelength limits as given in the P&S file:
-    iwav = iwl * c.MTC / c.NTC         # Microns to nanometer
-    fwav = fwl * c.MTC / c.NTC
-    iwav = np.log(iwav) / c.RATIOLOG
-    fwav = np.log(fwav) / c.RATIOLOG
- 
-    # Find the positions of iwl and fwl, then jump to wl_i position:
-    irec = ut.binsearch(data, iwav, 0,    nlines, 'ts', 0)
-    frec = ut.binsearch(data, fwav, irec, nlines, 'ts', 1)
-    nread = frec - irec + 1  # Number of records to read
+    data = open(self.dbfile, "r")
+    data.seek(0, 2)
+    nlines   = data.tell() / self.recsize
+
+    # Get database limiting wavenumbers:
+    firstwl = self.readwl(data,        0)  # Highest wn in DB
+    lastwl  = self.readwl(data, nlines-1)  # Lowest wn in DB
+
+    # Find the record index for iwl:
+    if iwl > firstwl:
+      irec_init = self.binsearch(data, iwl, 0,         nlines, 1)
+    else:
+      irec_init = 0
+    if fwl < lastwl:
+      irec_fin  = self.binsearch(data, fwl, irec_init, nlines, 0)
+    else:
+      irec_fin = nlines-1
+
+    # Number of records to read:
+    nread = irec_fin - irec_init + 1
 
     # Store data in two arrays for doubles and integers:
     # For Wavelength, Elow, and log(gf):
@@ -194,46 +194,45 @@ class tioschwenke():
     # For Isotope index:
     isoID   = np.zeros(nread,     int)
  
-    ut.lrprint(verbose, "Beginning to read Schwenke database, between "
-                        "records %d and %d."%(irec, frec))
+    ut.lrprint(verbose, "Beginning to read Plez VO database, between "
+                        "records %d and %d."%(irec_init, irec_fin))
     # When the wavelength surpasses the max wavelength, stop the loop
     chk = 1  # Check-point counter
     i   = 0  # Stored record index
-    wl_intvl = float((frec - irec)/20)  # Check-point interval
+    interval = float((irec_fin - irec_init)/20)  # Check-point interval
 
-    iw   = np.zeros(nread, int)
-    ieli = np.zeros(nread, np.short)
-    ielo = np.zeros(nread, np.short)
-    igf  = np.zeros(nread, np.short)
+    wnumber = np.zeros(nread)
+    gf      = np.zeros(nread)
+    elow    = np.zeros(nread)
 
     while (i < nread):
       # Read a record:
-      data.seek((irec+i)*c.TS_RECSIZE)
-      iw[i], ieli[i], ielo[i], igf[i] = struct.unpack('ihhh',
-                                                      data.read(c.TS_RECDATA))
- 
+      data.seek((irec_init+i) * self.recsize)
+      line = data.read(self.recsize)
+      wnumber[i] = float(line[self.recwnpos:self.recwnend])
+      gf     [i] = float(line[self.recgfpos:self.recgfend])
+      elow   [i] = float(line[self.recelpos:self.recelend])
+
       # Print a checkpoint statement every 1/20th interval:
       if verbose > 1:
-        pos = float(data.tell()/c.TS_RECSIZE)
-        if (pos/wl_intvl)%1 == 0.0:
+        pos = float(data.tell()/self.recsize)
+        if (pos/interval)%1 == 0.0:
           ut.lrprint(verbose-1, "checkpoint %d/20..."%chk)
           chk += 1
-          ut.lrprint(verbose-3, "iwl: %d, ielow: %5d, igf: "
-                                "%6d"%(iw[i], ielo[i], igf[i]))
-          ut.lrprint(verbose-2, "Wavelength: %.3f, IsoID: %d, Elow: %.5e, "
-                     "gf: %.5e"%(np.exp(iw[i] * c.RATIOLOG) * c.NTC/c.MTC,
-                                 np.abs(ieli[i]) - 8950,
-                                 tablog[ielo[i]], tablog[igf[i]]))
+          ut.lrprint(verbose-3, "Wavenumber (cm-1): {:.2f}, Elow (eV): {:.3f}, "
+                     "gf: {:.4e}".format(wnumber[i], elow[i], gf[i]))
+          ut.lrprint(verbose-2, "Wavelength (um): {:.3f},  IsoID: {:d},  "
+                     "Elow (cm-1): {:.5e}, gf: {:.5e}".format(
+                       1.0/(wnumber[i]*c.MTC), 1, elow[i]*c.eV2kayser, gf[i]))
       i += 1
 
     # Convert wavelength to TLI format (microns):
-    wlength[:] = np.exp(iw * c.RATIOLOG) * c.NTC/c.MTC
-    # Get gf from log table:
-    gf[:]      = tablog[igf]
-    # Get lowest state energy from log table:
-    elow[:]    = tablog[ielo]
-    # Get isotopic index:
-    isoID[:]   = np.abs(ieli) - 8950
+    wlength[:] = 1.0 / (wnumber * c.MTC)
+    # Convert Elow from eV to cm-1:
+    elow[:] = elow * c.eV2kayser
+    # Isotopic index:
+    isoID[:]   = np.ones(nread, int)
+
     ut.lrprint(verbose, "Done.\n")
     data.close()
     return wlength, gf, elow, isoID
