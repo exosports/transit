@@ -117,11 +117,15 @@ class voplez(dbdriver):
     Returns:
     --------
     Temp: 1D float ndarray
-       The array of temeratures where the partition function was evaluated.
+       The array of temperatures where the partition function was evaluated.
     PF: 2D float ndarray
-       A 2D array (N temperatures, N isotopes) with the partition
-       function values for each isotope (columns) as function of temperature
-       (first column).
+       A 2D array (of shape [Nisotopes,Ntemperatures]) with the partition
+       function values for each isotope (columns) as function of temperature.
+
+    Notes:
+    ------
+    The partition function is valid for the range of temperatures from
+    1000K to 7000K.
 
     Modification History:
     ---------------------
