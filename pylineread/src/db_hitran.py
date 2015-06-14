@@ -151,25 +151,17 @@ class hitran(dbdriver):
 
     Parameters:
     -----------
-    dbfile: String
-       Database filename.
-    pffile: String
-       Partition Function filename.
     verbose: Integer
        Verbosity threshold.
 
     Returns:
     --------
-    PF: 2D ndarray
-       A 2D array (N temperatures, N isotopes + 1) with the partition
-      function values for each isotope (columns) as function of temperature
+    Temp: 1D float ndarray
+       The array of temeratures where the partition function was evaluated.
+    PF: 2D float ndarray
+       A 2D array (N temperatures, N isotopes) with the partition
+       function values for each isotope (columns) as function of temperature
        (first column).
-    DBname: String
-       The database name.
-    isoNames: List
-       List with the P&S isotope names.
-    mass: List
-       List with the P&S isotope masses.
 
     Modification History:
     ---------------------
