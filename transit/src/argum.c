@@ -180,8 +180,9 @@ processparameters(int argc,            /* Number of command-line args  */
     /* Input and output options:              */
     {NULL,          0,             HELPTITLE,         NULL, NULL,
      "INPUT/OUTPUT OPTIONS:"},
-    {"output",     CLA_OUTMOD,      required_argument, "-",  "filename",
-     "Outputs modulation information, a dash (-) directs to standard output."},
+    {"outmod",     CLA_OUTMOD,      required_argument, "-",  "filename",
+     "Output modulation spectrum filename, a dash (-) directs to standard "
+     "output."},
     {"atm",        CLA_ATMOSPHERE, required_argument, "NULL",  "atmfile",
      "File containing atmospheric info (Radius, pressure, temperature). A dash"
      " (-) indicates alternative input."},
