@@ -397,8 +397,7 @@ flux(struct transit *tr){  /* Transit structure                             */
   freemem_localeclipse();
 
   /* prints output                                                          */
-  if (verblevel > 0)
-    printflux(tr);
+  printflux(tr);
   return 0;
 }
 
