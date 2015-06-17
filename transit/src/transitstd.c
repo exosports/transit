@@ -182,27 +182,35 @@ int
 fileexistopen(char *in,    /* Input filename                                */
               FILE **fp){  /* Opened file pointer if successful             */
   struct stat st;
+
+  /* Return if no file was given:                                           */
+  if (!in)
+    return 0;
+
+  /* Check if the suggested file exists. If it doesn't, use defaults:       */
+  if (stat(in, &st) == -1){
+    if (errno == ENOENT)
+      return -1;
+    else
+      return -4;
+  }
+
+  /* Check if suggested file is of a valid type:                            */
+  if (!(S_ISREG(st.st_mode) || S_ISFIFO(st.st_mode)))
+    return -2;
+
+  /* If no file pointer variable is given, we've done all we can:           */
+  if (fp == NULL)
+    return 1;
+
+  /* If a file pointer is given, attempt to open the file:                  */
   *fp = NULL;
 
-  if(in){
-    /* Check if the suggested file exists. If it doesn't, use defaults:     */
-    if (stat(in, &st) == -1){
-      if(errno == ENOENT)
-        return -1;
-      else
-        return -4;
-    }
-    /* Not of the valid type:                                               */
-    else if(!(S_ISREG(st.st_mode) || S_ISFIFO(st.st_mode)))
-      return -2;
-    /* Not openable:                                                        */
-    else if(((*fp)=fopen(in,"r")) == NULL)
-      return -3;
-    /* No problem!:                                                         */
-    return 1;
-  }
-  /* No file was requested:                                                 */
-  return 0;
+  if (((*fp)=fopen(in,"r")) == NULL)
+    return -3;
+
+  /* Success:                                                               */
+  return 1;
 }
 
 
