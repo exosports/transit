@@ -60,9 +60,47 @@ The \texttt{transit} program is structure-oriented. All the variables used by \t
 \section{List of Headers used by \texttt{transit} IN PROGRESS}
 
 transit.h: \\
-\indent Contains common headers for the \texttt{transit} program.\\
+\indent Contains common headers for the \texttt{transit} program and defines some functions.\\
 extraext.h: \\
 \indent Contains function to compute extra extinction contributors (scattering and clouds).\\
+stdarg.h: \\
+\indent Allows functions to accept an indefinite number of arguments. \\
+math.h: \\
+\indent Contains common mathematical operations. \\
+errno.h: \\
+\indent Defines the {\tt errno} macro, allowing errors to be checked. \\
+sys/types.h: \\
+\indent Defines a large number of types. \\
+sys/stat.h: \\
+\indent Defines the structure of data returns by stat() functions. \\
+sys/time.h: \\
+\indent Defines a number of time-related structures, functions, and arguments. \\
+unistd.h: \\
+\indent Defines many miscellaneous contanst, types, and functions.\\
+sampling.h: \\
+\indent Declares resampling and interpolation functions.\\
+profile.h: \\
+\indent Declares Voigt profile calculation functions.\\
+iomisc.h: \\
+\indent Declares miscellaneous input/output function (in iomisc.c). \\
+numerical.h: \\
+\indent Declares functions found in numerical.c. \\
+xmalloc.h: \\
+\indent Redefines malloc(), realloc(), and calloc(). \\
+strings.h: \\
+\indent Defines several string manipulation functions. \\
+stdlib.h: \\
+\indent Defines many general purpose functions. \\
+stdio.h: \\
+\indent Defines many general input/output functions. \\
+alloca.h: \\
+\indent Defines function alloca(), which allocates memory which is freed when the function that called alloca() returns to its caller. \\
+flags\_tr.h: \\
+\indent Defines {\tt transit} flags. \\
+constants\_tr: \\
+\indent Defines {\tt transit} constants (see Table \ref{table:constants}). \\
+types\_tr: \\
+\indent Defines {\tt transit} custom variable types (see Table \ref{table:types}). \\
 
 	
 \section{List of Custom Variable Types in \texttt{transit} DONE}
@@ -1134,7 +1172,8 @@ double timecheck(int verblevel, long iter, long index, char *str, \\ struct time
 \item[-] Exit the program.
 \end{enumerate}
 
-\subsection{argum.c:}
+\subsection{argum.c:} 
+Functions in this file handle the creation and filling-out of the hint structure. The hinted values are taken from command-line arguments and/or a configuration file, and then the general hinted values are placed into the main transit structure.
 \subsubsection{List of Functions Defined in argum.c:}
 \function{
 int processparameters(int argc, char **argv, struct transit *tr)}
@@ -1167,7 +1206,7 @@ void printintro()}
 
 \function{
 void freemem\_hints(struct transithint *h)}
-Frees hints structure. \newline
+\tgray{Frees hints structure.} \newline
 
 \function{
 void freemem\_cloud(struct extcloud *c)}
@@ -1185,75 +1224,62 @@ void freemem\_detailfld(struct detailfld *f)}
 \subsubsection{processparameters:}
 \paragraph{Variables Modified:}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Initialize \ttred{tr.ds.th} transithint.
-\item[-] Set \ttred{th.fl, th.verbnoise, th.mass, th.tauiso} with
-  default values (flags, verbose level, mass or number abundance bool,
-  and per isotope optical depth calculation).
-\item[-] Set \ttred{th.det.tau.name, th.det.ext.name, th.det.cia.name}
-  (detailed output default names).
-\item[-] Set \ttred{th.ncia, th.ciafile} from command line
-  arguments (Number of CIA files and CIA filenames).
-\item[-] Set \ttred{th.save.ext} from command line arguments
-  (filename to save extinction array).
-\item[-] Set rest of fields in \ttred{th.det.tau, th.det.ext, th.det.cia}
-  from command line arguments.
-\item[-] Set \ttred{th.minelow, th.solname} from command line
-  arguments (low-energy minimum limit and light-ray path solution
-  type).
-\item[-] Set \ttred{th.f\_atm, th.f\_line, th.f\_out, th.f\_outsample,
-    th.f\_toomuch} from command line arguments (atmosphere, line
-  database, output, samplings, tau too much filenames).
-\item[-] Set \ttred{th.ot} and update \ttred{th.fl} with {\tt
-    TRU\_OUTTAU} from command line arguments (output optical depth
-  instead of modulation bool).
-\item[-] Set \ttred{th.allowrq} from command line arguments
-  (lowest allowed cumulative abundance).
-\item[-] Update \ttred{th.mass} from command line arguments.
-\item[-] Fill \ttred{th.onept} fields.
-\item[-] Update \ttred{th.fl} to include {\tt TRU\_ATMASK1P} flag
-  if set by command line arguments.
-\item[-] Set \ttred{th.rads.i, th.rads.f, th.rads.d, th.rads.fct} from
-  command line arguments (radius sampling parameters).
-\item[-] Set \ttred{th.wavs.i, th.wavs.f, th.wavs.d, th.wavs.fct,
-    th.wavs.o} from command line arguments (wavelength sampling).
-\item[-] Set \ttred{th.wavs.n, th.wavs.v} default values.
-\item[-] Set \ttred{th.wns.i, th.wns.f, th.wns.d, th.wns.fct,
-    th.wns.o} from command line arguments (wavenumber sampling).
-\item[-] Set \ttred{th.wns.n, th.wns.v} default values.
-\item[-] Set \ttred{th.margin, th.wnm} from command line arguments
-  (wavelength and wavenumber margins).
-\item[-] Set \ttred{th.maxratio\_doppler, th.voightfine,
-    th.timesalpha} from command line arguments (Voigt's width to
-  recalculate the profile, fine-binning oversampling, and half-width
-  of profile in number of broadening half-widths).
-\item[-] Update \ttred{th.verblevel} from command line arguments.
-\item[-] Modify \ttred{th.fl} to include {\tt TRU\_EXTINPERISO}
-  from command line arguments (calculate extinction per isotope flag).
-\item[-] Set \ttred{th.blowex} from command line argument (extinction
-  multiplicative factor).
-\item[-] Set \ttred{th.sg} variables except \ttred{x, y, starmass,
-    starmassfct, starradfct} from command line arguments.
-\item[-] Set \ttred{th.toomuch, th.tauiso, th.taulevel, th.modlevel}
-  from command line arguments (max optical depth, calculate tau for
-  the single isotope with this index, optical depth integration level,
-  modulation integration level).
-\item[-] Fill \ttred{th.cl} fields.
+\item[-] Set \ttred{tr.ds.th.verbnoise, tr.ds.th.mass, tr.ds.th.savefiles} (verbosity, abuncance type, and file saving boolean) to defaults.
+\item[-] Set \ttred{tr.ds.th.ncia, tr.ds.th.ciafile} (number of CIA files, CIA filenames) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.save.ext} (saved extinction grid) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.f\_opa} (opacity filename) from command line arguments/config file.
+\item[-] Initialize \ttred{tr.ds.th.det.cia, tr.ds.th.det.tau, tr.ds.th.det.ext} (detailed field structures for CIA, optical depth, and/or extinction) if specifed by command line arguments/config file.
+\item[-] Fill in the \ttred{tr.ds.th.det} structure values.
+\item[-] Set \ttred{tr.ds.th.ethresh} (factor threshold for line profile calculation) from command line arguments/config file.
+\item[-] Allocate and set \ttred{tr.ds.th.solname} (ray solution type) from command line arguments/config file.
+\item[-] Allocate and set \ttred{tr.ds.th.f\_atm, tr.ds.th.f\_line, tr.ds.th.f\_molfile, \\ tr.ds.th.f\_outmod, tr.ds.th.f\_outsample, tr.ds.th.f\_toomuch, tr.ds.th.f\_outflux, \\ tr.ds.th.f\_outintens} (input and output filenames) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.savefiles} (boolean to save files or not) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.p0, tr.ds.th.r0, tr.ds.th.gsurf} (surface pressure, radius, and gravity) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.allowrq} (variance from unity allowed in total abundance) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.qmol, tr.ds.th.qscale} (species with scale factors, scale factors) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.opabreak} (boolean to indicate to the program to break after opacity calculation) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.rads.i, tr.ds.th.rads.f, tr.ds.th.rads.d, tr.ds.th.rads.fct} (radius sampling initial value, final value, spacing, and units conversion factor) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.wavs.i, tr.ds.th.wavs.f, tr.ds.th.wavs.d, tr.ds.th.wavs.fct} (wavelength sampling initial value, final value, spacing, and units conversion factor) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.wns.i, tr.ds.th.wns.f, tr.ds.th.wns.d, tr.ds.th.wns.fct, \\ tr.ds.th.wns.o} (wavenumber sampling initial value, final value, spacing, units conversion factor, and oversampling factor) from command line arguments/config file. Initialize \ttred{tr.ds.th.wns.n} (number of samples) to 0 and \ttred{tr.ds.wns.v} (sampling values) to NULL.
+\item[-] Set \ttred{tr.ds.th.temp.i, tr.ds.th.temp.f, tr.ds.th.temp.d} (temperature sampling initial value, final value, and spacing) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.timesalpha} (number of half-widths in a Voigt profile) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.nDop, tr.ds.th.nLor} (number of Doppler and Lorentz broadening width samples) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.dmin, tr.ds.th.dmax, tr.ds.th.lmin, tr.ds.th.lmax} (broadening width sample boundaries) from command line arguments/config file.
+\item[-] Set verbosity to 0 if the 'q' command-line argument is given.
+\item[-] Set verbosity to specified value if the 'v' command-line argument is given.
+\item[-] Set \ttred{tr.ds.th.sg.starrad} (star radius) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.sg.smaxis, tr.ds.th.sg.time, tr.ds.th.sg.incl, \\ tr.ds.th.sg.ecc, tr.ds.th.sg.lnode, tr.ds.th.sg.aper} (semimajor axis, phase from eclipse, inclination, eccentricity, longitude of ascending node, argument of pericenter) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.sg.smaxisfct, tr.ds.th.sg.timefct, tr.ds.th.sg.inclfct, \\ tr.ds.th.sg.eccfct, tr,.ds.th.sg.lnodefct, tr.ds.th.sg.aperfct} (unit conversion factors for above orbital parameters) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.sg.transpplanet} (boolean to set maximum optical depth to toomuch) to True if specified in commmand-line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.toomuch} (maximum optical depth to make calculations, above which it is assumed no light transmits) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.taulevel} (optical depth integration level) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.modlevel} (modulation integration level) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.cl.rini, tr.ds.th.cl.rfin} (initial cloud radius and final cloud radius) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.cl.rfct} (cloud radius units factor) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.cl.maxe} (maximum cloud extinction) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.angles} (intensity angles) from command line arguments/config file.
 \end{enumerate}
 
 \paragraph{Walkthrough:}
-makes the command-line-argument parser, resets the transithint struct, and fill in its variables with default values and command line arguments.  
-
-The code makes an enum list to define command-line-argument keys;  
-builds up an optdocs struct (command-line-argument parser);  
-resets the transithint memory and sets default values for some parameters;  
-and parses the input command line arguments to transithint.
-
-\subsubsection{acceptsoltype:}
-\paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] \findme{anything?}
+\item[-] Set up an enumerated list of all command line arguments, creating a key.
+\item[-] Build a structure to identify all command line arguments.
+\item[-] Build a configuration paramters structure.
+\item[-] Initialize the hint structure, and set all memory to zero.
+\item[-] Set up flags, verbosity, abundance units, and whether or not to save files.
+\item[-] Set up the detailed output field structures for optical depth, extinction, and CIA.
+\item[-] Begin infinite loop:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call to \ttblue{procopt} from procopt.c to process the command line options. If the option supplies a configuration file, \ttblue{procopt} will parse the file.
+\item[-] If \ttblue{procopt} returns -1 (indicating no more command line arguments to process), exit the loop.
+\item[-] Handle the returns of \ttblue{procopt} on a case-by-case basis (a case for each command line argument), filling in the hint structure with the specified values. There are too many options to practically list here.
+makes the command-line-argument parser, resets the transithint struct, and fill in its variables with default values and command line arguments. 
+\end{enumerate} 
+\item[-] Call \ttblue{procopt\_free} from procopt.c to free the memory used by \ttblue{procopt}.
+\item[-] Return 0 on success.
 \end{enumerate}
 
+\subsubsection{acceptsoltype:}
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Loop over each element in the ray solutions array.
@@ -1339,7 +1365,7 @@ and parses the input command line arguments to transithint.
 
 \newpage
 \subsection{geometry.c: EDITED}
-This file contains routines which make calculations regarding the geometry of the transit or eclipse.
+This file contains routines which handle the hinted geometry parameters and make calculations regarding the geometry of the transit or eclipse.
 \subsubsection{List of Functions Defined in geometry.c:}
 \function{
 int setgeomhint(struct transit *tr)}
@@ -1400,7 +1426,7 @@ inline PREC\_RES starvariation(double x, double y, double radius)}
 
 \newpage
 \subsection{readlineinfo.c:}
-This file is concerned with reading TLI files produced by the {\tt pylineread} program. Function \ttblue{savefile, main} are not currently used in {\tt transit}.
+This file is concerned with reading TLI files produced by the {\tt pylineread} program. Only binary TLI files are accepted. Functions \ttblue{saveline, main} are not currently used in {\tt transit}.
 
 \subsubsection{List of Functions Defined in readlineinfo.c:}
 \function{
@@ -1662,7 +1688,7 @@ int main(int argc, char **argv)}
 
 \newpage
 \subsection{readatm.c:}
-\findme{fill this in}
+This file contains functions which read the atmospheric file.
 \subsubsection{List of Functions Defined in readatm.c:}
 \function{
 int getatm(struct transit *tr)}
@@ -1945,135 +1971,10 @@ Recalculate radius array according to hydrostatic pressure, and find the radial 
 \item[-] Shift the radius array to force the radius at the reference pressure equal to the reference radius.
 \end{enumerate}
 
-\newpage
-\subsection{at\_file.c:}
-\subsubsection{List of Functions Defined in at\_file.c:}
-\function{
-static void isisoline(&char *name, PREC\_ATM mass, int *isoeq, 
-                   \\ &enum isodo atisodo, prop\_isof *isof, enum isodo *isodo,
-                   \\ &PREC\_NREC nliso)}
-Check whether the isotope with 'name' corresponds to an isotope in
-lineinfofile. If yes, set's its isodo parameter. \newline
-
-\function{
-static int checknonmatch(&struct transit *tr, struct atm\_data *at,
-                      \\ &enum isodo *isodo)}
-Ask what to do with lineinfo isotopes that don't have a match in 
-the atmosphere file. \newline
-
-\function{
-static inline double findfactq(&char *iso, prop\_isof *isof, prop\_isov *isov,
-                            \\ &int n, PREC\_NREC r)}
-Find the isotope in 'isof'  with name 'iso' and get its abundance at
-radius given by index 'r'. \newline
-
-\function{
-static inline double addq(&prop\_isov *isov, enum isodo *isodo,
-                       \\ &\_Bool *other, int n, PREC\_NREC r)}
-Add the (fractional) abundance from all isotopes except for the
-other'-factor isotopes. \newline
-
-\function{
-static void atmerr(int max, char *file, int line)}
-Print error message when a line of 'file' is longer than 'max' characters. \newline
-
-\function{
-static void invalidfield(char *line, int nmb, int fld, char *fldn)}
-Print error message when a field with transition info is invalid. \newline
-
-\function{
-static inline void checkposvalue(PREC\_RES val, int field, long line)}
-Check that val is positive. throw error message if not. \newline
-
-\function{
-int getmnfromfile(FILE *fp, struct atm\_data *at, struct transit *tr, int nmb)}
-Get keyword variables from atmosphere file (mass/number abundance bool;
-zero-radius offset; radius, temperature, and pressure units factor;
-atmfile name/info; list isotopes; list of proportional-abundance isotopes).
-Store molecules and proportional isotopes in atm\_data struct. 
-Determine which linedb isotope corresponds to such atm\_data isotope.
-Solve non-matched linedb isotope cases.
-Put all non-ignore isotopes in transit.ds.iso structure. \newline
-
-\function{
-int readatmfile(&FILE *fp, struct transit *tr, struct atm\_data *at,
-             \\ &prop\_samp *rads, int nrad)}
-Read radius, pressure, temperature, and abundances and store it into
-at\_data of transit.  Calculate mean molecular mass and densities.
-(Detailed): Read and store radius, pressure, and temperature from
-file.  Read abundances for each (non other-factor) isotope.  Sum
-fractional abundances. Calculate ramaining (other-factor) abundances.
-Calculate mean molecular mass per radius.  Calculate densities per
-isotope at each radius. \newline
-
-\subsubsection{Variables Modified in getmnfromfile:}
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Allocate \ttred{tr.ds.at.isoprop} (Atmosphere's
-  proportional-isotopes array)
-\item[-] Allocate \ttred{tr.ds.at.isodo, tr.ds.at.isoeq, tr.ds.at.m,
-    tr.ds.at.n} (atmosphere's file isotope type, lineinfo's isotope
-  index, isotope's mass, isotope's name).
-\item[-] Set \ttred{tr.ds.at.mass} (abundance by mass (True) or number
-  (False) boolean) from file.
-\item[-] Set \ttred{tr.ds.at.rads.fct, tr.ds.at.atm.pfct,
-    tr.ds.at.atm.tfct} (units factor of radius, pressure, and
-  temperature arrays) from file.
-\item[-] Call to {\tt storename} to set \ttred{tr.ds.at.info} from
-  file.
-\item[-] Re-allocate \ttred{tr.ds.at.isodo, tr.ds.at.isoeq,
-    tr.ds.at.m, tr.ds.at.n} from file.
-\item[-] Set \ttred{tr.ds.at.m, tr.ds.at.n} from file.
-\item[-] Call to {\tt isisoline} to set \ttred{tr.ds.at.isoeq,
-    tr.ds.at.isodo} from file.
-\item[-] Re-allocate \ttred{tr.ds.at.isoprop} from file.
-\item[-] Set \ttred{tr.ds.at.isoprop.m, tr.ds.at.isoprop.n} from file.
-\item[-] Set \ttred{tr.ds.at.isoprop.f} (proportional factor) from
-  file.
-\item[-] Set \ttred{tr.ds.at.isoprop.t} (name of referenced isotope)
-  from file.
-\item[-] Call to {\tt isisoline} to set \ttred{tr.ds.at.isoprop.eq,
-    tr.ds.at.isoprop.isodo} (lineinfo's isotope index, and isotope's
-  type) from file.
-\item[-] Set \ttred{tr.ds.at.begline} (position where tabulated
-  data begins in atm file).
-\item[-] Set \ttred{tr.ds.at.ipa, tr.ds.at.n\_aiso} (number of
-  proportional isotopes, total number of isotopes in atmosphere file).
-\item[-] Copy {\tt tr.ds.at.isoprop} isotopes into {\tt tr.ds.at}.
-\item[-] Set \ttred{tr.ds.at.n\_niso} (number of non-ignored
-  isotopes with no linelist).
-\item[-] Add non-ignored non-linedb isotopes into {\tt tr.ds.at.iso}:
-\item[-] Re-allocate 
-  \ttred{tr.ds.iso.isodo, tr.ds.iso.isof, tr.ds.iso.isof.n}.
-\item[-] Set \ttred{tr.ds.at.isoeq}.
-\item[-] Copy \ttred{tr.ds.iso.isodo, tr.ds.iso.isof.m,
-    tr.ds.iso.isof.n} from {\tt tr.ds.at.isodo, tr.ds.at.m,
-    tr.ds.at.n}.
-\item[-] Set \ttred{tr.ds.iso.n\_e} (number of non-ignored isotopes).
-\end{enumerate}
-
-\subsubsection{Variables Modified in readatmfile:}
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Re-allocate \ttred{tr.ds.at.rads.v, tr.ds.at.atm.t,
-    tr.ds.at.atm.p, tr.ds.at.mm,}\newline \ttred{tr.ds.iso.at.isov.d,
-    tr.ds.at.isov.q} (atmosphere radius temperature, pressure,
-  meanmolecular mass, isotopes' density, and isotopes' abundance
-  arrays).
-\item[-] Set \ttred{tr.ds.at.isov.n} (number of layers in the
-  atmosphere).
-\item[-] Set \ttred{tr.ds.at.rads.v, tr.ds.at.atm.p, tr.ds.at.atm.t}
-  reading from file.
-\item[-] Set \ttred{tr.ds.at.isov.q} interactively
-  (tr.ds.at.isodo=fixed), from isoprop (factor), from file (atmfile),
-  or call to {\tt addq} and calculate from isoprop (factor/other).
-\item[-] Call to {\tt checkaddmm} to set \ttred{tr.ds.at.mm}.
-\item[-] Call to {\tt stateeqnford} to set
-  \ttred{tr.ds.at.isov.d}.
-\end{enumerate}
 
 \newpage
 \subsection{makesample.c:}
-This file is concerned with producing samplin arrays for parameters including wavenumber, radius, temperature, and impact parameter. 
-
+This file is concerned with producing sampling arrays for parameters including wavenumber, radius, temperature, and impact parameter. Sampling functions for each parameter call either \ttblue{makesample} or \ttblue{makesample1} to with the proper variables to create the sampling.
 \subsubsection{List of Functions Defined in makesample.c:}
 \function{
 int makesample1(prop\_samp *samp, prop\_samp *ref, const long fl)}
@@ -2550,7 +2451,7 @@ Calculates the extinction coeffecient for a given radius layer and temperature.
 
 \newpage
 \subsection{cia.c: EDITED}
-This file contains routines which are used to calculate extinction due to Collision-Induced Absorption (CIA).
+This file contains routines which are used to read the CIA files(s) and interpolate the values therein to the {\tt transit} sampling.
 \subsubsection{List of Functions Defined in cia.c:}
 \function{
 int readcia(struct transit *tr)}
@@ -2676,41 +2577,49 @@ int freemem\_cia(struct cia *cia, long *pi)}
 
 \newpage
 \subsection{idxrefraction.c:}
+This file is concerned with calculating the index of refraction at each radius level. Currently this is 1 at all layers (no light bending).
 \subsubsection{List of Functions Defined in idxrefraction.c:}
 \function{
 int idxrefrac(struct transit *tr)}
-Calculates the index of refraction.  Currently, it sets an index of
-refraction of 1.0 at all levels (no light bending). \newline
+\tgray{Calculates the index of refraction.  Currently, it sets an index of
+refraction of 1.0 at all levels (no light bending).} \newline
 
 \function{
-int freemem\_idexrefrac(struct idxref *ir, long *pi)}
-Free index of refraction array. \newline
+\tgray{int freemem\_idexrefrac(struct idxref *ir, long *pi)}
+Free index of refraction array.} \newline
 
 \function{
 int restidxref(FILE *in, PREC\_NREC nrad, struct idxref *ir)}
-Restore hints structure, the structure needs to have been
-allocated before. \newline
+\tgray{Restore hints structure, the structure needs to have been
+allocated before.} \newline
 
 \function{
 void saveidxref(FILE *out, PREC\_NREC nrad, struct idxref *ir)}
-Write index of refraction values to file pointed by out. \newline
+\tgray{Write index of refraction values to file pointed by out.} \newline
 
 \subsubsection{idxrefrac:}
 \paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Allocate and set values of \ttred{tr.ds.ir.n} (Index of
   refraction per radius array)
-\item[-] Modify \ttred{tr.pi} to account for {\tt TRPI\_IDXREFRAC}.
+\item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_IDXREFRAC}.
 \end{enumerate}
 
 \paragraph{Walkthrough}
-Should calculate the index of refraction at each radius in the
-atmosphere. Currently, it sets an index of refraction of 1.0 at all
-levels (no light bending).
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call to \ttblue{transitcheckcalled} in transitstd.c to check that \ttblue{makeradsample} has been called.
+\item[-] Allocate index of refraction array.
+\item[-] Loop over each radius layer:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call to \ttblue{stateeqnford} \findme{from where?} to calculate density.
+\item[-] Calculate index of refraction (currently always 1).
+\end{enumerate}
+\item[-] Return 0 on success.
+\end{enumerate}
 
 \newpage
 \subsection{extinction.c: EDITED}
-This file contains routines associated with computing molecular extinction.
+This file contains routines associated with computing molecular extinction. That includes a wrapper function to calculate Voigt profiles, a function to compute molecular extinction, and a function to interpolate the 
 \subsubsection{ List of Functions Defined in extinction.c:}
 \function{
 inline int getprofile(&PREC\_VOIGT **pr, int vf, PREC\_RES dwn, PREC\_VOIGT dop,
@@ -2793,14 +2702,11 @@ int interpolmolext(struct transit *tr, PREC\_NREC r, PREC\_RES **kiso)}
 % \end{itemize}
 
 \subsubsection{extwn:}
-Set up the variables to calculate the line profile and extinction
-coefficient (\ttred{tr.ds.ex}).
-
 \paragraph{Modified:}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Copy {\tt th.ethresh} into \ttred{ex.ethresh} (extinction threshold).
-\item[-] Allocate \ttred{ex.e}.
-\item[-] Allocate \ttred{ex.computed}.
+\item[-] Allocate \ttred{ex.e} (extinction).
+\item[-] Allocate \ttred{ex.computed} (boolean to indicate if extinction has been computed at the corresponding radius layer).
 \item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_EXTWN}.
 \end{enumerate}
 
@@ -2904,7 +2810,7 @@ Lorentz line-broadening widths (Equations \ref{eq:doppler} and
 \newpage
 \subsection{tau.c: EDITED}
 This file contains all routines associated with calculation of optical depth. Functions \ttblue{detailout}, \ttblue{outdebtauex}, \ttblue{outdebex}, and \ttblue{outdebtau} are unused.
-FINDME: reference the equation in BART theory doc
+\findme{reference the equation in BART theory doc}
 \subsubsection{List of Functions Defined in tau.c:}
 
 \function{
