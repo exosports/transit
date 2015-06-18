@@ -69,33 +69,41 @@ opacity(struct transit *tr){
   transitcheckcalled(tr->pi, "opacity", 1, "makeradsample", TRPI_MAKERAD);
 
   /* Check if the opacity file exists:                                      */
-  int fe = fileexistopen(th->f_opa, &tr->fp_opa);
-  tr->f_opa = th->f_opa;  /* Set file name in transit struct                */
-  transitprint(10, verblevel, "Opacity-file exist status = %d\n", fe);
+  int file_exists = fileexistopen(th->f_opa, NULL);
+  transitprint(10, verblevel, "Opacity-file exist status = %d\n", file_exists);
 
-  /* The opacity file exists:                                               */
-  if (fe == 1){
-    transitprint(1, verblevel, "Reading opacity file: '%s'.\n", tr->f_opa);
-    /* Read the grid of opacities from file:                                */
-    readopacity(tr, tr->fp_opa);
-  }
-  /* Calculate Voigt profiles:                                              */
-  else{
+  /* Set the file name in the transit struct:                               */
+  tr->f_opa = th->f_opa;
+
+  /* Opacity file has some error that makes it unusable, or not specified:  */
+  if (file_exists < -1 || file_exists == 0) {
+
+    /* Calculate Voigt profiles:                                            */
     transitprint(1, verblevel, "Calculating grid of Voigt profiles.\n");
     calcprofiles(tr);
-    if (fe == 0)
-      transitprint(1, verblevel, "No opacity file specified.\n");
+
+    /* Set progress indicator and return success:                           */
+    tr->pi |= TRPI_OPACITY;
+    return 0;
   }
-  /* Opacity file specified, but it doesn't exist yet:                      */
-  if (fe == -1){
+
+  /* Opacity file specified, but it just doesn't exist yet:                 */
+  if (file_exists == -1) {
+
     /* Open file for writing:                                               */
     tr->fp_opa = fopen(tr->f_opa, "wb");
-    /* Create file:                                                         */
+
+    /* Immediately return if the file could not be opened:                  */
     if (tr->fp_opa == NULL){
       transiterror(TERR_WARNING, "Opacity filename '%s' cannot be opened "
                                  "for writing.\n", tr->f_opa);
       return -1;
     }
+
+    /* Calculate Voigt profiles:                                            */
+    transitprint(1, verblevel, "Calculating grid of Voigt profiles.\n");
+    calcprofiles(tr);
+
     /* Calculate the grid of opacities:                                     */
     transitprint(1, verblevel, "Calculating new grid of opacities: '%s'.\n",
                                tr->f_opa);
@@ -106,9 +114,157 @@ opacity(struct transit *tr){
     tr->pi |= TRPI_READDATA;
     tr->pi |= TRPI_READINFO;
     tr->pi |= TRPI_CHKRNG;
+
+    /* Set progress indicator and return success:                           */
+    tr->pi |= TRPI_OPACITY;
+    return 0;
   }
 
-  /* Set progress indicator and return success:                             */
+  /* Implied: The opacity file exists:                                      */
+  file_exists = fileexistopen(th->f_opa, &tr->fp_opa);
+  tr->f_opa = th->f_opa;
+  transitprint(10, verblevel, "Opacity-file exist status = %d\n", file_exists);
+
+  if (file_exists != 1) {
+
+    transitprint(1, verblevel, "Opening opacity file failed.\n");
+
+    /* Calculate Voigt profiles:                                            */
+    transitprint(1, verblevel, "Calculating grid of Voigt profiles.\n");
+    calcprofiles(tr);
+
+    /* Set progress indicator and return success:                           */
+    tr->pi |= TRPI_OPACITY;
+    return 0;
+  }
+
+  /* Should attempt to use shared memory:                                   */
+  if (tr->opashare) {
+
+    /* Get ID or create shared opacityhint struct:                          */
+    key_t hintkey = ftok(tr->f_opa, 'a');
+    op.hintID = shmget(hintkey, sizeof(struct opacityhint), 0644 | IPC_CREAT);
+
+    /* If reserving the hint segment was unsuccessful, give up:             */
+    if (op.hintID == -1) {
+
+      transitprint(1, verblevel, "Could not get hint shared memory ID.\n");
+
+      /* Read the grid of opacities from file:                              */
+      transitprint(1, verblevel, "Reading opacity file: '%s'.\n", tr->f_opa);
+      readopacity(tr, tr->fp_opa);
+
+      /* Set progress indicator and return success:                         */
+      tr->pi |= TRPI_OPACITY;
+      return 0;
+    }
+
+    /* Attach to the hint shared memory segment:                            */
+    op.hint = shmat(op.hintID, (void *) 0, 0);
+
+    /* If attaching was unsuccessful, give up.                              */
+    if (op.hint == (struct opacityhint *) -1) {
+
+      transitprint(1, verblevel, "Could not attach to hint shared memory.\n");
+
+      /* Read the grid of opacities from file:                              */
+      transitprint(1, verblevel, "Reading opacity file: '%s'.\n", tr->f_opa);
+      readopacity(tr, tr->fp_opa);
+
+      /* Set progress indicator and return success:                         */
+      tr->pi |= TRPI_OPACITY;
+      return 0;
+    }
+
+    /* If no process has claimed to be the master, claim it:                */
+    if (op.hint->master_PID == 0)
+      op.hint->master_PID = getpid();
+
+    /* Wait a few cycles in case multiple processes claimed it at once:     */
+    int i;
+    for (i = 0; i < 10; i++);
+
+    /* Check again to see if this process claimed the memory:               */
+    if (op.hint->master_PID == getpid()) {
+
+      /* Share the grid of opacities from file:                             */
+      transitprint(1, verblevel, "Sharing opacity file: '%s'.\n", tr->f_opa);
+
+      if (shareopacity(tr, tr->fp_opa) || mountopacity(tr)) {
+
+        transitprint(1, verblevel, "Shared memory sh/mt error. Aborting.\n");
+        op.hint->status |= TSHM_ERROR;
+
+        /* Read the grid of opacities from file:                            */
+        transitprint(1, verblevel, "Reading opacity file: '%s'.\n",
+                                    tr->f_opa);
+        readopacity(tr, tr->fp_opa);
+      }
+
+      /* Assuming that all processes have attached to the two shared
+         memory segments, mark them for destruction as soon as all of the
+         processes have detached.                                           */
+      struct shmid_ds buf1, buf2;
+      shmctl(op.hintID, IPC_STAT, &buf1);
+      transitprint(1, verblevel, "STATING ALL OF THE THINGS.\n");
+
+      do {
+        shmctl(op.mainID, IPC_STAT, &buf2);
+      }
+      while (buf2.shm_nattch != buf1.shm_nattch);
+
+      transitprint(1, verblevel, "REMOVING ALL OF THE THINGS. 1: %d, 2: %d\n",
+        buf1.shm_nattch, buf2.shm_nattch);
+      shmctl(op.hintID, IPC_RMID, &buf1);
+      shmctl(op.mainID, IPC_RMID, &buf2);
+
+      /* Set progress indicator and return success:                         */
+      tr->pi |= TRPI_OPACITY;
+      return 0;
+    }
+
+    else {
+
+      while ((op.hint->status & TSHM_WRITTEN) == 0) {
+
+        /* If there's an error with the shared memory, abort.               */
+        if (op.hint->status & TSHM_ERROR) {
+
+          transitprint(1, verblevel, "Shared memory error. Aborting.\n");
+
+          /* Read the grid of opacities from file:                          */
+          transitprint(1, verblevel, "Reading opacity file: '%s'.\n",
+                                      tr->f_opa);
+          readopacity(tr, tr->fp_opa);
+
+          /* Set progress indicator and return success:                     */
+          tr->pi |= TRPI_OPACITY;
+          return 0;
+        }
+      }
+    }
+
+    /* If there's an error attaching or mounting the memory, abort.     */
+    if (attachopacity(tr) || mountopacity(tr)) {
+
+      transitprint(1, verblevel, "Shared memory att/mt error. Aborting.\n");
+
+      /* Read the grid of opacities from file:                          */
+      transitprint(1, verblevel, "Reading opacity file: '%s'.\n",
+                                  tr->f_opa);
+      readopacity(tr, tr->fp_opa);
+    }
+  }
+
+  /* Should not attempt to use shared memory:                               */
+  else {
+
+    /* Read the grid of opacities from file:                                */
+    transitprint(1, verblevel, "Reading opacity file: '%s'.\n", tr->f_opa);
+    readopacity(tr, tr->fp_opa);
+  }
+
+  /* Set progress indicator and return success:                           */
   tr->pi |= TRPI_OPACITY;
   return 0;
 }
@@ -396,6 +552,134 @@ readopacity(struct transit *tr,  /* transit struct                          */
 }
 
 
+/* FUNCTION: Read the opacity file and store values in shared memory.       */
+int
+shareopacity(struct transit *tr, /* transit struct                          */
+            FILE *fp){           /* Pointer to file to read                 */
+  struct opacity *op=tr->ds.op;  /* opacity struct                          */
+  struct opacityhint *oh=op->hint;  /* opacity hint struct                  */
+
+  /* Read file dimension sizes:                                             */
+  fread(&op->Nmol,   sizeof(long), 1, fp);
+  fread(&op->Ntemp,  sizeof(long), 1, fp);
+  fread(&op->Nlayer, sizeof(long), 1, fp);
+  fread(&op->Nwave,  sizeof(long), 1, fp);
+  transitprint(1, verblevel, "Opacity grid size: Nmolecules    = %5li\n"
+                             "                   Ntemperatures = %5li\n"
+                             "                   Nlayers       = %5li\n"
+                             "                   Nwavenumbers  = %5li\n",
+                             op->Nmol, op->Ntemp, op->Nlayer, op->Nwave);
+  transitprint(20, verblevel, "ftell = %li\n", ftell(fp));
+
+  /* Copy dimensional data into the shared hint struct:                     */
+  oh->Nwave = op->Nwave;
+  oh->Ntemp = op->Ntemp;
+  oh->Nlayer = op->Nlayer;
+  oh->Nmol = op->Nmol;
+
+  /* If creating and attaching the main segment fails, return:              */
+  if (attachopacity(tr))
+    return 1;
+
+  /* Read arrays:                                                           */
+  void *p = op->mainaddr;
+  fread(p, sizeof(int),      op->Nmol,   fp);
+  p += sizeof(int) * op->Nmol;
+  fread(p,  sizeof(PREC_RES), op->Ntemp,  fp);
+  p += sizeof(PREC_RES) * op->Ntemp;
+  fread(p, sizeof(PREC_RES), op->Nlayer, fp);
+  p += sizeof(PREC_RES) * op->Nlayer;
+  fread(p,   sizeof(PREC_RES), op->Nwave,  fp);
+  p += sizeof(PREC_RES) * op->Nwave;
+
+  /* Read opacity grid:                                                     */
+  fread(p, sizeof(PREC_RES),
+        op->Nmol * op->Ntemp * op->Nlayer * op->Nwave, fp);
+
+  oh->status |= TSHM_WRITTEN;
+  return 0;
+}
+
+
+/* FUNCTION: Locate (or create) and attach to the main shared memory.
+   Return: 0 on success, 1 on failure                                       */
+int
+attachopacity(struct transit *tr){ /* transit struct                        */
+  struct opacity *op=tr->ds.op;   /* opacity struct                         */
+  struct opacityhint *oh=op->hint;  /* opacity hint struct                  */
+
+  op->Nwave = oh->Nwave;
+  op->Ntemp = oh->Ntemp;
+  op->Nlayer = oh->Nlayer;
+  op->Nmol = oh->Nmol;
+
+  int main_shm_size  /* Size of the main shared memory, starting with: grid */
+    = sizeof(PREC_RES) * op->Nmol * op->Ntemp * op->Nlayer * op->Nwave
+    + sizeof(int) * op->Nmol          /* op->molID  */
+    + sizeof(PREC_RES) * op->Ntemp    /* op->temp   */
+    + sizeof(PREC_RES) * op->Nlayer   /* op->press  */
+    + sizeof(PREC_RES) * op->Nwave;   /* op->wns    */
+
+  /* Allocate or locate the main shared memory:                             */
+  key_t mainkey = ftok(tr->f_opa, 'b');
+  op->mainID = shmget(mainkey, main_shm_size, 0644 | IPC_CREAT);
+
+  /* If allocation failed, abort:                                           */
+  if (op->mainID == -1) {
+    transiterror(TERR_WARNING, "Failed to allocate main shared memory.\n");
+    transitprint(1, verblevel, "Attachment failed. shmget() returned -1.\n");
+    return 1;
+  }
+
+  /* Attach to the main shared memory:                                      */
+  op->mainaddr = shmat(op->mainID, (void *) 0, 0);
+
+  if (op->mainaddr == (void *) -1) {
+    transiterror(TERR_WARNING, "Failed to attach to main shared memory.\n");
+    transitprint(1, verblevel, "Attachment failed. shmat() returned -1.\n");
+    return 1;
+  }
+
+  oh->num_attached++;
+  return 0;
+}
+
+
+/* FUNCTION: Create pointers to the opacity values in shared memory.
+   Return: 0 on success                                                     */
+int
+mountopacity(struct transit *tr){ /* transit struct                         */
+  struct opacity *op=tr->ds.op;   /* opacity struct                         */
+  int i, t, r;  /* for-loop indices                                         */
+
+  void *p = op->mainaddr;
+  op->molID = p;
+  p += sizeof(int) * op->Nmol;
+  op->temp = p;
+  p += sizeof(PREC_RES) * op->Ntemp;
+  op->press = p;
+  p += sizeof(PREC_RES) * op->Nlayer;
+  op->wns = p;
+  p += sizeof(PREC_RES) * op->Nwave;
+
+  op->o      = (PREC_RES ****)       calloc(op->Nlayer, sizeof(PREC_RES ***));
+  for     (r=0; r < op->Nlayer; r++){
+    op->o[r] = (PREC_RES  ***)       calloc(op->Ntemp,  sizeof(PREC_RES **));
+    for   (t=0; t < op->Ntemp; t++){
+      op->o[r][t] = (PREC_RES **)    calloc(op->Nmol,   sizeof(PREC_RES *));
+      for (i=0; i < op->Nmol; i++){
+        op->o[r][t][i] = (PREC_RES *) p /* Map the 4D structure to 1D.      */
+                                      + r * op->Ntemp * op->Nmol * op->Nwave
+                                      + t * op->Nmol * op->Nwave
+                                      + i * op->Nwave;
+      }
+    }
+  }
+
+  return 0;
+}
+
+
 /* FUNCTION: Free opacity array
    Return: 0 on success                                                     */
 int
@@ -416,6 +700,6 @@ freemem_opacity(struct opacity *op, /* Opacity structure                    */
 
   /* Update progress indicator and return:                                  */
   *pi &= ~(TRPI_OPACITY | TRPI_TAU);
+
   return 0;
 }
-

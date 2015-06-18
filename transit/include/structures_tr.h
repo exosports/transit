@@ -174,7 +174,7 @@ struct extinction{
 struct opacityhint{
   int master_PID;       /* Process that will write the shared memory        */
   int num_attached;     /* Count of processes attached to the main segment  */
-  unsigned int status;  /* Flags concerning the state of the shared memory  */
+  volatile long status; /* Flags concerning the state of the shared memory  */
   long Nwave, Ntemp, Nlayer, Nmol; /* Info necessary for sizing shared mem  */
 };
 

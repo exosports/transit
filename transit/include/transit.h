@@ -27,9 +27,11 @@
 #include <stdarg.h>
 #include <math.h>
 #include <errno.h>
-#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <sampling.h>
 #include <profile.h>
