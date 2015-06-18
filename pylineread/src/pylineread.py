@@ -341,17 +341,17 @@ if __name__ == "__main__":
     ti = time.time()
     transDB = driver[db].dbread(cla.iwav, cla.fwav, cla.verb, pflist[db])
     tf = time.time()
-    ut.lrprint(verbose-3, "Reading time: %8.3f seconds"%(tf-ti))
+    ut.lrprint(verbose-3, "Reading time: {:8.3f} seconds".format(tf-ti))
     
     wlength = np.concatenate((wlength, transDB[0]))    
     gf      = np.concatenate((gf,      transDB[1]))    
     elow    = np.concatenate((elow,    transDB[2]))    
     isoID   = np.concatenate((isoID,   transDB[3]+acum[idb]))    
 
-    ut.lrprint(verbose-8, "Isotpe in-database indices: " +
-                          str(np.unique(transDB[3])))
-    ut.lrprint(verbose-8, "Isotpe correlative indices: " +
-                          str(np.unique(transDB[3]+acum[idb])))
+    ut.lrprint(verbose-8, "Isotope in-database indices: {}".format(
+                           np.unique(transDB[3])))
+    ut.lrprint(verbose-8, "Isotope correlative indices: {}\n".format(
+                           np.unique(transDB[3]+acum[idb])))
 
   # Total number of transitions:
   nTransitions = np.size(wlength)
@@ -361,12 +361,18 @@ if __name__ == "__main__":
   isort = sorted(zip(np.arange(nTransitions), isoID, wlength),
                  key=lambda x:(x[1], x[2]))
   isort = list(zip(*isort)[0])
+
   tf = time.time()
-  ut.lrprint(verbose-3, " Sort  time: %8.7f seconds"%(tf-ti))
+  ut.lrprint(verbose-3, "Sort  time: %8.3f seconds"%(tf-ti))
   wlength = wlength[isort]
   gf      = gf     [isort]
   elow    = elow   [isort]
   isoID   = isoID  [isort]
+
+  # Position of the first transition for each isotope:
+  iso_init = np.where(np.ediff1d(isoID))[0]
+  iso_init = np.concatenate(([0], iso_init))
+  ut.lrprint(verbose-5, "First transition per isotope:\n{}".format(iso_init))
 
   # FINDME: Implement well this:
   if False:
@@ -387,20 +393,24 @@ if __name__ == "__main__":
   transinfo = ""
   # Write the number of transitions:
   TLIout.write(struct.pack("i", nTransitions))
+  ut.lrprint(verbose-3, "Writing {:d} transition lines.".format(nTransitions))
+  # Write the index for the first transition for each isotope:
+  nIso = len(iso_init)
+  TLIout.write(struct.pack(str(nIso)+"i", *list(iso_init)))
 
-  ut.lrprint(verbose-3, "Writing %d transition lines."%nTransitions)
+  # Write the Line-transition data:
   ti = time.time()
   transinfo += struct.pack(str(nTransitions)+"d", *list(wlength))
   transinfo += struct.pack(str(nTransitions)+"h", *list(isoID))
   transinfo += struct.pack(str(nTransitions)+"d", *list(elow))
   transinfo += struct.pack(str(nTransitions)+"d", *list(gf))
   tf = time.time()
-  ut.lrprint(verbose-3, "Packing time: %8.3f seconds"%(tf-ti))
+  ut.lrprint(verbose-3, "Packing time: {:8.3f} seconds".format(tf-ti))
 
   ti = time.time()
   TLIout.write(transinfo)
   tf = time.time()
-  ut.lrprint(verbose-3, "Writing time: %8.3f seconds"%(tf-ti))
+  ut.lrprint(verbose-3, "Writing time: {:8.3f} seconds".format(tf-ti))
 
   TLIout.close()
   ut.lrprint(verbose, "Done.\n")
