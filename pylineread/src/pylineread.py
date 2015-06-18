@@ -99,11 +99,13 @@ def parseargs():
   # Get parameters from configuration file (if exists):
   if args.config_file:
     if not os.path.isfile(args.config_file):
-      ut.printexit("Configuration file '%s' does not exist."%args.config_file)
+      ut.printexit("Configuration file '{:s}' does not exist.".
+                    format(args.config_file))
     config = ConfigParser.SafeConfigParser()
     config.read([args.config_file])
     if "Parameters" not in config.sections():
-      ut.printexit("Invalid configuration file: '%s'."%args.config_file)
+      ut.printexit("Invalid configuration file: '{:s}'.".
+                    format(args.config_file))
     defaults = dict(config.items("Parameters"))
     # Store these arguments as lists:
     if "db_list" in defaults:
@@ -199,10 +201,13 @@ if __name__ == "__main__":
     elif dbtype[i] == "vo":
       driver.append(vo.voplez(dblist[i],      pflist[i]))
     else:
-      ut.printexit("Unknown Database type (%d): '%s'"%(i+1, dbtype[i]))
-    ut.lrprint(verbose-10, "File %d, database name: '%s'"%(i+1, driver[i].name))
+      ut.printexit("Unknown Database type ({:d}): '{:s}'".
+                    format(i+1, dbtype[i]))
+    ut.lrprint(verbose-10, "File {:d}, database name: '{:s}'".
+                            format(i+1, driver[i].name))
 
-  ut.lrprint(verbose, "Beginning to write the TLI file: '%s'"%outputfile)
+  ut.lrprint(verbose, "Beginning to write the TLI file: '{:s}'".
+                       format(outputfile))
   # Open output file:
   TLIout  = open(outputfile, "wb")
 
@@ -246,8 +251,9 @@ if __name__ == "__main__":
                          struct.unpack('i', magic)[0],
                          c.TLI_VERSION, c.LR_VERSION, c.LR_REVISION,
                          cla.iwav, cla.fwav))
-  ut.lrprint(verbose-8, "There are %d databases in %d files."%(Ndb, Nfiles))
-  ut.lrprint(verbose-9, "Databases: " + str(DBnames))
+  ut.lrprint(verbose-8, "There are {:d} databases in {:d} files.".
+                         format(Ndb, Nfiles))
+  ut.lrprint(verbose-9, "Databases:\n{}".format(DBnames))
 
   # Partition info:
   totIso = 0                  # Cumulative number of isotopes
@@ -269,8 +275,6 @@ if __name__ == "__main__":
     iso_mass  = driver[i].mass
     iso_ratio = driver[i].isoratio
 
-    ut.lrprint(verbose, "Isotopes mass: " + str(iso_mass))
-
     # Number of temperature samples:
     Ntemp = len(Temp)
     # Number of isotopes:
@@ -282,40 +286,44 @@ if __name__ == "__main__":
 
     # Store length of database name, database name, number of temperatures,
     #  and number of isotopes in TLI file:
-    TLIout.write(struct.pack("h%dc"%lenDBname,  lenDBname, *DBnames[idb]))
+    TLIout.write(struct.pack("h{:d}c".format(lenDBname),
+                             lenDBname, *DBnames[idb]))
     # Store the molecule name:
-    TLIout.write(struct.pack("h%dc"%lenMolec, lenMolec, *driver[i].molecule))
+    TLIout.write(struct.pack("h{:d}c".format(lenMolec),
+                             lenMolec, *driver[i].molecule))
     # Store the number of temperature samples and isotopes:
     TLIout.write(struct.pack("hh", Ntemp, Niso))
-    ut.lrprint(verbose-8, "Database (%d/%d): '%s (%s molecule)'\n"
-                          "  Number of temperatures: %d\n"
-                          "  Number of isotopes: %d"%(idb+1, Ndb, DBnames[idb],
-                                              driver[i].molecule, Ntemp, Niso))
+    ut.lrprint(verbose-8, "\nDatabase ({:d}/{:d}): '{:s} ({:s} molecule)'\n"
+                          "  Number of temperatures: {:3d}\n"
+                          "  Number of isotopes:     {:3d}".
+                               format(idb+1, Ndb, DBnames[idb],
+                                      driver[i].molecule, Ntemp, Niso))
 
     # Write all the temperatures in a list:
-    TLIout.write(struct.pack("%dd"%Ntemp, *Temp))
-    ut.lrprint(verbose-8, "  Temperatures: [%6.1f, %6.1f, ..., %6.1f]"%(
-                             Temp[0], Temp[1], Temp[Ntemp-1]))
+    TLIout.write(struct.pack("{:d}d".format(Ntemp), *Temp))
+    ut.lrprint(verbose-8, "  Temperatures: [{:6.1f}, {:6.1f}, ..., {:6.1f}]".
+                           format(Temp[0], Temp[1], Temp[Ntemp-1]))
 
     # For each isotope, write the relevant partition function information
     # to file.  Keep a tally of isotopes for multiple databse support 
     for j in np.arange(Niso):
-      ut.lrprint(verbose-9, "  Isotope (%d/%d): '%s'"%(j+1, Niso, isoNames[j]))
+      ut.lrprint(verbose-9, "  Isotope ({:d}/{:d}): '{:s}'".
+                              format(j+1, Niso, isoNames[j]))
 
       # Store length of isotope name, isotope name, and isotope mass:
       lenIsoname = len(isoNames[j])
       Iname = str(isoNames[j])
-      TLIout.write(struct.pack("h%dc"%lenIsoname, lenIsoname, *Iname))
+      TLIout.write(struct.pack("h{:d}c".format(lenIsoname), lenIsoname, *Iname))
       TLIout.write(struct.pack("d", iso_mass[j]))
       TLIout.write(struct.pack("d", iso_ratio[j]))
 
       # Write the partition function per isotope:
-      TLIout.write(struct.pack("%dd"%Ntemp, *partDB[j]))
-      ut.lrprint(verbose-9, "    Mass (u):        %8.4f\n"
-                            "    Isotopic ratio:  %8.4g\n"
-                            "    Part. Function:  [%.2e, %.2e, ..., %.2e]"%(
-                             iso_mass[j], iso_ratio[j],
-                             partDB[j,0], partDB[j,1], partDB[j,Ntemp-1]))
+      TLIout.write(struct.pack("{:d}d".format(Ntemp), *partDB[j]))
+      ut.lrprint(verbose-9, "    Mass (u):        {:8.4f}\n"
+                          "    Isotopic ratio:  {:8.4g}\n"
+                          "    Part. Function:  [{:.2e}, {:.2e}, ..., {:.2e}]".
+                            format(iso_mass[j], iso_ratio[j],
+                                   partDB[j,0], partDB[j,1], partDB[j,Ntemp-1]))
 
     # Calculate cumulative number of isotopes per database:
     totIso += Niso
@@ -323,7 +331,7 @@ if __name__ == "__main__":
     acum[idb] = totIso
 
   # Cumulative number of isotopes:
-  ut.lrprint(verbose-5, "Cumulative number of isotopes per DB: " + str(acum))
+  ut.lrprint(verbose-5, "Cumulative number of isotopes per DB: {}".format(acum))
   ut.lrprint(verbose, "Done.")
 
   ut.lrprint(verbose, "\nWriting transition info to tli file:")
@@ -363,7 +371,7 @@ if __name__ == "__main__":
   isort = list(zip(*isort)[0])
 
   tf = time.time()
-  ut.lrprint(verbose-3, "Sort  time: %8.3f seconds"%(tf-ti))
+  ut.lrprint(verbose-3, "Sort time:    {:8.3f} seconds".format(tf-ti))
   wlength = wlength[isort]
   gf      = gf     [isort]
   elow    = elow   [isort]
@@ -400,10 +408,10 @@ if __name__ == "__main__":
 
   # Write the Line-transition data:
   ti = time.time()
-  transinfo += struct.pack(str(nTransitions)+"d", *list(wlength))
-  transinfo += struct.pack(str(nTransitions)+"h", *list(isoID))
-  transinfo += struct.pack(str(nTransitions)+"d", *list(elow))
-  transinfo += struct.pack(str(nTransitions)+"d", *list(gf))
+  transinfo += struct.pack("{:d}d".format(nTransitions), *list(wlength))
+  transinfo += struct.pack("{:d}h".format(nTransitions), *list(isoID))
+  transinfo += struct.pack("{:d}d".format(nTransitions), *list(elow))
+  transinfo += struct.pack("{:d}d".format(nTransitions), *list(gf))
   tf = time.time()
   ut.lrprint(verbose-3, "Packing time: {:8.3f} seconds".format(tf-ti))
 
