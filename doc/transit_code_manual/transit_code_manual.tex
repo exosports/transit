@@ -10,7 +10,7 @@
 \pagestyle{myheadings}
 \markright{Transit}
 \pagenumbering{arabic}
-
+\graphicspath{fig}
 \begin{document}
 
 \begin{titlepage}
@@ -52,13 +52,24 @@ Dr.~Joseph \textsc{Harrington}
 
 
 \section{Introduction IN PROGRESS}
+\label{sec:intro}
 This document is intended to provide the \texttt{transit} user with the information necessary to modify the code for their own uses. It describes all headers, custom variable types, structures, and functions used within the \texttt{transit} program. We also include information about which functions allocate, fill in, and free data arrays. 
 
 The \texttt{transit} program is structure-oriented. All the variables used by \texttt{transit} are held in structures, as listed in Section \ref{structures}. These structures are passed around to functions which allocate, fill out, and free the variables within the structures. In Section \ref{structures} all arrays within the program are cross-referenced with the functions that alter them.
-(FINDME: Intro is WIP).
+
+The functions of {\tt transit} are split into two chunks: initialization and calculation. The initialization functions set up the variables and structures that are needed to make the radiative transfer calculations. This includes parsing the configuration file, making sampling arrays, reading the input files (line transition information, collision-induced absorption), and creating the opacity grid. The calculation functions make the extinction and optical depth calculations, for both transit and eclipse geometry, and create the output files. Figure \ref{fig:codediagram} shows the function structure of {\tt transit}.
+
+\begin{figure}
+\includegraphics[trim={0 2.9in 0 0},clip]{fig/transit_diagram}
+\label{fig:codediagram}
+\caption{{\tt transit} function structure. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom. For example, at the beginning, transit\_init calls processparameters, then transit\_init calls acceptgenhints, then acceptgenhints calls acceptsoltype, and so on. Boxes are color-coded as follows:  yellow functions are used for eclipse geometry, pink functions are used for transit geomtry, and green functions are used in both. The shaded backgrounds indicate where each function can be found.}
+\end{figure}
+
+In Section \ref{sec:headers} we describe all the headers included in {\tt transit}. Section \ref{sec:variables} gives all the custom variable types and their purpose. Then in Section \ref{sec:constants} we list all the defined constants in {\tt transit}. Section \ref{structures} lists both the structures and structure types used, and makes note of which function alters each array. In Section \ref{sec:functions} we list all source files and functions, and provide a list of the variables which are altered by each function along with a walkthrough of each major function. Finally, Section \ref{sed:equations} lists some equations that are important to the calculations made in {\tt transit}.
 
 \section{List of Headers used by \texttt{transit} IN PROGRESS}
-
+This section lists all headers included in the {\tt transit} program. Those which are unique to {\tt transit} can be found in the transit/include/ directory. The file transit.h contains the lines which include the rest of the headers.
+\label{sec:headers}
 transit.h: \\
 \indent Contains common headers for the \texttt{transit} program and defines some functions.\\
 extraext.h: \\
@@ -104,7 +115,7 @@ types\_tr: \\
 
 	
 \section{List of Custom Variable Types in \texttt{transit} DONE}
-
+\label{sec:variables}
 Table \ref{table:types} lists the user-defined data types used in
 Transit.  These declarations are located in
 transit/transit/include/types\_tr.h.
@@ -136,6 +147,7 @@ PREC\_VOIGTP & double & Voigt profile data type \\
 \newpage
 
 \section{List of Constants in \texttt{transit} DONE}
+\label{sec:constants}
 Table \ref{table:constants} lists the user-defined constants used in \texttt{transit}. The definitions can be found in transit/transit/include/constants\_tr.h.
 \begin{table}[ht]
 \centering
@@ -853,18 +865,17 @@ struct transit{
 \end{plain}
 
 \section{List of Functions in the \texttt{transit} Files}
-
-% \begin{figure}[htb]
-% \centerline{
-% \includegraphics[width=0.59\textwidth, clip]{figs/f8a.ps}}
-% \caption{\small \label{fig:WASP8b} Atmospheric spectral emission
-%   of the dayside of WASP-8b \citep{CubillosEtal2013apjWASP8b}.  The
-%   blue circles with error bars are the measured eclipse depths.  The
-%   red and green curves show two model spectra, one in chemical
-%   equilibrium (green) and one with $10\sp{3}\times$ lower
-%   methane abundance (red).}
-% \end{figure}
+\label{sec:functions}
+In this section we list all functions, sorted by source file, give a brief description of what they do, list all variables that they alter, and provide a walkthrough for each. A modified variable is written in \ttred{red}, a function is written in \ttblue{blue}, and an unmodified variable is written in {\tt typewriter}.
 \subsection{transit.c}
+This file contains the main {\tt transit} driver functions. The \ttblue{main} function calls \ttblue{transit\_init} and \ttblue{do\_transit}, the driver functions which do the initialization and calculation. Then \ttblue{main} calls \ttblue{free\_memory} which frees the remaining memory. This structure is shown in Figure \ref{fig:transitc}.
+
+\begin{figure}
+\includegraphics{fig/transitc}
+\caption{Function structure of transit.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom. Boxes are color-coded as follows:  yellow functions are used for eclipse geometry, pink functions are used for transit geomtry, and green functions are used in both.}
+\label{fig:transitc}
+\end{figure}
+
 \subsubsection{List of Functions Defined in transit.c}
 \function{
 void transit\_init(int argc, char **argv)}
@@ -880,7 +891,7 @@ void get\_waveno\_arr(double *waveno\_arr, int waveno)}
 
 \function{
 void set\_radius(double refradius)}
-\tgray{Set the reference radius in the transit structure}.
+\tgray{Set the reference radius in the transit structure}.\newline
 
 \function{
 void run\_transit(double *re\_input, int transitint, double *transit\_out, \\ int transit\_out\_size)}
@@ -1012,7 +1023,7 @@ void freemem\_transit(struct transit *tr)}
 \end{enumerate}
 
 \subsection{transitstd.c:}
-This file contains a number of standard functions.
+This file contains a number of standard functions. As they are largely unrelated, and called when necessary throughout the code, there is no general structure to the functions in this file.
 \subsubsection{List of Functions Defined in transitstd.c}
 \function{
 inline void transitdot(int thislevel, int verblevel, ...)}
@@ -1173,7 +1184,13 @@ double timecheck(int verblevel, long iter, long index, char *str, \\ struct time
 \end{enumerate}
 
 \subsection{argum.c:} 
-Functions in this file handle the creation and filling-out of the hint structure. The hinted values are taken from command-line arguments and/or a configuration file, and then the general hinted values are placed into the main transit structure.
+Functions in this file handle the creation and filling-out of the hint structure. The hinted values are taken from command-line arguments and/or a configuration file, and then the general hinted values are placed into the main transit structure. Figure \ref{fig:argumc} shows the function structure.
+
+\begin{figure}
+\includegraphics{fig/argumc}
+\caption{Function structure of argum.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  yellow functions are used for eclipse geometry, pink functions are used for transit geomtry, and green functions are used in both.}
+\label{fig:argumc}
+\end{figure}
 \subsubsection{List of Functions Defined in argum.c:}
 \function{
 int processparameters(int argc, char **argv, struct transit *tr)}
@@ -1427,6 +1444,13 @@ inline PREC\_RES starvariation(double x, double y, double radius)}
 \newpage
 \subsection{readlineinfo.c:}
 This file is concerned with reading TLI files produced by the {\tt pylineread} program. Only binary TLI files are accepted. Functions \ttblue{saveline, main} are not currently used in {\tt transit}.
+
+
+\begin{figure}
+\includegraphics{fig/readlineinfoc}
+\caption{Function structure of readlineinfo.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  yellow functions are used for eclipse geometry, pink functions are used for transit geomtry, and green functions are used in both.}
+\label{fig:readlineinfoc}
+\end{figure}
 
 \subsubsection{List of Functions Defined in readlineinfo.c:}
 \function{
@@ -1688,7 +1712,14 @@ int main(int argc, char **argv)}
 
 \newpage
 \subsection{readatm.c:}
-This file contains functions which read the atmospheric file.
+This file contains functions which read the atmospheric file. Figure \ref{fig:readatmc} shows the function structure.
+
+\begin{figure}
+\includegraphics{fig/readatmc}
+\caption{Function structure of readatm.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  yellow functions are used for eclipse geometry, pink functions are used for transit geomtry, and green functions are used in both.}
+\label{fig:readatmc}
+\end{figure}
+
 \subsubsection{List of Functions Defined in readatm.c:}
 \function{
 int getatm(struct transit *tr)}
@@ -1974,7 +2005,14 @@ Recalculate radius array according to hydrostatic pressure, and find the radial 
 
 \newpage
 \subsection{makesample.c:}
-This file is concerned with producing sampling arrays for parameters including wavenumber, radius, temperature, and impact parameter. Sampling functions for each parameter call either \ttblue{makesample} or \ttblue{makesample1} to with the proper variables to create the sampling.
+This file is concerned with producing sampling arrays for parameters including wavenumber, radius, temperature, and impact parameter. Sampling functions for each parameter call either \ttblue{makesample} or \ttblue{makesample1} to with the proper variables to create the sampling. Function structure is shown in Figure \ref{fig:makesamplec}.
+
+\begin{figure}
+\includegraphics{fig/makesamplec}
+\caption{Function structure of makesample.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  yellow functions are used for eclipse geometry, pink functions are used for transit geomtry, and green functions are used in both.}
+\label{fig:makesamplec}
+\end{figure}
+
 \subsubsection{List of Functions Defined in makesample.c:}
 \function{
 int makesample1(prop\_samp *samp, prop\_samp *ref, const long fl)}
@@ -2284,7 +2322,14 @@ radius array.
 
 \newpage
 \subsection{opacity.c: EDITED}
-This file contains routines which calculate opacities, read opacity files, and write opacity files.
+This file contains routines which calculate opacities, read opacity files, and write opacity files. Figure \ref{fig:opacityc} shows the function structure.
+
+\begin{figure}
+\includegraphics{fig/opacityc}
+\caption{Function structure of opacity.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  yellow functions are used for eclipse geometry, pink functions are used for transit geomtry, and green functions are used in both.}
+\label{fig:opacityc}
+\end{figure}
+
 \subsubsection{List of Functions Defined in opacity.c:}
 \function{
 int opacity(struct transit *tr)}
@@ -2664,13 +2709,12 @@ int interpolmolext(struct transit *tr, PREC\_NREC r, PREC\_RES **kiso)}
 
 
 \subsubsection{getprofile}
-\textbf{Variables Modified}
+\paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Allocate \ttred{op.profile} (**pr).
 \end{enumerate}
 
-\noindent
-\textbf{Walkthrough}
+\paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Find the largest width between Doppler and Lorentz
 \item[-] Calculate the range for computation in half-widths.
@@ -2702,7 +2746,7 @@ int interpolmolext(struct transit *tr, PREC\_NREC r, PREC\_RES **kiso)}
 % \end{itemize}
 
 \subsubsection{extwn:}
-\paragraph{Modified:}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\paragraph{Modified:}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Copy {\tt th.ethresh} into \ttred{ex.ethresh} (extinction threshold).
 \item[-] Allocate \ttred{ex.e} (extinction).
@@ -3501,6 +3545,7 @@ F\sb{\nu}(0) = \pi \int\sb{0}\sp{\tau\sb{b}} B\sb{\nu}e\sp{-\tau/\bar{\mu}}\der(
 \end{equation}
 
 \section{Equations}
+\label{sec:equations}
 Optical depth:
 
 \begin{equation}
@@ -3515,10 +3560,10 @@ Extinction:
 
 \begin{equation}
 \label{eqn:ext}
-e = (FINDME)
+e = 
 \end{equation}
 \noindent
-where (FINDME) \newline
+where \findme{(FINDME)} \newline
 
 \noindent
 Modulation:
