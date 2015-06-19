@@ -377,10 +377,11 @@ if __name__ == "__main__":
   elow    = elow   [isort]
   isoID   = isoID  [isort]
 
-  # Position of the first transition for each isotope:
+  # Calculate the total number of transitions per isotope:
   iso_init = np.where(np.ediff1d(isoID))[0]
-  iso_init = np.concatenate(([0], iso_init))
-  ut.lrprint(verbose-5, "First transition per isotope:\n{}".format(iso_init))
+  iso_init = np.concatenate(([0], iso_init, [nTransitions]))
+  Nisotran = np.ediff1d(iso_init)
+  ut.lrprint(verbose-5, "Transitions per isotope:\n{}".format(Nisotran))
 
   # FINDME: Implement well this:
   if False:
@@ -402,9 +403,13 @@ if __name__ == "__main__":
   # Write the number of transitions:
   TLIout.write(struct.pack("i", nTransitions))
   ut.lrprint(verbose-3, "Writing {:d} transition lines.".format(nTransitions))
-  # Write the index for the first transition for each isotope:
-  nIso = len(iso_init)
-  TLIout.write(struct.pack(str(nIso)+"i", *list(iso_init)))
+  # Write the number of transitions for each isotope:
+  Niso = len(Nisotran)
+  # Note that nIso may differ from accumiso, since accum iso accounts for
+  # all the existing isotopes for an species, whereas nIso accounts only
+  # for the isotopes that do have line transitions in the given range.
+  TLIout.write(struct.pack("i",Niso))
+  TLIout.write(struct.pack(str(Niso)+"i", *list(Nisotran)))
 
   # Write the Line-transition data:
   ti = time.time()
