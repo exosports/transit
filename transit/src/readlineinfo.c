@@ -555,15 +555,17 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
                 struct lineinfo *li){ /* lineinfo structure                 */
 
   struct line_transition *lt = &li->lt;  /* line_transition structure       */
-  FILE *fp;            /* Data file pointer                                 */
-  int nlines,          /* Number of line transitions                        */
-      niso,            /* Number of isotopes in line transition data        */
-      nread,           /* Number of transitions to read for each isotope    */
-      *isotran,        /* Number of transitions per isotope in TLI          */
-      start,           /* Position of first LT for isotope in TLI           */
-      i,               /* for-loop index                                    */
-      iso_off, elow_off, gf_off,  /* Offsets for isoID, Elow, and gf data   */
-      rn;              /* Return IDs                                        */
+  FILE *fp;              /* Data file pointer                               */
+  int nlines,            /* Number of line transitions                      */
+      niso,              /* Number of isotopes in line transition data      */
+      nread,             /* Number of transitions to read for each isotope  */
+      *isotran,          /* Number of transitions per isotope in TLI        */
+      start,             /* Position of first LT for isotope in TLI         */
+      i,                 /* for-loop index                                  */
+      offset=0,          /* Isotope offset (in number of transitions)       */
+      wl_loc, iso_loc,   /* Offsets for isoID, Elow, and gf data            */
+      el_loc, gf_loc,    /* (in memory)                                     */
+      rn;                /* Return IDs                                      */
   /* Indices of first and last transitions to be stored                     */
   long ifirst, ilast;
 
@@ -623,39 +625,44 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
                  "linetran structure array of length %i, in function "
                  "readdatarng.\n", nlines);
 
-  /* Offsets for the isotpeID, Elow, and gf info in file:                   */
-  iso_off  = nlines*sizeof(PREC_LNDATA);
-  elow_off = nlines*sizeof(short )      + iso_off;
-  gf_off   = nlines*sizeof(PREC_LNDATA) + elow_off;
+  /* Starting location for wavelength, isoID, Elow, and gf data in file:    */
+  wl_loc  = start;
+  iso_loc = wl_loc  + nlines*sizeof(PREC_LNDATA);
+  el_loc  = iso_loc + nlines*sizeof(short);
+  gf_loc  = el_loc  + nlines*sizeof(PREC_LNDATA);
 
   for (i=0; i<niso; i++){
-    transitprint(30, verblevel, "\nInit pos: %d\n", start);
+    transitprint(3, verblevel, "\nInit pos: %d\n", start);
     /* Do binary search in units of TLI:                                    */
     datafileBS(fp, start, isotran[i], iniw, &ifirst, sizeof(PREC_LNDATA), 0);
     datafileBS(fp, start, isotran[i], finw, &ilast,  sizeof(PREC_LNDATA), 1);
+    ifirst += offset;
+    ilast  += offset;
     transitprint(5, verblevel, "Initial and final entries are: "
                                "%li and %li.\n", ifirst, ilast);
 
+    transitprint(3, verblevel, "\nLT Pos: %ld\n", li->n_l);
     /* Number of transitions to read:                                       */
     nread = ilast - ifirst + 1;
     /* Move pointer to each section and read info:                          */
     /* Wavelength:                                                          */
-    fseek(fp, start + ifirst*sizeof(PREC_LNDATA),            SEEK_SET);
+    fseek(fp, ifirst*sizeof(PREC_LNDATA) + wl_loc,  SEEK_SET);
     fread(lt->wl+li->n_l,    sizeof(PREC_LNDATA), nread, fp);
     /* Isotope ID:                                                          */
-    fseek(fp, start + ifirst*sizeof(short)       + iso_off,  SEEK_SET);
+    fseek(fp, ifirst*sizeof(short)       + iso_loc, SEEK_SET);
     fread(lt->isoid+li->n_l, sizeof(short),       nread, fp);
     /* Lower-state energy:                                                  */
-    fseek(fp, start + ifirst*sizeof(PREC_LNDATA) + elow_off, SEEK_SET);
+    fseek(fp, ifirst*sizeof(PREC_LNDATA) + el_loc,  SEEK_SET);
     fread(lt->elow+li->n_l,  sizeof(PREC_LNDATA), nread, fp);
     /* gf:                                                                  */
-    fseek(fp, start + ifirst*sizeof(PREC_LNDATA) + gf_off,   SEEK_SET);
+    fseek(fp, ifirst*sizeof(PREC_LNDATA) + gf_loc,  SEEK_SET);
     fread(lt->gf+li->n_l,    sizeof(PREC_LNDATA), nread, fp);
 
     /* Count the number of lines:                                           */
     li->n_l += nread;
-    /* Move the isotope index                                               */
+    /* Move the wl offset to next isotope:                                  */
     start += isotran[i]*sizeof(double);
+    offset += isotran[i];
   }
 
   /* Re-allocate arrays to their correct size:                              */
