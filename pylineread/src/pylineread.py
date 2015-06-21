@@ -335,10 +335,10 @@ if __name__ == "__main__":
   ut.lrprint(verbose, "Done.")
 
   ut.lrprint(verbose, "\nWriting transition info to tli file:")
-  wlength = []
-  gf      = []
-  elow    = []
-  isoID   = []
+  wlength = np.array([], np.double)
+  gf      = np.array([], np.double)
+  elow    = np.array([], np.double)
+  isoID   = np.array([], int)
   # Read from file and write the transition info:
   for db in np.arange(Nfiles):
     # Get database index:
@@ -378,9 +378,8 @@ if __name__ == "__main__":
   isoID   = isoID  [isort]
 
   # Calculate the total number of transitions per isotope:
-  iso_init = np.where(np.ediff1d(isoID))[0]
-  iso_init = np.concatenate(([0], iso_init, [nTransitions]))
-  Nisotran = np.ediff1d(iso_init)
+  Nisotran = np.bincount(isoID)
+  Nisotran = Nisotran[np.where(Nisotran>0)]  # Remove zeroes
   ut.lrprint(verbose-5, "Transitions per isotope:\n{}".format(Nisotran))
 
   # FINDME: Implement well this:
