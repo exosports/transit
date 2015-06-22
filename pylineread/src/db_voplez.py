@@ -82,6 +82,12 @@ class voplez(dbdriver):
     # Molecule name:
     self.molecule = "VO"
 
+    # Partition-function polynomial coefficients:
+    # (from communication with B. Pelz):
+    self.PFcoeffs = np.array([ 6.62090157e+02, -4.03350494e+02,
+                               9.82836218e+01, -1.18526504e+01,
+                               7.08429905e-01, -1.67235124e-02])
+
     # Other utilities:
     self.recsize  = 53  # Record length
     self.recwnpos = 33  # Wavenumber position in record
@@ -150,27 +156,27 @@ class voplez(dbdriver):
     2015-06-14  patricio  Initial implementation.  pcubillos@fulbrightmail.org
     2015-06-21  sally     Calculates pf for Vanadium (II) Oxide (VO)
     """
-    # Constants from communication with Pelz
-    an_0 =  6.62090157e+02 
-    an_1 = -4.03350494e+02  
-    an_2 =  9.82836218e+01 
-    an_3 = -1.18526504e+01  
-    an_4 =  7.08429905e-01 
-    an_5 = -1.67235124e-02
-    # Temperature Array
-    Temp = np.linspace(1000., 7000., 13) # change how many Temps?
-    # Intialize PF array
-    PF = np.zeros((len(Temp), 2))
-    # Calculate Q (partition function value) at each Temp
-    for i in np.arange(len(Temp)):
-        # Append Temp to PF array
-        PF[i, 1] = Temp[i]
-        # Calculate Q
-        # Formula from Irwin 1981, ApJS 45, 621 (equation #2)
-        ln_Q = an_0 + an_1*np.log(Temp[i]) + an_2*(np.log(Temp[i]))**2 + an_3*(np.log(Temp[i]))**3 + an_4*(np.log(Temp[i]))**4 + an_5*(np.log(Temp[i]))**5
-        Q = np.exp(ln_Q)
-        # Append Q to PF array
-        PF[i, 0] = Q
+    # Temperature array:
+    Temp = np.arange(1000.0, 7001.0, 50.0)
+    Ntemp = len(Temp)
+
+    # Number of isotopes:
+    Niso  = 1
+
+    # Intialize PF array:
+    PF = np.zeros((Niso, Ntemp), np.double)
+
+    # Calculate log(PF) at each Temp:
+    for i in np.arange(Ntemp):
+      # Formula from Irwin 1981, ApJS 45, 621 (equation #2):
+      PF[0,i] = (self.PFcoeffs[0]                      +
+                 self.PFcoeffs[1]* np.log(Temp[i])     +
+                 self.PFcoeffs[2]*(np.log(Temp[i]))**2 +
+                 self.PFcoeffs[3]*(np.log(Temp[i]))**3 +
+                 self.PFcoeffs[4]*(np.log(Temp[i]))**4 +
+                 self.PFcoeffs[5]*(np.log(Temp[i]))**5 )
+    # Get the exponential of log(PF):
+    PF = np.exp(PF)
     return Temp, PF
 
 
