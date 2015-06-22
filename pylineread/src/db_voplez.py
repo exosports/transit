@@ -127,13 +127,50 @@ class voplez(dbdriver):
     The partition function is valid for the range of temperatures from
     1000K to 7000K.
 
+    Sample Return:
+    Temp = np.linspace(1000., 7000., 13):
+    array([ 1000.,  1500.,  2000.,  2500.,  3000.,  3500.,  4000.,  4500., 5000.,  5500.,  6000.,  6500.,  7000.])
+    PF
+    array([[   6696.28281847,    1000.        ],
+           [  12463.29391522,    1500.        ],
+           [  20096.2494866 ,    2000.        ],
+           [  29606.07281774,    2500.        ],
+           [  41175.25306071,    3000.        ],
+           [  55080.93657951,    3500.        ],
+           [  71666.40723555,    4000.        ],
+           [  91330.40363125,    4500.        ],
+           [ 114524.07531435,    5000.        ],
+           [ 141751.43620469,    5500.        ],
+           [ 173571.51471102,    6000.        ],
+           [ 210601.37829024,    6500.        ],
+           [ 253519.63927169,    7000.        ]])
+
     Modification History:
     ---------------------
     2015-06-14  patricio  Initial implementation.  pcubillos@fulbrightmail.org
+    2015-06-21  sally     Calculates pf for Vanadium (II) Oxide (VO)
     """
-    # FINDME: Implement me
-    Temp = np.array([1000.0, 7000.0])
-    PF   = np.array([[1.0, 10.0]])
+    # Constants from communication with Pelz
+    an_0 =  6.62090157e+02 
+    an_1 = -4.03350494e+02  
+    an_2 =  9.82836218e+01 
+    an_3 = -1.18526504e+01  
+    an_4 =  7.08429905e-01 
+    an_5 = -1.67235124e-02
+    # Temperature Array
+    Temp = np.linspace(1000., 7000., 13) # change how many Temps?
+    # Intialize PF array
+    PF = np.zeros((len(Temp), 2))
+    # Calculate Q (partition function value) at each Temp
+    for i in np.arange(len(Temp)):
+        # Append Temp to PF array
+        PF[i, 1] = Temp[i]
+        # Calculate Q
+        # Formula from Irwin 1981, ApJS 45, 621 (equation #2)
+        ln_Q = an_0 + an_1*np.log(Temp[i]) + an_2*(np.log(Temp[i]))**2 + an_3*(np.log(Temp[i]))**3 + an_4*(np.log(Temp[i]))**4 + an_5*(np.log(Temp[i]))**5
+        Q = np.exp(ln_Q)
+        # Append Q to PF array
+        PF[i, 0] = Q
     return Temp, PF
 
 
