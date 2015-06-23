@@ -52,7 +52,6 @@ Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
 #include <transit.h>
-#include <extraext.h>
 
 
 /* Initial version January 23rd, 2014 Jasmina Blecic

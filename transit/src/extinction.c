@@ -653,3 +653,69 @@ interpolmolext(struct transit *tr, /* transit struct                        */
 
   return 0;
 }
+
+/* \fcnfh
+   Compute scatering contribution to extinction
+*/
+inline void
+computeextscat(double *e, 
+               long n, 
+               struct extscat *sc,
+               double *rad,
+               double trad,
+               double *temp,
+               double tcft,
+               double wn){
+  long i;
+
+  for(i=0; i<n; i++)
+    e[i] = 0;
+}
+
+
+/* \fcnfh
+   Compute cloud contribution to extinction
+*/
+inline void
+computeextcloud(double *e, 
+               long n,
+               struct extcloud *cl,
+               prop_samp *rad,
+               double *temp,
+               double tcft,
+               double wn){
+  long i;
+  double *r = rad->v;
+  double rfct = rad->fct;
+  double rini = cl->rini*cl->rfct;
+  double rfin = cl->rfin*cl->rfct;
+
+  /* If there are no clouds, set array to zero: */
+  if(rini==0){
+    memset(e, 0, n*sizeof(double));
+    return;
+  }
+
+  if(rad->d == 0)
+    transiterror(TERR_SERIOUS,
+                 "Radius needs to be equispaced for clouds prescription.\n");
+  double slp = cl->maxe / (rfin - rini);
+
+  /* Find radius index right below the cloud top layer: */
+  for(i=n-1; i>=0; i--){
+    if(r[i]*rfct <= rini)
+      break;
+    e[i] = 0; /* Zero extinction in this range          */
+  }
+
+  /* Set cloud extinction between cloud top and maxe:   */
+  for(; i>=0; i--){
+    if(r[i] * rfct <= rfin)
+      break;
+    e[i] = slp * (r[i]*rfct - rini);
+  }
+
+  /* Keep constant extinction maxe until the bottom:    */
+  for(; i>=0; i--)
+      e[i] = cl->maxe;
+}

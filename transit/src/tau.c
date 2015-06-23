@@ -52,7 +52,6 @@ Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
 #include <transit.h>
-#include <extraext.h>
 
 #define CIA_DOFLOAT  2
 #define CIA_RADFIRST 1

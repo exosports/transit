@@ -22,4 +22,13 @@ extern int restextinct P_((FILE *in, long nrad, short niso, long nwn,
 extern int computemolext P_((struct transit *tr, PREC_RES **kiso,
                    PREC_ATM temp, PREC_ATM *density, double *Z, int permol));
 extern int interpolmolext P_((struct transit *tr, PREC_NREC r, PREC_RES **kiso));
+extern inline void computeextscat P_((double *e, long n, 
+                                      struct extscat *sc, double *rad,
+                                      double trad, double *temp, 
+                                      double tcft, double wn));
+
+extern inline void computeextcloud P_((double *e, long n,
+                                       struct extcloud *cl, prop_samp *rad,
+                                       double *temp, double tcft,
+                                       double wn));
 #undef P_
