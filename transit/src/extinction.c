@@ -460,7 +460,7 @@ computemolext(struct transit *tr, /* transit struct                         */
   transitprint(10, verblevel, "Number of dynamic-sampling values:%li\n",
                                 dnwn);
 
-  /* Determine the maximum and minimum extinction-coefficient in this layer */
+  /* Determine the maximum and minimum line-strength per isotope:           */
   for(ln=0; ln<nlines; ln++){
     /* Wavenumber of line transition:                                       */
     wavn = 1.0 / (lt->wl[ln] * lt->wfct);

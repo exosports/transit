@@ -632,7 +632,6 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
   gf_loc  = el_loc  + nlines*sizeof(PREC_LNDATA);
 
   for (i=0; i<niso; i++){
-    transitprint(3, verblevel, "\nInit pos: %d\n", start);
     /* Do binary search in units of TLI:                                    */
     datafileBS(fp, start, isotran[i], iniw, &ifirst, sizeof(PREC_LNDATA), 0);
     datafileBS(fp, start, isotran[i], finw, &ilast,  sizeof(PREC_LNDATA), 1);
@@ -641,7 +640,6 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
     transitprint(5, verblevel, "Initial and final entries are: "
                                "%li and %li.\n", ifirst, ilast);
 
-    transitprint(3, verblevel, "\nLT Pos: %ld\n", li->n_l);
     /* Number of transitions to read:                                       */
     nread = ilast - ifirst + 1;
     /* Move pointer to each section and read info:                          */
