@@ -12,7 +12,7 @@ the same name written by Patricio Rojo (Univ. de Chile, Santiago) when
 he was a graduate student at Cornell University under Joseph
 Harrington.
 
-Copyright (C) 2014 University of Central Florida.  All rights reserved.
+Copyright (C) 2015 University of Central Florida.  All rights reserved.
 
 This is a test version only, and may not be redistributed to any third
 party.  Please refer such requests to us.  This program is distributed
@@ -641,19 +641,16 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
   int nmol = at->n_aiso;
   FILE *elist;
 
-  double *mmass,    /* Molecular mass from list                             */
-         *radius;   /* Molecular radii from list                            */
-  int *molID;       /* Molecular universal ID                               */
-  char **rname,     /* Molecules names for listed radii                     */
-       **alias,     /* Alias of names given in atmfile                      */
-       **amol;      /* Corresponding molecule for alias                     */
-  int nalias =  2,  /* Number of listed alias names                         */
-      ndatamol = 23, /* Number of listed molecules                          */
-      maxlinelen = 501,
-      i, j;         /* Auxiliary for-loop index                             */
+  double *mmass,       /* Molecular mass from list                          */
+         *radius;      /* Molecular radii from list                         */
+  int *molID;          /* Molecular universal ID                            */
+  long dinit;          /* Data initial position in File pointer             */
+  int ndatamol=0,      /* Number of species in file                         */
+      maxlinelen=501,  /* Line maximum length                               */
+      i, j;            /* Auxiliary for-loop index                          */
+  char **rname,        /* Molecules names for listed radii                  */
+       line[maxlinelen], *lp;
 
-  char line[maxlinelen], *lp,
-       molecule[MAXNAMELEN]; /* Current molecule's name                     */
 
   /* Open Molecular data file:                                              */
   if((elist=verbfileopen(filename, "Molecular info ")) == NULL)
@@ -661,27 +658,21 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
 
   /* Read lines, skipping comments and blank lines:                         */
   do{
+    dinit = ftell(elist);
     lp = fgets(line, maxlinelen, elist);
   }while (lp[0] == '\0' || lp[0] == '\n' || lp[0] == '#');
 
-  /* Allocate alias names and corresponding molecules:                      */
-  alias    = (char  **)calloc(nalias, sizeof(char *));
-  amol     = (char  **)calloc(nalias, sizeof(char *));
-  alias[0] = (char   *)calloc(nalias*MAXNAMELEN, sizeof(char));
-  amol[0]  = (char   *)calloc(nalias*MAXNAMELEN, sizeof(char));
-  for (i=1; i<nalias; i++){
-    alias[i] = alias[0] + i*MAXNAMELEN;
-    amol[i]  = amol[0]  + i*MAXNAMELEN;
-  }
-
-  /* Get aliases from file:                                                 */
-  for (i=0; i<nalias; i++){
-    /* Get alias and molecule name:                                         */
-    getname(lp, alias[i]);
-    lp = nextfield(lp);
-    getname(lp, amol[i]);
+  /* Count the number of species:                                           */
+  do{
     lp = fgets(line, maxlinelen, elist);
-  }
+    ndatamol += 1;
+    if (lp == NULL)
+      break;
+  }while (lp[0] != '\0' && lp[0] != '\n' && lp[0] != '#');
+
+  /* Re-locate pointer to the data initial position and read first line:    */
+  fseek(elist, dinit, SEEK_SET);
+  lp = fgets(line, maxlinelen, elist);
 
   /* Allocate molecule ID, mass, names, and radii:                          */
   molID    = (int    *)calloc(ndatamol,            sizeof(int));
@@ -691,11 +682,6 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
   rname[0] = (char   *)calloc(ndatamol*MAXNAMELEN, sizeof(char));
   for (i=1; i<ndatamol; i++)
     rname[i] = rname[0] + i*MAXNAMELEN;
-
-  /* Go to next block:                                                      */
-  do{
-    lp = fgets(line, maxlinelen, elist);
-  }while (lp[0] == '\0' || lp[0] == '\n' || lp[0] == '#');
 
   /* Read molecular info from file:                                         */
   for (i=0; i<ndatamol; i++){
@@ -711,18 +697,14 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
     lp = nextfield(lp);
     radius[i] = strtod(lp, NULL)/2.0;
     lp = fgets(line, maxlinelen, elist);
+    transitprint(30, verblevel, "Read species:'%6s',  ID:%3d,  mass:%7.4f,  "
+      "radius:%5.2f.\n", rname[i], molID[i], mmass[i], radius[i]);
   }
 
   /* Assign info for each molecule in atosphere:                            */
   for (i=0; i<nmol; i++){
-    /* Check if molecule name is an alias:                                  */
-    if ((j=findstring(mol->name[i], alias, nalias)) >= 0)
-      strcpy(molecule, amol[j]);
-    else
-      strcpy(molecule, mol->name[i]);
-
     /* Set the radius:                                                      */
-    j = findstring(molecule, rname, ndatamol);
+    j = findstring(mol->name[i], rname, ndatamol);
     mol->radius[i] = radius[j] * ANGSTROM;
     /* Set the universal molecular ID:                                      */
     mol->ID[i]     = molID[j];

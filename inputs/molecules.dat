@@ -1,8 +1,3 @@
-# Molecular aliases:
-IonMolHyd  H2
-IonHyd     H
-
-
 # Molecular info:
 # Radii sources:
 # 01  http://www.sigmaaldrich.com/chemistry/chemical-synthesis/learning-center/technical-bulletins/al-1430/molecular-sieves.html
@@ -11,6 +6,7 @@ IonHyd     H
 # 04  Wolfram Alpha + Wikipedia
 # 05  http://www.chemspider.com/Molecular-Formula/C2H2
 # xx  Not found!
+
 # Mass source: http://www.webqc.org/mmcalc.php
 
 # ID    Molecule  Mass         Diameter  Diameter   Long
@@ -38,12 +34,4 @@ IonHyd     H
   11    Na        22.98976928  3.72      04         Sodium
   16    S         32.065       2.00      04         Sulfur
   19    K         39.09830     4.54      04         Potassium
-
-
-# Isotopic ratios:
-# For Partridge & Schwenke (1997):
-H2O    1H1H16O    0.997000
-H2O    1H1H17O    0.000508
-H2O    1H1H18O    0.000508
-H2O    1H2H16O    0.001984
 
