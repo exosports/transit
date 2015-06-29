@@ -149,8 +149,9 @@ class hitran(dbdriver):
 
     Notes:
     ------
-    This function is a wrapper of the Fortran TIPS routine written
-    by R. R. Gamache.
+    This function is a wrapper of the CTIPS library written by
+    Patricio Cubillos, which is itself a C implementation of the
+    Fortran TIPS routine by R. R. Gamache.
     The range of temperatures is limited to: 70K -- 3000K.
 
     Parameters:
@@ -171,6 +172,7 @@ class hitran(dbdriver):
     ---------------------
     2012-11-22  patricio  Initial implementation.  pcubillos@fulbrightmail.org
     2014-03-10  patricio  Adapted previous code.
+    2015-06-29  aj-foster Swapped Fortran for C implementation of TIPS.
     """
 
     # Get molecule ID as  integer:
@@ -270,8 +272,9 @@ class hitran(dbdriver):
 
     Notes:
     ------
-    This function is a wrapper of the Fortran TIPS routine written
-    by R. R. Gamache.
+    This function is a wrapper of the CTIPS library written by
+    Patricio Cubillos, which is itself a C implementation of the
+    Fortran TIPS routine by R. R. Gamache.
     The range of temperatures is limited to: 70K -- 3000K.
 
     Parameters:
@@ -290,6 +293,7 @@ class hitran(dbdriver):
     Modification History:
     ---------------------
     2012-03-10  patricio  Initial implementation.  pcubillos@fulbrightmail.org
+    2015-06-29  aj-foster Swapped Fortran for C implementation of TIPS.
     """
 
     # Get molecule ID:
