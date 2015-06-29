@@ -38,7 +38,7 @@ Clone the repository to your working directory:
 git clone https://github.com/pcubillos/transit transit/
 ```
 
-Compile the pu and transit programs (in that order), as well as the pylineread FORTRAN code:  
+Compile the pu and transit programs (in that order), as well as the pylineread TIPS code:  
 ```shell
 cd $topdir/transit/pu/  
 make  

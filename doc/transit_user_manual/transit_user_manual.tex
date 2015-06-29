@@ -216,7 +216,7 @@ Thank you for using transit! \newline
 
 Transit was developed on a Unix/Linux machine using Python 2.7.6,
 Numpy 1.8.2, and mpi4py 1.3.1.  \findme{Ask someone who knows about C
-  and Fortran requirements.}
+  requirements.}
 
 \indent -- Python. \\
 \indent -- \href{http://www.numpy.org/}{NumPy}. \\
@@ -224,7 +224,6 @@ Numpy 1.8.2, and mpi4py 1.3.1.  \findme{Ask someone who knows about C
 \indent -- \href{http://mpi4py.scipy.org/docs/usrman/install.html}{mpi4py}. \\
 \indent -- An MPI distribution (MPICH preferred). \\
 \indent -- A C compiler \findme{any preference?}. \\
-\indent -- A Fortran compiler \findme{any preference?}. \\
 \indent -- GSL \findme{give specifics}.
 
 \subsection{Install and Compile}
@@ -251,8 +250,8 @@ order): \newline
 {\tttb cd ../transit} \\
 {\tttb make} \\
 
-\noindent Compile the {\tttm pylineread} fortran code: \\
-{\tttb cd ../pylineread/src/fortran} \\
+\noindent Compile the {\tttm pylineread} TIPS code: \\
+{\tttb cd ../pylineread/src/ctips} \\
 {\tttb make} \\
 
 \noindent To remove the program binaries, execute (from the respective
@@ -469,7 +468,7 @@ db_list  = .../databases/Schwenke-H2O/h2ofastfix.bin
 
 # Path(s) to the partition function files:
 part_list= .../databases/Schwenke-H2O/h2opartfn.dat
-           .../transit/pylineread/src/fortran/lib/TIPS_BART
+           implicit
 
 # Type of each input database:
 #   hit:  HITRAN and HITEMP
@@ -548,7 +547,7 @@ Database              & Temperature & URL \\
                       & range (K) &       \\
 \hline
 Partridge \& Schwenke & 10-6000   & \href{http://kurucz.harvard.edu/molecules/h2o/h2opartfn.dat}{kurucz.harvard.edu/molecules/h2o/h2opartfn.dat} \\
-HITRAN \& HITEMP      & 70-3000   & transit/pylineread/src/fortran/lib/TIPS\_BART \\
+HITRAN \& HITEMP      & 70-3000   & transit/pylineread/src/ctips \\
 Schwenke              & 10-6000   & \href{http://kurucz.harvard.edu/molecules/tio/tiopart.dat}{kurucz.harvard.edu/molecules/tio/tiopart.dat} \\
 \hline
 \end{tabular}
@@ -1468,6 +1467,7 @@ pylineread routines ({\tttm transit/pylineread/src/}): \\
 \routine{utils.py}{\findme{Explain me}.}
 \routine{constants.py}{\findme{Explain me}.} \vspace{0.3cm}
 
+\findme{Replace with CTIPS information.}
 Fortran routines ({\tttm transit/pylineread/src/fortran/}): \\
 \routine{BART\_BD\_ISO\_82\_TO\_85.for}{\findme{Explain me}.}
 \routine{BD\_ISO\_2011.for}{\findme{Explain me}.}
