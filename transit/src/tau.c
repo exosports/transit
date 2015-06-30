@@ -301,11 +301,11 @@ tau(struct transit *tr){
       /* Check if the optical depth reached toomuch:                        */
       if (tau_wn[ri] > tau->toomuch){
         tau->last[wi] = ri;   /* Set tau.last                               */
-        if (ri<3){
+        if (ri < 3){
           transiterror(TERR_WARNING, "At wavenumber %g (cm-1), the optical "
                        "depth (%g) exceeded toomuch (%g) at the height "
                        "level %li (%g km), this should have happened in a "
-                       "deeper layer (check layers sampling).\n", wn->v[wi],
+                       "deeper layer.\n", wn->v[wi],
                        tau_wn[ri], tau->toomuch, ri, h[ri]*hfct/1e5);
         }
         break;  /* Exit height loop when the optical depth reached toomuch  */
@@ -314,23 +314,19 @@ tau(struct transit *tr){
           "(toomuch: %g)\n", wi, wn->v[wi], r[ri], tau_wn[ri], tau->toomuch);
     }
 
-      /* Write total, cloud, and scattering extinction to file if requested: */
-      if (th->savefiles){
-        save1Darray(tr, totEx,    er, rnn, wi);
-        save1Darray(tr, cloudEx, e_c, rnn, wi);
-        save1Darray(tr, scattEx, e_s, rnn, wi);
-      }
-
-    if(ri==nh){
-      transitprint(1, verblevel,
-                   "WARNING: At wavenumber %g cm-1, the bottom of the "
-                   "atmosphere was reached before obtaining the critical TAU "
-                   "value of %g.\nMaximum TAU reached: %g.\n",
-                   wn->v[wi], tau->toomuch, tau_wn[ri]);
-      tau->last[wi] = ri-1;
+    /* Write total, cloud, and scattering extinction to file if requested:  */
+    if (th->savefiles){
+      save1Darray(tr, totEx,    er, rnn, wi);
+      save1Darray(tr, cloudEx, e_c, rnn, wi);
+      save1Darray(tr, scattEx, e_s, rnn, wi);
     }
 
-
+    if(ri==nh){
+      transitprint(1, verblevel, "WARNING: At wavenumber %g cm-1, tau reached "
+                   "the bottom of the atmosphere with tau: %g (tau max: %g).\n"
+                   wn->v[wi], tau_wn[ri-1], tau->toomuch);
+      tau->last[wi] = ri-1;
+    }
   }
   transitprint(1, verblevel, "Done.\n");
 
