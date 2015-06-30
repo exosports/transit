@@ -63,6 +63,10 @@ from driver import dbdriver
 #db_hitran.py dir:
 DBHdir = os.path.dirname(os.path.realpath(__file__))
 
+# CTIPS
+sys.path.append(DBHdir + "/ctips/lib")
+import ctips as ct
+
 class hitran(dbdriver):
   def __init__(self, dbfile, pffile):
     """
@@ -145,8 +149,9 @@ class hitran(dbdriver):
 
     Notes:
     ------
-    This function is a wrapper of the Fortran TIPS routine written
-    by R. R. Gamache.
+    This function is a wrapper of the CTIPS library written by
+    Patricio Cubillos, which is itself a C implementation of the
+    Fortran TIPS routine by R. R. Gamache.
     The range of temperatures is limited to: 70K -- 3000K.
 
     Parameters:
@@ -167,6 +172,7 @@ class hitran(dbdriver):
     ---------------------
     2012-11-22  patricio  Initial implementation.  pcubillos@fulbrightmail.org
     2014-03-10  patricio  Adapted previous code.
+    2015-06-29  aj-foster Swapped Fortran for C implementation of TIPS.
     """
 
     # Get molecule ID as  integer:
@@ -186,22 +192,15 @@ class hitran(dbdriver):
     ut.lrprint(verbose-5, "Ntemp: %d, Niso: %d"%(Ntemp, Niso))
 
     for i in np.arange(Niso):
-      # Molecule ID, isotope ID, and temperature array as strings:
-      smol  = str(molID) + "\n"
-      siso  = str(self.isotopes[i]) + "\n"
-      stemp = np.asarray(Temp, '|S6')
 
-      # String input for TIPS:
-      input = smol + siso + ("\n" + smol + siso).join(stemp) + "\n99\n"
+      # Molecule ID, isotope ID, and temperature arrays:
+      mol = np.repeat(molID, len(Temp))
+      iso = np.repeat(int(self.isotopes[i]), len(Temp))
 
-      # Call fortran routine to calculate the partition function:
-      p = sp.Popen([self.pffile], stdout=sp.PIPE, stdin=sp.PIPE,
-                   stderr=sp.STDOUT)
-      #print("Size: %d"%np.size(PF[i]))
-      #tmp =  p.communicate(input=input)[0].strip().split("\n")
-      #print(tmp)
-      PF[i] = p.communicate(input=input)[0].strip().split("\n") 
+      # Call CTIPS with the given arrays:
+      PF[i] = ct.tips(mol, iso, Temp)
       PF[i] /= self.gi[i]
+
     return Temp, PF
 
 
@@ -273,8 +272,9 @@ class hitran(dbdriver):
 
     Notes:
     ------
-    This function is a wrapper of the Fortran TIPS routine written
-    by R. R. Gamache.
+    This function is a wrapper of the CTIPS library written by
+    Patricio Cubillos, which is itself a C implementation of the
+    Fortran TIPS routine by R. R. Gamache.
     The range of temperatures is limited to: 70K -- 3000K.
 
     Parameters:
@@ -293,25 +293,24 @@ class hitran(dbdriver):
     Modification History:
     ---------------------
     2012-03-10  patricio  Initial implementation.  pcubillos@fulbrightmail.org
+    2015-06-29  aj-foster Swapped Fortran for C implementation of TIPS.
     """
+
+    # Get molecule ID:
+    molID = int(self.molID)
+
     # Get number of isotopes:
     Niso = len(self.isotopes)
 
     # Output array for table of Temperature and PF values:
     PFzero = np.zeros(Niso, np.double)
 
-    # Molecule ID, isotope ID, and temperature array as strings:
-    smol  = self.molID + "\n"
-    siso  = np.asarray(self.isotopes, '|S5')
-    stemp = "\n" + str(self.T0) + "\n"
+    # Molecule ID, isotope ID, and temperature arrays:
+    mol = np.repeat(molID, Niso)
+    iso = np.asarray(self.isotopes, dtype=int)
+    temp = np.repeat(self.T0, Niso)
 
-    # String input for TIPS:
-    input = smol + ("\n" + stemp + smol).join(siso) + stemp + "\n99\n"
-
-    # Call fortran routine to calculate the partition function:
-    p = sp.Popen([self.pffile], stdout=sp.PIPE, stdin=sp.PIPE, stderr=sp.STDOUT)
-    PFzero[:] = p.communicate(input=input)[0].strip().split("\n")
-
+    PFzero = ct.tips(mol, iso, temp)
     return PFzero / self.gi
 
 

@@ -35,16 +35,16 @@ topdir=`pwd`
 
 Clone the repository to your working directory:  
 ```shell
-git clone https://github.com/pcubillos/transit transit/
+git clone --recursive https://github.com/pcubillos/transit transit/
 ```
 
-Compile the pu and transit programs (in that order), as well as the pylineread FORTRAN code:  
+Compile the pu and transit programs (in that order), as well as the pylineread TIPS code:  
 ```shell
 cd $topdir/transit/pu/  
 make  
 cd $topdir/transit/transit/  
 make  
-cd $topdir/transit/pylineread/src/fortran/  
+cd $topdir/transit/pylineread/ctips/
 make  
 ```
 
