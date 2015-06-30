@@ -93,7 +93,7 @@ readcia(struct transit *tr){
   tr->ds.cia = &st_cia;
   int npairs = tr->ds.cia->nfiles = tr->ds.th->ncia; /* Number of CIA files */
   int p;                /* Auxiliary wavenumber index                       */
-  long nt, wa;          /* Number of temperature, wn samples in CIA file    */
+  long nt = 0, wa;      /* Number of temperature, wn samples in CIA file    */
   char rc;
   char *lp, *lpa;       /* Pointers in file                                 */
   int maxline=300, n;   /* Max length of line. Counter                      */

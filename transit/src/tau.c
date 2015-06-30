@@ -115,11 +115,13 @@ tau(struct transit *tr){
   PREC_RES **e = ex->e;                  /* Extinction coefficient          */
   PREC_RES (*fcn)() = tr->sol->optdepth; /* eclipsetau or transittau func.  */
 
-  long wi, ri; /* Indices for wavenumber, and radius                        */
-  int rn;      /* Functions output code                                     */
+  long wi, ri = 0; /* Indices for wavenumber, and radius                    */
+  int rn;          /* Functions output code                                 */
   int i;
 
-  FILE *totEx, *cloudEx, *scattEx;
+  FILE *totEx   = NULL,
+       *cloudEx = NULL,
+       *scattEx = NULL;
 
   PREC_ATM *density = (PREC_ATM *)calloc(tr->ds.mol->nmol, sizeof(PREC_ATM));
   double   *Z       = (double   *)calloc(tr->ds.iso->n_i,  sizeof(double));
@@ -480,10 +482,7 @@ saveCIA(struct transit *tr){
 void
 save1Darray(struct transit *tr, FILE *myFile, PREC_RES *array1d, 
                                               int nrad, long wi){
-  struct optdepth *tau=tr->ds.tau;       /* Def optical depth structure    */
-
   prop_samp *wn = &tr->wns;   /* Wavenumber sampling                        */
-  prop_samp *rad = &tr->rads; /* Radius sampling                            */
 
   /* format of the characters written                                       */
   char *format= "%-20.10g";
@@ -501,7 +500,7 @@ openFile(char *filename, char *header){
   /* open file to write                                                     */
   FILE *myFile = fopen(filename, "w");
   fprintf(myFile, "\n");
-  fprintf(myFile, header);
+  fputs(header, myFile);
   return myFile;
 }
 

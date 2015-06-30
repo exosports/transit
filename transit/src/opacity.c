@@ -182,7 +182,6 @@ calcprofiles(struct transit *tr){
 int
 calcopacity(struct transit *tr,
             FILE *fp){
-  struct transithint *th = tr->ds.th; /* transithint struct                 */
   struct opacity *op=tr->ds.op;     /* Opacity struct                       */
   struct isotopes  *iso=tr->ds.iso; /* Isotopes struct                      */
   struct molecules *mol=tr->ds.mol; /* Molecules struct                     */
@@ -191,9 +190,6 @@ calcopacity(struct transit *tr,
        flag;                        /* Interpolation flag                   */
   int i, j, t, r,                   /* for-loop indices                     */
       rn, iso1db;
-
-  struct timeval tv;  /* Time-keeping variables                             */
-  double t0=0.0;
 
   PREC_ATM *density = (PREC_ATM *)calloc(mol->nmol, sizeof(PREC_ATM));
   double   *Z       = (double   *)calloc(iso->n_i,  sizeof(double));
@@ -275,7 +271,7 @@ calcopacity(struct transit *tr,
 
     /* Compute extinction:                                                  */
     for (r=0;   r<Nlayer; r++){  /* For each layer:                         */
-      transitprint(3, verblevel, "\nOpacity Grid at layer %03d/%03d.\n",
+      transitprint(3, verblevel, "\nOpacity Grid at layer %03d/%03ld.\n",
                                  r+1, Nlayer);
       for (t=0; t<Ntemp;  t++){  /* For each temperature:                   */
         /* Get density and partition-function arrays:                       */

@@ -573,6 +573,7 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
   PREC_LNDATA iniw = li->wavs.i * li->wavs.fct / TLI_WAV_UNITS;
   PREC_LNDATA finw = li->wavs.f * li->wavs.fct / TLI_WAV_UNITS;
   PREC_LNDATA wltmp;   /* Auxiliary variable to store wavelength            */
+  (void) wltmp;        /* Suppress warning for this unused variable         */
 
   /* Open line data file:                                                   */
   if((rn=fileexistopen(tr->f_line, &fp)) != 1){
