@@ -87,7 +87,7 @@ ARFLAGS     = ruc
 INCLFLAGS   = -I/usr/X11R6/include -I. $(INCLUDES)
 LIBFLAGS    = -L/usr/X11R6/lib
 EXTPRM      = -DTESTGTK
-WARNFLAGS   = -Wall -Winline
+WARNFLAGS   = -Wall -Winline -Wno-unused-result
 
 NODBGFLAGS  = 
 DBGFLAGS    = -g3 -gdwarf-2
