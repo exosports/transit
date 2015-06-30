@@ -136,6 +136,25 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
 
   /* Integrate Extinction along ray path:                                   */
   /* Use spline if GSL is available along with at least 3 points:           */
+
+
+  double *hsum;
+  double *hratio;
+  double *hfactor;
+  double *h;
+
+  hsum    = calloc(nrad/2, sizeof(double));
+  hratio  = calloc(nrad/2, sizeof(double));
+  hfactor = calloc(nrad/2, sizeof(double));
+  h       = calloc(nrad-1, sizeof(double));
+  
+  makeh(s, h, nrad);
+
+  geth(h, hsum, hratio, hfactor, nrad);
+
+  res = simps(ex, h, hsum, hratio, hfactor, nrad);
+
+  /*
 #ifdef _USE_GSL
   gsl_interp_accel *acc = gsl_interp_accel_alloc();
   gsl_interp       *spl = gsl_interp_alloc(gsl_interp_cspline, nrad);
@@ -145,7 +164,7 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
   gsl_interp_accel_free(acc);
 #else
 #error non equispaced integration is not implemented without GSL
-#endif /* _USE_GSL                                                          */
+#endif */ /* _USE_GSL                                                          */
 
   /* Reset original values of arrays:                                       */
   *ex  = tmpex;

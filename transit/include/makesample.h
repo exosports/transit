@@ -24,6 +24,13 @@ extern inline double * spline3 P_((double *xi, double *yi, double *x,
                                    long nx, long N));
 extern inline double * splinterp P_((long N, double *xi, double *yi, long nx, 
                                      double *xout, double *yout));
+extern inline void * geth P_((double *h, double *hsum, double *hratio, 
+                              double *hfactor, int n));
+extern inline double simps P_((double *y, double *h, double *hsum,
+                               double *hratio, double *hfactor, int n));
+extern inline void makeh P_((double *x, double *h, int n));
+extern inline double simpson P_((double *y, double *hsum, double *hratio,
+                                 double *hfactor, int n));
 
 
 #undef P_
