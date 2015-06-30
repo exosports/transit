@@ -323,7 +323,7 @@ tau(struct transit *tr){
 
     if(ri==nh){
       transitprint(1, verblevel, "WARNING: At wavenumber %g cm-1, tau reached "
-                   "the bottom of the atmosphere with tau: %g (tau max: %g).\n"
+                   "the bottom of the atmosphere with tau: %g (tau max: %g).\n",
                    wn->v[wi], tau_wn[ri-1], tau->toomuch);
       tau->last[wi] = ri-1;
     }
