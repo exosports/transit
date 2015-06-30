@@ -136,22 +136,24 @@ eclipsetau(struct transit *tr,
     s[i] = s[i-1] + (rad[i] - rad[i-1]); // /cos(angle_rad);
   }
 
-  /* Integrate extinction along the path:                                   */
-  /* Use spline if GSL is available along with at least 3 points:           */
-//#ifdef _USE_GSL
-//  gsl_interp_accel *acc = gsl_interp_accel_alloc();
-//  gsl_interp *spl = gsl_interp_alloc(gsl_interp_cspline, nrad);
-//  gsl_interp_init(spl, s, ex, nrad);
-//  res = gsl_interp_eval_integ(spl, s, ex, 0, s[nrad-1], acc);
-//  gsl_interp_free(spl);
-//  gsl_interp_accel_free(acc);
-//#else
-//#error non equispaced integration is not implemented without GSL
-//#endif /* _USE_GSL */
+  /* Integrate extinction along the path:  */
 
-  /* Safety mode: GSL is acting up sometimes                                */
-  res = integ_trapz(s, ex, nrad);
+  double *hsum;
+  double *hratio;
+  double *hfactor;
+  double *h;
 
+  hsum    = calloc(nrad/2, sizeof(double));
+  hratio  = calloc(nrad/2, sizeof(double));
+  hfactor = calloc(nrad/2, sizeof(double));
+  h       = calloc(nrad-1, sizeof(double));
+  
+  makeh(s, h, nrad);
+
+  geth(h, hsum, hratio, hfactor, nrad);
+
+  res = simps(ex, h, hsum, hratio, hfactor, nrad);
+                                 
   /* Optical depth divided by units of radius:                              */
   return res;
 }
@@ -238,38 +240,23 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
                                 "integration.\n", last);
 
   /* Integrate along tau up to tau = toomuch:                               */
-#ifdef _USE_GSL
-  gsl_interp_accel *acc = gsl_interp_accel_alloc();
-  gsl_interp *spl       = gsl_interp_alloc(gsl_interp_cspline, last);
-  gsl_interp_init(spl, tauIV, tauInteg, last);
-  res = gsl_interp_eval_integ(spl, tauIV, tauInteg,
-                               tauIV[0], tauIV[last-1], acc);
-  gsl_interp_free(spl);
-  gsl_interp_accel_free (acc);
-#else
-# error computation of modulation() without GSL is not implemented
-#endif
 
-  /* GSL is stupid. I will use a trapezoidal rule for integration instead
-     (when I want to run the code in safety mode):                          */
-  //res = integ_trapz(tauIV, tauInteg, last);
+  double *hsum;
+  double *hratio;
+  double *hfactor;
+  double *h;
 
-  //if (fabs(w-2877.00) <= 0.5){
-  //  transitprint(1, 2, "\nI(w=%.10g) = %.10g\n", w, res);
-  //  for (i=0; i<last; i++)
-  //    transitprint(1, 2, "  tau: %.10e   int:%.10e\n", tauIV[i], tauInteg[i]);
-  //  double res2 = integ_trapz(tauIV, tauInteg, last-1);
-  //  transitprint(1,2, "Trapezoidal integration: %.10e\n", res2);
-  //}
+  hsum    = calloc(last/2, sizeof(double));
+  hratio  = calloc(last/2, sizeof(double));
+  hfactor = calloc(last/2, sizeof(double));
+  h       = calloc(last-1, sizeof(double));
+  
+  makeh(tauIV, h, last);
 
-  //if (res < 0){
-  //if (fabs(w-1844.59) <= 0.005){
-  //  double res2 = integ_trapz(tauIV, tauInteg, last-1);
-  //  transitprint(1,2, "Trapezoidal integration: %.10e\n", res2);
-  //  transitprint(1, 2, "\nI(w=%.10g) = %.10g\n", w, res);
-  //  for (i=0; i<last; i++)
-  //    transitprint(1, 2, "  tau: %.10e   int:%.10g\n", tauIV[i], tauInteg[i]);
-  //}
+  geth(h, hsum, hratio, hfactor, last);
+
+  res = simps(tauInteg, h, hsum, hratio, hfactor, last);
+
   return res/cos(angle);
 }
 

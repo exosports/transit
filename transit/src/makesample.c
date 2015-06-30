@@ -796,6 +796,161 @@ inline double * splinterp(long N,
 	return yout;
 }
 
+/* Access to i-th value of array a:                                         */
+/* FINDME: put this elswhere                                                */
+
+#define INDd(a,i) *((double *)(a + i))
+
+/*
+"Calculate the differentials for a Simpson-rule integration.
+                                                            
+Parameters:                                                 
+-----------                                                 
+h: 1D double ndarray                                        
+   Intervals between the X-axis samples.                    
+                                                            
+Returns:                                                    
+--------                                                    
+hsum: 1D double ndarray                                     
+   Sums of interval pairs.                                  
+hratio: 1D double ndarray                                   
+   Ratio of consecutive intervals.                          
+hfactor: 1D double ndarray                                  
+   Factor interval.                                         
+                                                            
+Notes:                                                      
+------                                                      
+- If there are even samples, skip the first interval.       
+- hsum    = [h0+h1, h2+h3, h4+h5, ...]                      
+- hratio  = [h1/h0, h3/h2, h5/h4, ...]                      
+- hfactor = [hsum0*hsum0/h0*h1, hsum1*hsum1/h2*h3, ...]     
+" */
+
+inline void 
+*geth(double *h, double *hsum, double *hratio, double *hfactor, int n){
+  int size;            /* Size of output array                              */
+  int i, j, even=0;    /* Auxilliary for-loop indices                       */
+
+  /* Empty array case:                                                      */
+  if (n==0){
+    hsum    = 0;
+    hratio  = 0;
+    hfactor = 0;
+    return;
+  }
+    
+  /* Check for even number of samples (odd number of intervals):            */
+  even = n%2;
+  /* Calculate size of h arrays                                             */ 
+  size = n/2;
+
+  if(even)
+    even = 0;
+  else 
+    even = 1;
+
+  /* Calculate hsum, hratio, hfactor                                        */
+  for (i=0; i<size; i++){
+    j = 2*i + even;
+    INDd(hsum,   i) = INDd(h,(j  )) + INDd(h,(j+1));
+    INDd(hratio, i) = INDd(h,(j+1)) / INDd(h,(j  ));
+    INDd(hfactor,i) = INDd(hsum,i)*INDd(hsum,i) / (INDd(h,(j))*INDd(h,(j+1)));
+  }
+}
+
+
+/*
+"Wrapper for Simpson-rule integration.
+                                                              
+Parameters:                                                   
+-----------                                                   
+y: 1D double ndarray                                          
+   Function to integrate.                                     
+h: 1D double ndarray                                          
+   Intervals between function evaluations.                    
+hsum: 1D double ndarray                                       
+   Sums of interval pairs.                                    
+hratio: 1D double ndarray                                     
+   Ratio of consecutive intervals.                            
+hfactor: 1D double ndarray                                    
+   Factor interval.                                           
+                                                              
+Returns:                                                      
+--------                                                      
+integ: Float                                                  
+   Integral of y over intervals h using the Simpson rule.     
+                                                              
+Notes:                                                        
+------                                                        
+- If there are even samples, use a trapezoidal integration for
+  the first interval.                                         
+- See geth for formula for hsum, hratio, and hfactor");
+*/
+
+inline double 
+simps(double *y, double *h, double *hsum, double *hratio, double *hfactor, int n){
+  int even;
+  double integ=0;
+  even = n%2 == 0;
+
+  /* Simple case, nothing to integrate:                                     */ 
+  if (n == 1)
+    return 0.0;
+  /* Simple case, do a trapezoidal integration:                             */
+  if (n == 2)
+    return INDd(h,0) * (INDd(y,0) + INDd(y,1))/2;
+
+  /* Do Simpson integration (skip first if even):                           */
+  integ = simpson(y, hsum, hratio, hfactor, n);
+
+  /* Add trapezoidal rule for first interval if n is even:                  */
+  if (even){
+    integ += INDd(h,0) * (INDd(y,0) + INDd(y,1))/2;
+  }
+
+  return integ;
+}
+
+/* \fcnfh DEF
+   Make a spacing array for integration                                     */
+inline void
+makeh(double *x, double *h, int n){
+  int i;
+
+  /* Calculate spacing between each point                                   */
+  for(i=0;i<n-1;i++){
+    INDd(h,i) = INDd(x, i+1) - INDd(x, i);
+  }
+}
+
+/* \fcnfh DEF
+   Perform Simpson integration calculation                                  */
+inline double
+simpson(double *y,         /* Values of function to integrate        */
+        double *hsum,      /* See simpson.c's geth function          */
+        double *hratio,    /* See simpson.c's geth function          */
+        double *hfactor,   /* See simpson.c's geth function          */
+        int n){            /* Number of elements in y                */
+
+  /* Do the final sum for the Simpson integration algorithm.  Based on 
+     the Python implementation:
+     github.com/scipy/scipy/blob/v0.15.1/scipy/integrate/quadrature.py      */
+
+  int i=0,           /* for-loop index                                      */
+      j;             /* Array index for each interval                       */
+  double res = 0.0;  /* The results                                         */
+
+  /* Add contribution from each interval:                                   */
+  for (i=0; i < (n-1)/2; i++){
+    /* Skip first value of y if there's an even number of samples:          */
+    j = 2*i + (n%2==0);
+    res += (INDd(y, (j  )) * (2.0 - INDd(hratio, i))     +
+            INDd(y, (j+1)) * INDd(hfactor, i)            +
+            INDd(y, (j+2)) * (2.0 - 1.0/INDd(hratio, i)) ) * INDd(hsum,i);
+  }
+
+  return res/6.0;
+}
 
 /* \fcnfh  DEF
    Print sample info for a structure                                        */
