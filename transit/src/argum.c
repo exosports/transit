@@ -146,6 +146,7 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_RRADIUS,
     CLA_GSURF,
     CLA_OPABREAK,
+    CLA_OPASHARE,
     CLA_NDOP,
     CLA_NLOR,
     CLA_DMIN,
@@ -327,6 +328,8 @@ processparameters(int argc,            /* Number of command-line args  */
      "Temperature sample spacing (in kelvin)."},
     {"justOpacity",      CLA_OPABREAK,  no_argument, NULL, NULL,
      "If set, End execution after the opacity-grid calculation."},
+    {"shareOpacity",      CLA_OPASHARE,  no_argument, NULL, NULL,
+     "If set, attempt to place the opacity grid into shared memory."},
 
     /* Resulting ray options:                 */
     {NULL,        0,            HELPTITLE,         NULL, NULL,
@@ -535,6 +538,9 @@ processparameters(int argc,            /* Number of command-line args  */
       break;
     case CLA_OPABREAK: /* Bool: End after opacity calculation               */
       hints->opabreak = 1;
+      break;
+    case CLA_OPASHARE: /* Bool: Place opacity grid in shared memory         */
+      hints->opashare = 1;
       break;
 
     /* Radius parameters:                                                   */
@@ -800,6 +806,9 @@ acceptgenhints(struct transit *tr){
 
   /* Pass flag to break after the opacity-grid calculation:                 */
   tr->opabreak = th->opabreak;
+
+  /* Pass flag to place opacity grid in shared memory:                      */
+  tr->opashare = th->opashare;
 
   /* Set interpolation function flag:                                       */
   switch(tr->fl & TRU_SAMPBITS){

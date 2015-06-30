@@ -134,4 +134,10 @@
 #define TERR_ALLOC        0x000040
 #define TERR_DBG          0x000080
 
+/* Shared memory flags: */
+#define TSHM_START        0x000000 /* Default state     */
+#define TSHM_INIT         0x000001 /* Space initialized */
+#define TSHM_WRITTEN      0x000002 /* Space written     */
+#define TSHM_ERROR        0x000004 /* Error             */
+
 #endif /* _FLAGS_TR_H */
