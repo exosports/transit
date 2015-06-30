@@ -17,5 +17,13 @@ extern int restsample P_((FILE *in, prop_samp *samp));
 extern int restsample_arr P_((FILE *in, prop_samp *samp));
 extern int outsample P_((struct transit *tr));
 extern void freemem_samp P_((prop_samp *samp));
+extern inline double * tri P_((double *a, double *d, double *c, double *b,
+                               double *e, long n));
+extern inline double * spline3 P_((double *xi, double *yi, double *x, 
+                                   double *z,  double *h,  double *y,
+                                   long nx, long N));
+extern inline double * splinterp P_((long N, double *xi, double *yi, long nx, 
+                                     double *xout, double *yout));
+
 
 #undef P_

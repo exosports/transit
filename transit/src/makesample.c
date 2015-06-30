@@ -539,18 +539,11 @@ makeradsample(struct transit *tr){
   atmt->p  = (PREC_ATM *)calloc(nrad, sizeof(PREC_ATM));
   atmt->mm = (double   *)calloc(nrad, sizeof(double));
 
-  resamplex(flag, rsamp->n, rsamp->v, nrad, rad->v);
   /* Interpolate the atm. temperature, pressure, and mean molecular mass:   */
-  resampley(flag, 3, atms->atm.t, atmt->t,
-                     atms->atm.p, atmt->p,
-                     atms->mm,    atmt->mm);
+  atmt->t  = splinterp(rsamp->n, rsamp->v, atms->atm.t, nrad, rad->v, atmt->t);
+  atmt->p  = splinterp(rsamp->n, rsamp->v, atms->atm.p, nrad, rad->v, atmt->p);
+  atmt->mm = splinterp(rsamp->n, rsamp->v, atms->mm,    nrad, rad->v, atmt->mm);
 
-  /* Interpolate molecular density and abundance:                           */
-  for(i=0; i<nmol; i++)
-    resampley(flag, 2, atms->molec[i].d, molec[i].d,
-                       atms->molec[i].q, molec[i].q);
-  resample_free();
- 
   /* Temperature boundary check:                                            */
   for (i=0; i<nrad; i++){
     if (atmt->t[i] < li->tmin)
@@ -562,21 +555,27 @@ makeradsample(struct transit *tr){
                    "a higher temperature (%.1f K) than the highest allowed "
                    "TLI temperature (%.1f K).\n", i, atmt->t[i], li->tmax);
   }
+
+  /* Interpolate molecular density and abundance:                           */
+  for(i=0; i<nmol; i++){
+    molec[i].d = splinterp(rsamp->n, rsamp->v, atms->molec[i].d,
+                           nrad,     rad->v,   molec[i].d);
+    molec[i].q = splinterp(rsamp->n, rsamp->v, atms->molec[i].q,
+                           nrad,     rad->v,   molec[i].q);
+  }
+ 
   /* Interpolate isotopic partition function and cross section:             */
   for(i=0; i<ndb; i++){       /* For each database separately:              */
     iso1db = iso->db[i].s;    /* Index of first isotope in current DB       */
     isovs  = li->isov + iso1db;
-
-    resamplex(flag, li->db[i].t, li->db[i].T, nrad, atmt->t);
     for(j=0; j < iso->db[i].i; j++){
       transitASSERT(iso1db + j > niso-1,
                     "Trying to reference an isotope (%i) outside the extended "
                     "limit (%i).\n", iso1db+j, niso-1);
-      resampley(flag, 1, isovs[j].z, iso->isov[iso1db+j].z);
+      iso->isov[iso1db+j].z = splinterp(li->db[i].t, li->db[i].T, isovs[j].z,
+                                        nrad, atmt->t, iso->isov[iso1db+j].z);
     }
   }
-  resample_free();
-
   /* Set progress indicator and return:                                     */
   if(res>=0)
     tr->pi |= TRPI_MAKERAD;
@@ -664,6 +663,137 @@ maketempsample(struct transit *tr){
   if (res >= 0)
     tr->pi |= TRPI_MAKETEMP;
   return res;
+}
+
+
+inline double * tri(double *a,
+	     double *d,
+	     double *c,
+             double *b,
+	     double *e,
+	     long n){
+	int i;
+	int j;
+	double xmult;
+
+	for (i=1; i<=n; i++){
+		xmult = a[i-1]/d[i-1];
+		d[i] = d[i] - xmult*c[i-1];
+		b[i] = b[i] - xmult*b[i-1];
+	}
+
+	e[n-1] = b[n-1]/d[n-1];
+
+	for (j = n; j >= 1; j--){
+		e[j] = (b[j-1]-c[j-1]*e[j+1])/d[j-1];
+	}
+	
+	e[0] = 0;
+	e[n+1] = 0;
+
+	return e;
+}
+
+inline double * spline3(double *xi,
+		 double *yi,
+		 double *x,
+		 double *z,
+		 double *h,
+		 double *y,
+		 long nx,
+		 long N){
+
+	int i, j, n;
+	double dx;
+	double amult, bmult, cmult;
+	
+	y[0] = yi[0];
+	for (n=0; n<=nx; n++){
+		for (i=0; i<N-1; i++){
+			if (xi[i] <= x[n]){
+				j = i;
+			}
+		}
+		amult = (z[j+1] - z[j])/(6*h[j]);
+		bmult = z[j]/2;
+		cmult = (yi[j+1] - yi[j])/h[j] -h[j]/6 * (z[j+1] + 2 * z[j]);
+		dx = x[n] - xi[j];
+		y[n] = yi[j] + dx*cmult + dx*dx*bmult + dx*dx*dx*amult;
+	}
+        
+	return y;
+}
+
+inline double * splinterp(long N,
+                   double *xi,
+		   double *yi,
+		   long nx,
+                   double *xout,
+		   double *yout){
+
+	double *b;
+	double *h;
+	double *k;
+	double *a;
+	double *d;
+	double *z;
+	double *c;
+	double *y;
+	int n;
+
+	int i;
+
+	
+	/* Account for the endpoints. The code is written to calculate nx 
+           points not including the final endpoint. This line makes it so
+           the return has the desired number of values                    */
+	nx -= 1;
+
+	b  = calloc(N,    sizeof(double));
+	h  = calloc(N,    sizeof(double));
+	k  = calloc(N,    sizeof(double));
+	a  = calloc(N,    sizeof(double));
+	d  = calloc(N,    sizeof(double));
+	z  = calloc(N+1,  sizeof(double));
+	c  = calloc(N,    sizeof(double));
+	y  = calloc(nx+1, sizeof(double));
+
+	b[0] = (yi[1] - yi[0]) / (xi[1] - xi[0]);
+ 
+	for (i=0; i<=N-2; i++){
+		b[i+1] = -b[i] + 2*(yi[i+1] - yi[i]) / (xi[i+1] - xi[i]);
+	}
+
+	N -= 1;
+
+	for (i=0; i<=N-1; i++){
+		h[i] = xi[i+1] - xi[i];
+	}
+
+	for (i=0; i<=N-2; i++){
+	  k[i] = 6*( (yi[i+2] - yi[i+1])/h[i+1] - (yi[i+1] - yi[i])/h[i] );
+	}
+
+	for (i=0; i<=N-2; i++){
+		a[i] = h[i+1];
+	}
+
+	for (i=0; i<=N-2; i++){
+		d[i] = 2*(h[i] + h[i+1]);
+	}
+
+	N += 1;
+
+	c = a;
+
+	double *e;
+	e = calloc(N, sizeof(double));
+
+	z = tri(a, d, c, k, e, N-2);
+
+	yout = spline3(xi, yi, xout, z, h, y, nx, N);
+
+	return yout;
 }
 
 

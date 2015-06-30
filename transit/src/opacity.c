@@ -378,14 +378,13 @@ calcopacity(struct transit *tr,
   for(i=0; i<iso->n_db; i++){  /* For each database separately:             */
     iso1db = iso->db[i].s;     /* Index of first isotope in current DB      */
 
-    resamplex(flag, li->db[i].t, li->db[i].T, Ntemp, op->temp);
     for(j=0; j < iso->db[i].i; j++){
       transitASSERT(iso1db + j > iso->n_i-1, "Trying to reference an isotope "
              "(%i) outside the extended limit (%i).\n", iso1db+j, iso->n_i-1);
-      resampley(flag, 1, li->isov[iso1db+j].z, op->ziso[iso1db+j]);
+      splinterp(li->db[i].t, li->db[i].T, li->isov[iso1db+j].z, Ntemp, op->temp, op->ziso[iso1db+j]);
     }
   }
-  resample_free();
+  //resample_free();
 
   /* Get pressure array from transit (save in CGS units):                   */
   Nlayer = op->Nlayer = tr->rads.n;
