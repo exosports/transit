@@ -632,8 +632,8 @@ detailout(prop_samp *wn,         /* transit's wavenumber array              */
 
 
 /* FUNCTION
-   Print (to file or stdout) the impact parameter where the optical depth
-   reached toomuch (for each wavenumber)                                    */
+   Print (to file or stdout) for each wavelength the maximum optical depth
+   calculated, the radius of such optical depth, and the index of the layer */
 void
 printtoomuch(char *file,            /* Filename to save the info            */
              struct optdepth *tau,  /* Tau information                      */
@@ -654,11 +654,14 @@ printtoomuch(char *file,            /* Filename to save the info            */
                    "optical depth got larger than %g.\n", file, tau->toomuch);
 
   /* Print header:                                                          */
-  fprintf(out, "# Wavelenght (um)  Radius at max. calculated depth (km)\n");
+  fprintf(out,
+    "# Wavelength   Max Optical   Radius at the    Radius\n"
+    "   (microns)         depth   max depth (km)    index\n");
   /* Print the wavenumber and radius:                                       */
   for(w=0; w < wn->n; w++)
-    fprintf(out, "%14.7f     %12.3f\n", 1.0/wn->v[w]*wn->fct*1e4,
-                                        rad->v[tau->last[w]]*rad->fct/1e5);
+    fprintf(out, "%12.7f   %.5e     %12.4f     %04d\n",
+                 1.0/wn->v[w]*wn->fct*1e4, tau->t[w][tau->last[w]],
+                 rad->v[tau->last[w]]*rad->fct/1e5,  tau->last[w]);
   fclose(out);
 }
 
