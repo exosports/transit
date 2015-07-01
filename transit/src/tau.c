@@ -658,7 +658,7 @@ printtoomuch(char *file,            /* Filename to save the info            */
     "   (microns)         depth   max depth (km)    index\n");
   /* Print the wavenumber and radius:                                       */
   for(w=0; w < wn->n; w++)
-    fprintf(out, "%12.7f   %.5e     %12.4f     %04d\n",
+    fprintf(out, "%12.7f   %.5e     %12.4f     %04ld\n",
                  1.0/wn->v[w]*wn->fct*1e4, tau->t[w][tau->last[w]],
                  rad->v[tau->last[w]]*rad->fct/1e5,  tau->last[w]);
   fclose(out);

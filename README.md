@@ -44,7 +44,7 @@ cd $topdir/transit/pu/
 make  
 cd $topdir/transit/transit/  
 make  
-cd $topdir/transit/pylineread/ctips/
+cd $topdir/transit/pylineread/src/ctips/
 make  
 ```
 
