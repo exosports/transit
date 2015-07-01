@@ -2,8 +2,9 @@
 # ID          HITRAN molecule ID               --
 # Molecule    Molecule name                    --
 # Iso         Isotope ID                       AFGL code
-# gi          State-independent stat. weight   Shimeckova et al. (2006)
-# Iso ratio   Isotopic ratio                   Shimeckova et al. (2006)
+# gi          State-independent stat. weight   Simeckova et al. (2006),
+#                                              TIPS code.
+# Iso ratio   Isotopic ratio                   Simeckova et al. (2006).
 # Iso mass    Isotopic mass (amu)              Lide (2008) Handbook of chem.
 
 # ID Molecule Iso        gi         Iso ratio    Iso mass
@@ -49,7 +50,7 @@
  8   NO        46         3         9.940e-01    29.99798862
  8   NO        56         2         3.654e-03    30.99502352
  8   NO        48         3         1.993e-03    32.00223500
- 9   SO2      626         0         9.457e-01    63.96190024
+ 9   SO2      626         1         9.457e-01    63.96190024
  9   SO2      646         1         4.195e-02    65.95769614
 10   NO2      646         3         9.916e-01    45.99290324
 11   NH3     4111         3         9.959e-01    17.02549
@@ -95,7 +96,7 @@
 26   C2H2    1231         8         2.197e-02    27.019005
 26   C2H2    1222         6         3.046e-04    27.021927
 27   C2H6    1221         1         9.770e-01    30.04695019                  
-27   C2H6    1231         0         2.195e-02    31.05030503
+27   C2H6    1231         1         2.195e-02    31.05030503
 28   PH3     1111         2         9.995e-01    33.99723673
 29   COF2     269         1         9.865e-01    65.99172106
 29   COF2     369         0         1.108e-02    66.99507589
@@ -113,8 +114,8 @@
 37   HOBr     161         8         4.919e-01    97.91903025
 38   C2H4     221         1         9.773e-01    29.03465497
 38   C2H4     231         2         2.196e-02    28.03130013
-39   CH3OH   2161         0         9.859e-01    32.02621475
-40   CH3Br    219         0         5.010e-01    93.94181219
-40   CH3Br    211         0         4.874e-01    95.93976569
-41   CH3CN   2124         0         9.739e-01    41.02654910
-42   CF4       29         0         9.889e-01    87.99361288
+39   CH3OH   2161         1         9.859e-01    32.02621475
+40   CH3Br    219         4         5.010e-01    93.94181219
+40   CH3Br    211         4         4.874e-01    95.93976569
+41   CH3CN   2124         3         9.739e-01    41.02654910
+42   CF4       29         1         9.889e-01    87.99361288
