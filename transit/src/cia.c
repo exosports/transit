@@ -366,7 +366,7 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
                    long nx1,     /* Size of x1             */
                    double *x2,   /* Source second array    */
                    long nx2,     /* Size of x2             */
-                   double *t1,   /* Requested fisrt array  */
+                   double *t1,   /* Requested first array  */
                    long nt1,     /* Size of t1             */
                    double *t2,   /* Requested second array */
                    long nt2){    /* Size of t2             */
@@ -376,6 +376,8 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
   long lj=nt2, fj=0;
   long li=nt1, fi=0;
 
+  double *xout;
+  double *yout;
 #ifndef _USE_GSL
 #error We cannot spline interpolate without GSL to obtain CIA opacities
 #endif
@@ -407,24 +409,38 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
   gsl_interp_accel *acc;
   gsl_interp       *spl;
 
+
+  /*
   for(i=0; i<nx1; i++){
-    acc = gsl_interp_accel_alloc();
-    spl = gsl_interp_alloc(gsl_interp_cspline, nx2);
-    gsl_interp_init(spl, x2, src[i], nx2);
-    for(j=fj; j<lj; j++)
-      f2[j][i] = gsl_interp_eval(spl, x2, src[i], t2[j], acc);
-    gsl_interp_free(spl);
-    gsl_interp_accel_free(acc);
+    res[i] = splinterp(nx2, x1, src[i], nt2, t1, res[i]);
+  }
+  */
+  for(i=0; i<nx1; i++){
+    for(j=fj; j<lj; j++){
+      xout    = calloc(1,sizeof(double));
+      xout[0] = t2[j];
+
+      yout    = calloc(1,sizeof(double));
+      yout[0] = f2[j][i];
+
+      f2[j][i] = splinterp(nx2, x2, src[i], nt2, xout, yout)[0];
+      free(xout);
+      free(yout);
+    }
   }
 
   for(j=fj; j<lj; j++){
-    acc = gsl_interp_accel_alloc();
-    spl = gsl_interp_alloc(gsl_interp_cspline, nx1);
-    gsl_interp_init(spl, x1, f2[j], nx1);
-    for(i=fi; i<li; i++)
-      res[i][j] += gsl_interp_eval(spl, x1, f2[j], t1[i], acc);
-    gsl_interp_free(spl);
-    gsl_interp_accel_free(acc);
+    for(i=fi; i<li; i++){
+      xout    = calloc(1,sizeof(double));
+      xout[0] = t1[i];
+
+      yout    = calloc(1,sizeof(double));
+      yout[0] = res[j][i];
+
+      res[i][j] += splinterp(nx1, x1, f2[j], nt2, xout, yout)[0];
+      free(xout);
+      free(yout);
+    }
   }
 
   free(f2[0]);
