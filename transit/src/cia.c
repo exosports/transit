@@ -405,17 +405,9 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
   f2[0]       = (double  *)malloc(nt2*nx1*sizeof(double  ));
   for(i=1; i<nt2; i++)
     f2[i] = f2[0] + i*nx1;
-  gsl_interp_accel *acc;
-  gsl_interp       *spl;
 
-
-  /*
-  for(i=0; i<nx1; i++){
-    res[i] = splinterp(nx2, x1, src[i], nt2, t1, res[i]);
-  }
-  */
-  for(i=0; i<nx1; i++){
-    for(j=fj; j<lj; j++){
+  for(j=fj; j<lj; j++){
+    for(i=0; i<nx1; i++){
       xout    = calloc(1,sizeof(double));
       xout[0] = t2[j];
 
@@ -428,8 +420,8 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
     }
   }
 
-  for(j=fj; j<lj; j++){
-    for(i=fi; i<li; i++){
+  for(i=fi; i<li; i++){
+    for(j=fj; j<lj; j++){
       xout    = calloc(1,sizeof(double));
       xout[0] = t1[i];
 
