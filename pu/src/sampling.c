@@ -439,7 +439,7 @@ interp(double refx,   /* Reference x point     */
 
    @returns the interpolated y-value
  */
-inline double
+double
 lineinterp(double refx,                /* Reference x point */
            double *x,                /* x-axis */
            double *y,                /* y-axis */
