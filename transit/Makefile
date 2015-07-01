@@ -70,7 +70,7 @@ INCL        = ./include/
 #CPUOPTION  = -mtune=pentium3
 INLINEFLAGS = -fgnu89-inline  #necessary for 'extern inlines' of GSL
 EXTPRM      = $(INLINEFLAGS) -DTRANSIT #-O1 #-static
-WARNFLAGS   = -Wall -Winline
+WARNFLAGS   = -Wall -Winline -Wno-unused-result
 GSLPRM      = -D_USE_GSL
 GSLLIB      = -lgsl -lblas
 #-W -Werror

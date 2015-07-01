@@ -55,7 +55,7 @@ Thank you for using transit!
 
 /* FUNCTION: Wrapper to calculate a Voigt profile
    Return: 1/2 of the number of points in the profile                       */
-inline int
+int
 getprofile(PREC_VOIGT **pr,  /* Pointer to 1D profile                       */
            PREC_RES dwn,     /* wavenumber spacing                          */
            PREC_VOIGT dop,   /* Doppler width                               */
@@ -657,7 +657,7 @@ interpolmolext(struct transit *tr, /* transit struct                        */
 /* \fcnfh
    Compute scatering contribution to extinction
 */
-inline void
+void
 computeextscat(double *e, 
                long n, 
                struct extscat *sc,
@@ -676,7 +676,7 @@ computeextscat(double *e,
 /* \fcnfh
    Compute cloud contribution to extinction
 */
-inline void
+void
 computeextcloud(double *e, 
                long n,
                struct extcloud *cl,

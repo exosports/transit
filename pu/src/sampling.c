@@ -63,7 +63,7 @@ Thank you for using transit!
 
    Return: 0 on success
           -1 if any of the arrays has zero elements               */
-inline int
+int
 resample(const short getingx, /* Axis flag: 0:y, 1:x,  2:free arrays      */
          long flags,          /* Flags */
          long nrefx,          /* Number of points in the reference x-axis */
@@ -439,7 +439,7 @@ interp(double refx,   /* Reference x point     */
 
    @returns the interpolated y-value
  */
-inline double
+double
 lineinterp(double refx,                /* Reference x point */
            double *x,                /* x-axis */
            double *y,                /* y-axis */

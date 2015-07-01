@@ -140,7 +140,7 @@ binsearchei(double *arr,  /* Array of length of at least 'f'              */
   binsearch() defaults to an inclusive, exclusive search
 
   Return: output from binsearchie                          */
-inline int 
+int 
 binsearch(double *arr,  /* Array to search in              */ 
           long i,       /* Index of first element to check */
           long f,       /* Index of final element to check */
@@ -155,7 +155,7 @@ binsearch(double *arr,  /* Array to search in              */
 
    @returns value of the integration
 */
-inline double
+double
 integ_trasim(double dx,
              double *y,
              long n)
@@ -199,7 +199,7 @@ integ_trasim(double dx,
   return res*dx/3.0+restrap;
 }
 
-double inline
+double
 integ_trapz(double *x, /* Independent variable                              */
             double *y, /* Function to integrate                             */
             long n){   /* Number of data points                             */
@@ -226,7 +226,7 @@ integ_trapz(double *x, /* Independent variable                              */
 
    @returns value interpolated
 */
-inline double
+double
 interp_parab(double *x,   /* x-array with at least 3 equispaced elements */
              double *y,   /* y-array with at least 3 elements            */
              double xr){  /* requested x-value to interpolate            */
@@ -248,7 +248,7 @@ interp_parab(double *x,   /* x-array with at least 3 equispaced elements */
 
    @returns value interpolated
 */
-inline double
+double
 interp_line(double *x,                /* x-array with at least 2 elements */
             double *y,                /* y-array with at least 2 elements */
             double xr)                /* requested x-value to interpolate */
@@ -334,7 +334,7 @@ fixedcmp(double d1,
 
 
 /* Downsample an array by a integer factor of points */
-inline int
+int
 downsample(double *input, /* Input array                           */
            double *out,   /* Output array                          */
            int n,         /* Number of elements in th einput array */

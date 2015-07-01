@@ -416,7 +416,7 @@ voigtn2(int m,              /* Number of fine resolution bins (deviation
 /*\fcnfh
   Compute Voigt profile on equispaced 1D grid.
   Return: 1 on success                                                      */
-inline int
+int
 voigtn(int nwn,            /* Number of wavenumber sample of the profile    */
        PREC_VOIGTP dwn,    /* Wavenumber half-width sample                  */
        PREC_VOIGTP alphaL, /* Lorentz width                                 */
