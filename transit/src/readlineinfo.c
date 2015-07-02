@@ -178,6 +178,9 @@ readtli_bin(FILE *fp,
   iso->isof     = (prop_isof    *)calloc(1,   sizeof(prop_isof));
   li->isov      = (prop_isov    *)calloc(1,   sizeof(prop_isov));
   iso->isoratio = (double       *)calloc(1,   sizeof(double));
+  /* Min and max allowed temperatures in TLI files:                         */
+  li->tmin      = -1.0;
+  li->tmax      = 10000.0;
 
   /* Read info for each database:                                           */
   for(i=0; i<ndb; i++){
@@ -209,6 +212,8 @@ readtli_bin(FILE *fp,
     fread(T, sizeof(double), nT, fp);
     transitprint(3, verblevel, "  Temperatures: [%6.1f, %6.1f, ..., %6.1f]\n",
                                T[0], T[1], T[nT-1]);
+    li->tmin = fmax(li->tmin, T[   0]);
+    li->tmax = fmin(li->tmax, T[nT-1]);
 
     /* Reallocate memory to account for new isotopes:                       */
     li->isov  = (prop_isov  *)realloc(li->isov,
@@ -236,7 +241,7 @@ readtli_bin(FILE *fp,
     for (j=0; j<nDBiso; j++){
       /* Store isotopes'  DB index number:                                  */
       iso->isof[correliso].d = i;
-      transitprint(10, verblevel, "  Correlative isotope number: %d", correliso);
+      transitprint(10, verblevel,"  Correlative isotope number: %d", correliso);
 
       /* Read isotopes' name:                                               */
       fread(&rs, sizeof(unsigned short), 1, fp);

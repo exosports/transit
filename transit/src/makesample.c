@@ -551,6 +551,17 @@ makeradsample(struct transit *tr){
                        atms->molec[i].q, molec[i].q);
   resample_free();
  
+  /* Temperature boundary check:                                            */
+  for (i=0; i<nrad; i++){
+    if (atmt->t[i] < li->tmin)
+      transiterror(TERR_SERIOUS, "The layer %d in the atmospheric model has "
+                   "a lower temperature (%.1f K) than the lowest allowed "
+                   "TLI temperature (%.1f K).\n", i, atmt->t[i], li->tmin);
+    if (atmt->t[i] > li->tmax)
+      transiterror(TERR_SERIOUS, "The layer %d in the atmospheric model has "
+                   "a higher temperature (%.1f K) than the highest allowed "
+                   "TLI temperature (%.1f K).\n", i, atmt->t[i], li->tmax);
+  }
   /* Interpolate isotopic partition function and cross section:             */
   for(i=0; i<ndb; i++){       /* For each database separately:              */
     iso1db = iso->db[i].s;    /* Index of first isotope in current DB       */

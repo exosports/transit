@@ -142,6 +142,7 @@ struct lineinfo{             /* Line information parameters:                */
   int ndb;                   /* Number of databases                         */
   prop_isov *isov;           /* Variable isotope information (w/temp) [iso] */
   prop_dbnoext *db;          /* Temperature info from databases [DB]        */
+  double tmin, tmax;         /* Min and max allowed TLI temperatures        */
   PREC_NREC n_l;             /* Number of lines in database                 */
 };
 

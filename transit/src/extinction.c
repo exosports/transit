@@ -247,11 +247,8 @@ extwn(struct transit *tr){
     ex->e[i] = ex->e[0] + i*nwn;
   }
 
-  /* Has the extinction been computed at given radius boolean: */
+  /* Has the extinction been computed at given radius boolean:              */
   ex->computed = (_Bool *)calloc(nrad, sizeof(_Bool));
-
-  /* For each radius (index 'r'):                                           */
-  transitprint(1, verblevel, "\nThere are %d radii samples.\n", nrad);
 
   /* Set progress indicator, and print and output extinction if one P,T
      was desired, otherwise return success:                                 */
