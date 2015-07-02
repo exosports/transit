@@ -301,14 +301,15 @@ struct detailout{
 
 
 struct cia{
-  int nfiles;       /* Number of CIA files                                  */
-  PREC_CIA **e;     /* Extinction from all CIA sources [wn][temp]           */
-  PREC_CIA ***cia;  /* Tabulated CIA extinction      [nfiles][nwave][ntemp] */
-  PREC_CIA **wn;    /* Tabulated wavenumber  arrays  [nfiles][nwave]        */
-  PREC_CIA **temp;  /* Tabulated temperature arrays  [nfiles][ntemp]        */
-  int *nwave;       /* Number of wavenumber samples  [nfiles]               */
-  int *ntemp;       /* Number of temperature samples [nfiles]               */
-  int *mol1, *mol2; /* Pairs of molecule's ID        [nfiles]               */
+  int nfiles;         /* Number of CIA files                                */
+  PREC_CIA **e;       /* Extinction from all CIA sources [wn][temp]         */
+  PREC_CIA ***cia;    /* Tabulated CIA extinction    [nfiles][nwave][ntemp] */
+  PREC_CIA **wn;      /* Tabulated wavenumber  arrays  [nfiles][nwave]      */
+  PREC_CIA **temp;    /* Tabulated temperature arrays  [nfiles][ntemp]      */
+  int *nwave;         /* Number of wavenumber samples  [nfiles]             */
+  int *ntemp;         /* Number of temperature samples [nfiles]             */
+  int *mol1, *mol2;   /* Pairs of molecule's ID        [nfiles]             */
+  double tmin, tmax;  /* CIAs minimum and maximum temperatures              */
 };
 
 

@@ -71,7 +71,7 @@ readcia(struct transit *tr){
   long nt = 0, wa;       /* Number of temperature, wn samples in CIA file   */
   char rc;               
   char *lp, *lpa;        /* Pointers in file                                */
-  int maxline=300, n;    /* Max length of line. Counter                     */
+  int maxline=300, n=0;  /* Max length of line. Counter                     */
   long lines;            /* Lines read counter                              */
   long i;                /* Auxiliary for indices                           */
   char line[maxline+1];  /* Array to hold line being read                   */
@@ -108,8 +108,11 @@ readcia(struct transit *tr){
   st_cia.cia  = (PREC_CIA ***)calloc(npairs, sizeof(PREC_CIA **));
   st_cia.temp = (PREC_CIA  **)calloc(npairs, sizeof(PREC_CIA  *));
   st_cia.wn   = (PREC_CIA  **)calloc(npairs, sizeof(PREC_CIA  *));
+  /* Min and max allowed temperatures in CIA files:                         */
+  st_cia.tmin = -1.0;      /* (will update later as we read CIA files)      */
+  st_cia.tmax = 100000.0;
 
-  for(p=0; p < npairs; p++){
+  for (p=0; p < npairs; p++){
     /* Copy file names from hint:                                           */
     file = xstrdup(tr->ds.th->ciafile[p]);
 
@@ -199,6 +202,9 @@ readcia(struct transit *tr){
       }
       break;
     }
+    /* Set tmin and tmax:                                                   */
+    st_cia.tmin = fmax(st_cia.tmin, st_cia.temp[p][  0]);
+    st_cia.tmax = fmin(st_cia.tmax, st_cia.temp[p][n-1]);
 
     /* Set an initial value for allocated wavenumber fields:                */
     wa = 32;
@@ -304,8 +310,18 @@ interpolatecia(struct transit *tr){
     e[i] = e[0] + i*tr->rads.n;
 
   /* Get transit temperatures and wavenumber arrays:                        */
-  for(i=0; i<tr->rads.n; i++)
+  for(i=0; i<tr->rads.n; i++){
     tmpt[i] = atm->tfct * atm->t[i];
+    /* Check for temperature boundaries:                                    */
+    if (tmpt[i] < cia->tmin)
+      transiterror(TERR_SERIOUS, "The layer %d in the atmospheric model has "
+                   "a lower temperature (%.1f K) than the lowest allowed "
+                   "CIA temperature (%.1f K).\n", i, tmpt[i], cia->tmin);
+    if (tmpt[i] > cia->tmax)
+      transiterror(TERR_SERIOUS, "The layer %d in the atmospheric model has "
+                   "a higher temperature (%.1f K) than the highest allowed "
+                   "CIA temperature (%.1f K).\n", i, tmpt[i], cia->tmax);
+  }
   for(i=0; i<tr->wns.n; i++)
     tmpw[i] = tr->wns.fct * tr->wns.v[i];
 
