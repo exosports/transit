@@ -200,6 +200,15 @@ calcopacity(struct transit *tr,
   op->temp = (PREC_RES *)calloc(Ntemp, sizeof(PREC_RES));
   for (i=0; i<Ntemp; i++)
     op->temp[i] = tr->temp.v[i];
+  /* Temperature boundaries check:                                          */
+  if (op->temp[0] < li->tmin)
+    transiterror(TERR_SERIOUS, "The opacity file attempted to sample a "
+                 "temperature (%.1f K) below the lowest allowed "
+                 "TLI temperature (%.1f K).\n", op->temp[0], li->tmin);
+  if (op->temp[Ntemp-1] > li->tmax)
+    transiterror(TERR_SERIOUS, "The opacity file attempted to sample a "
+                 "temperature (%.1f K) beyond the highest allowed "
+                 "TLI temperature (%.1f K).\n", op->temp[Ntemp-1], li->tmax);
   transitprint(1, verblevel, "There are %li temperature samples.\n", Ntemp);
 
   /* Evaluate the partition at these temperatures:                          */

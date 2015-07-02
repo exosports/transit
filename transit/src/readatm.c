@@ -51,18 +51,8 @@ USA
 Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
-/* List of functions:
-int    getatm(struct transit *tr) 
-
-double checkaddmm(double *mm, PREC_NREC r, prop_mol *molec,
-                  struct molecules *mol, int n, _Bool mass)
-void   telldefaults(struct isotopes *iso, struct atm_data *at)
-int    freemem_atmosphere(struct atm_data *at, long *pi)                    */
-
 #include <readatm.h>
-
 #define ROUNDTHRESH 1e-5
-
 static double zerorad=0;
 
 char *atmfilename;
@@ -705,6 +695,11 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
   for (i=0; i<nmol; i++){
     /* Set the radius:                                                      */
     j = findstring(mol->name[i], rname, ndatamol);
+    if (j == -1){
+      transiterror(TERR_SERIOUS, "The atmospheric species '%s' is not "
+                   "present in the list of known species:\n '%s'.\n",
+                    mol->name[i], filename);
+    }
     mol->radius[i] = radius[j] * ANGSTROM;
     /* Set the universal molecular ID:                                      */
     mol->ID[i]     = molID[j];

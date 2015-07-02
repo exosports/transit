@@ -19,8 +19,10 @@ alt=""border="10" /></a>
 * Jasmina Blecic (UCF)
 * Joe Harrington (UCF)
 * Patricio Rojo (U. de Chile)
+* Andrew J. Foster (UCF)
 * Madison Stemm (UCF)
-* Andrew Foster (UCF)
+* Ryan Challener (UCF)
+* Andrew S. D. Foster (UCF)
 
 ### Getting Started:
 Get the Transit user's manual [here](doc/transitUM.pdf).
@@ -35,7 +37,7 @@ topdir=`pwd`
 
 Clone the repository to your working directory:  
 ```shell
-git clone --recursive https://github.com/pcubillos/transit transit/
+git clone --recursive https://github.com/exosports/transit transit/
 ```
 
 Compile the pu and transit programs (in that order), as well as the pylineread TIPS code:  

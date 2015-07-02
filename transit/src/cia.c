@@ -12,7 +12,7 @@ the same name written by Patricio Rojo (Univ. de Chile, Santiago) when
 he was a graduate student at Cornell University under Joseph
 Harrington.
 
-Copyright (C) 2014 University of Central Florida.  All rights reserved.
+Copyright (C) 2015 University of Central Florida.  All rights reserved.
 
 This is a test version only, and may not be redistributed to any third
 party.  Please refer such requests to us.  This program is distributed
@@ -51,31 +51,6 @@ USA
 Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
-
-/* List of functions defined in cia.c:
-
-int interpolatecia(struct transit *tr)
-    Get number of CIA files from hint. Allocate tr.ds.cia variables.
-    Open files, read isotope names and sampled temperatures.
-    Read tabulated data (wavenumber x temperatures)
-    Interpolate values from tabulated sample to transit sample.
-    Get density arrays of the isotopes from transit.
-    Calculate absorption coefficients in cm-1.
-
-int bicubicinterpolate(double **res, double **src,
-                       double *x1, long nx1, double *x2, long nx2, 
-                       double *t1, long nt1, double *t2, long nt2)
-    Interpolates 'src' into 'res' according to the new dimensions, first
-    interpolates the second dimension and then the first. The result is
-    added to 'res'.
-
-void ciaerr(int max, char *name, int line)
-    Error printing function for lines longer than maxline in the CIA file.
-
-int freemem_cia(struct cia *cia, long *pi)
-    Free cia structure 
-*/
-
 #include <transit.h>
 
 /* \fcnfh
@@ -92,14 +67,14 @@ readcia(struct transit *tr){
   static struct cia st_cia;  /* CIA structure                               */
   tr->ds.cia = &st_cia;
   int npairs = tr->ds.cia->nfiles = tr->ds.th->ncia; /* Number of CIA files */
-  int p;                /* Auxiliary wavenumber index                       */
-  long nt = 0, wa;      /* Number of temperature, wn samples in CIA file    */
-  char rc;
-  char *lp, *lpa;       /* Pointers in file                                 */
-  int maxline=300, n;   /* Max length of line. Counter                      */
-  long lines;           /* Lines read counter                               */
-  long i;               /* Auxiliary for indices                            */
-  char line[maxline+1]; /* Array to hold line being read                    */
+  int p;                 /* Auxiliary wavenumber index                      */
+  long nt = 0, wa;       /* Number of temperature, wn samples in CIA file   */
+  char rc;               
+  char *lp, *lpa;        /* Pointers in file                                */
+  int maxline=300, n=0;  /* Max length of line. Counter                     */
+  long lines;            /* Lines read counter                              */
+  long i;                /* Auxiliary for indices                           */
+  char line[maxline+1];  /* Array to hold line being read                   */
   struct molecules *mol=tr->ds.mol;
 
   /* Make sure that radius and wavenumber samples exist:                    */
@@ -133,8 +108,11 @@ readcia(struct transit *tr){
   st_cia.cia  = (PREC_CIA ***)calloc(npairs, sizeof(PREC_CIA **));
   st_cia.temp = (PREC_CIA  **)calloc(npairs, sizeof(PREC_CIA  *));
   st_cia.wn   = (PREC_CIA  **)calloc(npairs, sizeof(PREC_CIA  *));
+  /* Min and max allowed temperatures in CIA files:                         */
+  st_cia.tmin = -1.0;      /* (will update later as we read CIA files)      */
+  st_cia.tmax = 100000.0;
 
-  for(p=0; p < npairs; p++){
+  for (p=0; p < npairs; p++){
     /* Copy file names from hint:                                           */
     file = xstrdup(tr->ds.th->ciafile[p]);
 
@@ -193,8 +171,8 @@ readcia(struct transit *tr){
       case 't': /* Read the sampling temperatures array:                    */
         while(isblank(*++lp));
         nt = st_cia.ntemp[p] = countfields(lp, ' '); /* Number of temps.    */
-        transitprint(10, verblevel, "  Number of temperature samples: %ld\n",
-                                    nt);
+        transitprint(5, verblevel, "  Number of temperature samples: %ld\n",
+                                   nt);
         if(!nt)
           transiterror(TERR_SERIOUS, "Wrong line %i in CIA file '%s', if it "
                        "begins with a 't' then it should have the "
@@ -224,6 +202,9 @@ readcia(struct transit *tr){
       }
       break;
     }
+    /* Set tmin and tmax:                                                   */
+    st_cia.tmin = fmax(st_cia.tmin, st_cia.temp[p][  0]);
+    st_cia.tmax = fmin(st_cia.tmax, st_cia.temp[p][n-1]);
 
     /* Set an initial value for allocated wavenumber fields:                */
     wa = 32;
@@ -283,10 +264,19 @@ readcia(struct transit *tr){
       for(i=1; i<n; i++)
         a[i] = a[0] + i*nt;
     }
-    transitprint(10, verblevel, "  Number of wavenumber samples: %d\n", n);
-    transitprint(20, verblevel, "  Wavenumber array (cm-1) = [%.1f, %.1f, "
+    transitprint(5, verblevel, "  Number of wavenumber samples: %d\n", n);
+    transitprint(5, verblevel, "  Wavenumber array (cm-1) = [%.1f, %.1f, "
          "%.1f, ..., %.1f, %.1f, %.1f]\n", st_cia.wn[p][0],   st_cia.wn[p][1],
       st_cia.wn[p][2], st_cia.wn[p][n-3], st_cia.wn[p][n-2], st_cia.wn[p][n-1]);
+    /* Wavenumber boundaries check:                                         */
+    if ((st_cia.wn[p][  0] > tr->wns.v[          0]) ||
+        (st_cia.wn[p][n-1] < tr->wns.v[tr->wns.n-1]) ){
+      transiterror(TERR_SERIOUS, "The wavelength range [%.2f, %.2f] cm-1 of "
+                   "the CIA file:\n  '%s',\ndoes not cover Transit's "
+                   "wavelength range [%.2f, %.2f] cm-1.\n", file,
+                   st_cia.wn[p][0], st_cia.wn[p][n-1],
+                   tr->wns.v[0],    tr->wns.v[tr->wns.n-1]);
+    }
     st_cia.cia[p] = a;
     st_cia.nwave[p] = n;
     fclose(fp);
@@ -320,8 +310,18 @@ interpolatecia(struct transit *tr){
     e[i] = e[0] + i*tr->rads.n;
 
   /* Get transit temperatures and wavenumber arrays:                        */
-  for(i=0; i<tr->rads.n; i++)
+  for(i=0; i<tr->rads.n; i++){
     tmpt[i] = atm->tfct * atm->t[i];
+    /* Check for temperature boundaries:                                    */
+    if (tmpt[i] < cia->tmin)
+      transiterror(TERR_SERIOUS, "The layer %d in the atmospheric model has "
+                   "a lower temperature (%.1f K) than the lowest allowed "
+                   "CIA temperature (%.1f K).\n", i, tmpt[i], cia->tmin);
+    if (tmpt[i] > cia->tmax)
+      transiterror(TERR_SERIOUS, "The layer %d in the atmospheric model has "
+                   "a higher temperature (%.1f K) than the highest allowed "
+                   "CIA temperature (%.1f K).\n", i, tmpt[i], cia->tmax);
+  }
   for(i=0; i<tr->wns.n; i++)
     tmpw[i] = tr->wns.fct * tr->wns.v[i];
 
@@ -337,7 +337,6 @@ interpolatecia(struct transit *tr){
 
     /* Calculate absorption coefficients in cm-1 units:                     */
     for(i=0; i < tr->rads.n; i++){
-      //amagat2 = densiso1[i]*densiso2[i]/RHOSTP/RHOSTP;
       amagat2 = densiso1[i]*densiso2[i]/(AMU*mol->mass[cia->mol1[n]] * AMAGAT *
                                          AMU*mol->mass[cia->mol2[n]] * AMAGAT);
       for(j=0; j < tr->wns.n; j++)
