@@ -35,7 +35,7 @@ topdir=`pwd`
 
 Clone the repository to your working directory:  
 ```shell
-git clone --recursive https://github.com/pcubillos/transit transit/
+git clone --recursive https://github.com/exosports/transit transit/
 ```
 
 Compile the pu and transit programs (in that order), as well as the pylineread TIPS code:  
