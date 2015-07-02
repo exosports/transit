@@ -12,7 +12,7 @@ the same name written by Patricio Rojo (Univ. de Chile, Santiago) when
 he was a graduate student at Cornell University under Joseph
 Harrington.
 
-Copyright (C) 2014 University of Central Florida.  All rights reserved.
+Copyright (C) 2015 University of Central Florida.  All rights reserved.
 
 This is a test version only, and may not be redistributed to any third
 party.  Please refer such requests to us.  This program is distributed
@@ -51,31 +51,6 @@ USA
 Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
-
-/* List of functions defined in cia.c:
-
-int interpolatecia(struct transit *tr)
-    Get number of CIA files from hint. Allocate tr.ds.cia variables.
-    Open files, read isotope names and sampled temperatures.
-    Read tabulated data (wavenumber x temperatures)
-    Interpolate values from tabulated sample to transit sample.
-    Get density arrays of the isotopes from transit.
-    Calculate absorption coefficients in cm-1.
-
-int bicubicinterpolate(double **res, double **src,
-                       double *x1, long nx1, double *x2, long nx2, 
-                       double *t1, long nt1, double *t2, long nt2)
-    Interpolates 'src' into 'res' according to the new dimensions, first
-    interpolates the second dimension and then the first. The result is
-    added to 'res'.
-
-void ciaerr(int max, char *name, int line)
-    Error printing function for lines longer than maxline in the CIA file.
-
-int freemem_cia(struct cia *cia, long *pi)
-    Free cia structure 
-*/
-
 #include <transit.h>
 
 /* \fcnfh
@@ -92,14 +67,14 @@ readcia(struct transit *tr){
   static struct cia st_cia;  /* CIA structure                               */
   tr->ds.cia = &st_cia;
   int npairs = tr->ds.cia->nfiles = tr->ds.th->ncia; /* Number of CIA files */
-  int p;                /* Auxiliary wavenumber index                       */
-  long nt = 0, wa;      /* Number of temperature, wn samples in CIA file    */
-  char rc;
-  char *lp, *lpa;       /* Pointers in file                                 */
-  int maxline=300, n;   /* Max length of line. Counter                      */
-  long lines;           /* Lines read counter                               */
-  long i;               /* Auxiliary for indices                            */
-  char line[maxline+1]; /* Array to hold line being read                    */
+  int p;                 /* Auxiliary wavenumber index                      */
+  long nt = 0, wa;       /* Number of temperature, wn samples in CIA file   */
+  char rc;               
+  char *lp, *lpa;        /* Pointers in file                                */
+  int maxline=300, n;    /* Max length of line. Counter                     */
+  long lines;            /* Lines read counter                              */
+  long i;                /* Auxiliary for indices                           */
+  char line[maxline+1];  /* Array to hold line being read                   */
   struct molecules *mol=tr->ds.mol;
 
   /* Make sure that radius and wavenumber samples exist:                    */
@@ -346,7 +321,6 @@ interpolatecia(struct transit *tr){
 
     /* Calculate absorption coefficients in cm-1 units:                     */
     for(i=0; i < tr->rads.n; i++){
-      //amagat2 = densiso1[i]*densiso2[i]/RHOSTP/RHOSTP;
       amagat2 = densiso1[i]*densiso2[i]/(AMU*mol->mass[cia->mol1[n]] * AMAGAT *
                                          AMU*mol->mass[cia->mol2[n]] * AMAGAT);
       for(j=0; j < tr->wns.n; j++)
