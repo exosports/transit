@@ -19,8 +19,10 @@ alt=""border="10" /></a>
 * Jasmina Blecic (UCF)
 * Joe Harrington (UCF)
 * Patricio Rojo (U. de Chile)
+* Andrew J. Foster (UCF)
 * Madison Stemm (UCF)
-* Andrew Foster (UCF)
+* Ryan Challener (UCF)
+* Andrew S. D. Foster (UCF)
 
 ### Getting Started:
 Get the Transit user's manual [here](doc/transitUM.pdf).
