@@ -193,8 +193,8 @@ readcia(struct transit *tr){
       case 't': /* Read the sampling temperatures array:                    */
         while(isblank(*++lp));
         nt = st_cia.ntemp[p] = countfields(lp, ' '); /* Number of temps.    */
-        transitprint(10, verblevel, "  Number of temperature samples: %ld\n",
-                                    nt);
+        transitprint(5, verblevel, "  Number of temperature samples: %ld\n",
+                                   nt);
         if(!nt)
           transiterror(TERR_SERIOUS, "Wrong line %i in CIA file '%s', if it "
                        "begins with a 't' then it should have the "
@@ -283,10 +283,19 @@ readcia(struct transit *tr){
       for(i=1; i<n; i++)
         a[i] = a[0] + i*nt;
     }
-    transitprint(10, verblevel, "  Number of wavenumber samples: %d\n", n);
-    transitprint(20, verblevel, "  Wavenumber array (cm-1) = [%.1f, %.1f, "
+    transitprint(5, verblevel, "  Number of wavenumber samples: %d\n", n);
+    transitprint(5, verblevel, "  Wavenumber array (cm-1) = [%.1f, %.1f, "
          "%.1f, ..., %.1f, %.1f, %.1f]\n", st_cia.wn[p][0],   st_cia.wn[p][1],
       st_cia.wn[p][2], st_cia.wn[p][n-3], st_cia.wn[p][n-2], st_cia.wn[p][n-1]);
+    /* Wavenumber boundaries check:                                         */
+    if ((st_cia.wn[p][  0] > tr->wns.v[          0]) ||
+        (st_cia.wn[p][n-1] < tr->wns.v[tr->wns.n-1]) ){
+      transiterror(TERR_SERIOUS, "The wavelength range [%.2f, %.2f] cm-1 of "
+                   "the CIA file:\n  '%s',\ndoes not cover Transit's "
+                   "wavelength range [%.2f, %.2f] cm-1.\n", file,
+                   st_cia.wn[p][0], st_cia.wn[p][n-1],
+                   tr->wns.v[0],    tr->wns.v[tr->wns.n-1]);
+    }
     st_cia.cia[p] = a;
     st_cia.nwave[p] = n;
     fclose(fp);
