@@ -19,7 +19,7 @@ alt=""border="10" /></a>
 * Jasmina Blecic (UCF)
 * Joe Harrington (UCF)
 * Patricio Rojo (U. de Chile)
-* Andrew J. Foster (UCF)
+* [Austin J. Foster](http://aj-foster.com) (UCF)
 * Madison Stemm (UCF)
 * Ryan Challener (UCF)
 * Andrew S. D. Foster (UCF)
