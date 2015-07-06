@@ -372,8 +372,8 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
   long i, j; /* Auxiliary for indices        */
   /* First and last values of source arrays: */
   double fx1=x1[0], fx2=x2[0], lx1=x1[nx1-1], lx2=x2[nx2-1];
-  long lj=nt2, fj=0;
-  long li=nt1, fi=0;
+  long lj=nt2, fj=0; /* Indices which mark index edges of 2nd dimension */
+  long li=nt1, fi=0; /* Indices which mark index edges of 1st dimension */
 
 #ifndef _USE_GSL
 #error We cannot spline interpolate without GSL to obtain CIA opacities
@@ -383,7 +383,7 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
   if(t1[0]>lx1 || t1[nt1-1]<fx1 || t2[0]>lx2 || t2[nt2-1]<fx2)
     return 0;
 
-  /* Find indices where requested array values are within source boundaries
+  /* Find indices where requested array values are within source boundaries.
      (i.e., do not extrapolate):                                            */
   while(t1[fi++]<fx1);
   fi--;
@@ -399,32 +399,32 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
     if(t2[j]>lx2)
       lj = j;
 
+  /* Arrays created by spline_init to be used in interpolation calculation */
   double *z1;
   double *z2;
   z1 = calloc(nx2, sizeof(double));
   z2 = calloc(nx1, sizeof(double));
 
+  /* Temporary middle array to hold data that has been interpolated in one 
+     direction                                                              */
   double **f2 = (double **)malloc(nt2    *sizeof(double *));
   f2[0]       = (double  *)malloc(nt2*nx1*sizeof(double  ));
   for(i=1; i<nt2; i++)
     f2[i] = f2[0] + i*nx1;
-  transitprint(1,2,"nx1: %i, nx2: %i \n", nx1, nx2);
-  transitprint(1,2,"fj: %li, lj: %li \n", fj, lj);
-  transitprint(1,2,"fi: %li, li: %li \n", fi, li);
+
+  /* Interpolate the 2nd dimension                                          */
   for(i=0; i<nx1; i++){
     z1 = spline_init(z1, x2, src[i], nx2);
-    for(j=0;j<nt2;j++){
-      //for(j=fj; j<lj; j++){
+    for(j=fj; j<lj; j++){
       f2[j][i] = splinterp_pt(z1, nx2, x2, src[i], t2[j], f2[j][i]);
     }
   }
-  for(j=0;j<nt2;j++){
-  //for(j=fj; j<lj; j++){
+
+  /* Interpolate the 1st dimension                                          */
+  for(j=fj; j<lj; j++){
     z2 = spline_init(z2, x1, f2[j], nx1);
-    for(i=0;i<nt1;i++){
-    //for(i=fi; i<li; i++){
+    for(i=fi; i<li; i++){
       res[i][j] += splinterp_pt(z2, nx1, x1, f2[j], t1[i], res[i][j]);
-      //transitprint(1,2,"Interpolation 2 (res[%li][%li]): %.20f \n", i,j,res[i][j]);
     }
   }
 

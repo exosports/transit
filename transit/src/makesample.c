@@ -864,12 +864,14 @@ double * spline_init(double *z, double *x, double *y, long N){
   double *d;
   double *b;
   double *h;
+  double *k;
   int i;
 
   a = calloc(N, sizeof(double));
   d = calloc(N, sizeof(double));
   b = calloc(N, sizeof(double));
   h = calloc(N-1, sizeof(double));
+  k = calloc(N-1, sizeof(double));
 
   for(i=0;i<N-1;i++)
     h[i] = x[i+1]-x[i];
@@ -885,7 +887,10 @@ double * spline_init(double *z, double *x, double *y, long N){
   for(i=0;i<N-2;i++)
     a[i] = h[i+1];
 
-  z = tri(a, d, a, b, z, N-2);
+  for(i=0;i<N-1;i++)
+    k[i] = 6*((y[i+2] - y[i+1])/h[i+1] - (y[i+1] - y[i])/h[i]);
+
+  z = tri(a, d, a, k, z, N-2);
 
   return z;
 }
