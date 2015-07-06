@@ -214,24 +214,40 @@ Thank you for using transit! \newline
 
 \subsection{System Requirements}
 
-Transit was developed on a Unix/Linux machine using Python 2.7.6,
-Numpy 1.8.2, and mpi4py 1.3.1.  \findme{Ask someone who knows about C
-  requirements.}
+At this time, {\transit} requires a Unix environment with several software
+dependencies:
 
-\indent -- Python. \\
-\indent -- \href{http://www.numpy.org/}{NumPy}. \\
-\indent -- \href{http://matplotlib.org/index.html}{matplotlib}. \\
-\indent -- \href{http://mpi4py.scipy.org/docs/usrman/install.html}{mpi4py}. \\
-\indent -- An MPI distribution (MPICH preferred). \\
-\indent -- A C compiler \findme{any preference?}. \\
-\indent -- GSL \findme{give specifics}.
+\begin{itemize} \itemsep0pt
+\item \textbf{Python} version 2.7. \emph{This code has not yet been tested with
+      Python 3.}
+\begin{itemize} \itemsep0pt
+  \item \textbf{NumPy} version 1.8.2+
+        (\href{http://www.numpy.org/}{project homepage})
+  \item \textbf{SciPy} version 0.13.3+
+        (\href{http://www.scipy.org/}{project homepage})
+  \item \textbf{matplotlib} version 1.3.1+
+        (\href{http://matplotlib.org/}{project homepage})
+  \item \textbf{mpi4py} version 1.3.1+
+        (\href{http://mpi4py.scipy.org/docs/usrman/install.html}{installation page})
+\end{itemize}
+\item \textbf{MPI} (MPICH preferred)
+\item \textbf{GCC/Make} or compatible build tools
+\item \textbf{GSL} \findme{give specifics}.
+\item \textbf{POSIX Shared Memory support} for use with the {\tt --shareOpacity}
+      flag \findme{link to shm docs}
+\end{itemize}
+
+For reference, {\transit} was developed on a Unix/Linux machine using Python
+2.7.6, Numpy 1.8.2, and mpi4py 1.3.1. We have not yet tested the code against
+earlier releases of the dependencies. If you find that it works with an earlier
+version, please let us know!
 
 \subsection{Install and Compile}
 \label{sec:compile}
 
 To obtain the {\transit} code download the latest stable version from
-the \href{https://github.com/pcubillos/transit/releases}
-{releases}\footnote{github.com/pcubillos/transit/releases} page.
+the \href{https://github.com/exosports/transit/releases}
+{releases}\footnote{github.com/exosports/transit/releases} page.
 Alternatively, clone the repository to your local machine with the
 following terminal commands.  First, create a working directory to
 place the code: \newline
@@ -241,7 +257,7 @@ place the code: \newline
 {\tttb cd tmp/transit\_demo} \\
 
 \noindent Clone the repository to your working directory: \newline
-{\tttb git clone https://github.com/pcubillos/transit transit} \\
+{\tttb git clone https://github.com/exosports/transit transit} \\
 
 \noindent Compile the {\tttm pu} and {\tttm transit} code (in this
 order): \newline
@@ -1548,7 +1564,7 @@ pu routines ({\tttm /transit/pu/src/}): \\
 Please cite these papers if you found this package useful for your
 research:
 \begin{itemize}
-\item \href{https://github.com/pcubillos/transit}{Cubillos et
+\item \href{https://github.com/exosports/transit}{Cubillos et
     al. (2015)} (in preparation).
 
 \item \href{https://github.com/dzesmin/}{Blecic et al. (2015)} (in

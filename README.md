@@ -3,7 +3,7 @@
 
 Transit calculates the transmission or emission spectrum of a planetary atmosphere with application to extrasolar-planet transit and eclipse observations, respectively. Transit computes the spectra by solving the one-dimensional line-by-line radiative-transfer equation for an atmospheric model.  
 
-<a href="https://www.youtube.com/watch?v=-GHBFHyeI14" target="_blank"><img src="https://github.com/pcubillos/transit/blob/master/doc/ScreenShot.jpg" 
+<a href="https://www.youtube.com/watch?v=-GHBFHyeI14" target="_blank"><img src="https://github.com/exosports/transit/blob/master/doc/ScreenShot.jpg" 
 alt=""border="10" /></a>
 
 ### Table of Contents:
