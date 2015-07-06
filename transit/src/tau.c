@@ -192,13 +192,9 @@ tau(struct transit *tr){
 
   /* Set cloud structure:                                                   */
   static struct extcloud cl;
-  cl.maxe = th->cl.maxe; /* Maximum opacity                                 */
-  cl.rini = th->cl.rini; /* Top layer radius                                */
-  cl.rfin = th->cl.rfin; /* Radius of maxe                                  */
-  if(th->cl.rfct == 0)
-    cl.rfct = rad->fct;
-  else
-    cl.rfct = th->cl.rfct;
+  cl.cloudext = th->cl.cloudext;  /* Maximum cloud extinction               */
+  cl.cloudtop = th->cl.cloudtop;  /* Top layer radius                       */
+  cl.cloudbot = th->cl.cloudbot;  /* Radius of maxe                         */
   tr->ds.cl = &cl;
 
   /* Has the extinction coefficient been calculated boolean:                */

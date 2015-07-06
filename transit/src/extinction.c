@@ -671,8 +671,7 @@ computeextscat(double *e,
 
 
 /* \fcnfh
-   Compute cloud contribution to extinction
-*/
+   Compute cloud contribution to extinction                                 */
 void
 computeextcloud(double *e, 
                long n,
@@ -682,37 +681,37 @@ computeextcloud(double *e,
                double tcft,
                double wn){
   long i;
-  double *r = rad->v;
-  double rfct = rad->fct;
-  double rini = cl->rini*cl->rfct;
-  double rfin = cl->rfin*cl->rfct;
+  double *radius  = rad->v,  /* Atmospheric-model layer's radius            */
+       rfct       = rad->fct,
+       extinction = cl->cloudext,
+       top        = cl->cloudtop * rfct,
+       bottom     = cl->cloudbot * rfct,
+       slope;
 
-  /* If there are no clouds, set array to zero: */
-  if(rini==0){
+  /* If there are no clouds, set array to zero:                             */
+  if(extinction == 0){
     memset(e, 0, n*sizeof(double));
     return;
   }
 
-  if(rad->d == 0)
-    transiterror(TERR_SERIOUS,
-                 "Radius needs to be equispaced for clouds prescription.\n");
-  double slp = cl->maxe / (rfin - rini);
+  /* Slope of extinction per altitude:                                      */
+  slope = extinction / (bottom - top);
 
-  /* Find radius index right below the cloud top layer: */
+  /* Find radius index right below the cloud top layer:                     */
   for(i=n-1; i>=0; i--){
-    if(r[i]*rfct <= rini)
+    if(radius[i]*rfct <= top)
       break;
-    e[i] = 0; /* Zero extinction in this range          */
+    e[i] = 0;  /* The extinction is zero above the cloud                    */
   }
 
-  /* Set cloud extinction between cloud top and maxe:   */
+  /* Set cloud extinction between cloud top and bottom:                     */
   for(; i>=0; i--){
-    if(r[i] * rfct <= rfin)
+    if(radius[i] * rfct <= bottom)
       break;
-    e[i] = slp * (r[i]*rfct - rini);
+    e[i] = slope * (radius[i]*rfct - top);
   }
 
-  /* Keep constant extinction maxe until the bottom:    */
+  /* Keep constant extinction until the bottom:                             */
   for(; i>=0; i--)
-      e[i] = cl->maxe;
+      e[i] = extinction;
 }

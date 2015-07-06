@@ -271,12 +271,10 @@ struct outputray{
 };
 
 struct extcloud{
-  double maxe;     /* Maximum opacity in [cm-1]                          */
-  double rini;     /* Radius at which clouds start                       */
-  double rfin;     /* Radius at which clouds has it maximum thickness
-                      'maxe'. rfin < rini                                */
-  double rfct;     /* Factor that will make the two radius values above
-                      into cgs                                           */
+  double cloudext;  /* Maximum opacity in [cm-1]                            */
+  double cloudtop;  /* Radius at which clouds start                         */
+  double cloudbot;  /* Radius at which clouds has it maximum extinction
+                      'cloudext'.                                           */
 };
 
 struct extscat{
