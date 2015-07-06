@@ -125,9 +125,7 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_TAULEVEL,
     CLA_MODLEVEL,
     CLA_ETHRESH,
-    CLA_CLOUDRAD,
-    CLA_CLOUDFCT,   /* FINDME: Delete?              */
-    CLA_CLOUDE,     /* FINDME: Stack with cloudrad? */
+    CLA_CLOUD,
     CLA_TRANSPARENT,
     CLA_DETEXT,
     CLA_DETCIA,
@@ -292,15 +290,12 @@ processparameters(int argc,            /* Number of command-line args  */
     {"ethreshold", CLA_ETHRESH,   required_argument, "1e-8",    "ethreshold",
      "Minimum extinction-coefficient ratio (w.r.t. maximum in a layer) to "
      "consider in the calculation."},
-    {"cloudrad",   CLA_CLOUDRAD,    required_argument, NULL, "radup,raddown",
-     "Make a cloud appear linearly from radup to raddown. Use '--cloudfct' "
-     "units; if not defined, use radfct."},
-    {"cloudfct",   CLA_CLOUDFCT,    required_argument, NULL,    "factor",
-     "Cloud radius values specified by '--cloudrad' will be multiplied by "
-     "this to convert to cgs units."},
-    {"cloudext",   CLA_CLOUDE,      required_argument, NULL,    "extinction",
-     "Maximum extinction of the cloud, which opacity will linearly increase "
-     "from 'radup' to 'raddown'."},
+    {"cloud",      CLA_CLOUD,      required_argument, NULL,
+     "cloudext,cloudtop,cloudbot",
+     "Gray-opacity layer with extinction linearly increasing from 0 at "
+     "cloudtop, up cloudext at cloudbot.  Then keep a constant extinction "
+     "until the bottom of the atmosphere.  cloudext has units of cm-1, "
+     "cloudtop and cloudbot units are given by radfct."},
     {"detailext",  CLA_DETEXT,      required_argument, NULL,
      "filename:wn1,wn2,...",
      "Save extinction at specified wavenumbers in filename."},
@@ -672,23 +667,22 @@ processparameters(int argc,            /* Number of command-line args  */
       hints->modlevel = atoi(optarg);
       break;
 
-    case CLA_CLOUDRAD:   /* Lower and higher limits of a cloud              */
-      hints->cl.rini = strtod(optarg, &optarg);
-      if(*optarg!=',' || optarg[1]=='\0')
+    case CLA_CLOUD:      /* Cloud arguments:                                */
+      hints->cl.cloudext = strtod(optarg, &optarg);
+      if(*optarg != ','  ||  optarg[1] == '\0')
         transiterror(TERR_SERIOUS, "Syntax error in option '--cloudrad', "
-                     "parameters need to be radup,raddown.\n");
-      hints->cl.rfin = strtod(optarg+1, NULL);
-      if(hints->cl.rini<hints->cl.rfin ||
-         (hints->cl.rfin<=0 && hints->cl.rini!=0))
-        transiterror(TERR_SERIOUS, "Syntax error in '--cloudrad', radup(%g) "
-                     "needs to be bigger than raddown (%g) and both greater "
-                     "than zero.\n", hints->cl.rini, hints->cl.rfin);
-      break;
-    case CLA_CLOUDFCT:       /* Cloud limits units factor                   */
-      hints->cl.rfct = atof(optarg);
-      break;
-    case CLA_CLOUDE:         /* Maximum cloud opacity                       */
-      hints->cl.maxe = atof(optarg);
+                "parameters need to be given as cloudext,cloudtop,cloudbot.\n");
+      hints->cl.cloudtop = strtod(optarg+1, &optarg);
+      if(*optarg != ','  ||  optarg[1] == '\0')
+        transiterror(TERR_SERIOUS, "Syntax error in option '--cloudrad', "
+                "parameters need to be given as cloudext,cloudtop,cloudbot.\n");
+      hints->cl.cloudbot = strtod(optarg+1, NULL);
+      /* Safety check that top > bottom:                                    */
+      if((hints->cl.cloudtop < hints->cl.cloudbot) ||
+         (hints->cl.cloudbot <= 0 && hints->cl.cloudtop != 0))
+        transiterror(TERR_SERIOUS, "Syntax error in '--cloud', the cloud top "
+                 "(%g) needs to be larger than the cloud bottom (%g) and both "
+                 "greater than 0.\n", hints->cl.cloudtop, hints->cl.cloudbot);
       break;
     case CLA_INTENS_GRID:    /* Intensity grid                              */
       hints->angles = xstrdup(optarg);

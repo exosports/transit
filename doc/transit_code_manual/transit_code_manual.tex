@@ -622,12 +622,10 @@ struct outputray{
 Cloud extinction information.
 \begin{plain}
 struct extcloud{
-  double maxe;     /* Maximum opacity in [cm-1]                          */
-  double rini;     /* Radius at which clouds start                       */
-  double rfin;     /* Radius at which clouds has it maximum thickness
-                      'maxe'. rfin < rini                                */
-  double rfct;     /* Factor that will make the two radius values above
-                      into cgs                                           */
+  double cloudext;     /* Maximum opacity in [cm-1]                          */
+  double cloudtop;     /* Radius at which clouds start                       */
+  double cloudbot;     /* Radius at which clouds has it maximum thickness
+                          'cloudext'.                                        */
 };
 \end{plain}
 
@@ -1271,9 +1269,7 @@ void freemem\_detailfld(struct detailfld *f)}
 \item[-] Set \ttred{tr.ds.th.toomuch} (maximum optical depth to make calculations, above which it is assumed no light transmits) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.taulevel} (optical depth integration level) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.modlevel} (modulation integration level) from command line arguments/config file.
-\item[-] Set \ttred{tr.ds.th.cl.rini, tr.ds.th.cl.rfin} (initial cloud radius and final cloud radius) from command line arguments/config file.
-\item[-] Set \ttred{tr.ds.th.cl.rfct} (cloud radius units factor) from command line arguments/config file.
-\item[-] Set \ttred{tr.ds.th.cl.maxe} (maximum cloud extinction) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.cl.cloudext, tr.ds.th.cl.cloudtop, tr.ds.th.cl.cloudbot} (maximum cloud extinction, initial cloud radius, and final cloud radius) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.angles} (intensity angles) from command line arguments/config file.
 \end{enumerate}
 
@@ -2920,9 +2916,8 @@ variable \ttred{tr.sol} in the function \ttblue{acceptgenhints} from
 \item[-] Copy \ttred{tr.save.ext} from {\tt th.save.ext} (extinction
   output filename).
 \item[-] Call to {\tt init\_optdepth} to initialize {\tt tr.tau}.
-\item[-] Set \ttred{tr.cl.maxe, tr.cl.rini, tr.cl.rfin, tr.cl.rfct}
-  (Cloud maximum opacity, top layer radius, layer radius of maxe, and
-  radius units factor).
+\item[-] Set \ttred{tr.cl.cloudext, tr.cl.cloudtop, tr.cl.cloudbottom}
+  (Cloud maximum opacity, top layer radius, layer radius of cloudext).
 \item[-] Call to {\tt computemolext} or {\tt interpolmolext} to calculate
   \ttred{tr.ds.ex.e} (extinction coefficient).
 \item[-] Call to {\tt eclipsetau} or {\tt transittau} to calculate
@@ -3300,8 +3295,8 @@ int freemem\_outputray(struct outputray *out, long *pi)}
 \textbf{computeextcloud:}
 \begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Set gray extinction increasing linearly from zero at a top
-  layer radius (\texttt{rini}) up to a maximum extinction
-  (\texttt{maxe}) at a given radius (\texttt{rfin}). From there, the
+  layer radius (\texttt{cloudtop}) up to a maximum extinction
+  (\texttt{cloudext}) at a given radius (\texttt{cloudbot}). From there, the
   lower layers have a constant extinction coefficient.  \newline
 \end{itemize}
 
