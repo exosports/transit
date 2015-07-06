@@ -40,17 +40,13 @@ Clone the repository to your working directory:
 git clone --recursive https://github.com/exosports/transit transit/
 ```
 
-Compile the pu and transit programs (in that order), as well as the pylineread TIPS code:  
+Compile the pu and transit programs, as well as the pylineread TIPS code:  
 ```shell
-cd $topdir/transit/pu/  
-make  
-cd $topdir/transit/transit/  
-make  
-cd $topdir/transit/pylineread/src/ctips/
-make  
+cd $topdir/transit/
+make
 ```
 
-To remove the program binaries, execute (from the respective directories):  
+To remove the program binaries, execute:  
 ```shell
 make clean
 ```
