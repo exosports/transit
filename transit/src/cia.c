@@ -375,8 +375,6 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
   long lj=nt2, fj=0;
   long li=nt1, fi=0;
 
-  double *xout;
-  double *yout;
 #ifndef _USE_GSL
 #error We cannot spline interpolate without GSL to obtain CIA opacities
 #endif
@@ -401,36 +399,32 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
     if(t2[j]>lx2)
       lj = j;
 
+  double *z1;
+  double *z2;
+  z1 = calloc(nx2, sizeof(double));
+  z2 = calloc(nx1, sizeof(double));
+
   double **f2 = (double **)malloc(nt2    *sizeof(double *));
   f2[0]       = (double  *)malloc(nt2*nx1*sizeof(double  ));
   for(i=1; i<nt2; i++)
     f2[i] = f2[0] + i*nx1;
-
-  for(j=fj; j<lj; j++){
-    for(i=0; i<nx1; i++){
-      xout    = calloc(1,sizeof(double));
-      xout[0] = t2[j];
-
-      yout    = calloc(1,sizeof(double));
-      yout[0] = f2[j][i];
-
-      f2[j][i] = splinterp(nx2, x2, src[i], nt2, xout, yout)[0];
-      free(xout);
-      free(yout);
+  transitprint(1,2,"nx1: %i, nx2: %i \n", nx1, nx2);
+  transitprint(1,2,"fj: %li, lj: %li \n", fj, lj);
+  transitprint(1,2,"fi: %li, li: %li \n", fi, li);
+  for(i=0; i<nx1; i++){
+    z1 = spline_init(z1, x2, src[i], nx2);
+    for(j=0;j<nt2;j++){
+      //for(j=fj; j<lj; j++){
+      f2[j][i] = splinterp_pt(z1, nx2, x2, src[i], t2[j], f2[j][i]);
     }
   }
-
-  for(i=fi; i<li; i++){
-    for(j=fj; j<lj; j++){
-      xout    = calloc(1,sizeof(double));
-      xout[0] = t1[i];
-
-      yout    = calloc(1,sizeof(double));
-      yout[0] = res[j][i];
-
-      res[i][j] += splinterp(nx1, x1, f2[j], nt2, xout, yout)[0];
-      free(xout);
-      free(yout);
+  for(j=0;j<nt2;j++){
+  //for(j=fj; j<lj; j++){
+    z2 = spline_init(z2, x1, f2[j], nx1);
+    for(i=0;i<nt1;i++){
+    //for(i=fi; i<li; i++){
+      res[i][j] += splinterp_pt(z2, nx1, x1, f2[j], t1[i], res[i][j]);
+      //transitprint(1,2,"Interpolation 2 (res[%li][%li]): %.20f \n", i,j,res[i][j]);
     }
   }
 

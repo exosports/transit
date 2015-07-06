@@ -563,7 +563,7 @@ makeradsample(struct transit *tr){
     molec[i].q = splinterp(rsamp->n, rsamp->v, atms->molec[i].q,
                            nrad,     rad->v,   molec[i].q);
   }
- 
+
   /* Interpolate isotopic partition function and cross section:             */
   for(i=0; i<ndb; i++){       /* For each database separately:              */
     iso1db = iso->db[i].s;    /* Index of first isotope in current DB       */
@@ -690,7 +690,6 @@ inline double * tri(double *a,
 	
 	e[0] = 0;
 	e[n+1] = 0;
-
 	return e;
 }
 
@@ -795,6 +794,102 @@ inline double * splinterp(long N,
 
 	return yout;
 }
+
+double splinterp_pt(double *z, long N, double *x, double *y, double xout, double yout){
+  int midindex;
+  
+  int index;
+
+  int first;
+  int last;
+
+  first = 0;
+  last  = N;
+
+  midindex = (first + last)/2;
+
+  while(first<=last){
+    if(x[midindex] < xout && x[midindex + 1] > xout){
+      index = midindex;
+      break;
+    }
+    else if(x[midindex] < xout){
+      first = midindex+1;
+      midindex = (first + last)/2;
+    }
+    else if(x[midindex] > xout){
+      last  = midindex-1;
+      midindex = (first + last)/2;
+    }
+    else{
+      index = midindex;
+      break;
+    }   
+  }
+
+  double x_hi, x_lo;
+  double y_hi, y_lo;
+
+  x_lo = x[index];
+  x_hi = x[index+1];
+  y_lo = y[index];
+  y_hi = y[index+1];
+
+  double h;
+  double dy;
+
+  h = x_hi - x_lo;
+  dy = y_hi - y_lo;
+
+  if(x[index] == xout)
+    yout = y[index];
+  else if(h > 0){
+    double dx;
+    double a,b,c;
+    dx = xout - x_lo;
+    a = (z[index+1] - z[index])/(6*h);
+    b = z[index]/2;
+    c = dy/h - h/6 * (z[index+1] + 2*z[index]);
+    yout = y_lo + dx*(c + dx*(b + dx*a));
+  }
+  else
+    yout = 0;
+
+
+  return yout;
+}
+
+double * spline_init(double *z, double *x, double *y, long N){
+  double *a;
+  double *d;
+  double *b;
+  double *h;
+  int i;
+
+  a = calloc(N, sizeof(double));
+  d = calloc(N, sizeof(double));
+  b = calloc(N, sizeof(double));
+  h = calloc(N-1, sizeof(double));
+
+  for(i=0;i<N-1;i++)
+    h[i] = x[i+1]-x[i];
+
+  b[0] = (y[1] - y[0]) / (x[1] - x[0]);
+
+  for(i=0;i<N-1;i++)
+    b[i+1] = -b[i] + 2*(y[i+1] - y[i]) / (x[i+1] - x[i]);
+
+  for(i=0;i<N-2;i++)
+    d[i] = 2*(h[i] + h[i+1]);
+
+  for(i=0;i<N-2;i++)
+    a[i] = h[i+1];
+
+  z = tri(a, d, a, b, z, N-2);
+
+  return z;
+}
+    
 
 /* Access to i-th value of array a:                                         */
 /* FINDME: put this elswhere                                                */
