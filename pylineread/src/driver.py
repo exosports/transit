@@ -119,6 +119,7 @@ class dbdriver(object):
     """
     # Wavelength of record:
     rec_wl = 0
+    irec   = 0
  
     # Start binary search:
     while ihi - ilo > 1:
