@@ -12,7 +12,7 @@
 # he was a graduate student at Cornell University under Joseph
 # Harrington.
 # 
-# Copyright (C) 2014 University of Central Florida.  All rights reserved.
+# Copyright (C) 2015 University of Central Florida.  All rights reserved.
 # 
 # This is a test version only, and may not be redistributed to any third
 # party.  Please refer such requests to us.  This program is distributed
@@ -85,7 +85,7 @@ class hitran(dbdriver):
     """
     super(hitran, self).__init__(dbfile, pffile)
 
-    self.recsize   = 162 # Record length
+    self.recsize   =   0 # Record length (will be set in self.dbread())
     self.recwnpos  =   3 # Wavenumber     position in record
     self.recisopos =   2 # Isotope        position in record
     self.reclinpos =  15 # Line intensity position in record
@@ -348,8 +348,13 @@ class hitran(dbdriver):
     2014-03-10  patricio  Adapted for pylineread.
     2014-07-06  patricio  Updated to return 1D arrays.
     """
-    # Get Total number of transitions in file:
+    # Open HITRAN file for reading:
     data = open(self.dbfile, "r")
+    # Read first line to get the record size:
+    data.seek(0)
+    line = data.readline()
+    self.recsize = len(line)
+    # Get Total number of transitions in file:
     data.seek(0, 2)
     nlines   = data.tell() / self.recsize
     # Get Molecule ID:
