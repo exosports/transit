@@ -111,7 +111,7 @@ long fw_status;
 #define transitassert(a, ...) if(a) transiterror(TERR_CRITICAL, __VA_ARGS__)
 
 #define transitprint(thislevel, verblevel, ...) do{                         \
-  if(thislevel <= verblevel)  fprintf(stderr, __VA_ARGS__); }while(0)
+  if(thislevel <= verblevel)  fprintf(stdout, __VA_ARGS__); }while(0)
 
 /* Add flag to transit if present in hint and change hint flag value:       */
 #define transitacceptflag(transit, hint, flag) do{                          \
