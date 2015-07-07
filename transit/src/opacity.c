@@ -370,7 +370,8 @@ calcopacity(struct transit *tr,
   op->ziso[0] = (PREC_ATM  *)calloc(iso->n_i*Ntemp, sizeof(PREC_ATM));
   for(i=1; i<iso->n_i; i++)
     op->ziso[i] = op->ziso[0] + i*Ntemp;
-
+  double *z;
+  int k;
   /* Set interpolation function flag:                                       */
   flag = tr->interpflag;
   flag = 1;  /* FINDME: Temporary hack                                      */
@@ -381,10 +382,15 @@ calcopacity(struct transit *tr,
     for(j=0; j < iso->db[i].i; j++){
       transitASSERT(iso1db + j > iso->n_i-1, "Trying to reference an isotope "
              "(%i) outside the extended limit (%i).\n", iso1db+j, iso->n_i-1);
-      splinterp(li->db[i].t, li->db[i].T, li->isov[iso1db+j].z, Ntemp, op->temp, op->ziso[iso1db+j]);
+
+      z = calloc(li->db[i].t, sizeof(double));
+      z = spline_init(z, li->db[i].T, li->isov[iso1db+j].z, li->db[i].t);
+      for(k=0;k<Ntemp;k++)
+        op->ziso[iso1db+j][k] = splinterp_pt(z, li->db[i].t, li->db[i].T, li->isov[iso1db+j].z, op->temp[k], op->ziso[iso1db+j][k]);
+
+      free(z);
     }
   }
-  //resample_free();
 
   /* Get pressure array from transit (save in CGS units):                   */
   Nlayer = op->Nlayer = tr->rads.n;
