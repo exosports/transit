@@ -33,7 +33,7 @@
 #define VOIGT_QUICK 0x00001   //Quick integration.
 extern int _voigt_maxelements;
 
-//function definition (proto_voigt.h)
+//function definition (voigt.h)
 #if __STDC__ || defined(__cplusplus)
 #define P_(s) s
 #else

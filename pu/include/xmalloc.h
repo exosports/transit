@@ -27,7 +27,7 @@
 #define calloc(n,s) xcalloc(n,s)
 //#define strdup(p) xstrdup(p)
 
-//functin definition (proto_xmalloc.h)
+//functin definition (xmalloc.h)
 #if __STDC__ || defined(__cplusplus)
 #define P_(s) s
 #else

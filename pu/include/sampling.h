@@ -21,7 +21,7 @@
           resample(2, 0, 0, NULL, 0, NULL, 0)
 
 
-//function definition (proto_sampling.h)
+//function definition (sampling.h)
 #if __STDC__ || defined(__cplusplus)
 #define P_(s) s
 #else

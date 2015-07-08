@@ -150,20 +150,33 @@ extern int revision;
 
 extern const ray_solution slantpath, eclipsepath;
 
+/* Transit Prototypes                                                       */
+#if __STDC__ || defined(__cplusplus)
+#define P_(s) s
+#else
+#define P_(s) ()
+#endif
+
+/* src/transit.c */
+/* FINDME: Main commented out to make MPI to work: */
+//extern int main P_((int argc, char **argv));
+extern void freemem_transit P_((struct transit *tr));
+
+#undef P_
+
 /***** Prototypes *****/
-#include <proto_transit.h>
-#include <proto_readlineinfo.h>
-#include <proto_readatm.h>
-#include <proto_transitstd.h>
-#include <proto_makesample.h>
-#include <proto_extinction.h>
-#include <proto_opacity.h>
-#include <proto_idxrefraction.h>
-#include <proto_tau.h>
-#include <proto_argum.h>
-#include <proto_geometry.h>
-#include <proto_observable.h>
-#include <proto_cia.h>
-#include <proto_eclipse.h>
+#include <readlineinfo.h>
+#include <readatm.h>
+#include <transitstd.h>
+#include <makesample.h>
+#include <extinction.h>
+#include <opacity.h>
+#include <idxrefraction.h>
+#include <tau.h>
+#include <argum.h>
+#include <geometry.h>
+#include <observable.h>
+#include <cia.h>
+#include <eclipse.h>
 
 #endif /* _TRANSIT_H */
