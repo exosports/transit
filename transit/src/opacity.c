@@ -206,15 +206,13 @@ opacity(struct transit *tr){
          processes have detached.                                           */
       struct shmid_ds buf1, buf2;
       shmctl(op.hintID, IPC_STAT, &buf1);
-      transitprint(1, verblevel, "STATING ALL OF THE THINGS.\n");
 
       do {
         shmctl(op.mainID, IPC_STAT, &buf2);
       }
       while (buf2.shm_nattch != buf1.shm_nattch);
 
-      transitprint(1, verblevel, "REMOVING ALL OF THE THINGS. 1: %d, 2: %d\n",
-        buf1.shm_nattch, buf2.shm_nattch);
+      transitprint(1, verblevel, "Marking shared memory for removal.\n");
       shmctl(op.hintID, IPC_RMID, &buf1);
       shmctl(op.mainID, IPC_RMID, &buf2);
 
@@ -582,7 +580,7 @@ shareopacity(struct transit *tr, /* transit struct                          */
     return 1;
 
   /* Read arrays:                                                           */
-  void *p = op->mainaddr;
+  char *p = op->mainaddr;
   fread(p, sizeof(int),      op->Nmol,   fp);
   p += sizeof(int) * op->Nmol;
   fread(p,  sizeof(PREC_RES), op->Ntemp,  fp);
@@ -652,14 +650,14 @@ mountopacity(struct transit *tr){ /* transit struct                         */
   struct opacity *op=tr->ds.op;   /* opacity struct                         */
   int i, t, r;  /* for-loop indices                                         */
 
-  void *p = op->mainaddr;
-  op->molID = p;
+  char *p = op->mainaddr;
+  op->molID = (int *) p;
   p += sizeof(int) * op->Nmol;
-  op->temp = p;
+  op->temp = (PREC_RES *) p;
   p += sizeof(PREC_RES) * op->Ntemp;
-  op->press = p;
+  op->press = (PREC_RES *) p;
   p += sizeof(PREC_RES) * op->Nlayer;
-  op->wns = p;
+  op->wns = (PREC_RES *) p;
   p += sizeof(PREC_RES) * op->Nwave;
 
   op->o      = (PREC_RES ****)       calloc(op->Nlayer, sizeof(PREC_RES ***));

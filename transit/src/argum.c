@@ -56,6 +56,9 @@ Thank you for using transit!
 /* Revision        April 26th,   2014 Jasmina Blecic
                    added new function for ray grid                         */
 
+/* Required for compilation with shared memory libraries.                   */
+#define _XOPEN_SOURCE 700
+
 #include <time.h>
 #include <transit.h>
 #include <version_tr.h>

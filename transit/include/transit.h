@@ -21,6 +21,9 @@
 /* Revision        March 19th,   2014 Jasmina Blecic
                    added eclipse ray solution                      */
 
+/* Required for compilation with shared memory libraries.                   */
+#define _XOPEN_SOURCE 700
+
 #ifndef _TRANSIT_H
 #define _TRANSIT_H
 
