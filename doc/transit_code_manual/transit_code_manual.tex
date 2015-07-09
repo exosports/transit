@@ -60,7 +60,7 @@ The \texttt{transit} program is structure-oriented. All the variables used by \t
 The functions of {\tt transit} are split into two chunks: initialization and calculation. The initialization functions set up the variables and structures that are needed to make the radiative transfer calculations. This includes parsing the configuration file, making sampling arrays, reading the input files (line transition information, collision-induced absorption), and creating the opacity grid. The calculation functions make the extinction and optical depth calculations, for both transit and eclipse geometry, and create the output files. Figure \ref{fig:codediagram} shows the function structure of {\tt transit}.
 
 \begin{figure}
-\includegraphics[trim={0 2.9in 0 0},clip]{fig/transit_diagram}
+\includegraphics{fig/transit_diagram}
 \label{fig:codediagram}
 \caption{{\tt transit} function structure. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom. For example, at the beginning, transit\_init calls processparameters, then transit\_init calls acceptgenhints, then acceptgenhints calls acceptsoltype, and so on. Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both. The shaded backgrounds indicate where each function can be found.}
 \end{figure}
@@ -72,8 +72,6 @@ This section lists all headers included in the {\tt transit} program. Those whic
 \label{sec:headers}
 transit.h: \\
 \indent Contains common headers for the \texttt{transit} program and defines some functions.\\
-extraext.h: \\
-\indent Contains function to compute extra extinction contributors (scattering and clouds).\\
 stdarg.h: \\
 \indent Allows functions to accept an indefinite number of arguments. \\
 math.h: \\
@@ -862,6 +860,7 @@ struct transit{
 };
 \end{plain}
 
+\newpage
 \section{List of Functions in the \texttt{transit} Files}
 \label{sec:functions}
 In this section we list all functions, sorted by source file, give a brief description of what they do, list all variables that they alter, and provide a walkthrough for each. A modified variable is written in \ttred{red}, a function is written in \ttblue{blue}, and an unmodified variable is written in {\tt typewriter}.
@@ -870,7 +869,7 @@ This file contains the main {\tt transit} driver functions. The \ttblue{main} fu
 
 \begin{figure}
 \includegraphics{fig/transitc}
-\caption{Function structure of transit.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom. Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both.}
+\caption{Function structure of transit.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom. Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, green functions are used in both, and red functions are unused at this time.}
 \label{fig:transitc}
 \end{figure}
 
@@ -1183,11 +1182,11 @@ double timecheck(int verblevel, long iter, long index, char *str, \\ struct time
 
 \newpage
 \subsection{argum.c:} 
-Functions in this file handle the creation and filling-out of the hint structure. The hinted values are taken from command-line arguments and/or a configuration file, and then the general hinted values are placed into the main transit structure. Figure \ref{fig:argumc} shows the function structure.
+Functions in this file handle the creation and filling-out of the hint structure. The hinted values are taken from command-line arguments and/or a configuration file, and then the general hinted values are placed into the main transit structure. \ttblue{savehint, resthint} are unused. Figure \ref{fig:argumc} shows the function structure.
 
 \begin{figure}
 \includegraphics{fig/argumc}
-\caption{Function structure of argum.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both.}
+\caption{Function structure of argum.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, green functions are used in both, and red functions are unused at this time.}
 \label{fig:argumc}
 \end{figure}
 \subsubsection{List of Functions Defined in argum.c:}
@@ -1440,11 +1439,11 @@ inline PREC\_RES starvariation(double x, double y, double radius)}
 
 \newpage
 \subsection{readlineinfo.c:}
-This file is concerned with reading TLI files produced by the {\tt pylineread} program. Only binary TLI files are accepted. Functions \ttblue{saveline, main} are not currently used in {\tt transit}.
+This file is concerned with reading TLI files produced by the {\tt pylineread} program. Only binary TLI files are accepted. Functions \ttblue{saveline, main} are not currently used in {\tt transit}. Figure \ref{fig:readlineinfoc} shows this function structure.
 
 \begin{figure}
 \includegraphics{fig/readlineinfoc}
-\caption{Function structure of readlineinfo.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both.}
+\caption{Function structure of readlineinfo.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, green functions are used in both, and red functions are unused at this time.}
 \label{fig:readlineinfoc}
 \end{figure}
 
@@ -1719,11 +1718,11 @@ int main(int argc, char **argv)}
 
 \newpage
 \subsection{readatm.c:}
-This file contains functions which read the atmospheric file. Figure \ref{fig:readatmc} shows the function structure.
+This file contains functions which read the atmospheric file. \ttblue{telldefaults} is currently unused. Figure \ref{fig:readatmc} shows the function structure.
 
 \begin{figure}
 \includegraphics{fig/readatmc}
-\caption{Function structure of readatm.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both.}
+\caption{Function structure of readatm.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, green functions are used in both, and red functions are unused at this time.}
 \label{fig:readatmc}
 \end{figure}
 
@@ -1961,8 +1960,7 @@ Recalculate radius array according to hydrostatic pressure, and find the radial 
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Call \ttblue{verbfileopen} from messagep.c to open the molecular info file if it exists.
 \item[-] Skip past all comments and blank lines.
-\item[-] Allocate arrays for alias names and molecules.
-\item[-] For each alias, call \ttblue{getname} and \ttblue{nextfield} from iomisc.c to read the aliases and molecule names from file.
+\item[-] Count the number of species
 \item[-] Allocate arrays for molecule ID, mass, names, and radii.
 \item[-] Skip past all comments and blank lines.
 \item[-] Read molecular info from file by calling \ttblue{getname} and \ttblue{nextfield} from iomisc.c. Place into the allocated arrays.
@@ -2012,11 +2010,11 @@ Recalculate radius array according to hydrostatic pressure, and find the radial 
 
 \newpage
 \subsection{makesample.c:}
-This file is concerned with producing sampling arrays for parameters including wavenumber, radius, temperature, and impact parameter. Sampling functions for each parameter call either \ttblue{makesample} or \ttblue{makesample1} to with the proper variables to create the sampling. Function structure is shown in Figure \ref{fig:makesamplec}.
+This file is concerned with producing sampling arrays for parameters including wavenumber, radius, temperature, and impact parameter. Sampling functions for each parameter call either \ttblue{makesample} or \ttblue{makesample1} to with the proper variables to create the sampling. Functions \ttblue{savesample, savesample\_arr, restsample, restsample\_arr} are unused. \ttblue{main} is only used for debugging. Function structure is shown in Figure \ref{fig:makesamplec}.
 
 \begin{figure}
 \includegraphics{fig/makesamplec}
-\caption{Function structure of makesample.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both.}
+\caption{Function structure of makesample.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, green functions are used in both, and red functions are unused at this time.}
 \label{fig:makesamplec}
 \end{figure}
 
@@ -2244,7 +2242,7 @@ atmospheric radius array (i.e., hint given). \newline
 \item[-] Allocate arrays for atmospheric temperature, pressure, and mean molecular mass.
 \item[-] Call \ttblue{resamplex} from sampling.c to interpolate the radius sampling.
 \item[-] Call \ttblue{resampley} from sampling.c to interpolate the atmospheric pressure, temperature, and mean molecular mass.
-\item[-] Call \ttblue{resample\_free} \findme{from where?} to free the resampling arrays.
+\item[-] Call \ttblue{resample\_free} from sampling.c to free the resampling arrays.
 \item[-] Loop over each database (species):
 \begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Call \ttblue{resamplex} from sampling.c to interpolate temperatures from the TLI file.
@@ -2253,7 +2251,7 @@ atmospheric radius array (i.e., hint given). \newline
 \item[-] Call \ttblue{resampley} from sampling.c to interpolate the partition function from the TLI file.
 \end{itemize}
 \end{itemize}
-\item[-] Call \ttblue{resample\_free} \findme{from where?} to free the resampling arrays.
+\item[-] Call \ttblue{resample\_free} from sampling.c to free the resampling arrays.
 \item[-] If sampling was successful, update the progress indicator.
 \item[-] Return the result flag.
 \end{itemize}
@@ -2333,7 +2331,7 @@ This file contains routines which calculate opacities, read opacity files, and w
 
 \begin{figure}
 \includegraphics{fig/opacityc}
-\caption{Function structure of opacity.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both.}
+\caption{Function structure of opacity.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, green functions are used in both, and red functions are unused at this time.}
 \label{fig:opacityc}
 \end{figure}
 
@@ -2521,7 +2519,7 @@ This file contains routines which are used to read the CIA files(s) and interpol
 
 \begin{figure}
 \includegraphics{fig/ciac}
-\caption{Function structure of cia.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both.}
+\caption{Function structure of cia.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, and green functions are used in both.}
 \label{fig:ciac}
 \end{figure}
 
@@ -2650,7 +2648,7 @@ int freemem\_cia(struct cia *cia, long *pi)}
 
 \newpage
 \subsection{idxrefraction.c:}
-This file is concerned with calculating the index of refraction at each radius level. Currently this is 1 at all layers (no light bending).
+This file is concerned with calculating the index of refraction at each radius level. Currently this is 1 at all layers (no light bending). Functions \ttblue{restidxref, saveidxref} are unused.
 \subsubsection{List of Functions Defined in idxrefraction.c:}
 \function{
 int idxrefrac(struct transit *tr)}
@@ -2658,8 +2656,8 @@ int idxrefrac(struct transit *tr)}
 refraction of 1.0 at all levels (no light bending).} \newline
 
 \function{
-\tgray{int freemem\_idexrefrac(struct idxref *ir, long *pi)}
-Free index of refraction array.} \newline
+int freemem\_idexrefrac(struct idxref *ir, long *pi)}
+\tgray{Free index of refraction array.} \newline
 
 \function{
 int restidxref(FILE *in, PREC\_NREC nrad, struct idxref *ir)}
@@ -2692,11 +2690,11 @@ void saveidxref(FILE *out, PREC\_NREC nrad, struct idxref *ir)}
 
 \newpage
 \subsection{extinction.c: EDITED}
-This file contains routines associated with computing molecular extinction. That includes a wrapper function to calculate Voigt profiles, a function to compute molecular extinction, and a function to interpolate the molecular extinction. There are also functions which compute extinction from other sources (\ttblue{computeextscat, computeextcloud}) although they are not fully implemented. Figure \ref{fig:extinctionc} shows the function structure of extinction.c.
+This file contains routines associated with computing molecular extinction. That includes a wrapper function to calculate Voigt profiles, a function to compute molecular extinction, and a function to interpolate the molecular extinction. There are also functions which compute extinction from other sources (\ttblue{computeextscat, computeextcloud}) although they are not fully implemented. Functions \ttblue{savefile\_extinct, restfile\_extinct, restextinct} are unused. Figure \ref{fig:extinctionc} shows the function structure of extinction.c.
 
 \begin{figure}
 \includegraphics{fig/extinctionc}
-\caption{Function structure of opacity.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both.}
+\caption{Function structure of opacity.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, green functions are used in both, and red functions are unused at this time.}
 \label{fig:extinctionc}
 \end{figure}
 
@@ -2742,6 +2740,15 @@ int interpolmolext(struct transit *tr, PREC\_NREC r, PREC\_RES **kiso)}
 \tgray{Interpolate the opacity grid at the specified layer to obtain
   molecular extinction.}  \\
 
+\function{
+void computeextscat(double *e, long n, struct extscat *sc, double *rad, \\
+                    double trad, double *temp, double tcft, double wn)}
+\tgray{Compute scattering contribution to extinction. Currently fills the scattering extinction array with 0's (no extinction due to scattering).} \\
+
+\function{
+void computeextcloud(double *e, long n, struct extscat *sc, double *rad, \\
+                     double trad, double *temp, double tcft, double wn)}
+\tgray{Compute cloud contribution to extinction. Cloud extinction is linear, increasing from top of the clouds to the bottom of the clouds.} \\
 
 \subsubsection{getprofile}
 \paragraph{Variables Modified}
@@ -2760,25 +2767,6 @@ int interpolmolext(struct transit *tr, PREC\_NREC r, PREC\_RES **kiso)}
 \item[-] Calculate the Voigt profile using a width that gives and integer number of {\tt dwn} spaced bins.
 \item[-] Return the number of points in half the profile.
 \end{enumerate}
-% OLD GETPROFILE:
-% Calculates an oversampled Voigt profile in a two-dimensional array of
-% shape: oversampling factor $\times$ (non-oversampled) wavenumber
-% samples.  Each non-oversampled profile spacing matches the
-% \texttt{transit} wavenumber array spacing, and its values are
-% evaluated slightly away one from another in order to account for the
-% sub-sampling distance between the wavenumber sampling and the profile
-% central wavenumber. \newline
-
-% Code details:
-% \begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-% \item[-] Get the largest (Doppler or Lorentz) width (\texttt{bigalpha}).
-% \item[-] Calculate the profile half width (\texttt{wvgt}) and number
-%   of point per profile (\texttt{nvgt}).
-% \item[-] Allocate the profile.
-% \item[-] Call to \ttblue{voigtn} to calculate the Voigt profile
-%   following Equations (C-37) -- (C-44).
-% \item[-] Return \texttt{nvgt}/2. \newline
-% \end{itemize}
 
 \subsubsection{extwn:}
 \paragraph{Modified:}
@@ -2886,14 +2874,40 @@ Lorentz line-broadening widths (Equations \ref{eq:doppler} and
 \item[-] Return 0 on success.
 \end{enumerate}
 
+\subsubsection{computeextscat:}
+\paragraph{Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Fill out scattering extinction array (passed to function, not found in any structures).
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Loop over each radius layer. Set scattering extinction to 0 at all layers.
+\end{enumerate}
+
+\subsubsection{computeextcloud:}
+\paragraph{Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Fill out cloud extinction array (passed to function, not found in any structures).
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If there are no clouds, set the cloud extinction array to zero everywhere.
+\item[-] Calculate the amount of extinction per distance due to the clouds.
+\item[-] Loop down through the radius layers, setting the cloud extinction to 0 until reaching the clouds.
+\item[-] Loop down through the radius layers, starting from the top of the clouds, setting the cloud extinction to a linearly increasing amount according to the extinction per distance until reaching the bottom of the clouds.
+\item[-] Loop through the remaining radius layers, setting the cloud extinction to the total extinction due to clouds.
+\end{enumerate}
+
 \newpage
 \subsection{tau.c: EDITED}
-This file contains all routines associated with calculation of optical depth. Functions \ttblue{detailout}, \ttblue{outdebtauex}, \ttblue{outdebex}, and \ttblue{outdebtau} are unused. Figure \ref{fig:tauc} shows the function structure of tau.c.
+This file contains all routines associated with calculation of optical depth. Functions \ttblue{detailout}, \ttblue{outdebtauex}, \ttblue{outdebex}, and \ttblue{outdebtau} are unused. Functions \ttblue{print2dArrayDouble, print1dArrayDouble} are generic print-to-file functions that are not generally used in {\tt transit}. Figure \ref{fig:tauc} shows the function structure of tau.c.
 \findme{reference the equation in BART theory doc}
 
 \begin{figure}
 \includegraphics{fig/tauc}
-\caption{Function structure of tau.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both.}
+\caption{Function structure of tau.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, green functions are used in both, and red functions are unused at this time.}
 \label{fig:tauc}
 \end{figure}
 
@@ -3059,7 +3073,7 @@ This file contains routines associated with calculating flux from an eclipse. Th
 
 \begin{figure}
 \includegraphics{fig/eclipsec}
-\caption{Function structure of eclipse.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both.}
+\caption{Function structure of eclipse.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, and green functions are used in both.}
 \label{fig:eclipsec}
 \end{figure}
 
@@ -3160,7 +3174,7 @@ This file contains routines that calculate tau at a specific impact parameter an
 
 \begin{figure}
 \includegraphics{fig/slantpathc}
-\caption{Function structure of slantpath.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both.}
+\caption{Function structure of slantpath.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, and green functions are used in both.}
 \label{fig:slantpathc}
 \end{figure}
 
@@ -3306,7 +3320,7 @@ This file contains \ttblue{modulation}, a routine which uses \ttblue{modulationp
 
 \begin{figure}
 \includegraphics{fig/observablec}
-\caption{Function structure of observable.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both.}
+\caption{Function structure of observable.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, and green functions are used in both.}
 \label{fig:observablec}
 \end{figure}
 
@@ -3346,28 +3360,6 @@ int freemem\_outputray(struct outputray *out, long *pi)}
 \item[-] {\tt sg.x and sg.y} are not used. (also, {\tt x, y} equations
   look fishy).
 \end{enumerate}
-
-\newpage
-\subsection{Loose ends:}
-
-\textbf{computeextradius:}
-\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Driver routine for \ttblue{extradius} to calculate the
-  extinction coefficient at an specific radius.
-\item[-] Set \ttred{tr.ds.ex.computed} of the given layer to True on
-  success.
-  \newline
-\end{itemize}
-
-\textbf{computeextcloud:}
-\begin{itemize}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Set gray extinction increasing linearly from zero at a top
-  layer radius (\texttt{cloudtop}) up to a maximum extinction
-  (\texttt{cloudext}) at a given radius (\texttt{cloudbot}). From there, the
-  lower layers have a constant extinction coefficient.  \newline
-\end{itemize}
-
-
 \newpage
 
 \section{These Sections do not belong to the Code Doc!}
