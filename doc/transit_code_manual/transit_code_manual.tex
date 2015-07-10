@@ -135,13 +135,11 @@ PREC\_RES    & double &  Partial result  \\
 PREC\_ATM    & double &  Atmospheric data  \\
 PREC\_CS     & double &  Cross-section data  \\
 PREC\_CIA    & double &  Collision-induced absorption data  \\
-PREC\_VOIGT  & float  & Voigt profile data type \\
-PREC\_VOIGTP & double & Voigt profile data type \\
+PREC\_VOIGT  & float  &  Voigt profile data type \\
+PREC\_VOIGTP & double &  Precise Voigt profile data type \\
 \hline
 \end{tabular}
 \end{table}
-
-\findme{When is PREC\_VOIGTP used vs PREC\_VOIGT?}
 \newpage
 
 \section{List of Constants in \texttt{transit} DONE}
@@ -212,7 +210,7 @@ typedef struct {
   double *z;        /* Partition function [radius or temp]                  */
     /* ALLOCATED:	readtli_bin					    */
     /* FILLED OUT:	readtli_bin					    */
-    /* FREED: 								    */ 
+    /* FREED: 		free_isov						    */ 
 } prop_isov;
 \end{plain}
 \noindent \newline
@@ -232,13 +230,13 @@ typedef struct{
   PREC_ATM *d;     /*  Density   [n]           */
     /* ALLOCATED:	getatm						    */
     /* ALLOCATED:	readatmfile					    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* FILLED OUT:	makeradsample					    */
+    /* FREED: 		free_mol					    */ 
   PREC_ATM *q;     /*  Abundance [n]           */
     /* ALLOCATED:	getatm						    */
     /* ALLOCATED:	readatmfile					    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* FILLED OUT:	makeradsample					    */
+    /* FREED: 		free\_mol					    */ 
 } prop_mol;
 \end{plain}
 \noindent \newline
@@ -248,18 +246,18 @@ typedef struct {
   double *mm;       /*  Mean molecular mass [rad]        */
     /* ALLOCATED:	getatm						    */
     /* ALLOCATED:	readatmfile					    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* FILLED OUT:	makeradsample					    */
+    /* FREED: 		free_atm					    */ 
   PREC_ATM *p;      /*  Pressure    [rad]                */
     /* ALLOCATED:	getatm						    */
     /* ALLOCATED:	readatmfile					    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* FILLED OUT:	makeradsample					    */
+    /* FREED: 		free_atm					    */ 
   PREC_ATM *t;      /*  Temperature [rad]                */
     /* ALLOCATED:	getatm						    */
     /* ALLOCATED:	readatmfile					    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* FILLED OUT:	makeradsample					    */
+    /* FREED: 		free_atm					    */ 
   PREC_ATM pfct;    /*  p units factor to cgs (dyne/cm2) */
   PREC_ATM tfct;    /*  t units factor to cgs (Kelvin)   */
 } prop_atm;
@@ -282,8 +280,8 @@ typedef struct {
   unsigned int t;   /* Number of temperatures				    */
   double *T;        /* Temperatures                                         */
     /* ALLOCATED:	readtli_bin					    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */
+    /* FILLED OUT:	readtli_bin					    */
+    /* FREED: 		free_dbnoext					    */
 } prop_dbnoext;
 \end{plain}
 
@@ -365,11 +363,11 @@ struct lineinfo{
   int ndb;                   /* Number of databases                         */
   prop_isov *isov;           /* Variable isotope information (w/temp) [iso] */
     /* ALLOCATED:	readtli_bin					    */
-    /* FILLED OUT:							    */
+    /* FILLED OUT:	readtli_bin					    */
     /* FREED: 		freemem_lineinfo				    */ 
   prop_dbnoext *db;          /* Temperature info from databases [DB]        */
     /* ALLOCATED:	readtli_bin					    */
-    /* FILLED OUT:							    */
+    /* FILLED OUT:	readtli_bin					    */
     /* FREED: 		freemem_lineinfo				    */ 
   PREC_NREC n_l;             /* Number of lines in database                 */
 };
@@ -384,12 +382,13 @@ struct atm_data{
   prop_atm atm;          /* Atmospheric properties                          */
   prop_mol *molec;       /* Molecular information [n_aiso]                  */
     /* ALLOCATED:	getatm						    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* FILLED OUT:	getmoldata, getmnfromfile			    */
+    /* FREED: 		free_mol					    */ 
   double *mm;            /* Mean molecular mass [rad]                       */
     /* ALLOCATED:	getatm						    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:       readatmfile                                         */
+    /* FILLED OUT:	getmoldata					    */
+    /* FREED: 		freemem_atmosphere				    */ 
   char *info;            /* Optional atmosphere file information or label   */
   _Bool mass;            /* Abundances in isov by mass (1) of by number (0) */
   int begline;           /* Line of first radius dependent info             */
@@ -1359,7 +1358,20 @@ makes the command-line-argument parser, resets the transithint struct, and fill 
 \end{enumerate}
 
 \subsubsection{resthint:}
-\findme{do we doc this one?}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Restore \ttred{tr.ds.th.f\_atm, tr.ds.th.f\_line, tr.ds.th.f\_outmod,\\ tr.ds.th.f\_outflux,  tr.ds.th.f\_outintens, tr.ds.th.f\_toomuch, \\ tr.ds.th.f\_outsample, tr.ds.th.solname,  tr.ds.th.ciafile} from file.
+\item[-] Restore \ttred{tr.ds.th.rads, tr.ds.th.wavs, tr.ds.th.wns, tr.ds.th.ips} from file.
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Restore the main hint structure from file.
+\item[-] If reading the file returns an error, return the error. Otherwise, increment the function result by the number of elements read from file.
+\item[-] Call \ttblue{reststr} from transitstd.c to restore the strings in the hint structure.
+\item[-] Call \ttblue{restsample\_arr} from makesample.c to restore the arrays in the hint structure.
+\item[-] Return the number of elements read from the file.
+\end{enumerate}
 
 \subsubsection{freemem\_hints:}
 \paragraph{Variables Modified}
@@ -1943,7 +1955,7 @@ Recalculate radius array according to hydrostatic pressure, and find the radial 
 \end{enumerate}
 \item[-] Calculate H2/He ratio, Helium abundance, and diatomic Hydrogen abundance.
 \item[-] Call \ttblue{checkaddmm} from readatm.c to calculate mean molecular mass and check that the sum of abundances is within the permitted range of one. If not, raise a warning.
-\item[-] For each isotope, call \ttblue{stateeqnford} \findme{where is this defined?} to calculate densities using the ideal gas law.
+\item[-] For each isotope, call \ttblue{stateeqnford} from transit.h to calculate densities using the ideal gas law.
 \item[-] Increment to the next radius layer.
 \end{enumerate}
 \item[-] Reallocate the arrays down to the final size according to the number of radius layers incremented in the infinite loop.
@@ -2080,11 +2092,6 @@ int main(int argc, char *argv[])}
 De-bugging. \newline
 
 \subsubsection{makesample1:}
-\paragraph{Variables Modified}
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] \findme{this function allocates and modifies sampling stuff but does it for a number of parameters. Should we say those variables are modified here, or in the function which calls this one?}
-\end{enumerate}
-
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Set the acceptable ratio that the final value must fall in to not be truncated.
@@ -2104,11 +2111,6 @@ De-bugging. \newline
 \end{enumerate}
 
 \subsubsection{makesample:}
-\paragraph{Variables Modified}
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] \findme{this function allocates and modifies sampling stuff but does it for a number of parameters. Should we say those variables are modified here, or in the function which calls this one?}
-\end{enumerate}
-
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Set the acceptable ratio that the final value must fall in to not be truncated.
@@ -2204,7 +2206,7 @@ atmospheric radius array (i.e., hint given). \newline
 \paragraph{Variables Modified:}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Call to makesample to set \ttred{tr.rads} values.
-\item[-] Allocate \ttred{tr.ds.iso.isov.d, tr.ds.iso.isov.q,
+\item[-] Allocate \ttred{tr.ds.mol.molec.d, tr.ds.mol.molec.q,
     tr.ds.iso.isov.z} (isotope's density, abundance, partition function).
 \item[-] Set \ttred{tr.ds.atm.tfct, tr.ds.atm.pfct} from {\tt tr.ds.at.atm.tfct, tr.ds.at.atm.pfct} (atmospheric unit factor for temperature and pressure).
 \item[-] Allocate \ttred{tr.atm.t, tr.atm.p, tr.atm.mm} (transit's
@@ -2426,7 +2428,7 @@ Free index of refraction array. \newline
 \item[-] Call \ttblue{maketempsample} from makesample.c to create a temperature array from hinted values and put the temperature array in the opacity structure.
 \item[-] Allocate the partition function array.
 \item[-] Set the interpolation function flag.
-\item[-] Interpolate the isotope partition function. (FINDME: be more specific here.)
+\item[-] Interpolate the isotope partition function for each isotope in each database.
 \item[-] Get pressure array from the transit structure and place in the opacity structure.
 \item[-] Get molecule array from the transit structure and place in the opacity structure.
 \item[-] For each molecule, check if its ID is in the molecule ID array. If not, add it.
@@ -2454,62 +2456,6 @@ Free index of refraction array. \newline
 \item[-] Read molecular ID, temperature, pressure, and wavenumber sampling arrays from file.
 \item[-] Allocate the 4D opacity grid.
 \item[-] Read the opacity grid from file.
-\item[-] Return 0 on success.
-\end{enumerate}
-
-\subsubsection{extinction:}
-Calculates the extinction coeffecient for a given radius layer and temperature.
-\paragraph{Modified}
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Calculate extinction and fill \ttred{tr.ds.op.o} for a single radius layer and temperature.
-\end{enumerate}
-
-\paragraph{Walkthrough}
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Calculate constant factors for Doppler and Lorentz line widths.
-\item[-] Allocate temporary arrays for line widths, extinction, and line width indices.
-\item[-] Loop over isotopes.
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Loop over molecules.
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Calculate the isotope's collision diameter. (FINDME: cross section?)
-\item[-] Call to \ttblue{stateeqnford} to calculate the density of molecule colliding with the isotope. (FINDME: where is this defined?)
-\item[-] Calculate Lorentz line width for this molecule and add it to the total line width for this isotope.
-\end{enumerate}
-\item[-] Multiply the Lorentz line width for this isotope by the constant factor.
-\item[-] Calculate Doppler width divided by central wavenumber for this isotope.
-\item[-] Find the maximum between the Doppler and Lorentz widths.
-\item[-] Find the minimum between the maximum width and the previous minimum width. The first minimum width is set at the beginning of the function.
-\item[-] Call \ttblue{binsearchapprox} from iomisc.c to perform a binary search to find the indices of the Doppler and Lorentz widths in the Doppler and Lorentz width samples.
-\end{enumerate}
-\item[-] Set oversampling resolution by looping through the exact divisors of the oversampling factor until the divisor times the spacing of the finest oversampling is greater than half the width of the smallest profile.
-\item[-] Loop over every line to calculate the maximum extinction coefficient for each molecule.
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Calculate the wavenumber of the line transition.
-\item[-] Call \ttblue{valueinarray}  to find the molecule index in the opacity grid for this isotope.
-\item[-] Skip calculation for this line transition if it is not within the given limits.
-\item[-] Calculate the extinction coefficient divided by the molecular abundance.
-\item[-] If the maximum extinction for this molecule has not been calculated yet, set it equal to the extinction coefficient that was just calculated. Otherwise, set the maximum and minimum extinction for this molecule equal to the maximum and minimum between the recently calculated extinction and the previously calculated maximum and minimum.
-\end{enumerate}
-\item[-] Loop over each line to calculate extinction coefficients.
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Calculate the wavenumber of the line transition.
-\item[-] Call \ttblue{valueinarray} to find the molecule index in the opacity grid for this isotope.
-\item[-] Skip calculation for this line transition if it is not within the given limits.
-\item[-] Calculate the extinction coefficient divided by the molecular abundance (FINDME: reference equation).
-\item[-] Find the index of the closest oversampled wavenumber.
-\item[-] Check if the next line falls within the same sampling unit (same sampling index). If so, co-add the next line with the current line (add the next line's extinction to the opacity for this line) and skip the next line's calculations.
-\item[-] If the extinction for this line is less than the defined threshold factor times the maximum extinction, disregard this line and continue to the next.
-\item[-] Calculate the closest dynamic sampling wavenumber.
-\item[-] Check if the ratio of Doppler width to Lorentz width is greater than a given threshold. If so, call to \ttblue{binsearchapprox} to do a binary search to recalculate the index for the Doppler width. If not, then the exact width of the Doppler profile is unimportant and the calculation is skipped.
-\item[-] Calculate the offset between the center of the line and the dynamic wavenumber sample (in units of oversampled wavenumber spacing).
-\item[-] Calculate the offset between the edge of the profile and the beginning of the wavenumber array (in units of oversampled wavenumber spacing)
-\item[-] Calculate the lower and upper indices of the profile (in units of dynamically sampled wavenumber)
-\item[-] Fix the lower and upper indices to the boundaries if they go outside the bounds of the wavenumber sampling.
-\item[-] Add the contribution from this line (and any co-added lines) to the opacity spectrum.
-\end{enumerate}
-\item[-] Call \ttblue{downsample} to downsample the temporary extinction array to the final sampling size and fill in the opacity grid.
-\item[-] Free all temporary arrays.
 \item[-] Return 0 on success.
 \end{enumerate}
 
@@ -2682,7 +2628,7 @@ void saveidxref(FILE *out, PREC\_NREC nrad, struct idxref *ir)}
 \item[-] Allocate index of refraction array.
 \item[-] Loop over each radius layer:
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Call to \ttblue{stateeqnford} \findme{from where?} to calculate density.
+\item[-] Call to \ttblue{stateeqnford} from transit.h to calculate density.
 \item[-] Calculate index of refraction (currently always 1).
 \end{enumerate}
 \item[-] Return 0 on success.
@@ -2764,16 +2710,16 @@ void computeextcloud(double *e, long n, struct extscat *sc, double *rad, \\
 \item[-] Check that the profile contains at least 3 elements. If not, set to 3.
 \item[-] If the profile is larger than the wavenumber range, shrink the profile.
 \item[-] Allocate the profile array.
-\item[-] Calculate the Voigt profile using a width that gives and integer number of {\tt dwn} spaced bins.
+\item[-] Calculate the Voigt profile using a width that gives and integer number of {\tt dwn} spaced bins. See Equations \ref{eqn:doppler}, \ref{eqn:lorentz}.
 \item[-] Return the number of points in half the profile.
 \end{enumerate}
 
 \subsubsection{extwn:}
 \paragraph{Modified:}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Copy {\tt th.ethresh} into \ttred{ex.ethresh} (extinction threshold).
-\item[-] Allocate \ttred{ex.e} (extinction).
-\item[-] Allocate \ttred{ex.computed} (boolean to indicate if extinction has been computed at the corresponding radius layer).
+\item[-] Copy {\tt tr.ds.th.ethresh} into \ttred{tr.ds.ex.ethresh} (extinction threshold).
+\item[-] Allocate \ttred{tr.ds.ex.e} (extinction).
+\item[-] Allocate \ttred{tr.ds.ex.computed} (boolean to indicate if extinction has been computed at the corresponding radius layer).
 \item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_EXTWN}.
 \end{enumerate}
 
@@ -2781,7 +2727,6 @@ void computeextcloud(double *e, long n, struct extscat *sc, double *rad, \\
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Check that \ttblue{readlineinfo\_tli, readdatarng, makewnsample,
     makeradsample} have been executed.
-\item[-] \findme{There's a note here that some of this function should be in readatm}
 \item[-] Set extinction coefficient threshold from transithint structure.
 \item[-] Allocate extinction coefficient array.
 \item[-] Allocate boolean for checing if extinction has been computed.
@@ -2792,9 +2737,9 @@ void computeextcloud(double *e, long n, struct extscat *sc, double *rad, \\
 This routine computes the molecular extinction coefficient ($e_m$, in
 cm$^{-1}$) at one specific atmospheric radius, Equations
 (3.36)--(3.37) of P. Rojo's thesis (see also Equation
-\ref{eq:extinction}).  Initially, the code calculates the Doppler and
-Lorentz line-broadening widths (Equations \ref{eq:doppler} and
-\ref{eq:lorentz}), to later calculate the Voigt profile.
+\ref{eqn:ext}).  Initially, the code calculates the Doppler and
+Lorentz line-broadening widths (Equations \ref{eqn:doppler} and
+\ref{eqn:lorentz}), to later calculate the Voigt profile.
 
 \paragraph{Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
@@ -2804,6 +2749,9 @@ Lorentz line-broadening widths (Equations \ref{eq:doppler} and
 
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate alpha Lorentz and Doppler arrays.
+\item[-] Allocate Lorentz and Doppler width indices arrays
+\item[-] Allocate arrays for max and min extinction for each species.
 \item[-] Allocate a temporary extinction array.
 \item[-] Calculate the dynamic wavenumber sampling interval and the oversampled dynamic wavenumber sampling interval.
 \item[-] Calculate constant factors for Doppler and Lorentz line widths.
@@ -2825,7 +2773,7 @@ Lorentz line-broadening widths (Equations \ref{eq:doppler} and
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Calculate the wavenumber of the line transition.
 \item[-] Skip calculation for this line transition if it is not within the given limits.
-\item[-] Calculate the extinction coefficient except the broadening factor. (FINDME: ?)
+\item[-] Calculate the extinction coefficient except the broadening factor (this is proportional to the extinction).
 \item[-] If the maximum extinction for this molecule has not been calculated yet, set it equal to the extinction coefficient that was just calculated. Otherwise, set the maximum and minimum extinction for this molecule equal to the maximum and minimum between the recently calculated extinction and the previously calculated maximum and minimum.
 \end{enumerate}
 \item[-] Loop over each line to calculate extinction coefficients.
@@ -2967,9 +2915,11 @@ subroutines to do the calculations.
 In the code, \ttblue{transittau} or \ttblue{eclipsetau} is pointed by
 the variable \ttblue{fcn}. \ttblue{transittau} is defined in the
 \texttt{transit\_ray\_solution slantpath} variable at the end of
-\texttt{slantpath.c}.  \texttt{slantpath} is assigned to the transit
+slantpath.c. \ttblue{eclipsetau} is defined in the 
+\texttt{transit\_ray\_solution eclipsepath} variable at the end of
+eclipse.c. \texttt{slantpath} is assigned to the transit
 variable \ttred{tr.sol} in the function \ttblue{acceptgenhints} from
-\texttt{argum.c}. \findme{update to include eclipse ray solution}.
+\texttt{argum.c}.
 
 \paragraph{Variables Modified:}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
@@ -3153,7 +3103,7 @@ freemem\_intensityGrid(struct grid *intens, long *pi)}
 \subsubsection{flux:}
 \paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Allocate \ttred{tr.ds.out.o} (emergent flux) (FINDME: how to say this? It creates and fills out a local out structure).
+\item[-] Allocate \ttred{tr.ds.out.o} (emergent flux)
 \item[-] Calculate \ttred{tr.ds.out.o} (flux). See Equation \ref{eqn:flux}.
 \end{enumerate}
 
@@ -3250,7 +3200,7 @@ nor planet emission.} \newline
   sampled radius index.
 \item[-] Calculate the analytical part of the extinction integral.
 \item[-] Calculate the optical depth by integrating (with GSL) if
-  there are at least 3 points available. See Equation \ref{eqn:tau}. \findme{is this right?}
+  there are at least 3 points available. See Equation \ref{eqn:tau}.
 \item[-] If there are only two points available, use Trapezium integration.
 \item[-] Return the result of integration to account for full
  multiplied by 2.
@@ -3340,7 +3290,7 @@ int freemem\_outputray(struct outputray *out, long *pi)}
 \subsubsection{modulation}
 \paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Allocate \ttred{tr.ds.out.o} (modulation output) (FINDME: same issue as before).
+\item[-] Allocate \ttred{tr.ds.out.o} (modulation output).
 \item[-] Call to {\tt setgeom} from geometry.c to calculate \ttred{tr.ds.sg.x, tr.ds.sg.y} (coordinates of the center of the planet with respect to the star).
 \item[-] Call to {\tt modulationperwn} to calculate \ttred{tr.ds.out.o} (modulation).
 \end{enumerate}
@@ -3354,14 +3304,9 @@ int freemem\_outputray(struct outputray *out, long *pi)}
 \item[-] Update the progress indicator to account for {\tt TRPI\_MODULATION}.
 \item[-] Call printmod to print the modulation to file.
 \end{enumerate}
-
-\subsubsection{FINDME:}
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] {\tt sg.x and sg.y} are not used. (also, {\tt x, y} equations
-  look fishy).
-\end{enumerate}
 \newpage
 
+\comment{
 \section{These Sections do not belong to the Code Doc!}
 
 \subsection{Extinction Coefficient:}
@@ -3597,7 +3542,7 @@ Finally the emerging flux at the top of the atmosphere is:
 \begin{equation}
 F\sb{\nu}(0) = \pi \int\sb{0}\sp{\tau\sb{b}} B\sb{\nu}e\sp{-\tau/\bar{\mu}}\der(\tau/\bar{\mu})
 \end{equation}
-
+}
 \section{Equations}
 \label{sec:equations}
 Optical depth:
@@ -3613,11 +3558,39 @@ where $e$ is extinction and d$s$ is the differential path element. \newline
 Extinction:
 
 \begin{equation}
-\label{eqn:ext}
-e = 
+\label{eq:ext}
+  e_m = \frac{\pi e^2}{c^2 m_e} \sum_i \frac{\rho_i}{m_i} \frac{gf_i}{Z_i}
+      \exp\left(-\frac{hcE_{\rm low}^i}{kT}\right)
+      \left(1-\exp\left(\frac{hc\bar\nu_0^i}{kT}\right)\right)
+      \Psi(\bar\nu, \alpha_D, \alpha_L),
 \end{equation}
 \noindent
-where \findme{(FINDME)} \newline
+where $e_m$ is extinction, $gf$ is the weighted oscillator strength, $Z_i$ is the partition function, $\bar\nu_0^i$ is the central wavenumber of the line, $E_{\rm low}^i$ is the lower state energy level, $T$ is the atmospheric temperature, $\rho_i$ is the isotopic density, $m_i$ is the isotopic mass, $\Psi$ is the Voigt line profile (the convolution of Doppler and Lorentz profiles) with arguments of central wavenumber ($\bar\nu$), Doppler width ($\alpha_D$), and Lorentz width ($\alpha_L$). $k$ is the Boltzmann constant, $h$ is the Planck constant, and $c$ is the speed of light.  \newline
+
+\noindent
+Doppler and Lorentz widths:
+
+\begin{eqnarray}
+\label{eqn:doppler}
+ \alpha_D &=& \underbrace{\frac{\sqrt{2k T \ln{2}}}{c}}_{\rm{propto\_adop}}
+              \frac{\bar\nu_0}{\sqrt{m_i}} \label{dopbr} \\
+\label{eqn:lorentz}
+ \alpha_L &=& \underbrace{\sqrt{\frac{2k T}{\pi^3c^2}}}_{\rm{propto\_alor}}
+              \sigma_c\sum_{\rm coll}\frac{\rho_j}{m_j}
+              \sqrt{\left(\frac{1}{m_j} + \frac{1}{m_i}\right)}
+              + \underbrace{\alpha_{N}}_{\mathrm{ignored}}
+\end{eqnarray}
+\noindent
+where $\alpha_D$ is Doppler width, $\alpha_L$ is Lorentz width, $k$ is the Boltzmann constant, $T$ is atmospheric temperature, $c$ is the speed of light, $\bar\nu_0$ is central wavenumber, $m_i$ is isotopic mass, $\sigma_c$ is isotopic cross section, $\rho_j$ is isotopic density, and $\alpha_N$ is natural broadening (negligible). \newline
+
+\noindent
+Density:
+\begin{equation}
+\label{eqn:den}
+  \rho_i = \frac{\mu_im}{n}\frac{P}{kT} = \bar{m}\mu_i\frac{P}{kT},
+\end{equation}
+\noindent
+where $\mu_i$ is the mass mixing ratio, $m$ is mass, $P$ is pressure, $k$ is the Boltzmann constant, $T$ is temperature, and where $\bar{m} = m/n$, the mean molecular mass in the layer.\newline
 
 \noindent
 Modulation:
@@ -3647,7 +3620,7 @@ I = \int_0\sp{\tau\sb{max}} B_\nu \mathrm{e}^{-\tau} \mathrm{d}\tau
 \end{equation}
 
 \noindent
-where $B_\nu$ is the Planck blackbody function and $\tau$ is optical depth. The integral is from $0$ to {\tt tr.toomuch}.
+where $B_\nu$ is the Planck blackbody function and $\tau$ is optical depth. The integral is from $0$ to {\tt tr.toomuch}. \newline
 
 \noindent
 Flux:
@@ -3657,7 +3630,7 @@ F = \sum\limits_{i=1} \pi I_i ((\sin{\theta_{fin}})^2 - (\sin{\theta_{in}})^2)
 \end{equation}
 
 \noindent
-where $I$ is intensity, $A$ is area, $n$ is the number of angles, and $w_n$ is the number of wavenumbers.
+where $I$ is intensity, $A$ is area, $n$ is the number of angles, and $w_n$ is the number of wavenumbers. \newline
 
 \noindent
 Hydrostatic pressure:
@@ -3667,7 +3640,7 @@ Hydrostatic pressure:
 \end{equation}
 
 \noindent
-where $P$ is pressure, $z$ is height, and $H$ is scale height.
+where $P$ is pressure, $z$ is height, and $H$ is scale height. \newline
 \bibliography{transit}
 \end{document}
 
