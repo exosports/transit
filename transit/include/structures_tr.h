@@ -171,6 +171,14 @@ struct extinction{
 };
 
 
+struct opacityhint{
+  int master_PID;       /* Process that will write the shared memory        */
+  int num_attached;     /* Count of processes attached to the main segment  */
+  volatile long status; /* Flags concerning the state of the shared memory  */
+  long Nwave, Ntemp, Nlayer, Nmol; /* Info necessary for sizing shared mem  */
+};
+
+
 struct opacity{
   PREC_RES ****o;         /* Opacity grid [temp][iso][rad][wav]             */
   PREC_VOIGT ***profile;  /* Voigt profiles [nDop][nLor][2*profsize+1]      */
@@ -184,6 +192,10 @@ struct opacity{
   int *molID;             /* Opacity-grid molecule ID array                 */
   long Nwave, Ntemp, Nlayer, Nmol, /* Number of elements in opacity grid    */
       nDop, nLor;         /* Number of Doppler and Lorentz-width samples    */
+  int hintID;             /* Shared memory ID of the hint segment           */
+  struct opacityhint *hint; /* Information about the shared memory          */
+  int mainID;             /* Shared memory ID of the main segment           */
+  void *mainaddr;         /* Shared memory address of the main segment      */
 };
 
 
@@ -341,6 +353,7 @@ struct transithint{
   _Bool mass;           /* Whether the abundances read by getatm are by
                            mass or number                                    */
   _Bool opabreak;       /* Break after opacity calculation flag              */
+  _Bool opashare;       /* Attempt to place opacity grid in shared memory.   */
   long fl;              /* flags                                             */
   _Bool userefraction;  /* Whether to use variable refraction                */
   _Bool savefiles    ;  /* Whether to save files                             */
@@ -387,6 +400,7 @@ struct transit{
       wavs, wns, temp; /* wavelength, wavenumber, and temperature           */
   prop_atm atm;      /* Sampled atmospheric data                            */
   _Bool opabreak;    /* Break after opacity calculation                     */
+  _Bool opashare;    /* Attempt to place opacity grid in shared memory.     */
   int ndivs,         /* Number of exact divisors of the oversampling factor */
      *odivs;         /* Exact divisors of the oversampling factor           */
   int voigtfine;     /* Number of fine-bins of the Voigt function           */
