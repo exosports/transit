@@ -69,25 +69,27 @@ static PREC_RES *area_grid;
     CALCULATES OPTICAL DEPTH AT VARIOUS POINTS ON THE PLANET
    ######################################################### */
 
-/* \fcnfh
+
+/* FUNCTION
    Computes optical depth for eclipse geometry for one ray, one wn, 
    at various incident angles on the planet surface, 
    between a certain layer in the atmosphere up to the top layer. 
    Returns: Optical depth divided by rad.fct:  \frac{tau}{units_{rad}}      */
-/* DEF */
 static PREC_RES
 eclipsetau(struct transit *tr,
            PREC_RES height,    /* Altitude down to where calculate tau      */
            PREC_RES *ex){      /* Extinction per layer [rad]                */
-  /* Incident angle:                                                        */
-  //PREC_RES angle = tr->angles[tr->angleIndex];
-  //PREC_RES angle_rad = angle * DEGREES;   
+
   /* Layers radius array:                                                   */
-  prop_samp *rads = &tr->rads;  /* Radius sampling                           */
-  PREC_RES *rad  = rads->v;     /* Radius array                              */
+  prop_samp *rads = &tr->rads;  /* Radius sampling                          */
+  PREC_RES *rad  = rads->v;     /* Radius array                             */
+
   /* Get the index rs, of the sampled radius immediately below or equal
      to height (i.e. rad[rs] <= height < rad[rs+1]):                        */
   int rs = binsearchapprox(rad, height, 0, tr->rads.n-1);
+
+  /* Auxiliary variables for Simson integration:                            */
+  double *hsum, *hratio, *hfactor, *h;
 
   /* Returns 0 if this is the top layer (no distance travelled):            */
   if (rs == tr->rads.n-1)
@@ -102,9 +104,6 @@ eclipsetau(struct transit *tr,
 
   PREC_RES res;          /* Optical depth divided by units of radius        */
   PREC_RES x3[3], r3[3]; /* Interpolation variables                         */
-
-  /* Conversion to radian:                                                  */
-  //PREC_RES angle_rad = angle * DEGREES;   
 
   /* Distance along the path:                                               */
   PREC_RES s[nrad];
@@ -133,27 +132,24 @@ eclipsetau(struct transit *tr,
   /* Distance along the path:                                               */
   s[0] = 0.0;
   for(int i=1; i < nrad; i++){
-    s[i] = s[i-1] + (rad[i] - rad[i-1]); // /cos(angle_rad);
+    s[i] = s[i-1] + (rad[i] - rad[i-1]);
   }
-
-  /* Integrate extinction along the path:  */
-
-  double *hsum;
-  double *hratio;
-  double *hfactor;
-  double *h;
 
   hsum    = calloc(nrad/2, sizeof(double));
   hratio  = calloc(nrad/2, sizeof(double));
   hfactor = calloc(nrad/2, sizeof(double));
   h       = calloc(nrad-1, sizeof(double));
-  
+
+  /* Integrate extinction along the path:                                   */
   makeh(s, h, nrad);
-
   geth(h, hsum, hratio, hfactor, nrad);
-
   res = simps(ex, h, hsum, hratio, hfactor, nrad);
-                                 
+
+  free(hsum);
+  free(hratio);
+  free(hfactor);
+  free(h);
+
   /* Optical depth divided by units of radius:                              */
   return res;
 }
@@ -191,6 +187,9 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
   /* Radius parameter variables:                                            */
   long rnn  = rad->n;
   long i;
+
+  /* Auxiliary variables for Simson integration:                            */
+  double *hsum, *hratio, *hfactor, *h;
 
   /* Blackbody function at each layer:                                      */
   PREC_RES B[rnn];
@@ -240,22 +239,19 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
                                 "integration.\n", last);
 
   /* Integrate along tau up to tau = toomuch:                               */
-
-  double *hsum;
-  double *hratio;
-  double *hfactor;
-  double *h;
-
   hsum    = calloc(last/2, sizeof(double));
   hratio  = calloc(last/2, sizeof(double));
   hfactor = calloc(last/2, sizeof(double));
   h       = calloc(last-1, sizeof(double));
-  
+
   makeh(tauIV, h, last);
-
   geth(h, hsum, hratio, hfactor, last);
-
   res = simps(tauInteg, h, hsum, hratio, hfactor, last);
+
+  free(hsum);
+  free(hratio);
+  free(hfactor);
+  free(h);
 
   return res/cos(angle);
 }
