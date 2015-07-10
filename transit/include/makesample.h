@@ -26,7 +26,7 @@ extern inline double * splinterp P_((long N, double *xi, double *yi, long nx,
                                      double *xout, double *yout));
 extern double splinterp_pt P_((double *z, long N, double *x, double *y, double xout, double yout));
 extern double * spline_init P_((double *z, double *x, double *y, long N));
-extern inline void * geth P_((double *h, double *hsum, double *hratio, 
+extern inline void * geth P_((double *h, double *hsum, double *hratio,
                               double *hfactor, int n));
 extern inline double simps P_((double *y, double *h, double *hsum,
                                double *hratio, double *hfactor, int n));

@@ -357,29 +357,28 @@ interpolatecia(struct transit *tr){
    interpolates the second dimension and then the first. The result is
    added to whatever it is already existent in 'res'
 
-   Return: 0 on success                                                 */
+   Return: 0 on success                                                     */
 int
-bicubicinterpolate(double **res, /* target array [t1][t2]  */
-                   double **src, /* Source array [x1][x2]  */
-                   double *x1,   /* Source first array     */
-                   long nx1,     /* Size of x1             */
-                   double *x2,   /* Source second array    */
-                   long nx2,     /* Size of x2             */
-                   double *t1,   /* Requested first array  */
-                   long nt1,     /* Size of t1             */
-                   double *t2,   /* Requested second array */
-                   long nt2){    /* Size of t2             */
-  long i, j; /* Auxiliary for indices        */
-  /* First and last values of source arrays: */
-  double fx1=x1[0], fx2=x2[0], lx1=x1[nx1-1], lx2=x2[nx2-1];
-  long lj=nt2, fj=0; /* Indices which mark index edges of 2nd dimension */
-  long li=nt1, fi=0; /* Indices which mark index edges of 1st dimension */
+bicubicinterpolate(double **res,  /* target array [t1][t2]                  */
+                   double **src,  /* Source array [x1][x2]                  */
+                   double *x1,    /* Source first array                     */
+                   long nx1,      /* Size of x1                             */
+                   double *x2,    /* Source second array                    */
+                   long nx2,      /* Size of x2                             */
+                   double *t1,    /* Requested first array                  */
+                   long nt1,      /* Size of t1                             */
+                   double *t2,    /* Requested second array                 */
+                   long nt2){     /* Size of t2                             */
 
-#ifndef _USE_GSL
-#error We cannot spline interpolate without GSL to obtain CIA opacities
-#endif
+  long i, j;           /* Auxiliary for-loop indices                        */
+  double fx1 = x1[0],  /* First and last values of source arrays:           */
+         fx2 = x2[0],
+         lx1 = x1[nx1-1],
+         lx2 = x2[nx2-1];
+  long lj=nt2, fj=0;  /* Indices of edges of 2nd dimension                  */
+  long li=nt1, fi=0;  /* Indices of edges of 1st dimension                  */
 
-  /* Return if sampling regions don't match: */
+  /* Return if sampling regions don't match:                                */
   if(t1[0]>lx1 || t1[nt1-1]<fx1 || t2[0]>lx2 || t2[nt2-1]<fx2)
     return 0;
 
@@ -399,20 +398,20 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
     if(t2[j]>lx2)
       lj = j;
 
-  /* Arrays created by spline_init to be used in interpolation calculation */
+  /* Arrays created by spline_init to be used in interpolation calculation: */
   double *z1;
   double *z2;
   z1 = calloc(nx2, sizeof(double));
   z2 = calloc(nx1, sizeof(double));
 
-  /* Temporary middle array to hold data that has been interpolated in one 
-     direction                                                              */
+  /* Temporary middle array to hold data that has been interpolated in one
+     direction:                                                             */
   double **f2 = (double **)malloc(nt2    *sizeof(double *));
   f2[0]       = (double  *)malloc(nt2*nx1*sizeof(double  ));
   for(i=1; i<nt2; i++)
     f2[i] = f2[0] + i*nx1;
 
-  /* Interpolate the 2nd dimension                                          */
+  /* Interpolate the 2nd dimension:                                         */
   for(i=0; i<nx1; i++){
     z1 = spline_init(z1, x2, src[i], nx2);
     for(j=fj; j<lj; j++){
@@ -420,7 +419,7 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
     }
   }
 
-  /* Interpolate the 1st dimension                                          */
+  /* Interpolate the 1st dimension:                                         */
   for(j=fj; j<lj; j++){
     z2 = spline_init(z2, x1, f2[j], nx1);
     for(i=fi; i<li; i++){
