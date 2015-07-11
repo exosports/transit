@@ -340,10 +340,11 @@ calcopacity(struct transit *tr,
   struct isotopes  *iso=tr->ds.iso; /* Isotopes struct                      */
   struct molecules *mol=tr->ds.mol; /* Molecules struct                     */
   struct lineinfo *li=tr->ds.li;    /* Lineinfo struct                      */
-  long Nmol, Ntemp, Nlayer, Nwave,  /* Opacity-grid  dimension sizes        */
-       flag;                        /* Interpolation flag                   */
+  long Nmol, Ntemp, Nlayer, Nwave;  /* Opacity-grid  dimension sizes        */
   int i, j, t, r,                   /* for-loop indices                     */
       rn, iso1db;
+  double *z;
+  int k;
 
   PREC_ATM *density = (PREC_ATM *)calloc(mol->nmol, sizeof(PREC_ATM));
   double   *Z       = (double   *)calloc(iso->n_i,  sizeof(double));
@@ -370,11 +371,7 @@ calcopacity(struct transit *tr,
   op->ziso[0] = (PREC_ATM  *)calloc(iso->n_i*Ntemp, sizeof(PREC_ATM));
   for(i=1; i<iso->n_i; i++)
     op->ziso[i] = op->ziso[0] + i*Ntemp;
-  double *z;
-  int k;
-  /* Set interpolation function flag:                                       */
-  flag = tr->interpflag;
-  flag = 1;  /* FINDME: Temporary hack                                      */
+
   /* Interpolate isotopic partition function:                               */
   for(i=0; i<iso->n_db; i++){  /* For each database separately:             */
     iso1db = iso->db[i].s;     /* Index of first isotope in current DB      */

@@ -127,17 +127,11 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
   s[0] = 0;
 
   /* Only valid for refraction index = 1.0                                  */
-  //transitprint(100, verblevel, "Delta-s = [");
   for(i=1; i<nrad; i++){
     s[i] = sqrt(rad[i]*rad[i] - r0*r0);
-    //transitprint(100, verblevel, "%.6f, ", s[i]);
   }
-  //transitprint(100, verblevel, "]\n");
 
   /* Integrate Extinction along ray path:                                   */
-  /* Use spline if GSL is available along with at least 3 points:           */
-
-
   double *hsum;
   double *hratio;
   double *hfactor;
@@ -149,22 +143,8 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
   h       = calloc(nrad-1, sizeof(double));
   
   makeh(s, h, nrad);
-
   geth(h, hsum, hratio, hfactor, nrad);
-
   res = simps(ex, h, hsum, hratio, hfactor, nrad);
-
-  /*
-#ifdef _USE_GSL
-  gsl_interp_accel *acc = gsl_interp_accel_alloc();
-  gsl_interp       *spl = gsl_interp_alloc(gsl_interp_cspline, nrad);
-  gsl_interp_init(spl, s, ex, nrad);
-  res = gsl_interp_eval_integ(spl, s, ex, 0, s[nrad-1], acc);
-  gsl_interp_free(spl);
-  gsl_interp_accel_free(acc);
-#else
-#error non equispaced integration is not implemented without GSL
-#endif */ /* _USE_GSL                                                          */
 
   /* Reset original values of arrays:                                       */
   *ex  = tmpex;
