@@ -695,8 +695,8 @@ inline double * tri(double *a,
 }
 
 
-/* \fcnfh  DEF
-   Calculates the y values for a cubic spline given the necessary arrays */
+/* FUNCTION
+   Calculate the y values for a cubic spline                                */
 inline double *
 spline3(double *xi,
         double *yi,
@@ -707,7 +707,7 @@ spline3(double *xi,
         long nx,
         long N){
 
-  int i, j, n;  /* Indices                                                  */
+  int i, j=0, n;  /* Indices                                                  */
   double dx;    /* Distance from interpolation x-coordinate to
                    previous x-coordinate in the source array                */
   double amult, bmult, cmult;  /* Coefficients of the cubic polynomial      */
@@ -722,9 +722,9 @@ spline3(double *xi,
         j = i;
       }
     }
-    amult = (z[j+1] - z[j])/(6*h[j]);
-    bmult = z[j]/2;
-    cmult = (yi[j+1] - yi[j])/h[j] -h[j]/6 * (z[j+1] + 2 * z[j]);
+    amult = (z[j+1] - z[j]) / (6*h[j]);
+    bmult = z[j] / 2;
+    cmult = (yi[j+1] - yi[j]) / h[j] - h[j]/6 * (z[j+1] + 2 * z[j]);
     dx = x[n] - xi[j];
     /* Calculate y-value from cubic polynomial:                             */
     y[n] = yi[j] + dx*cmult + dx*dx*bmult + dx*dx*dx*amult;
@@ -754,7 +754,6 @@ splinterp(long N,         /* Length of xi                                  */
   double *c;  /* FINDME: unnecessary. Remove                                */
   double *y;  /* Array created by spline3() function                        */
   double *e;
-  int n;
   int i;
 
   /* Account for the endpoints. The code is written to calculate nx 
@@ -819,7 +818,6 @@ splinterp_pt(double *z,
              double xout,
              double yout){
 
-  int midindex; /* Middle index for binary search                           */
   int index;    /* Index of x such that: x[index] <= xout < x[index+1]      */
 
   /* Indices of bounds:                                                     */
@@ -835,32 +833,29 @@ splinterp_pt(double *z,
   double dx;
   double a, b, c;
 
-  midindex = (first + last)/2;
-
+  index = (first + last)/2;  /* Middle index for binary search              */
   /* Binary search to find index:                                           */
-  while(first<=last){
-    if(x[midindex] < xout && x[midindex + 1] > xout){
-      index = midindex;
+  while(first <= last){
+    if(x[index] < xout && x[index + 1] > xout){
       break;
     }
-    else if(x[midindex] < xout){
-      first = midindex+1;
-      midindex = (first + last)/2;
+    else if(x[index] < xout){
+      first = index + 1;
+      index = (first + last)/2;
     }
-    else if(x[midindex] > xout){
-      last  = midindex-1;
-      midindex = (first + last)/2;
+    else if(x[index] > xout){
+      last  = index - 1;
+      index = (first + last)/2;
     }
     else{
-      index = midindex;
       break;
     }   
   }
 
   /* x- and y-values which mark bounds of the desired value:                */
-  x_lo = x[index];
+  x_lo = x[index  ];
   x_hi = x[index+1];
-  y_lo = y[index];
+  y_lo = y[index  ];
   y_hi = y[index+1];
 
   /* Calculate range of area in question:                                   */
@@ -961,7 +956,7 @@ Notes:
 - hfactor = [hsum0*hsum0/h0*h1, hsum1*hsum1/h2*h3, ...]     
 " */
 
-inline void *
+void
 geth(double *h,
      double *hsum,
      double *hratio,
@@ -1027,7 +1022,7 @@ Notes:
 - See geth for formula for hsum, hratio, and hfactor");
 */
 
-inline double 
+double
 simps(double *y,
       double *h,
       double *hsum,
@@ -1059,7 +1054,7 @@ simps(double *y,
 
 /* FUNCTION
    Make a spacing array for integration                                     */
-inline void
+void
 makeh(double *x,
       double *h,
       int n){
