@@ -1,4 +1,9 @@
+# Ignore these files in this repository:
+*.pyc
 *.o
 *.o.d
-callgrind*
-.*.swp
+*.swp
+pu/libpu.a
+pu/libpu.so.1
+transit/src/transit_wrap.c
+transit/transit
