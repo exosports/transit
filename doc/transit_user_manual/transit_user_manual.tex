@@ -233,8 +233,8 @@ dependencies:
 \item \textbf{MPI} (MPICH preferred)
 \item \textbf{GCC/Make} or compatible build tools
 \item \textbf{GSL} \findme{give specifics}.
-\item \textbf{POSIX Shared Memory support} for use with the {\tt --shareOpacity}
-      flag \findme{link to shm docs}
+\item \textbf{System V IPC support} for use with the {\tt --shareOpacity}
+      flag (see {\ref{sec:sharedmem}})
 \end{itemize}
 
 For reference, {\transit} was developed on a Unix/Linux machine using Python
@@ -797,6 +797,10 @@ execute: \newline
 
 \argument{{-}{-}justOpacity=$<$boolean$>$}{If set, end execution after
   the opacity-grid calculation.}
+
+\argument{{-}{-}shareOpacity=$<$boolean$>$}{If set, attempt to place the
+  opacity grid into shared memory for use by other Transit processes
+  (see {\ref{sec:sharedmem}}) [default: false].}
 
 
 \noindent{\bf Optical-Depth Options:} \newline
@@ -1370,6 +1374,108 @@ into that folder and execute from the shell:\newline
 (Edit the configuration file arguments following the format from
   Section \ref{sec:transitcfg}) \\
 {\tttb ../transit/transit -c transit\_run\_01.cfg} \\
+
+\subsection{Utilizing Shared Memory}
+\label{sec:sharedmem}
+
+{\transit} optionally utilizes IPC shared memory to store the opacity
+grid (see \ref{sec:opacity}). This is useful when multiple {\transit}
+processes are running with the same {\tttb opacityFile}.
+
+\subsubsection{System Requirements}
+
+There are numerous system requirements related to the use of shared
+memory:
+
+\begin{itemize}
+\setlength\itemsep{0ex}
+\setlength\topsep{0ex}
+\setlength\partopsep{0ex}
+\setlength\parsep{0ex}
+\item System V Interprocess Communication (IPC) support. This can be
+      found on most modern distributions of Linux, as well as Mac OS X.
+\item Presence of {\tttm sys/ipc.h} and {\tttm sys/shm.h} system libraries.
+\item Sufficient size allowances by the OS (see below).
+\end{itemize}
+
+\subsubsection{Size Allowances}
+
+The operating system places restrictions on the total amount of shared
+memory that may be used by one process and by all processes together.
+Prior to running {\transit} with shared memory, please consider the
+following: \newline
+
+\noindent
+{\bf To check the current size allowances} (reported in bytes): \\
+\\
+On Linux: \\
+{\tttm cat /proc/sys/kernel/shmmax} \\
+{\tttm cat /proc/sys/kernel/shmall} \\
+\\
+On Mac OS X: \\
+{\tttm sysctl -h kern.sysv.shmmax} \\
+{\tttm sysctl -h kern.sysv.shmall} \\
+
+\bigskip
+\noindent
+{\bf To temporarily set the current size allowances} (until next reboot): \\
+\\
+On Linux: \\
+{\tttm [sudo] echo [size in bytes] > /proc/sys/kernel/shmmax} \\
+{\tttm [sudo] echo [size in bytes] > /proc/sys/kernel/shmall} \\
+\\
+On Mac OS X: \\
+{\tttm [sudo] sysctl -h kern.sysv.shmmax=[size in bytes]} \\
+{\tttm [sudo] sysctl -h kern.sysv.shmall=[size in bytes]} \\
+
+\bigskip
+\noindent
+{\bf To set the size allowances automatically} (after reboot): \\
+\\
+On Linux, add the following lines to {\tttm /etc/sysctl.conf}: \\
+{\tttm kernel.shmmax=[size in bytes]} \\
+{\tttm kernel.shmall=[size in bytes]} \\
+\\
+On Max OS X, add the following lines to {\tttm /etc/sysctl.conf}: \\
+{\tttm kern.sysv.shmmax=[size in bytes]} \\
+{\tttm kern.sysv.shmall=[size in bytes]} \\
+
+\subsubsection{Cleaning Up}
+
+Transit marks its shared memory segments for destruction as soon as
+possible to avoid cases in which segments remain reserved after the
+program completes. However, it is possible that a Transit process that
+is interrupted at exactly the wrong moment will leave behind a segment
+of memory. Because shared memory is reserved by the system, and not
+any specific process, it will remain unusable until the system reboots.
+
+You can manually check for and remove shared memory segments if you
+suspect that segments have been left behind: \newline
+
+\noindent
+{\bf To check for segments}: \\
+\\
+On Linux: \\
+{\tttm ipcs -m} \\
+\\
+On Mac OS X: \\
+{\tttm ipcs -am} \\
+
+\medskip
+It is common to have several shared memory segments reserved during typical
+use of your computer. Because of this, identifying segments that belong
+Transit is not always trivial. You can narrow down the search by considering
+the user running Transit, the number of Transit processes using the given
+opacity file, and the size of the segments: for each opacity file, Transit
+will reserve one segment of several dozen (48) bytes to hold meta information
+and a larger segment (approximately the size of the opacity file) to hold
+the opacity grid. \newline
+
+\noindent
+{\bf To remove a segment using its ID}: \\
+\\
+On Linux and Mac OS X: \\
+{\tttm ipcrm -m [id]} \\
 
 % \subsubsection{ON-screen prints}
 
