@@ -215,11 +215,11 @@ telldefaults(struct isotopes *iso,
                "You are using one point atmospheric conditions:\n"
                " Temperature:         %g K\n"
                " Pressure:            %g dyne/cm2\n"
-               " Mean molecular mass: %g AMU\n", 
+               " Mean molecular mass: %g AMU\n",
                at->atm.t[0]*at->atm.tfct, at->atm.p[0]*at->atm.pfct, at->mm[0]);
   /* Densities for all isotopes: */
   for(i=0; i<iso->n_i; i++)
-      transitprint(1, verblevel, " %-8s: density %8g g/cm3\n", 
+      transitprint(1, verblevel, " %-8s: density %8g g/cm3\n",
                                    iso->isof[i].n,
                                    at->molec[iso->imol[i]].d[0]);
 }

@@ -142,7 +142,7 @@ setgeom(struct geometry *sg, /* geometry structure                           */
   /* Set X and Y: */
   sg->x = Delta*sqrt(cosi*cosi-cosv*cosv);
   sg->y = Delta*sini;
-  
+
   /* Set progress indicator and return: */
   *flags |= TRPI_GEOMETRY;
   return 0;

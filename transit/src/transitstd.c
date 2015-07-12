@@ -90,12 +90,12 @@ transiterror_fcn(int flags,
              execution of program.
            0 if it is a warning call and 'transit\_nowarn' is 1
 */
-int vtransiterror_fcn(int flags, 
+int vtransiterror_fcn(int flags,
                       const char *file,
                       const long line,
                       const char *str,
                       va_list ap){
-  char prepre_error[] = 
+  char prepre_error[] =
                      "\n******************************************************";
   char pre_error[] = "\n*** Transit";
   char error[7][22] = {"",
@@ -108,7 +108,7 @@ int vtransiterror_fcn(int flags,
   };
   char *errormessage, *out;
   int len, lenout, xtr;
-  char post_error[] = 
+  char post_error[] =
                      "******************************************************\n";
 
 
@@ -117,7 +117,7 @@ int vtransiterror_fcn(int flags,
 
   len = strlen(pre_error);
   if(!(flags & TERR_NOPREAMBLE))
-    len += strlen(error[flags & TERR_NOFLAGBITS]) + strlen(post_error) + 
+    len += strlen(error[flags & TERR_NOFLAGBITS]) + strlen(post_error) +
            strlen(prepre_error);
   /* Symbols + digits + file: */
   int debugchars = 0;
@@ -304,9 +304,9 @@ transitcheckcalled(const long pi,   /* Progress indicator variable          */
 
 /* \fcnfh
    Called by a gsl_error */
-void 
+void
 error(int exitstatus,
-      int something, 
+      int something,
       const char *fmt,
       ...){
   va_list ap;
@@ -433,8 +433,8 @@ reststr(FILE *in,
    This function is called if a line of 'file' was longer than 'max'
    characters
 */
-void 
-linetoolong(int max,     /* Maxiumum length of an accepted line */ 
+void
+linetoolong(int max,     /* Maxiumum length of an accepted line */
             char *file,  /* File from which we were reading     */
             int line){   /* Line who was being read             */
   transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
@@ -446,7 +446,7 @@ linetoolong(int max,     /* Maxiumum length of an accepted line */
 
 double
 timestart(struct timeval tv,  /* timeval structure                          */
-          char *str){         /* Time stamp                                 */ 
+          char *str){         /* Time stamp                                 */
   /* Get current time:                                                      */
   gettimeofday(&tv, NULL);
   /* Calculate time in seconds:                                             */

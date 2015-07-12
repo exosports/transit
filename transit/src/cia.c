@@ -69,7 +69,7 @@ readcia(struct transit *tr){
   int npairs = tr->ds.cia->nfiles = tr->ds.th->ncia; /* Number of CIA files */
   int p;                 /* Auxiliary wavenumber index                      */
   long nt = 0, wa;       /* Number of temperature, wn samples in CIA file   */
-  char rc;               
+  char rc;
   char *lp, *lpa;        /* Pointers in file                                */
   int maxline=300, n=0;  /* Max length of line. Counter                     */
   long lines;            /* Lines read counter                              */
@@ -433,10 +433,10 @@ bicubicinterpolate(double **res,  /* target array [t1][t2]                  */
   return 0;
 }
 
-  
+
 /* \fcnfh
    Error printing function for lines longer than maxline in the CIA file    */
-void 
+void
 ciaerr(int max,    /* Max line length                                       */
        char *name, /* CIA file name                                         */
        int line){  /* Line number                                           */
@@ -448,7 +448,7 @@ ciaerr(int max,    /* Max line length                                       */
 
 
 /* \fcnfh
-   Free cia structure 
+   Free cia structure
    Return: 0 on success                                                     */
 int
 freemem_cia(struct cia *cia,

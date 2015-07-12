@@ -119,7 +119,7 @@ modulation(struct transit *tr){
 
   /* Set progress indicator, and print output:                              */
   tr->pi |= TRPI_MODULATION;
-  printmod(tr);  
+  printmod(tr);
   return 0;
 }
 

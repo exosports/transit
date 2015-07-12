@@ -54,7 +54,7 @@ Thank you for using transit!
 #include <transit.h>
 
 /* \fcnfh DEF
-   Create a sampling array. Take values from hint or else from a 
+   Create a sampling array. Take values from hint or else from a
    reference sampling.
 
    Get units factor.  Get inital and final values.
@@ -173,7 +173,7 @@ makesample1(prop_samp *samp,       /* transit sampling    */
 
 
 /* \fcnfh  DEF
-   Create a sampling array. Take values from hint or else from a 
+   Create a sampling array. Take values from hint or else from a
    reference sampling.
 
    Get units factor.  Get inital and final values.
@@ -269,7 +269,7 @@ makesample(prop_samp *samp,  /* transit sampling                            */
       memcpy(samp->v, ref->v, samp->n*sizeof(PREC_RES));
       if(ref->o != 0)
         transiterror(TERR_WARNING,
-                     "Fixed sampling array of length %i was referenced. " 
+                     "Fixed sampling array of length %i was referenced. "
                      "But also oversampling was given (%li), ignoring it "
                      "in %s sampling.\n", samp->n, ref->o, TRH_NAME(fl));
       samp->o = 0;
@@ -371,7 +371,7 @@ makewnsample(struct transit *tr){
       transiterror(TERR_SERIOUS, "User specified wavenumber factor is "
                                  "negative (%g).\n", hsamp->fct);
     rsamp.i = hsamp->i*hsamp->fct;
-    transitprint(1, verblevel, "wave i1: %.3f = %.2f * %.2f\n", rsamp.i, 
+    transitprint(1, verblevel, "wave i1: %.3f = %.2f * %.2f\n", rsamp.i,
                  hsamp->i, hsamp->fct);
   }
   else if (wlsamp->f > 0){
@@ -491,7 +491,7 @@ makeradsample(struct transit *tr){
 
   /* We need to set-up limit so that the hinted values are compatible
      with the atmosphere                                                    */
- 
+
   /* If there is only one atmospheric point, don't do makesample:           */
   if(rsamp->n==1){
     rad->n    = 1;
@@ -500,7 +500,7 @@ makeradsample(struct transit *tr){
     rad->fct  = rsamp->fct;
     rad->d    = 0;
     rad->v    = (PREC_RES *)calloc(1, sizeof(PREC_RES));
-    rad->v[0] = rsamp->v[0]; 
+    rad->v[0] = rsamp->v[0];
     res       = 0;   /* makesample()-like output                            */
     /* FINDME: warn that hinted values are going to be useless              */
   }
@@ -729,7 +729,7 @@ spline3(double *xi,
     /* Calculate y-value from cubic polynomial:                             */
     y[n] = yi[j] + dx*cmult + dx*dx*bmult + dx*dx*dx*amult;
   }
-  
+
   return y;
 }
 
@@ -756,7 +756,7 @@ splinterp(long N,         /* Length of xi                                  */
   double *e;
   int i;
 
-  /* Account for the endpoints. The code is written to calculate nx 
+  /* Account for the endpoints. The code is written to calculate nx
      points not including the final endpoint. This line makes it so
      the return has the desired number of values                            */
   nx -= 1;
@@ -774,7 +774,7 @@ splinterp(long N,         /* Length of xi                                  */
 
   /* Calculate first entry of array                                         */
   b[0] = (yi[1] - yi[0]) / (xi[1] - xi[0]);
- 
+
   /* The following loops fill out the arrays                                */
   for (i=0; i<=N-2; i++){
     b[i+1] = -b[i] + 2*(yi[i+1] - yi[i]) / (xi[i+1] - xi[i]);
@@ -810,7 +810,7 @@ splinterp(long N,         /* Length of xi                                  */
 }
 
 
-double 
+double
 splinterp_pt(double *z,
              long N,
              double *x,
@@ -849,7 +849,7 @@ splinterp_pt(double *z,
     }
     else{
       break;
-    }   
+    }
   }
 
   /* x- and y-values which mark bounds of the desired value:                */
@@ -924,7 +924,7 @@ spline_init(double *z,
   /* FINDME: Free arrays                                                    */
   return z;
 }
-    
+
 
 /* FUNCTION
    Print sample info for a structure                                        */

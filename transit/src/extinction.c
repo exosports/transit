@@ -184,7 +184,7 @@ restfile_extinct(char *filename,
 
 
 /* FUNCTION:
-   Fill up the extinction information in tr->ds.ex  
+   Fill up the extinction information in tr->ds.ex
    TD: Scattering parameters should be added at some point here.
   Return: 0 on success, else
           computeextradius()                                                */
@@ -206,7 +206,7 @@ extwn(struct transit *tr){
 
   struct isotopes *iso = tr->ds.iso;
   int niso = iso->n_i;
-  int nrad = tr->rads.n; 
+  int nrad = tr->rads.n;
   int nwn  = tr->wns.n;
 
   /* Check there is at least one atmospheric layer:                         */
@@ -619,7 +619,7 @@ interpolmolext(struct transit *tr, /* transit struct                        */
 
   /* Layer temperature:                                                     */
   PREC_ATM temp = tr->atm.t[r] * tr->atm.tfct;
-  /* Gridded temperatures:                                                  */  
+  /* Gridded temperatures:                                                  */
   gtemp = op->temp;
   Ntemp = op->Ntemp;
   /* Gridded molecules list:                                                */
@@ -640,7 +640,7 @@ interpolmolext(struct transit *tr, /* transit struct                        */
     /* Add contribution from each molecule:                                 */
     for (m=0; m < Nmol; m++){
       /* Linear interpolation of the extinction coefficient:                */
-      ext = (op->o[r][itemp  ][m][i] * (gtemp[itemp+1]-temp) + 
+      ext = (op->o[r][itemp  ][m][i] * (gtemp[itemp+1]-temp) +
              op->o[r][itemp+1][m][i] * (temp - gtemp[itemp]) ) /
                                                  (gtemp[itemp+1]-gtemp[itemp]);
       imol = valueinarray(mol->ID, gmol[m], mol->nmol);
@@ -655,8 +655,8 @@ interpolmolext(struct transit *tr, /* transit struct                        */
    Compute scatering contribution to extinction
 */
 void
-computeextscat(double *e, 
-               long n, 
+computeextscat(double *e,
+               long n,
                struct extscat *sc,
                double *rad,
                double trad,
@@ -673,7 +673,7 @@ computeextscat(double *e,
 /* \fcnfh
    Compute cloud contribution to extinction                                 */
 void
-computeextcloud(double *e, 
+computeextcloud(double *e,
                long n,
                struct extcloud *cl,
                prop_samp *rad,
