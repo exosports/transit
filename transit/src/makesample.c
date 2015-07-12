@@ -926,11 +926,6 @@ spline_init(double *z,
 }
     
 
-/* Access to i-th value of array a:                                         */
-/* FINDME: put this elswhere                                                */
-/* FINDME: Replace instaances of INDd(a,i) with a[i]                        */
-#define INDd(a,i) *((double *)(a + i))
-
 /*
 "Calculate the differentials for a Simpson-rule integration.
                                                             
@@ -955,7 +950,6 @@ Notes:
 - hratio  = [h1/h0, h3/h2, h5/h4, ...]                      
 - hfactor = [hsum0*hsum0/h0*h1, hsum1*hsum1/h2*h3, ...]     
 " */
-
 void
 geth(double *h,
      double *hsum,
@@ -987,9 +981,9 @@ geth(double *h,
   /* Calculate hsum, hratio, hfactor                                        */
   for (i=0; i<size; i++){
     j = 2*i + even;
-    INDd(hsum,   i) = INDd(h,(j  )) + INDd(h,(j+1));
-    INDd(hratio, i) = INDd(h,(j+1)) / INDd(h,(j  ));
-    INDd(hfactor,i) = INDd(hsum,i)*INDd(hsum,i) / (INDd(h,(j))*INDd(h,(j+1)));
+    hsum   [i] = h[j  ] + h[j+1];
+    hratio [i] = h[j+1] / h[j  ];
+    hfactor[i] = hsum[i] * hsum[i] / (h[j] * h[j+1]);
   }
 }
 
@@ -1038,14 +1032,14 @@ simps(double *y,
     return 0.0;
   /* Simple case, do a trapezoidal integration:                             */
   if (n == 2)
-    return INDd(h,0) * (INDd(y,0) + INDd(y,1))/2;
+    return h[0] * (y[0] + y[1]) / 2;
 
   /* Do Simpson integration (skip first if even):                           */
   integ = simpson(y, hsum, hratio, hfactor, n);
 
   /* Add trapezoidal rule for first interval if n is even:                  */
   if (even){
-    integ += INDd(h,0) * (INDd(y,0) + INDd(y,1))/2;
+    integ += h[0] * (y[0] + y[1]) / 2;
   }
 
   return integ;
@@ -1059,14 +1053,13 @@ makeh(double *x,
       double *h,
       int n){
   int i;
-
   /* Calculate spacing between each point:                                  */
   for(i=0; i<n-1; i++){
-    INDd(h,i) = INDd(x, i+1) - INDd(x, i);
+    h[i] = x[i+1] - x[i];
   }
 }
 
-/* \fcnfh DEF
+/* FUNCTION
    Perform Simpson integration calculation                                  */
 inline double
 simpson(double *y,         /* Values of function to integrate        */
@@ -1087,9 +1080,9 @@ simpson(double *y,         /* Values of function to integrate        */
   for (i=0; i < (n-1)/2; i++){
     /* Skip first value of y if there's an even number of samples:          */
     j = 2*i + (n%2==0);
-    res += (INDd(y, (j  )) * (2.0 - INDd(hratio, i))     +
-            INDd(y, (j+1)) * INDd(hfactor, i)            +
-            INDd(y, (j+2)) * (2.0 - 1.0/INDd(hratio, i)) ) * INDd(hsum,i);
+    res += (y[j  ] * (2.0 - hratio[i])     +
+            y[j+1] * hfactor[i]            +
+            y[j+2] * (2.0 - 1.0/hratio[i]) ) * hsum[i];
   }
 
   return res/6.0;
