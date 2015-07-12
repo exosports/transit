@@ -29,14 +29,5 @@ extern inline double * splinterp P_((long N, double *xi, double *yi, long nx,
 extern double splinterp_pt P_((double *z, long N, double *x, double *y,
                                double xout, double yout));
 extern double * spline_init P_((double *z, double *x, double *y, long N));
-/* Simpson integration functions:                                          */
-extern void geth P_((double *h, double *hsum, double *hratio, double *hfactor,
-                     int n));
-extern double simps P_((double *y, double *h, double *hsum, double *hratio,
-                        double *hfactor, int n));
-extern void makeh P_((double *x, double *h, int n));
-extern inline double simpson P_((double *y, double *hsum, double *hratio,
-                                 double *hfactor, int n));
-
 
 #undef P_

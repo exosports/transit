@@ -51,6 +51,7 @@ USA
 Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
+#include <math.h>
 #include <numerical.h>
 
 /* \fcnfh
@@ -199,10 +200,12 @@ integ_trasim(double dx,
   return res*dx/3.0+restrap;
 }
 
+
 double
-integ_trapz(double *x, /* Independent variable                              */
-            double *y, /* Function to integrate                             */
-            long n){   /* Number of data points                             */
+integ_trapz(double *x,  /* Independent variable                             */
+            double *y,  /* Function to integrate                            */
+            long n){    /* Number of data points                            */
+
   double res=0; /* Integral value                                           */
   long i;
 
@@ -215,7 +218,7 @@ integ_trapz(double *x, /* Independent variable                              */
   for(i=0; i < n-1; i++){
     res += (x[i+1] - x[i]) * (y[i+1] + y[i]);
   }
-  return res/2.0;
+  return 0.5*res;
 }
 
 
@@ -242,17 +245,15 @@ interp_parab(double *x,   /* x-array with at least 3 equispaced elements */
 }
 
 
-/* \fcnfh
+/* FUNCTION
    Interpolates a line in two points and return requested
    value. This function doesn't check for less than required elements.
-
-   @returns value interpolated
-*/
+   Returns: value interpolated                                              */
 double
-interp_line(double *x,                /* x-array with at least 2 elements */
-            double *y,                /* y-array with at least 2 elements */
-            double xr)                /* requested x-value to interpolate */
-{
+interp_line(double *x,   /* x-array with at least 2 elements                */
+            double *y,   /* y-array with at least 2 elements                */
+            double xr){  /* requested x-value to interpolate                */
+
   const double dx = x[1] - x[0];
   const double m  = (y[1] - y[0]) / dx;
 
@@ -260,85 +261,77 @@ interp_line(double *x,                /* x-array with at least 2 elements */
 }
 
 
-/* \fcnfh
+/* FUNCTION
    return $x^n$, is a faster version of pow() that only works if n is
    integer
-
-   @returns result
-*/
+   Returns: result                                                          */
 double 
 powi(double x,
-     int n)
-{
+     int n){
+
   double y;
   _Bool negn=n<0;
 
-  y=1;
-  if(negn)
-    n*=-1;
+  y = 1;
+  if (negn)
+    n *= -1;
 
-  for(;n>0;--n){
+  for(; n>0; --n){
     while((n&1)==0){
-      x*=x;
-      n>>=1;
+      x *= x;
+      n >>= 1;
     }
-    y=y*x;
+    y = y*x;
   }
 
-  if(negn)
-    y=1/y;
+  if (negn)
+    y = 1.0/y;
 
   return y;
 }
 
-#include <math.h>
 
-/* \fcnfh
+/* FUNCTION
    Compares up to the 'prec' most significative digits
-
-   @returns true if both numbers are the same to the required accuracy
-*/
+   Returns: true if both numbers are the same to the required accuracy      */
 _Bool
 fixedcmp(double d1,
          double d2,
-         int prec)
-{
-  if(prec>8){
-    fprintf(stderr,
-            "fixedcmp:: Sorry, but requested precision can be 8 at"
-            " most. Not %i. STOPPING\n"
-            ,prec);
+         int prec){
+  if (prec > 8){
+    fprintf(stderr, "fixedcmp:: Sorry, but requested precision can be 8 at"
+                    " most. Not %i. STOPPING.\n", prec);
     exit(EXIT_FAILURE);
   }
 
-  double l10=log(d1)/log(10);
+  double l10 = log(d1)/log(10);
   int expv;
 
-  double prec10=powi(10,prec);
-  d1*=prec10;
-  d2*=prec10;
+  double prec10 = powi(10, prec);
+  d1 *= prec10;
+  d2 *= prec10;
 
-  if(l10<0)
-    expv=-l10+0.999999999999;
+  if (l10 < 0)
+    expv = -l10 + 0.999999999999;
   else
-    expv=-l10;
+    expv = -l10;
 
-  prec10=powi(10,expv);
-  d1*=prec10;
-  d2*=prec10;
+  prec10 = powi(10, expv);
+  d1 *= prec10;
+  d2 *= prec10;
 
-  l10=d1-d2;
+  l10 = d1-d2;
 
-  return l10*l10<1.0;
+  return l10*l10 < 1.0;
 }
 
 
-/* Downsample an array by a integer factor of points */
+/* Downsample an array by a integer factor of points                        */
 int
-downsample(double *input, /* Input array                           */
-           double *out,   /* Output array                          */
-           int n,         /* Number of elements in th einput array */
-           int scale){    /* Resampling factor                     */
+downsample(double *input,  /* Input array                                   */
+           double *out,    /* Output array                                  */
+           int n,          /* Number of elements in th einput array         */
+           int scale){     /* Resampling factor                             */
 
   /* - If the scaling factor (f) is an odd number, this routine simply
        performs an averaging of the f points around the resampled value.
@@ -365,7 +358,6 @@ downsample(double *input, /* Input array                           */
   int i, j;   /* for-loop indices */
   /* Number of points in the downsampled array:                             */
   int m = 1 + (n-1)/scale;
-  //fprintf(stderr, "m=%i\n", m);
   /* Kernel size:                                                           */
   int ks = 2*(scale/2) + 1;
 
@@ -402,4 +394,165 @@ downsample(double *input, /* Input array                           */
   out[m-1] /= 0.5*(scale+1);
 
   return 0;
+}
+
+
+/* FUNCTION
+   Calculate the differentials for a Simpson-rule integration.
+
+   Parameters:
+   -----------
+   h: 1D double ndarray
+      Intervals between the X-axis samples.
+
+   Returns:
+   --------
+   hsum: 1D double ndarray
+      Sums of interval pairs.
+   hratio: 1D double ndarray
+      Ratio of consecutive intervals.
+   hfactor: 1D double ndarray
+      Factor interval.
+
+   Notes:
+   ------
+   - If there are even samples, skip the first interval.
+   - hsum    = [h0+h1, h2+h3, h4+h5, ...]
+   - hratio  = [h1/h0, h3/h2, h5/h4, ...]
+   - hfactor = [hsum0*hsum0/h0*h1, hsum1*hsum1/h2*h3, ...]                  */
+void
+geth(double *h,
+     double *hsum,
+     double *hratio,
+     double *hfactor,
+     int n){
+
+  int size;            /* Size of output array                              */
+  int i, j, even=0;    /* Auxilliary for-loop indices                       */
+
+  /* Empty array case:                                                      */
+  if (n==0){
+    hsum    = 0;
+    hratio  = 0;
+    hfactor = 0;
+    return;
+  }
+
+  /* Check for even number of samples (odd number of intervals):            */
+  even = n%2;
+  /* Calculate size of h arrays                                             */
+  size = n/2;
+
+  if(even)
+    even = 0;
+  else
+    even = 1;
+
+  /* Calculate hsum, hratio, hfactor                                        */
+  for (i=0; i<size; i++){
+    j = 2*i + even;
+    hsum   [i] = h[j  ] + h[j+1];
+    hratio [i] = h[j+1] / h[j  ];
+    hfactor[i] = hsum[i] * hsum[i] / (h[j] * h[j+1]);
+  }
+}
+
+
+/* FUNCTION
+Wrapper for Simpson-rule integration.
+
+Parameters:
+-----------
+y: 1D double ndarray
+   Function to integrate.
+h: 1D double ndarray
+   Intervals between function evaluations.
+hsum: 1D double ndarray
+   Sums of interval pairs.
+hratio: 1D double ndarray
+   Ratio of consecutive intervals.
+hfactor: 1D double ndarray
+   Factor interval.
+
+Returns:
+--------
+integ: Float
+   Integral of y over intervals h using the Simpson rule.
+
+Notes:
+------
+- If there are even samples, use a trapezoidal integration for
+  the first interval.
+- See geth for formula for hsum, hratio, and hfactor");                     */
+double
+simps(double *y,
+      double *h,
+      double *hsum,
+      double *hratio,
+      double *hfactor,
+      int n){
+  int even;
+  double integ=0;
+  even = n%2 == 0;
+
+  /* Simple case, nothing to integrate:                                     */
+  if (n == 1)
+    return 0.0;
+  /* Simple case, do a trapezoidal integration:                             */
+  if (n == 2)
+    return h[0] * (y[0] + y[1]) / 2;
+
+  /* Do Simpson integration (skip first if even):                           */
+  integ = simpson(y, hsum, hratio, hfactor, n);
+
+  /* Add trapezoidal rule for first interval if n is even:                  */
+  if (even){
+    integ += h[0] * (y[0] + y[1]) / 2;
+  }
+
+  return integ;
+}
+
+
+/* FUNCTION
+   Make a spacing array for integration                                     */
+void
+makeh(double *x,
+      double *h,
+      int n){
+  int i;
+  /* Calculate spacing between each point:                                  */
+  for(i=0; i<n-1; i++){
+    h[i] = x[i+1] - x[i];
+  }
+}
+
+
+/* FUNCTION
+   Perform Simpson integration calculation                                  */
+inline double
+simpson(double *y,         /* Values of function to integrate               */
+        double *hsum,      /* See geth function                             */
+        double *hratio,    /* See geth function                             */
+        double *hfactor,   /* See geth function                             */
+        int n){            /* Number of elements in y                       */
+
+  /* Do the final sum for the Simpson integration algorithm.  Based on
+     the Python implementation:
+     github.com/scipy/scipy/blob/v0.15.1/scipy/integrate/quadrature.py      */
+
+  int i=0,           /* for-loop index                                      */
+      j;             /* Array index for each interval                       */
+  double res = 0.0;  /* The results                                         */
+
+  /* Add contribution from each interval:                                   */
+  for (i=0; i < (n-1)/2; i++){
+    /* Skip first value of y if there's an even number of samples:          */
+    j = 2*i + (n%2==0);
+    res += (y[j  ] * (2.0 - hratio[i])     +
+            y[j+1] * hfactor[i]            +
+            y[j+2] * (2.0 - 1.0/hratio[i]) ) * hsum[i];
+  }
+
+  return res/6.0;
 }
