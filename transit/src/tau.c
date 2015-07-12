@@ -110,7 +110,7 @@ int
 tau(struct transit *tr){
   struct transithint *th = tr->ds.th;    /* transithint struct              */
   struct optdepth *tau=tr->ds.tau;       /* Def optical depth structure     */
-  
+
   struct extinction *ex = tr->ds.ex;     /* Extinction struct               */
   PREC_RES **e = ex->e;                  /* Extinction coefficient          */
   PREC_RES (*fcn)() = tr->sol->optdepth; /* eclipsetau or transittau func.  */
@@ -156,7 +156,7 @@ tau(struct transit *tr){
 
   PREC_RES *tau_wn;              /* Optical depth array                     */
   PREC_ATM *temp = tr->atm.t,    /* Temperature array                       */
-           tfct  = tr->atm.tfct; /* Temperature units                       */ 
+           tfct  = tr->atm.tfct; /* Temperature units                       */
 
   prop_samp *wn = &tr->wns; /* Wavenumber sampling                          */
   long int wnn  = wn->n;    /* Number of wavenumber samples                 */
@@ -214,7 +214,7 @@ tau(struct transit *tr){
         density[i] = tr->ds.mol->molec[i].d[rnn-1];
       for (i=0; i < tr->ds.iso->n_i; i++)
         Z[i]       = tr->ds.iso->isov[i].z [rnn-1];
-      
+
       if((rn=computemolext(tr, ex->e+(rnn-1), tr->atm.t[rnn-1]*tr->atm.tfct,
                            density, Z, 0)) != 0)
         transiterror(TERR_CRITICAL,  "computemolext() returned error "
@@ -225,7 +225,7 @@ tau(struct transit *tr){
 
   /* Save total, cloud, and scattering extinction to file if requested:     */
   if (th->savefiles){
-    totEx = openFile("total_extion.dat", 
+    totEx = openFile("total_extion.dat",
               "# 2D total extinction\n"
               "# er [wn][rad]; wn[0]=min(wn), row[0]=bottom (max(p))\n");
     cloudEx = openFile("cloud_extion.dat",
@@ -334,19 +334,19 @@ tau(struct transit *tr){
   if (th->savefiles){
     /* 2D tau [wn][rad], wn[0] = min(wn), rad[0]=top of the atm (min(p)) */
     savetau(tr);
-    /* 2D CIA  extinction [wn][rad], 
+    /* 2D CIA  extinction [wn][rad],
                               wn[0] = min(wn), rad[0]=bottom (max(p))    */
     saveCIA(tr);
     /* 2D mol-line extinction [wn][rad],
                               wn[0] = min(wn), rad[0]=bottom (max(p))    */
     savemolExtion(tr, ri);
-    /* 2D total extinction [wn][rad], 
+    /* 2D total extinction [wn][rad],
                                wn[0] = min(wn), rad[0]=bottom (max(p))   */
     closeFile(totEx);
-    /* 2D cloud extinction [wn][rad], 
+    /* 2D cloud extinction [wn][rad],
                                wn[0] = min(wn), rad[0]=bottom (max(p))   */
     closeFile(cloudEx);
-    /* 2D scatt extinction [wn][rad], 
+    /* 2D scatt extinction [wn][rad],
                               wn[0] = min(wn), rad[0]=bottom (max(p))   */
     closeFile(scattEx);
   }
@@ -391,7 +391,7 @@ void print1dArrayDouble(FILE *outf, double *array, int noColumns, char *format){
 
 /* \fcnfh
    Generalized function to print 2D array to a file                         */
-void print2dArrayDouble(FILE *outf, double **array, 
+void print2dArrayDouble(FILE *outf, double **array,
      int noRows, int noColumns, char *format, prop_samp *wn){
 	if(outf == NULL)
 		outf= stdout;
@@ -476,13 +476,13 @@ saveCIA(struct transit *tr){
 /* \fcnfh
   Print to a file tau                                                      */
 void
-save1Darray(struct transit *tr, FILE *myFile, PREC_RES *array1d, 
+save1Darray(struct transit *tr, FILE *myFile, PREC_RES *array1d,
                                               int nrad, long wi){
   prop_samp *wn = &tr->wns;   /* Wavenumber sampling                        */
 
   /* format of the characters written                                       */
   char *format= "%-20.10g";
-   
+
   /*                                                                        */
   fprintf(myFile, "\n");
   fprintf(myFile, "wavenumber: %-20.10g\n", wn->v[wi]);
@@ -525,7 +525,7 @@ savetau(struct transit *tr){
 
   /* format of the characters written                                       */
   char *format= "%-20.10g";
-   
+
   /* write header                                                           */
   fprintf(myFile, "\n");
   fprintf(myFile, "# 2D optical depth\n");

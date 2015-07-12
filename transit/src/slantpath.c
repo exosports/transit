@@ -141,7 +141,7 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
   hratio  = calloc(nrad/2, sizeof(double));
   hfactor = calloc(nrad/2, sizeof(double));
   h       = calloc(nrad-1, sizeof(double));
-  
+
   makeh(s, h, nrad);
   geth(h, hsum, hratio, hfactor, nrad);
   res = simps(ex, h, hsum, hratio, hfactor, nrad);
@@ -212,7 +212,7 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
      \tau_{\nu}(\rho) =
      \underbrace{\frac{2e_{\nu}\rho}{n}
                   \left(\sqrt{\left(\frac{nr_1}{\rho}\right)^2-1} -
-                        \sqrt{\left(\frac{nr_0}{\rho}\right)^2-1}\right) 
+                        \sqrt{\left(\frac{nr_0}{\rho}\right)^2-1}\right)
      }_{\rm{analitic}} +
      \underbrace{2\int_{r_1=r_0+\delta r}^{\infty}
                  \frac{e_{\nu}~n~r}{\sqrt{n^2r^2-\rho^2}}{\rm d} r
@@ -226,10 +226,10 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
     PREC_RES alpha = ( ex[rs] - ex[rs-1] ) / ( rad[rs] - rad[rs-1] );
     PREC_RES rm    = rad[rs];
     if(alpha<0)
-      res = - alpha * (rm * sqrt( rm*rm -  r0*r0) - r0*r0 * 
+      res = - alpha * (rm * sqrt( rm*rm -  r0*r0) - r0*r0 *
                         log(sqrt( rm*rm / (r0*r0) - 1) + rm/r0 )) / 2.0;
     else
-      res =   alpha * (rm * sqrt( rm*rm -  r0*r0) + r0*r0 * 
+      res =   alpha * (rm * sqrt( rm*rm -  r0*r0) + r0*r0 *
                         log(sqrt( rm*rm / (r0*r0) - 1) + rm/r0 ))  / 2.0;
   }
 
@@ -300,7 +300,7 @@ transittau(struct transit *tr,
 
    Return: the transit's modulation:
    1 - in-transit/out-of-transit flux ratio (Equation 3.12):
-    M_{\lambda} = \frac{1}{R_\star^2}\left(R^2 - 
+    M_{\lambda} = \frac{1}{R_\star^2}\left(R^2 -
                    2\int_{0}^{R} \exp^{-\tau_\lambda(r)} r\,{\rm d}r\right) */
 static PREC_RES
 modulation1(PREC_RES *tau,        /* Optical depth array                    */
@@ -370,7 +370,7 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
          = & -\frac{\int_0^{r_p}\int e^{-\tau}r{\rm d}\theta {\rm d}r
                   \ +\ Area_{p}} {\pi R_s^2}                       \\
          = & -\frac{2\int_0^{r_p} e^{-\tau}r{\rm d}r
-                \ +\ r_p^2} {\pi R_s^2}   
+                \ +\ r_p^2} {\pi R_s^2}
      \end{eqnarray}                                                         */
 
   res = ipv[ipn1]*ipv[ipn1] - 2.0*res;

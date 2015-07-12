@@ -462,7 +462,7 @@ calcopacity(struct transit *tr,
     fwrite(&op->temp[0],  sizeof(PREC_RES), Ntemp,  fp);
     fwrite(&op->press[0], sizeof(PREC_RES), Nlayer, fp);
     fwrite(&op->wns[0],   sizeof(PREC_RES), Nwave,  fp);
-    
+
     /* Save opacity:                                                        */
     for (r=0; r<Nlayer; r++)
       for (t=0; t<Ntemp; t++)
@@ -471,7 +471,7 @@ calcopacity(struct transit *tr,
 
     fclose(fp);
   }
-  transitprint(2, verblevel, "Done.\n"); 
+  transitprint(2, verblevel, "Done.\n");
   return 0;
 }
 

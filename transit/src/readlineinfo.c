@@ -62,7 +62,7 @@ static double tli_to_microns = TLI_WAV_UNITS/1e-4;
 
 /* FNUCTION:
   Do a binary search in file pointed by 'fp' between 'off' and 'off+nfields'
-  looking for 'target' as the first item of a record of length 'reclength', 
+  looking for 'target' as the first item of a record of length 'reclength',
   result index (with respect to offs) is stored in 'resultp'.               */
 void
 datafileBS(FILE *fp,            /* File pointer                             */
@@ -135,8 +135,8 @@ datafileBS(FILE *fp,            /* File pointer                             */
   isotopes, isotope names and masses, partition function, and cross
   sections. Get cumulative number of isotopes.
   Returns 0 on success                                                      */
-int 
-readtli_bin(FILE *fp, 
+int
+readtli_bin(FILE *fp,
             struct transit *tr,
             struct lineinfo *li){
   /* Declare varables:                                                      */
@@ -233,7 +233,7 @@ readtli_bin(FILE *fp,
     transitDEBUG(23, verblevel, "DB %i: '%s' has %i (%i) temperatures, "
                  "%i (%i) isotopes, and starts at cumulative isotope %i.\n",
                  iso->isof[correliso].d, iso->db[i].n,
-                 li->db[i].t, nT, 
+                 li->db[i].t, nT,
                  iso->db[i].i, nDBiso, iso->db[i].s);
 
 
@@ -331,7 +331,7 @@ setimol(struct transit *tr){
 
 /* FUNCTION
    Initialize wavelength sample struct.
-   Set initial and final wavelengths to use.  
+   Set initial and final wavelengths to use.
 
    Return:  0   if all hinted values were accepted, else
            (positive if something was changed):
@@ -414,7 +414,7 @@ checkrange(struct transit *tr,   /* General parameters and  hints           */
     msamp->f = hsamp->f;
   }
   /* Set initial wavelength:                                                */
-  /* If invalid value, default it to 0:                                     */ 
+  /* If invalid value, default it to 0:                                     */
   if(hsamp->i < 0){
     hsamp->i = 0;
     transiterror(TERR_WARNING, "Setting hinted lower wavelength limit "
@@ -491,7 +491,7 @@ readinfo_tli(struct transit *tr,
   tr->f_line  = th->f_line;
 
   /* Read first four bytes, they should be either
-  `(0xff-T)(0xff-L)(0xff-I)(0xff)' or '\#TLI'. They are stored as integer.  
+  `(0xff-T)(0xff-L)(0xff-I)(0xff)' or '\#TLI'. They are stored as integer.
   This checks whether the machine where the TLI file and the one this
   program is being run have the same endian order.  If the first two are
   '\#TLI', then the first line should also start as '\#TLI-ascii'           */
@@ -501,7 +501,7 @@ readinfo_tli(struct transit *tr,
   li->asciiline = 0;
   transitDEBUG(13, verblevel, "Comparing %i and %i for Magic Number (len: "
                             "%li)\n", sign.s[0], sign.s[1], sizeof(sign.s[0]));
-  
+
   if(sign.s[0] != sign.s[1]){
     /* Does it look like an ASCII TLI?, if so check it:                     */
     rn = strncasecmp(sign.sig, "#TLI", 4);  /* FINDME: strncasecmp */
@@ -533,7 +533,7 @@ readinfo_tli(struct transit *tr,
   transitprint(3, verblevel, "TLI file read from %g to %g microns.\n",
                              li->wi, li->wf);
 
-  /* Declare linetransition struct and set wavelength and lower energy unit 
+  /* Declare linetransition struct and set wavelength and lower energy unit
      factors (As of TLI v5, always in microns and cm-1, respectively):      */
   struct line_transition *lt = &li->lt;
   lt->wfct = TLI_WAV_UNITS;
@@ -554,7 +554,7 @@ readinfo_tli(struct transit *tr,
           -1 unexpected EOF
           -2 file non-seekable
           -3 on non-integer number of structure records
-          -4 First field is not valid while looking for starting point 
+          -4 First field is not valid while looking for starting point
           -5 One of the fields contained an invalid flaoating point         */
 int readdatarng(struct transit *tr,   /* transit structure                  */
                 struct lineinfo *li){ /* lineinfo structure                 */
@@ -589,7 +589,7 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
   }
 
   /* Find starting point in datafile.  First with a binary search, then
-     with a sequential search:                                              */ 
+     with a sequential search:                                              */
 
   /* Check seekability:                                                     */
   if(fseek(fp, 0, SEEK_CUR)){
@@ -685,9 +685,9 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
     Driver function to read TLI: read isotopes info, check
     and ranges, and read line transition information.
     Return: 0 on success.                                                   */
-int 
+int
 readlineinfo(struct transit *tr){
-  struct transithint *th=tr->ds.th; 
+  struct transithint *th=tr->ds.th;
   static struct lineinfo li;
   static struct isotopes iso;
   long rn;  /* Sub-routines returned status */
@@ -757,7 +757,7 @@ readlineinfo(struct transit *tr){
 
 
 /* FUNCTION:
-   Frees lineinfo structure 
+   Frees lineinfo structure
    Return: 0 on success                                      */
 int
 freemem_isotopes(struct isotopes *iso,
@@ -812,7 +812,7 @@ freemem_lineinfo(struct lineinfo *li,
 }
 
 /* FUNCTION  */
-int 
+int
 freemem_linetransition(struct line_transition *lt,
                        long *pi){
   /* Free the four arrays of lt:                                            */
@@ -888,7 +888,7 @@ int main(int argc, char **argv){
   long qb[tr.n_i];
   float szb = (li->wf-li->wi)/nbins;
   double endb;
- 
+
   twl = ltwl;
   tisoid = ltisoid;
   if(!nbins)
@@ -925,7 +925,7 @@ int main(int argc, char **argv){
                "If so, write the record number (range 0 - %i), else just "
                "press ^C: ", li->n_l-1);
   }
-  
+
 }
 
 #undef checkprepost

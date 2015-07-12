@@ -206,7 +206,7 @@ processparameters(int argc,            /* Number of command-line args  */
     {"molfile",    CLA_MOLFILE,    required_argument, "../inputs/molecules.dat",
      "filename", "Path to file with the molecular info."},
     {"savefiles", CLA_SAVEFILES, required_argument, NULL, "no",
-     "Save output files with tau, molecular extinction, CIA, and total " 
+     "Save output files with tau, molecular extinction, CIA, and total "
      "extinction, with the predetermined file names."},
 
     /* Radius options:                                                      */
@@ -388,12 +388,12 @@ processparameters(int argc,            /* Number of command-line args  */
   st_trh.mass = 1;
   st_trh.savefiles = 0;
 
-  int rn,  /* optdocs' short option */ 
+  int rn,  /* optdocs' short option */
       i;   /* Auxilliary index      */
   char name[20];
   /* For interactive rad, wavelength, and wavenumber sample inputs: */
 
-  int isYes, /* if savefiles is 'yes' */ 
+  int isYes, /* if savefiles is 'yes' */
        isNo; /* if savefiles is 'no' */
 
   /* Preset names for detailed output in transithint: */
@@ -433,7 +433,7 @@ processparameters(int argc,            /* Number of command-line args  */
     case CLA_DETCIA:   /* Detailed CIA            */
       det = &hints->det.cia;
     case CLA_DETTAU:   /* Detailed tau            */
-      if(rn == CLA_DETTAU) 
+      if(rn == CLA_DETTAU)
         det = &hints->det.tau;
     case CLA_DETEXT:   /* Detailed extinction     */
       if(rn == CLA_DETEXT)
@@ -727,7 +727,7 @@ acceptsoltype(ray_solution **sol,
 
 
 /* \fcnfh
-    Set output file names in transit (out, toomuch, and sample). 
+    Set output file names in transit (out, toomuch, and sample).
     Initialize transit.sol.  Set geometry and detailed output
     variables in transit.
     Return: 0 on success                                          */
@@ -897,7 +897,7 @@ savehint(FILE *out,
             -2 if info read is wrong
             -3 if cannot allocate memory
              1 if information read was suspicious                           */
-int 
+int
 resthint(FILE *in,
          struct transithint *hint){
   int rn, res=0;

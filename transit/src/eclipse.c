@@ -71,9 +71,9 @@ static PREC_RES *area_grid;
 
 
 /* FUNCTION
-   Computes optical depth for eclipse geometry for one ray, one wn, 
-   at various incident angles on the planet surface, 
-   between a certain layer in the atmosphere up to the top layer. 
+   Computes optical depth for eclipse geometry for one ray, one wn,
+   at various incident angles on the planet surface,
+   between a certain layer in the atmosphere up to the top layer.
    Returns: Optical depth divided by rad.fct:  \frac{tau}{units_{rad}}      */
 static PREC_RES
 eclipsetau(struct transit *tr,
@@ -155,7 +155,7 @@ eclipsetau(struct transit *tr,
 }
 
 
-/* ################################################# 
+/* #################################################
     CALCULATES EMERGENT INTENSITY FOR ONE WAVENUMBER
    ################################################# */
 
@@ -176,13 +176,13 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
   /* General variables:                                                     */
   PREC_RES res;                  /* Result                                  */
   PREC_ATM *temp = tr->atm.t;    /* Temperatures                            */
- 
-  PREC_RES angle = tr->angles[tr->angleIndex] * DEGREES;   
+
+  PREC_RES angle = tr->angles[tr->angleIndex] * DEGREES;
 
   /* Takes sampling properties for wavenumber from tr:                      */
-  prop_samp *wn = &tr->wns; 
+  prop_samp *wn = &tr->wns;
   /* Wavenumber units factor to cgs:                                        */
-  double wfct  = wn->fct; 
+  double wfct  = wn->fct;
 
   /* Radius parameter variables:                                            */
   long rnn  = rad->n;
@@ -198,9 +198,9 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
   PREC_RES tauInteg[rnn],  /* Integrand function                            */
            tauIV[rnn];     /* Tau integration variable                      */
 
-  /* Integrate for each of the planet's layer starting from the           
-     outermost until the closest layer. 
-     The order is opposite since tau starts from the top and 
+  /* Integrate for each of the planet's layer starting from the
+     outermost until the closest layer.
+     The order is opposite since tau starts from the top and
      radius array starts from the bottom.                                   */
 
   /* Planck function (erg/s/sr/cm) for wavenumbers:
@@ -217,20 +217,20 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
   /* Add all other layers to be 0.                                          */
   for(; i<rnn; i++){
     tauInteg[i] = 0;
-    /* Geometric progression is used to provide enough elements 
+    /* Geometric progression is used to provide enough elements
        for integral to work. It does not change the final outcome/result.   */
     tauIV[i] = tauIV[i-1] + 1;
    }
 
-  /* Adding additional 0 layer, plus the last represent number of elements 
+  /* Adding additional 0 layer, plus the last represent number of elements
      is -1, so we need to add one more. 2 in total.                         */
   last += 2;
 
-  /* If atmosphere is transparent, and at last level tau has not reached 
+  /* If atmosphere is transparent, and at last level tau has not reached
      tau.toomuch, last is set to max number of layers (rnn, instead of rnn-1
      because we added 2 on the previous step). The code requests never
      to go over it.                                                         */
-  if(last > rnn)    
+  if(last > rnn)
     last = rnn;
 
   /* Checks if we have enough radii to do spline, at least 3:               */
@@ -257,7 +257,7 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
 }
 
 
-/* ############################################################### 
+/* ###############################################################
     CALCULATES EMERGENT INTENSITY AT VARIOUS POINTS ON THE PLANET
    ############################################################### */
 
@@ -332,7 +332,7 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
 
 /* FUNCTION
    Calculate the flux spectrum
-   Formula: 
+   Formula:
    Flux = pi * SUMM_i [I_i * (sin(theta_fin)^2 - sin(theta_in)^2)]
    I_i are calculated for each angle defined in the configuration file
    Returns: zero on success                                                 */
@@ -346,7 +346,7 @@ flux(struct transit *tr){  /* Transit structure                             */
   long int an = tr->ann;              /* Number of angles                   */
 
   /* Intensity for all angles and all wn                                    */
-  PREC_RES **intens_grid = tr->ds.intens->a; 
+  PREC_RES **intens_grid = tr->ds.intens->a;
 
   long int i, w;  /* for-loop indices                                       */
   PREC_RES area,  /* Projected area                                         */
@@ -399,7 +399,7 @@ printintens(struct transit *tr){
   long int wnn = wn->n;           /* Number of wavenumber samples           */
 
   /* Intensity for all angles and all wn:                                   */
-  PREC_RES **intens_grid = tr->ds.intens->a;   
+  PREC_RES **intens_grid = tr->ds.intens->a;
 
   /* Adds string to the output files to differentiate between outputs        */
   char our_fileName[512];
@@ -447,13 +447,13 @@ printintens(struct transit *tr){
 
 
 /* \fcnfh
-   Print (to file or stdout) the emergent intensity as function of wavenumber 
+   Print (to file or stdout) the emergent intensity as function of wavenumber
    (and wavelength)                                                         */
 void
 printflux(struct transit *tr){
   FILE *outf=stdout;
   /* The flux per wavenumber array:                                         */
-  PREC_RES *Flux = tr->ds.out->o; 
+  PREC_RES *Flux = tr->ds.out->o;
   int rn;
 
   /* Adds string to the output files to differentiate between outputs:      */
@@ -497,7 +497,7 @@ freemem_localeclipse(){
 int
 freemem_intensityGrid(struct grid *intens,   /* grid structure              */
                       long *pi){             /* progress indicator flag     */
-                   
+
   /* Free arrays:                                                           */
   free(intens->a[0]);
   free(intens->a);
