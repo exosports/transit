@@ -11,7 +11,7 @@
 #endif
 
 /* spline.c                                                                 */
-extern inline void tri P_((double *a, double *d, double *b, double *z, long n));
+extern inline void tri P_((double *h, double *y, double *z, long n));
 extern inline void spline3 P_((double *xi, double *yi, double *x,
                                    double *z,  double *h,  double *y,
                                    long nx, long N));
