@@ -5,7 +5,7 @@ sp             := $(sp).x
 dirstack_$(sp) := $(d)
 
 FILES_PROGRAM_$(d)   := numerical iomisc procopt profile \
-			sampling xmalloc messagep
+			sampling xmalloc messagep spline
 
 header_PROGRAM_$(d) := $(FILES_PROGRAM_$(d):%=$(d)/%.h)
 

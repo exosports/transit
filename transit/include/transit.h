@@ -40,6 +40,7 @@
 #include <profile.h>
 #include <iomisc.h>
 #include <numerical.h>
+#include <spline.h>
 #include <xmalloc.h>
 #include <strings.h>
 #include <stdlib.h>
