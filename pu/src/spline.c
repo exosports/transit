@@ -50,72 +50,81 @@ Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
 #include <spline.h>
+#include <math.h>
 
 /* FUNCTION
    Solve the Natural Cubic Spline Tridiagonal System.
    See: Kincaid & Cheney (2008): Numerical Mathematics & Computing,
         Algorithm 1 (page 391).                                             */
 inline void
-tri(double *h,  /* Input: */
-    double *u,  /* Input: */
-    double *v,  /* Input: */
+tri(double *h,  /* Input: spacing between x-coordinates for y               */
+    double *y,  /* Input: Y array of samples to interpolate from            */
     double *z,  /* Output: Second derivative of the spline                  */
-    long n){
+    long n){    /* Number of y samples                                      */
 
-  int i, j;  /* Auxiliary for-loop indices                                  */
+  int i;  /* Auxiliary for-loop indices                                     */
+  double *b, *u, *v;
+  b = calloc(n-1, sizeof(double));
+  u = calloc(n-1, sizeof(double));
+  v = calloc(n-1, sizeof(double));
+
+  /* Step 1:                                                                */
+  for (i=0; i<n-1; i++){
+    b[i] = (y[i+1] - y[i]) / h[i];
+  }
 
   /* Step 2:                                                                */
-  for (i=1; i<=n; i++){
-    u[i] = u[i] - h[i-1]*h[i-1]/u[i-1];
-    v[i] = v[i] - v[i-1]*h[i-1]/u[i-1];
+  u[1] = 2 * (h[1] + h[0]);
+  v[1] = 6 * (b[1] - b[0]);
+
+  for (i=2; i<n-1; i++){
+    u[i] = 2*(h[i] + h[i-1]) - h[i-1]*h[i-1]/u[i-1];
+    v[i] = 6*(b[i] - b[i-1]) - v[i-1]*h[i-1]/u[i-1];
   }
 
   /* Step 3:                                                                */
-  z[0] = z[n+1] = 0;
-
-  z[n-1] = v[n-1]/u[n-1];
-
-  for (j=n; j >= 1; j--){
-    z[j] = (v[j-1] - h[j-1]*z[j+1]) / u[j-1];
+  z[0] = z[n-1] = 0;  /* First and last are zeroes                          */
+  for (i=n-2; i > 0; i--){
+    z[i] = (v[i] - h[i]*z[i+1]) / u[i];
   }
 
+  free(b);
+  free(u);
+  free(v);
   return;
 }
 
 
 /* FUNCTION
-   Calculate the y values for a cubic spline                                */
+   Evaluate the cubic spline  y(x) interpolating from yi(xi).
+   See: Kincaid & Cheney (2008): Numerical Mathematics & Computing,
+        Equation 12, (page 392).                                            */
 inline void
-spline3(double *xi,
-        double *yi,
-        double *x,
-        double *z,
-        double *h,
-        double *y,  /* Output*/
-        long nx,
-        long N){
+spline3(double *xi,  /* Input X array to interpolate from                   */
+        double *yi,  /* Input Y array to interpolate from                   */
+        double *x,   /* Input array with X coordinates where to interpolate */
+        double *z,   /* Second derivatives of yi at xi                      */
+        double *h,   /* Spacing between xi points                           */
+        double *y,   /* Output: spline interpolated values                  */
+        long nx,     /* Length of x                                         */
+        long N){     /* Length of xi                                        */
 
-  int i, j=0, n;  /* Indices                                                  */
-  double dx;    /* Distance from interpolation x-coordinate to
-                   previous x-coordinate in the source array                */
-  double amult, bmult, cmult;  /* Coefficients of the cubic polynomial      */
-
-  y[0] = yi[0];
+  int i=0, n;  /* Indices                                                   */
+  double B;
 
   /* Calculate the spline interpolation y-value for each x-coordinate
      in the requested array                                                 */
-  for (n=0; n<=nx; n++){
-    for (i=0; i<N-1; i++){
-      if (xi[i] <= x[n]){
-        j = i;
-      }
+  for (n=0; n<nx; n++){
+    while (xi[i+1] < x[n]){
+      i++;
     }
-    amult = (z[j+1] - z[j]) / (6*h[j]);
-    bmult =  z[j] / 2;
-    cmult = (yi[j+1] - yi[j]) / h[j] - h[j]/6 * (z[j+1] + 2 * z[j]);
-    dx = x[n] - xi[j];
+    /* Factor for linear coefficient:                                       */
+    B = (yi[i+1] - yi[i]) / h[i] - h[i]/6 * (z[i+1] + 2 * z[i]);
+
     /* Calculate y-value from cubic polynomial:                             */
-    y[n] = yi[j] + dx*cmult + dx*dx*bmult + dx*dx*dx*amult;
+    y[n] = yi[j] +    (x[n] - xi[i])    * B         +
+                   pow(x[n] - xi[i], 2) * 0.5*z[i]  +
+                   pow(x[n] - xi[i], 3) * (z[i+1] - z[i]) / (6*h[i]);
   }
   return;
 }
@@ -125,70 +134,33 @@ spline3(double *xi,
    Cubic spline interpolation.  Given points described by arrays
    xi and yi, interpolates to coordinates of xout and puts them in yout.   */
 void
-splinterp(long N,         /* Length of xi                                  */
+splinterp(long N,         /* Length of xi                                   */
           double *xi,
           double *yi,
-          long nx,
+          long nx,        /* Length of xout                                 */
           double *xout,
           double *yout){
 
-  double *b;  /* dy/dx                                                      */
-  double *h;  /* Spacing between x-coordinates                              */
-  double *k;  /* Array related to derivative of spline                      */
-  double *a;  /* Shifted h array                                            */
-  double *d;  /* Midstep array used in calculations                         */
+  double *h;  /* Spacing between xi-coordinates                             */
   double *z;  /* Array created by tri() function                            */
   int i;
 
-  /* Account for the endpoints. The code is written to calculate nx
-     points not including the final endpoint. This line makes it so
-     the return has the desired number of values                            */
-  nx -= 1;
-
   /* Allocate all arrays to be used:                                        */
-  b = calloc(N,    sizeof(double));
-  h = calloc(N,    sizeof(double));
-  k = calloc(N,    sizeof(double));
-  a = calloc(N,    sizeof(double));
-  d = calloc(N,    sizeof(double));
-  z = calloc(N,    sizeof(double));
+  h = calloc(N-1, sizeof(double));
+  z = calloc(N,   sizeof(double));
 
-  /* Calculate first entry of array                                         */
-  b[0] = (yi[1] - yi[0]) / (xi[1] - xi[0]);
-
-  /* The following loops fill out the arrays                                */
-  for (i=0; i<=N-2; i++){
-    b[i+1] = -b[i] + 2*(yi[i+1] - yi[i]) / (xi[i+1] - xi[i]);
-  }
-
-  for (i=0; i<=N-2; i++){
+  for (i=0; i<N-1; i++){
     h[i] = xi[i+1] - xi[i];
   }
 
-  for (i=0; i<=N-3; i++){
-    k[i] = 6*( (yi[i+2] - yi[i+1])/h[i+1] - (yi[i+1] - yi[i])/h[i] );
-  }
-
-  for (i=0; i<=N-3; i++){
-    a[i] = h[i+1];
-  }
-
-  for (i=0; i<=N-3; i++){
-    d[i] = 2*(h[i] + h[i+1]);
-  }
-
   /* Calculate z array:                                                     */
-  tri(a, d, k, z, N-2);
+  tri(h, yi, z, N);
 
   /* Calculate output array                                                 */
   spline3(xi, yi, xout, z, h, yout, nx, N);
 
   /* Free arrays:                                                           */
-  free(b);
   free(h);
-  free(k);
-  free(a);
-  free(d);
   free(z);
 
   return;
@@ -219,6 +191,7 @@ splinterp_pt(double *z,
   double a, b, c;
 
   index = (first + last)/2;  /* Middle index for binary search              */
+
   /* Binary search to find index:                                           */
   while(first <= last){
     if(x[index] < xout && x[index + 1] > xout){
@@ -271,46 +244,19 @@ spline_init(double *z,  /* Output: Second derivative of spline              */
             double *x,
             double *y,
             long N){
-  /* See splinterp() for description of arrays */
-  double *a;
-  double *d;
-  double *b;
+  /* See splinterp() for description of arrays:                             */
   double *h;
-  double *k;
   int i;
-
-  a = calloc(N,   sizeof(double));
-  d = calloc(N,   sizeof(double));
-  b = calloc(N,   sizeof(double));
   h = calloc(N-1, sizeof(double));
-  k = calloc(N-1, sizeof(double));
 
   /* Calculate arrays for given x, y arrays (same as in splinterp() )       */
-  for(i=0;i<N-1;i++)
-    h[i] = x[i+1]-x[i];
+  for(i=0; i<N-1; i++)
+    h[i] = x[i+1] - x[i];
 
-  b[0] = (y[1] - y[0]) / (x[1] - x[0]);
+  /* Call tri() to get z array:                                             */
+  tri(h, y, z, N);
 
-  for(i=0;i<N-1;i++)
-    b[i+1] = -b[i] + 2*(y[i+1] - y[i]) / (x[i+1] - x[i]);
-
-  for(i=0;i<N-2;i++)
-    d[i] = 2*(h[i] + h[i+1]);
-
-  for(i=0;i<N-2;i++)
-    a[i] = h[i+1];
-
-  for(i=0;i<N-1;i++)
-    k[i] = 6*((y[i+2] - y[i+1])/h[i+1] - (y[i+1] - y[i])/h[i]);
-
-  /* Use calculated arrays and call tri() to get z array:                   */
-  tri(a, d, k, z, N-2);
-
-  /* FINDME: Free arrays                                                    */
-  free(a);
-  free(d);
-  free(b);
+  /* Free arrays:                                                           */
   free(h);
-  free(k);
   return;
 }
