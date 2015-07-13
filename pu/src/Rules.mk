@@ -16,7 +16,7 @@ lib_$(d)          := $(lib_STT_$(d)) $(lib_DYN_$(d))
 local_$(d)        := $(lib_$(d)) $(bin_PROGRAMS_$(d))
 
 #the following per binary
-libpu_FILES_$(d) := sampling voigt iomisc procopt numerical xmalloc messagep
+libpu_FILES_$(d) := sampling voigt iomisc procopt numerical xmalloc messagep spline
 
 libpu_OBJS_$(d)      := $(libpu_FILES_$(d):%=$(d)/%.o)
 libpu_PIC_OBJS_$(d)  := $(libpu_FILES_$(d):%=$(d)/%_pic.o)

@@ -29,6 +29,7 @@ transit_module = Extension('_transit_module',sources=['src/transit_wrap.c'],
                                            op.join(pu,'iomisc.o'),
                                            op.join(pu,'numerical.o'),
                                            op.join(pu,'xmalloc.o'),
+                                           op.join(pu,'spline.o'),
                                            op.join(pu,'sampling.o')])
 
 setup (name="transit_module",
