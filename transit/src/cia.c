@@ -377,6 +377,7 @@ bicubicinterpolate(double **res,  /* target array [t1][t2]                  */
          lx2 = x2[nx2-1];
   long lj=nt2, fj=0;  /* Indices of edges of 2nd dimension                  */
   long li=nt1, fi=0;  /* Indices of edges of 1st dimension                  */
+  double *z1, *z2;
 
   /* Return if sampling regions don't match:                                */
   if(t1[0]>lx1 || t1[nt1-1]<fx1 || t2[0]>lx2 || t2[nt2-1]<fx2)
@@ -399,8 +400,6 @@ bicubicinterpolate(double **res,  /* target array [t1][t2]                  */
       lj = j;
 
   /* Arrays created by spline_init to be used in interpolation calculation: */
-  double *z1;
-  double *z2;
   z1 = calloc(nx2, sizeof(double));
   z2 = calloc(nx1, sizeof(double));
 
@@ -413,22 +412,24 @@ bicubicinterpolate(double **res,  /* target array [t1][t2]                  */
 
   /* Interpolate the 2nd dimension:                                         */
   for(i=0; i<nx1; i++){
-    z1 = spline_init(z1, x2, src[i], nx2);
+    spline_init(z1, x2, src[i], nx2);
     for(j=fj; j<lj; j++){
-      f2[j][i] = splinterp_pt(z1, nx2, x2, src[i], t2[j], f2[j][i]);
+      f2[j][i] = splinterp_pt(z1, nx2, x2, src[i], t2[j]);
     }
   }
 
   /* Interpolate the 1st dimension:                                         */
   for(j=fj; j<lj; j++){
-    z2 = spline_init(z2, x1, f2[j], nx1);
+    spline_init(z2, x1, f2[j], nx1);
     for(i=fi; i<li; i++){
-      res[i][j] += splinterp_pt(z2, nx1, x1, f2[j], t1[i], res[i][j]);
+      res[i][j] += splinterp_pt(z2, nx1, x1, f2[j], t1[i]);
     }
   }
 
   free(f2[0]);
   free(f2);
+  free(z1);
+  free(z2);
 
   return 0;
 }
