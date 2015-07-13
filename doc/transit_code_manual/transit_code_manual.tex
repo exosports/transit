@@ -65,51 +65,43 @@ The functions of {\tt transit} are split into two chunks: initialization and cal
 \caption{{\tt transit} function structure. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom. For example, at the beginning, transit\_init calls processparameters, then transit\_init calls acceptgenhints, then acceptgenhints calls acceptsoltype, and so on. Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geomtry, and green functions are used in both. The shaded backgrounds indicate where each function can be found.}
 \end{figure}
 
-In Section \ref{sec:headers} we describe all the headers included in {\tt transit}. Section \ref{sec:variables} gives all the custom variable types and their purpose. Then in Section \ref{sec:constants} we list all the defined constants in {\tt transit}. Section \ref{structures} lists both the structures and structure types used, and makes note of which function alters each array. In Section \ref{sec:functions} we list all source files and functions, and provide a list of the variables which are altered by each function along with a walkthrough of each major function. Finally, Section \ref{sed:equations} lists some equations that are important to the calculations made in {\tt transit}.
+In Section \ref{sec:headers} we describe all the headers included in {\tt transit}. Section \ref{sec:variables} gives all the custom variable types and their purpose. Then in Section \ref{sec:constants} we list all the defined constants in {\tt transit}. Section \ref{structures} lists both the structures and structure types used, and makes note of which function alters each array. In Section \ref{sec:functions} we list all source files and functions, and provide a list of the variables which are altered by each function along with a walkthrough of each major function. Finally, Section \ref{sec:equations} lists some equations that are important to the calculations made in {\tt transit}.
 
 \section{List of Headers used by \texttt{transit} IN PROGRESS}
 This section lists all headers included in the {\tt transit} program. Those which are unique to {\tt transit} can be found in the transit/include/ directory. The file transit.h contains the lines which include the rest of the headers.
 \label{sec:headers}
-transit.h: \\
-\indent Contains common headers for the \texttt{transit} program and defines some functions.\\
-stdarg.h: \\
-\indent Allows functions to accept an indefinite number of arguments. \\
-math.h: \\
-\indent Contains common mathematical operations. \\
-errno.h: \\
-\indent Defines the {\tt errno} macro, allowing errors to be checked. \\
-sys/types.h: \\
-\indent Defines a large number of types. \\
-sys/stat.h: \\
-\indent Defines the structure of data returns by stat() functions. \\
-sys/time.h: \\
-\indent Defines a number of time-related structures, functions, and arguments. \\
-unistd.h: \\
-\indent Defines many miscellaneous contanst, types, and functions.\\
-sampling.h: \\
-\indent Declares resampling and interpolation functions.\\
-profile.h: \\
-\indent Declares Voigt profile calculation functions.\\
-iomisc.h: \\
-\indent Declares miscellaneous input/output function (in iomisc.c). \\
-numerical.h: \\
-\indent Declares functions found in numerical.c. \\
-xmalloc.h: \\
-\indent Redefines malloc(), realloc(), and calloc(). \\
-strings.h: \\
-\indent Defines several string manipulation functions. \\
-stdlib.h: \\
-\indent Defines many general purpose functions. \\
-stdio.h: \\
-\indent Defines many general input/output functions. \\
-alloca.h: \\
-\indent Defines function alloca(), which allocates memory which is freed when the function that called alloca() returns to its caller. \\
-flags\_tr.h: \\
-\indent Defines {\tt transit} flags. \\
-constants\_tr: \\
-\indent Defines {\tt transit} constants (see Table \ref{table:constants}). \\
-types\_tr: \\
-\indent Defines {\tt transit} custom variable types (see Table \ref{table:types}). \\
+\begin{table}[ht]
+\centering
+\caption{Headers}
+\label{table:headers}
+\begin{tabular}{ll}
+\hline
+\hline
+Name            & Description \\
+\hline
+transit.h       &  Radius and wavelength indices \\
+stdarg.h        &  Record indices \\
+math.h          &  Partition-function data \\
+errno.h         &  Line-transition data  \\
+sys/types.h     &  Partial result  \\
+sys/stat.h      &  Atmospheric data  \\
+sts/time.h      &  Cross-section data  \\
+unistd.h        &  Collision-induced absorption data  \\
+sampling.h      &  Voigt profile data type \\
+profile.h       &  Precise Voigt profile data type \\
+iomisc.h        &  Declares miscellaneous input/output functions \\
+numerical.h     &  Declares functions of numerical.c \\
+xmalloc.h       &  Redefines \ttblue{malloc, realloc, calloc} \\
+strings.h       &  Defines several string manipulation functions \\
+stdlib.h        &  Defines many general purpose functions \\
+stdio.h         &  Defines many general input/output functions \\
+alloca.h        &  Defines \ttblue{alloca}, which allocates temporary memory \\
+flags\_tr.h     &  Defines {\tt transit} flags \\
+constants\_tr.h &  Defines {\tt transit} constants (see Table \ref{table:constants}) \\
+types\_tr.h     &  Defines {\tt transit} custom variable types (see Table \ref{table:types}) \\
+\hline
+\end{tabular}
+\end{table}
 
 	
 \section{List of Custom Variable Types in \texttt{transit} DONE}
@@ -401,14 +393,17 @@ Extinction array and extinction parameters.
 \begin{plain}
 struct extinction{
   PREC_RES **e;      /* Extinction value [rad][wav]                         */
-    /* ALLOCATED:							    */
-    /* FILLED OUT: extinction						    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	extwn						    */
+    /* FILLED OUT:      computemolext, interpolmolext			    */
+    /* FREED: 		freemem_extinction				    */ 
   int vf;            /* Number of fine-bins of the Voigt function           */
   float ta;          /* Number of alphas that have to be contained in
                         the profile                                         */
   _Bool *computed;   /* Whether the extinction at the given radius was
                         computed [rad]                                      */
+    /* ALLOCATED:	extwn						    */
+    /* FILLED OUT:      computemolext, interpolmolext			    */
+    /* FREED: 		freemem_extinction				    */
   double ethresh;    /* Lower extinction-coefficient threshold              */
 };
 \end{plain}
@@ -418,45 +413,45 @@ Opacity array and opacity parameters.
 \begin{plain}
 struct opacity{
   PREC_RES ****o;         /* Opacity grid [temp][iso][rad][wav]             */
-    /* ALLOCATED:							    */
-    /* FILLED OUT: extinction							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	calcopacity, readopacity			    */
+    /* FILLED OUT:      computemolext					    */
+    /* FREED: 		freemem_opacity					    */ 
   PREC_VOIGT ***profile;  /* Voigt profiles [nDop][nLor][2*profsize+1]      */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	calcprofiles, getprofile			    */
+    /* FILLED OUT:	getprofile					    */
+    /* FREED: 		freemem_opacity					    */ 
   PREC_NREC **profsize;   /* Half-size of Voigt profiles [nDop][nLor]       */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	calcprofiles					    */
+    /* FILLED OUT:	getprofile					    */
+    /* FREED: 		freemem_opacity					    */ 
   double *aDop,           /* Sample of Doppler widths [nDop]                */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	calcprofiles					    */
+    /* FILLED OUT:	calcopacity					    */
+    /* FREED: 		freemem_opacity					    */ 
          *aLor;           /* Sample of Lorentz widths [nLor]                */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	calcprofiles					    */
+    /* FILLED OUT:	calcopacity					    */
+    /* FREED: 		freemem_opacity					    */ 
   PREC_RES *temp,         /* Opacity-grid temperature array                 */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	calcopacity					    */
+    /* FILLED OUT:	calcopacity					    */
+    /* FREED: 		freemem_opacity					    */ 
            *press,        /* Opacity-grid pressure array                    */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	calcopacity					    */
+    /* FILLED OUT:	calcopacity					    */
+    /* FREED: 		freemem_opacity					    */ 
            *wns;          /* Opacity-grid wavenumber array                  */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	calcopacity					    */
+    /* FILLED OUT:	calcopacity					    */
+    /* FREED: 		freemem_opacity					    */ 
   PREC_ATM **ziso;        /* Partition function per isotope [niso][Ntemp]   */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	calcopacity					    */
+    /* FILLED OUT:	calcopacity					    */
+    /* FREED: 		freemem_opacity					    */ 
   int *molID;             /* Opacity-grid molecule ID array                 */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	calcopacity					    */
+    /* FILLED OUT:	calcopacity					    */
+    /* FREED: 		freemem_opacity					    */ 
   long Nwave, Ntemp, Nlayer, Nmol, /* Number of elements in opacity grid    */
       nDop, nLor;         /* Number of Doppler and Lorentz-width samples    */
 };
@@ -467,9 +462,9 @@ Index of refraction array.
 \begin{plain}
 struct idxref{
   PREC_RES *n;   /* Index of refraction [rad]                               */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	idxrefrac					    */
+    /* FILLED OUT:	idxrefrac					    */
+    /* FREED: 		freemem_idxrefrac				    */ 
 };
 \end{plain}
 
@@ -495,9 +490,9 @@ struct optdepth{
     /* FREED:           freemem_tau					    */
   long *last;       /*  Level index where the optical depth reached toomuch
                        (counting from the top of the atmosphere) [wn]       */
-    /* ALLOCATED: init_optdepth	                                            */
-    /* FILLED OUT: tau							    */
-    /* FREED: freemem_tau						    */
+    /* ALLOCATED:       init_optdepth                                       */
+    /* FILLED OUT:      tau						    */
+    /* FREED:           freemem_tau					    */
   double toomuch;   /* Optical depth values greater than this won't be
                        calculated: the extinction is assumed to be zero.    */
 };
@@ -508,9 +503,9 @@ Intensity array.
 \begin{plain}
 struct grid{
   PREC_RES **a;      /* Intensity grid, 2D, [an][wnn]                       */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	init_optdepth					    */
+    /* FILLED OUT:	eclipse_intens					    */
+    /* FREED: 		freemem_intensityGrid				    */ 
 };
 \end{plain}
 
@@ -563,8 +558,8 @@ struct isotopes{
     /* FILLED OUT:	readtli_bin					    */
     /* FREED: 		freemem_isotopes				    */ 
   int *imol;          /* Molecule index for this isotope[n_i]               */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
+    /* ALLOCATED:	readlineinfo					    */
+    /* FILLED OUT:	setimol						    */
     /* FREED: 		freemem_isotopes				    */ 
   prop_db *db;        /* Database's info [n_db]                             */
     /* ALLOCATED:	readtli_bin					    */
@@ -583,24 +578,24 @@ struct molecules{
   int nmol;           /* Number of molecules                                */
   prop_mol *molec;    /* Molecular properties                               */
     /* ALLOCATED:	getatm						    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* FILLED OUT:	makeradsample					    */
+    /* FREED: 		free_mol					    */ 
   char **name;        /* Molecules' names                                   */
     /* ALLOCATED:	getmnfromfile					    */
     /* FILLED OUT:	getmnfromfile					    */
-    /* FREED: 								    */ 
+    /* FREED: 		freemem_molecules				    */ 
   PREC_ZREC *mass;    /* Molecules' masses                                  */
-    /* ALLOCATED:							    */
+    /* ALLOCATED:	getatm						    */
     /* FILLED OUT:	getmoldata					    */
-    /* FREED: 								    */ 
+    /* FREED: 		freemem_molecules				    */ 
   PREC_ZREC *radius;  /* Molecules' radii                                   */
     /* ALLOCATED:	getatm						    */
     /* FILLED OUT:	getmoldata					    */
-    /* FREED: 								    */ 
+    /* FREED: 		freemem_molecules				    */ 
   int *ID;            /* Molecule universal ID                              */
     /* ALLOCATED:	getatm						    */
     /* FILLED OUT:	getmoldata					    */
-    /* FREED: 								    */ 
+    /* FREED: 		FINDME: this isn't freed!			    */ 
 };
 \end{plain}
 
@@ -609,9 +604,9 @@ Flux
 \begin{plain}
 struct outputray{
   PREC_RES *o;     /* Output as seen before interaction with telescope      */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	flux, modulation				    */
+    /* FILLED OUT:	flux, modulation1, moldulationm1		    */
+    /* FREED: 		freemem_outputray				    */ 
 };
 \end{plain}
 
@@ -648,9 +643,9 @@ Stores requested extinction, optical depth, or CIA detailed information.
 struct detailfld{
   int n;         /* Number of requested wavenumber samples */
   PREC_RES *ref; /* Array of wavenumbers requested         */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	processparameters				    */
+    /* FILLED OUT:	acceptgenhints					    */
+    /* FREED: 		freemem_detailfld				    */ 
   char file[80]; /* Output filename                        */
   char name[30]; /* Name of field                          */
 };
@@ -670,33 +665,33 @@ Collision-Induced Absorption (CIA) extinction information.
 struct cia{
   int nfiles;       /* Number of CIA files                                  */
   PREC_CIA **e;     /* Extinction from all CIA sources [wn][temp]           */
-    /* ALLOCATED:							    */
-    /* FILLED OUT: interpolatecia					    */
-    /* FREED: freemem_cia						    */ 
+    /* ALLOCATED:	readcia						    */
+    /* FILLED OUT:      interpolatecia					    */
+    /* FREED:           freemem_cia					    */ 
   PREC_CIA ***cia;  /* Tabulated CIA extinction      [nfiles][nwave][ntemp] */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: freemem_cia						    */ 
+    /* ALLOCATED:	readcia						    */
+    /* FILLED OUT:	readcia						    */
+    /* FREED:           freemem_cia					    */ 
   PREC_CIA **wn;    /* Tabulated wavenumber  arrays  [nfiles][nwave]        */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: freemem_cia						    */ 
+    /* ALLOCATED:	readcia						    */
+    /* FILLED OUT:	readcia						    */
+    /* FREED:           freemem_cia					    */ 
   PREC_CIA **temp;  /* Tabulated temperature arrays  [nfiles][ntemp]        */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: freemem_cia						    */ 
+    /* ALLOCATED:	readcia						    */
+    /* FILLED OUT:	readcia						    */
+    /* FREED:           f0reemem_cia					    */ 
   int *nwave;       /* Number of wavenumber samples  [nfiles]               */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: freemem_cia						    */ 
+    /* ALLOCATED:	readcia						    */
+    /* FILLED OUT:	readcia						    */
+    /* FREED:           freemem_cia					    */ 
   int *ntemp;       /* Number of temperature samples [nfiles]               */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: freemem_cia						    */ 
+    /* ALLOCATED:	readcia						    */
+    /* FILLED OUT:	readcia						    */
+    /* FREED:           freemem_cia					    */ 
   int *mol1, *mol2; /* Pairs of molecule's ID        [nfiles]               */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: freemem_cia						    */ 
+    /* ALLOCATED:	readcia						    */
+    /* FILLED OUT:	readcia						    */
+    /* FREED:           freemem_cia					    */ 
 };
 \end{plain}
 
@@ -769,36 +764,36 @@ struct transit{
   PREC_RES telres;  /* Telescope resolution                                 */
   long int angleIndex; /* Index of the current angle                        */
   prop_samp rads,      /* Sampling properties of radius,                    */
-    /* ALLOCATED:							    */
+    /* ALLOCATED:	FINDME						    */
     /* FILLED OUT:	makeradsample					    */
     /* FREED: 		freemem_samp					    */
             ips,       /* impact parameter,                                 */
-    /* ALLOCATED:							    */
+    /* ALLOCATED:	FINDME						    */
     /* FILLED OUT:	makeipsample					    */
     /* FREED: 		freemem_samp					    */
             owns,      /* oversampled wavenumber,                           */
-    /* ALLOCATED:							    */
+    /* ALLOCATED:	FINDME						    */
     /* FILLED OUT:	makewnsample					    */
     /* FREED: 		freemem_samp					    */
             wavs,      /* wavelength,                                       */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 		freemem_samp					    *
+    /* ALLOCATED:	FINDME						    */
+    /* FILLED OUT:	FINDME						    */
+    /* FREED: 		freemem_samp					    */
             wns,       /* wavenumber,                                       */
-    /* ALLOCATED:							    */
+    /* ALLOCATED:	FINDME						    */
     /* FILLED OUT:	makewnsample					    */
     /* FREED: 		freemem_samp					    */
             temps;     /* temperature                                       */
-    /* ALLOCATED:							    */
+    /* ALLOCATED:	FINDME						    */
     /* FILLED OUT:	maketempsample					    */
     /* FREED: 		freemem_samp					    */
   prop_atm atm;      /* Sampled atmospheric data                            */
   _Bool opabreak;    /* Break after opacity calculation                     */
   int ndivs,         /* Number of exact divisors of the oversampling factor */
      *odivs;         /* Exact divisors of the oversampling factor           */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:	makewnsample						    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	makewnsample					    */
+    /* FILLED OUT:	makewnsample					    */
+    /* FREED: 		FINDME: not freed?				    */ 
   int voigtfine;     /* Number of fine-bins of the Voigt function           */
   float timesalpha;  /* Broadening profile width in number of Doppler or
                         Lorentz half width                                  */
@@ -806,18 +801,18 @@ struct transit{
   double gsurf;      /* Surface gravity                                     */
   int ann;           /* Number of angles                                    */
   double *angles;    /* Array of incident angles for eclipse geometry       */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	acceptgenhints					    */
+    /* FILLED OUT:	acceptgenhints					    */
+    /* FREED: 		FINDME						    */ 
   int nqmol;         /* Number of species scale factors                     */
   double *qscale;    /* Species scale factors                               */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	acceptgenhints					    */
+    /* FILLED OUT:	acceptgenhints					    */
+    /* FREED: 		FINDME						    */ 
   int *qmol;         /* Species with scale factors                          */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	acceptgenhints					    */
+    /* FILLED OUT:	acceptgenhints					    */
+    /* FREED: 		FINDME						    */ 
   int taulevel;      /* Tau integration level of precision                  */
   int modlevel;      /* Modulation integration level of precision           */
 
@@ -828,9 +823,9 @@ struct transit{
   ray_solution *sol; /* Transit solution type                               */
   PREC_RES *outpret; /* Output dependent on wavelength only as it travels
                         to Earth before telescope                           */
-    /* ALLOCATED:							    */
-    /* FILLED OUT:							    */
-    /* FREED: 								    */ 
+    /* ALLOCATED:	FINDME						    */
+    /* FILLED OUT:	FINDME						    */
+    /* FREED: 		freemem_transit					    */ 
 
   struct saves save; /* Saves indicator of program stats                    */
 
@@ -862,7 +857,7 @@ struct transit{
 \newpage
 \section{List of Functions in the \texttt{transit} Files}
 \label{sec:functions}
-In this section we list all functions, sorted by source file, give a brief description of what they do, list all variables that they alter, and provide a walkthrough for each. A modified variable is written in \ttred{red}, a function is written in \ttblue{blue}, and an unmodified variable is written in {\tt typewriter}.
+In this section we list all functions, sorted by source file, give a brief description of what they do, list all variables that they alter, and provide a walkthrough for each. A modified variable is written in \ttred{red}, a function is written in \ttblue{blue}, and an unmodified variable is written in {\tt typewriter}. Unless impractical, each subsection has a diagram which indicates the function structure of that source file.
 \subsection{transit.c}
 This file contains the main {\tt transit} driver functions. The \ttblue{main} function calls \ttblue{transit\_init} and \ttblue{do\_transit}, the driver functions which do the initialization and calculation. Then \ttblue{main} calls \ttblue{free\_memory} which frees the remaining memory. This structure is shown in Figure \ref{fig:transitc}.
 
@@ -1522,7 +1517,7 @@ void saveline(FILE *fp, struct lineinfo *li)}
 int main(int argc, char **argv)}
 \tgray{For debugging only.} \newline
 
-\subsubsection{readlineinfo}
+\subsubsection{readlineinfo:}
 \paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Reset \ttred{tr.ds.li, tr.ds.iso} (lineinfo and
@@ -1530,7 +1525,7 @@ int main(int argc, char **argv)}
 \item[-] If an opacity file exists, update \ttred{tr.pi} to account for TRPI\_READINFO and TRPI\_READDATA.
 \end{enumerate}
 
-\paragraph{Walkthrough:}
+\paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Reset line information and isotopes structures.  
 \item[-] Call \ttblue{readinfo\_tli} to check if TLI file exists, open it, and get header information (all info exept line transitions). 
@@ -1541,7 +1536,7 @@ int main(int argc, char **argv)}
 \end{enumerate}
 
 
-\subsubsection{readinfo\_tli}
+\subsubsection{readinfo\_tli:}
 \paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Set \ttred{tr.f\_line} from {\tt th.f\_line} if file
@@ -1554,7 +1549,7 @@ int main(int argc, char **argv)}
 \item[-] Update \ttred{tr.pi} to include {\tt TRPI\_READINFO}.
 \end{enumerate}
 
-\paragraph{Walkthrough:}
+\paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Declare a union variable which is used to determine the type of the TLI file (ASCII or binary) and to check endianness compatibility.
 \item[-] Check that a TLI file name was given. If not, raise an error and return -2.
@@ -1726,6 +1721,23 @@ int main(int argc, char **argv)}
 \item[-] Set the result index to the beginning index of the search range.
 \item[-] Move the file pointer to this point.
 \item[-] Read the value at that point in the file. 
+\end{enumerate}
+
+\subsubsection{setimol:}
+\paragraph{Variables Modified}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate and fill \ttred{tr.ds.iso.imol} (molecular indices array).
+\end{enumerate}
+
+\paragraph{Walkthrough}
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate molecular indices array.
+\item[-] Loop over isotopes:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Call to \ttred{findstring} from iomisc.c to find the index of the molecule name in the list of isotope database molecule names.
+\item[-] If the found molecule is not already in the molecular indices array, increment the total number of molecules.
+\end{enumerate}
+\item[-] Return 0 on success.
 \end{enumerate}
 
 \newpage
@@ -2388,10 +2400,10 @@ Free index of refraction array. \newline
 \paragraph{Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Copy {\tt tr.ds.th.nDop, tr.ds.th.nLor} into \ttred{tr.ds.op.nDop, tr.ds.op.nLor}.
-\item[-] Set \ttred{tr.ds.op.aDop, tr.ds.op.aLor} equal to logspaces from given minimum and maximum ({\tt tr.ds.th.dmin, tr.ds.th.dmax, tr.ds.th.lmin, tr.ds.th.lmax}).
+\item[-] Allocate and set \ttred{tr.ds.op.aDop, tr.ds.op.aLor} equal to logspaces from given minimum and maximum ({\tt tr.ds.th.dmin, tr.ds.th.dmax, tr.ds.th.lmin, tr.ds.th.lmax}).
 \item[-] Allocate \ttred{tr.ds.op.profsize} (Voigt profile half-size).
 \item[-] Allocate \ttred{tr.ds.op.profile} (Voigt profiles).
-\item[-] Call \ttblue{getprofile} from extinction.c to fill out \ttred{tr.ds.op.profsize}.
+\item[-] Call \ttblue{getprofile} from extinction.c to fill out \ttred{tr.ds.op.profsize, tr.ds.op.profile}.
 \end{enumerate}
 
 \paragraph{Walkthrough}
@@ -2502,8 +2514,12 @@ int freemem\_cia(struct cia *cia, long *pi)}
 \subsubsection{readcia:}
 \paragraph{Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Allocate \ttred{tr.ds.cia.e} (CIA extinction array).
+\item[-] Allocate \ttred{tr.ds.cia.mol1, tr.ds.cia.mol2} (molecule IDs).
+\item[-] Allocate \ttred{tr.ds.cia.ntemp, tr.ds.cia.nwave} (number of temperatures per file, number of wavenumbers per file).
+\item[-] Allocate \ttred{tr.ds.cia.cia, tr.ds.cia.temp, tr.ds.cia.wn} (3D CIA array, temperature array, wavenumber array).
 \item[-] Copy {\tt tr.ds.th.ncia} into \ttred{tr.ds.cia.ncia}.
-\item[-] Fill in \ttred{tr.ds.cia.cia} from file.
+\item[-] Fill in \ttred{tr.ds.cia.cia, tr.ds.cia.wn, tr.ds.cia.temp, tr.ds.cia.ntemp, \\ tr.ds.cia.nwave, tr.ds.cia.mol1, tr.ds.cia.mol2} from file.
 \item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_CIA}.
 \end{enumerate}
 
@@ -3120,7 +3136,7 @@ freemem\_intensityGrid(struct grid *intens, long *pi)}
 
 \newpage
 \subsection{slantpath.c: PC-EDITED}
-This file contains routines that calculate tau at a specific impact parameter and wavenumber, and routines that calculate modulation for a specific wavenumber. \ttblue{totaltau2}, which is intended to calculate tau taking into account a variable index of refraction, is unused and untested. Figure \ref{fig:slanthpathc} shows the function structure of slantpath.c.
+This file contains routines that calculate tau at a specific impact parameter and wavenumber, and routines that calculate modulation for a specific wavenumber. \ttblue{totaltau2}, which is intended to calculate tau taking into account a variable index of refraction, is unused and untested. Figure \ref{fig:slantpathc} shows the function structure of slantpath.c.
 
 \begin{figure}
 \includegraphics{fig/slantpathc}
