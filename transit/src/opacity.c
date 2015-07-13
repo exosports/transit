@@ -372,7 +372,7 @@ calcopacity(struct transit *tr,
   for(i=1; i<iso->n_i; i++)
     op->ziso[i] = op->ziso[0] + i*Ntemp;
 
-  /* Interpolate isotopic partition function:                               */
+  /* Interpolate the partition function:                                    */
   for(i=0; i<iso->n_db; i++){  /* For each database separately:             */
     iso1db = iso->db[i].s;     /* Index of first isotope in current DB      */
 
@@ -381,10 +381,10 @@ calcopacity(struct transit *tr,
              "(%i) outside the extended limit (%i).\n", iso1db+j, iso->n_i-1);
 
       z = calloc(li->db[i].t, sizeof(double));
-      z = spline_init(z, li->db[i].T, li->isov[iso1db+j].z, li->db[i].t);
+      spline_init(z, li->db[i].T, li->isov[iso1db+j].z, li->db[i].t);
       for(k=0;k<Ntemp;k++)
-        op->ziso[iso1db+j][k] = splinterp_pt(z, li->db[i].t, li->db[i].T, li->isov[iso1db+j].z, op->temp[k], op->ziso[iso1db+j][k]);
-
+        op->ziso[iso1db+j][k] = splinterp_pt(z, li->db[i].t, li->db[i].T,
+                                       li->isov[iso1db+j].z, op->temp[k]);
       free(z);
     }
   }

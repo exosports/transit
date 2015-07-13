@@ -540,9 +540,9 @@ makeradsample(struct transit *tr){
   atmt->mm = (double   *)calloc(nrad, sizeof(double));
 
   /* Interpolate the atm. temperature, pressure, and mean molecular mass:   */
-  atmt->t  = splinterp(rsamp->n, rsamp->v, atms->atm.t, nrad, rad->v, atmt->t);
-  atmt->p  = splinterp(rsamp->n, rsamp->v, atms->atm.p, nrad, rad->v, atmt->p);
-  atmt->mm = splinterp(rsamp->n, rsamp->v, atms->mm,    nrad, rad->v, atmt->mm);
+  splinterp(rsamp->n, rsamp->v, atms->atm.t, nrad, rad->v, atmt->t);
+  splinterp(rsamp->n, rsamp->v, atms->atm.p, nrad, rad->v, atmt->p);
+  splinterp(rsamp->n, rsamp->v, atms->mm,    nrad, rad->v, atmt->mm);
 
   /* Temperature boundary check:                                            */
   for (i=0; i<nrad; i++){
@@ -558,10 +558,8 @@ makeradsample(struct transit *tr){
 
   /* Interpolate molecular density and abundance:                           */
   for(i=0; i<nmol; i++){
-    molec[i].d = splinterp(rsamp->n, rsamp->v, atms->molec[i].d,
-                           nrad,     rad->v,   molec[i].d);
-    molec[i].q = splinterp(rsamp->n, rsamp->v, atms->molec[i].q,
-                           nrad,     rad->v,   molec[i].q);
+    splinterp(rsamp->n, rsamp->v, atms->molec[i].d,  nrad, rad->v, molec[i].d);
+    splinterp(rsamp->n, rsamp->v, atms->molec[i].q,  nrad, rad->v, molec[i].q);
   }
 
   /* Interpolate isotopic partition function and cross section:             */
@@ -572,8 +570,8 @@ makeradsample(struct transit *tr){
       transitASSERT(iso1db + j > niso-1,
                     "Trying to reference an isotope (%i) outside the extended "
                     "limit (%i).\n", iso1db+j, niso-1);
-      iso->isov[iso1db+j].z = splinterp(li->db[i].t, li->db[i].T, isovs[j].z,
-                                        nrad, atmt->t, iso->isov[iso1db+j].z);
+      splinterp(li->db[i].t, li->db[i].T, isovs[j].z,
+                nrad,        atmt->t,     iso->isov[iso1db+j].z);
     }
   }
   /* Set progress indicator and return:                                     */
