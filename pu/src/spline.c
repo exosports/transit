@@ -122,7 +122,7 @@ spline3(double *xi,  /* Input X array to interpolate from                   */
     B = (yi[i+1] - yi[i]) / h[i] - h[i]/6 * (z[i+1] + 2 * z[i]);
 
     /* Calculate y-value from cubic polynomial:                             */
-    y[n] = yi[j] +    (x[n] - xi[i])    * B         +
+    y[n] = yi[i] +    (x[n] - xi[i])    * B         +
                    pow(x[n] - xi[i], 2) * 0.5*z[i]  +
                    pow(x[n] - xi[i], 3) * (z[i+1] - z[i]) / (6*h[i]);
   }
