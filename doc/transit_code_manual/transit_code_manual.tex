@@ -38,7 +38,7 @@ Jasmina  \textsc{Blecic}  \\
 \begin{minipage}{0.4\textwidth}
 \begin{flushright} \large
 \emph{Supervisor:} \\
-Dr.~Joseph \textsc{Harrington}
+Dr.~Joseph \textsc{Harrington}\\ \vspace{1.2cm}
 \end{flushright}
 \end{minipage}
 
@@ -51,7 +51,7 @@ Dr.~Joseph \textsc{Harrington}
 \end{titlepage}
 
 
-\section{Introduction IN PROGRESS}
+\section{Introduction}
 \label{sec:intro}
 This document is intended to provide the \texttt{transit} user with the information necessary to modify the code for their own uses. It describes all headers, custom variable types, structures, and functions used within the \texttt{transit} program. We also include information about which functions allocate, fill in, and free data arrays. 
 
@@ -66,8 +66,8 @@ The functions of {\tt transit} are split into two chunks: initialization and cal
 \end{figure}
 
 In Section \ref{sec:headers} we describe all the headers included in {\tt transit}. Section \ref{sec:variables} gives all the custom variable types and their purpose. Then in Section \ref{sec:constants} we list all the defined constants in {\tt transit}. Section \ref{structures} lists both the structures and structure types used, and makes note of which function alters each array. In Section \ref{sec:functions} we list all source files and functions, and provide a list of the variables which are altered by each function along with a walkthrough of each major function. Finally, Section \ref{sec:equations} lists some equations that are important to the calculations made in {\tt transit}.
-
-\section{List of Headers used by \texttt{transit} IN PROGRESS}
+\pagebreak
+\section{List of Headers used by \texttt{transit}}
 This section lists all headers included in the {\tt transit} program. Those which are unique to {\tt transit} can be found in the transit/include/ directory. The file transit.h contains the lines which include the rest of the headers.
 \label{sec:headers}
 \begin{table}[ht]
@@ -103,7 +103,7 @@ types\_tr.h     &  Defines {\tt transit} custom variable types (see Table \ref{t
 \end{tabular}
 \end{table}
 
-	
+\pagebreak	
 \section{List of Custom Variable Types in \texttt{transit} DONE}
 \label{sec:variables}
 Table \ref{table:types} lists the user-defined data types used in
@@ -132,7 +132,7 @@ PREC\_VOIGTP & double &  Precise Voigt profile data type \\
 \hline
 \end{tabular}
 \end{table}
-\newpage
+\pagebreak
 
 \section{List of Constants in \texttt{transit} DONE}
 \label{sec:constants}
@@ -171,8 +171,8 @@ MAXNAMELEN   & 20                                          &  Maximum length of 
 \hline
 \end{tabular}
 \end{table}
-
-\section{List of Structures in the \texttt{transit} Files IN PROGRESS}
+\pagebreak
+\section{List of Structures in the \texttt{transit} Files}
 \label{structures}
 \subsection{Structure Types}
 
@@ -764,27 +764,27 @@ struct transit{
   PREC_RES telres;  /* Telescope resolution                                 */
   long int angleIndex; /* Index of the current angle                        */
   prop_samp rads,      /* Sampling properties of radius,                    */
-    /* ALLOCATED:	FINDME						    */
+    /* ALLOCATED:	makesample, makesample1				    */
     /* FILLED OUT:	makeradsample					    */
     /* FREED: 		freemem_samp					    */
             ips,       /* impact parameter,                                 */
-    /* ALLOCATED:	FINDME						    */
+    /* ALLOCATED:	makesample, makesample1				    */
     /* FILLED OUT:	makeipsample					    */
     /* FREED: 		freemem_samp					    */
             owns,      /* oversampled wavenumber,                           */
-    /* ALLOCATED:	FINDME						    */
+    /* ALLOCATED:	makesample, makesample1				    */
     /* FILLED OUT:	makewnsample					    */
     /* FREED: 		freemem_samp					    */
             wavs,      /* wavelength,                                       */
-    /* ALLOCATED:	FINDME						    */
+    /* ALLOCATED:	makesample, makesample1				    */
     /* FILLED OUT:	FINDME						    */
     /* FREED: 		freemem_samp					    */
             wns,       /* wavenumber,                                       */
-    /* ALLOCATED:	FINDME						    */
+    /* ALLOCATED:	makesample, makesample1				    */
     /* FILLED OUT:	makewnsample					    */
     /* FREED: 		freemem_samp					    */
             temps;     /* temperature                                       */
-    /* ALLOCATED:	FINDME						    */
+    /* ALLOCATED:	makesample, makesample1				    */
     /* FILLED OUT:	maketempsample					    */
     /* FREED: 		freemem_samp					    */
   prop_atm atm;      /* Sampled atmospheric data                            */
@@ -1384,7 +1384,7 @@ makes the command-line-argument parser, resets the transithint struct, and fill 
 \end{enumerate}
 
 \newpage
-\subsection{geometry.c: EDITED}
+\subsection{geometry.c:}
 This file contains routines which handle the hinted geometry parameters and make calculations regarding the geometry of the transit or eclipse.
 \subsubsection{List of Functions Defined in geometry.c:}
 \function{
@@ -2340,7 +2340,7 @@ radius array.
 \end{itemize}
 
 \newpage
-\subsection{opacity.c: EDITED}
+\subsection{opacity.c:}
 This file contains routines which calculate opacities, read opacity files, and write opacity files. Figure \ref{fig:opacityc} shows the function structure.
 
 \begin{figure}
@@ -2472,7 +2472,7 @@ Free index of refraction array. \newline
 \end{enumerate}
 
 \newpage
-\subsection{cia.c: EDITED}
+\subsection{cia.c:}
 This file contains routines which are used to read the CIA files(s) and interpolate the values therein to the {\tt transit} sampling. Figure \ref{fig:ciac} shows the function structure of cia.c.
 
 \begin{figure}
@@ -2651,7 +2651,7 @@ void saveidxref(FILE *out, PREC\_NREC nrad, struct idxref *ir)}
 \end{enumerate}
 
 \newpage
-\subsection{extinction.c: EDITED}
+\subsection{extinction.c:}
 This file contains routines associated with computing molecular extinction. That includes a wrapper function to calculate Voigt profiles, a function to compute molecular extinction, and a function to interpolate the molecular extinction. There are also functions which compute extinction from other sources (\ttblue{computeextscat, computeextcloud}) although they are not fully implemented. Functions \ttblue{savefile\_extinct, restfile\_extinct, restextinct} are unused. Figure \ref{fig:extinctionc} shows the function structure of extinction.c.
 
 \begin{figure}
@@ -2865,7 +2865,7 @@ Lorentz line-broadening widths (Equations \ref{eqn:doppler} and
 \end{enumerate}
 
 \newpage
-\subsection{tau.c: EDITED}
+\subsection{tau.c:}
 This file contains all routines associated with calculation of optical depth. Functions \ttblue{detailout}, \ttblue{outdebtauex}, \ttblue{outdebex}, and \ttblue{outdebtau} are unused. Functions \ttblue{print2dArrayDouble, print1dArrayDouble} are generic print-to-file functions that are not generally used in {\tt transit}. Figure \ref{fig:tauc} shows the function structure of tau.c.
 \findme{reference the equation in BART theory doc}
 
@@ -3034,7 +3034,7 @@ variable \ttred{tr.sol} in the function \ttblue{acceptgenhints} from
 \end{enumerate}
 \newpage
 
-\subsection{eclipse.c: EDITED}
+\subsection{eclipse.c:}
 This file contains routines associated with calculating flux from an eclipse. This includes calculating optical depth at each wavenumber and incident angle, emergent intensity at each wavenumber, emergent intensity over all wavenumbers, and flux over all angles. Figure \ref{fig:eclipsec} shows the function structure of eclipse.c.
 
 \begin{figure}
@@ -3135,7 +3135,7 @@ freemem\_intensityGrid(struct grid *intens, long *pi)}
 \end{enumerate}
 
 \newpage
-\subsection{slantpath.c: PC-EDITED}
+\subsection{slantpath.c:}
 This file contains routines that calculate tau at a specific impact parameter and wavenumber, and routines that calculate modulation for a specific wavenumber. \ttblue{totaltau2}, which is intended to calculate tau taking into account a variable index of refraction, is unused and untested. Figure \ref{fig:slantpathc} shows the function structure of slantpath.c.
 
 \begin{figure}
@@ -3281,7 +3281,7 @@ nor planet emission.} \newline
 
 
 \newpage
-\subsection{observable.c: EDITED}
+\subsection{observable.c:}
 This file contains \ttblue{modulation}, a routine which uses \ttblue{modulationperwn} to calculate modulation at each wavenumber. Figure \ref{fig:observablec} shows the function structure of observable.c.
 
 \begin{figure}
