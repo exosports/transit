@@ -330,6 +330,8 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
   long ipn  = ip->n;
   long ipn1 = ipn-1;
   long i;
+  int nrad = last;
+  double *hsum, *hratio, *hfactor, *h;
 
   /* Max overall tau, for the tr.ds.sg.transparent=True case:               */
   const PREC_RES maxtau = tau[last] > toomuch? tau[last]:toomuch;
@@ -358,18 +360,17 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
   /* Increment last to represent the number of elements, check that we
      have enough:                                                           */
   last++;
-  if(last<3)
+  if(last < 3)
     transiterror(TERR_CRITICAL, "Condition failed, less than 3 items "
                                 "(only %i) for radial integration.\n", last);
 
   /* Integrate along radius:                                                */
-  /* FINDME: Untested                                                       */
-  int nrad = last;
-  double *hsum, *hratio, *hfactor, *h;
-  hsum    = calloc(nrad/2, sizeof(double));
-  hratio  = calloc(nrad/2, sizeof(double));
-  hfactor = calloc(nrad/2, sizeof(double));
-  h       = calloc(nrad-1, sizeof(double));
+  hsum    = calloc(last/2, sizeof(double));
+  hratio  = calloc(last/2, sizeof(double));
+  hfactor = calloc(last/2, sizeof(double));
+  h       = calloc(last-1, sizeof(double));
+
+
   makeh(ipv+ipn-last, h, last);
   geth(h, hsum, hratio, hfactor, last);
   res = simps(rinteg+ipn-last, h, hsum, hratio, hfactor, last);
@@ -393,6 +394,11 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
 
   /* Normalize by the stellar radius:                                       */
   res *= 1.0 / (srad*srad);
+
+  free(hsum);
+  free(hratio);
+  free(hfactor);
+  free(h);
 
   return res;
 }
