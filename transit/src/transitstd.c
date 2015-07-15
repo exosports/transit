@@ -302,27 +302,6 @@ transitcheckcalled(const long pi,   /* Progress indicator variable          */
 }
 
 
-/* \fcnfh
-   Called by a gsl_error */
-void
-error(int exitstatus,
-      int something,
-      const char *fmt,
-      ...){
-  va_list ap;
-  int len = strlen(fmt);
-  char out[len+2];
-  strcpy(out, fmt);
-  out[len  ] = '\n';
-  out[len+1] = '\0';
-
-  va_start(ap, fmt);
-  vtransiterror(TERR_CRITICAL, out, ap);
-  va_end(ap);
-
-  exit(exitstatus);
-}
-
 void
 freemem_molecules(struct molecules *mol, long *pi){
   /* Free structures: */

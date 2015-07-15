@@ -46,9 +46,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <alloca.h>
-#ifdef _USE_GSL
-#include <gsl/gsl_spline.h>
-#endif
 
 #define compattliversion 5
 
