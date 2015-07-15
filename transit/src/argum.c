@@ -64,9 +64,6 @@ Thank you for using transit!
 #include <version_tr.h>
 #include <math.h>
 #include <procopt.h>
-#ifdef _USE_GSL
-#include <gsl/gsl_version.h>
-#endif /* _USE_GSL */
 
 /* Transit ray solutions:                                                   */
 const static ray_solution *raysols[] = {&slantpath,   /* see slantpath.c    */

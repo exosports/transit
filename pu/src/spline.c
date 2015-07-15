@@ -50,6 +50,7 @@ Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
 #include <spline.h>
+#include <iomisc.h>
 #include <math.h>
 
 /* FUNCTION
@@ -109,15 +110,23 @@ spline3(double *xi,  /* Input X array to interpolate from                   */
         long nx,     /* Length of x                                         */
         long N){     /* Length of xi                                        */
 
-  int i=0, n;  /* Indices                                                   */
+  int i, n;  /* Indices                                                     */
   double B;
 
   /* Calculate the spline interpolation y-value for each x-coordinate
      in the requested array                                                 */
   for (n=0; n<nx; n++){
+    /* If the array is sorted:
     while (xi[i+1] < x[n]){
       i++;
+    }                                                                       */
+    /* Else, do a binary search:                                            */
+    i = binsearchapprox(xi, x[n], 0, N-1);
+    /* Enforce: xi[i] <= x[n] (except if xi[N-1] == x[n]):                  */
+    if (i == N-1 || x[n] < xi[i]){
+      i--;
     }
+
     /* Factor for linear coefficient:                                       */
     B = (yi[i+1] - yi[i]) / h[i] - h[i]/6 * (z[i+1] + 2 * z[i]);
 
@@ -177,10 +186,6 @@ splinterp_pt(double *z,
   double yout;  /* Output interpolated value for xout                       */
   int index;    /* Index of x such that: x[index] <= xout < x[index+1]      */
 
-  /* Indices of bounds:                                                     */
-  int first=0,
-      last =N;
-
   double x_hi, x_lo;
   double y_hi, y_lo;
 
@@ -190,24 +195,11 @@ splinterp_pt(double *z,
   double dx;
   double a, b, c;
 
-  index = (first + last)/2;  /* Middle index for binary search              */
-
   /* Binary search to find index:                                           */
-  while(first <= last){
-    if(x[index] < xout && x[index + 1] > xout){
-      break;
-    }
-    else if(x[index] < xout){
-      first = index + 1;
-      index = (first + last)/2;
-    }
-    else if(x[index] > xout){
-      last  = index - 1;
-      index = (first + last)/2;
-    }
-    else{
-      break;
-    }
+  index = binsearchapprox(x, xout, 0, N-1);
+  /* Enforce: x[i] <= xout (except if x[N-1] == xout):                      */
+  if (index == N-1 || xout < x[index]){
+    index--;
   }
 
   /* x- and y-values which mark bounds of the desired value:                */
@@ -228,7 +220,7 @@ splinterp_pt(double *z,
   else if(h > 0){
     dx = xout - x_lo;
     a = (z[index+1] - z[index])/(6*h);
-    b = z[index]/2;
+    b = 0.5*z[index];
     c = dy/h - h/6 * (z[index+1] + 2*z[index]);
     yout = y_lo + dx*(c + dx*(b + dx*a));
   }

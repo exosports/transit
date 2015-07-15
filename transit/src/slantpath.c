@@ -176,8 +176,7 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
   int rs, i=0;
   const int maxiterations=50;
 
-  transiterror(TERR_CRITICAL|TERR_ALLOWCONT, "This routine has not been "
-               "tested yet.  You have been warned.\n");
+  transiterror(TERR_CRITICAL, "This routine has not been implemented yet.\n");
 
   /* Look for closest approach radius:                                      */
   while(1){
@@ -242,22 +241,15 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
     dt[i] = ex[i]/sqrt(1-r0a*r0a);
   }
 
-  /* Integrate: Use spline if GSL is available along with at least 3 points: */
-#ifdef _USE_GSL
+  /* Integrate:                                                             */
   if(nrad-rs > 2){
-    gsl_interp_accel *acc = gsl_interp_accel_alloc();
-    gsl_spline *spl = gsl_spline_alloc(gsl_interp_cspline, nrad-rs);
-    gsl_spline_init(spl, rad+rs, dt+rs, nrad-rs);
-    res += gsl_spline_eval_integ(spl, rad[rs], rad[nrad-1], acc);
-    gsl_spline_free(spl);
-    gsl_interp_accel_free(acc);
+    /* FINDME: Not implemented                                              */
   }
-  else /* Else, use trapezoidal integration when there are only two points: */
-#endif /* _USE_GSL */
-  if(nrad-rs > 1)
+  /* Else, use trapezoidal integration when there are only two points:      */
+  else if (nrad-rs > 1)
     res += integ_trasim(rad[1]-rad[0], dt+rs, nrad-rs);
 
-  return 2*(res);
+  return 2*res;
 }
 
 
@@ -349,19 +341,17 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
                                 "(only %i) for radial integration.\n", last);
 
   /* Integrate along radius:                                                */
-#ifdef _USE_GSL
-  gsl_interp_accel *acc = gsl_interp_accel_alloc();
-  gsl_interp *spl       = gsl_interp_alloc(gsl_interp_cspline, last);
-  gsl_interp_init(spl, ipv+ipn-last, rinteg+ipn-last, last);
-  res = gsl_interp_eval_integ(spl, ipv+ipn-last, rinteg+ipn-last,
-                               ipv[ipn-last], ipv[ipn1], acc);
-  gsl_interp_free(spl);
-  gsl_interp_accel_free (acc);
-#else
-# error computation of modulation() without GSL is not implemented
-#endif
+  /* FINDME: Untested                                                       */
+  int nrad = last;
+  double *hsum, *hratio, *hfactor, *h;
+  hsum    = calloc(nrad/2, sizeof(double));
+  hratio  = calloc(nrad/2, sizeof(double));
+  hfactor = calloc(nrad/2, sizeof(double));
+  h       = calloc(nrad-1, sizeof(double));
+  makeh(ipv+ipn-last, h, last);
+  geth(h, hsum, hratio, hfactor, last);
+  res = simps(rinteg+ipn-last, h, hsum, hratio, hfactor, last);
 
-  /* TD: Add real unblocked area of the star, considering geometry          */
   /* Substract the total area blocked by the planet. This is from the
      following:
      \begin{eqnarray}
@@ -372,7 +362,6 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
          = & -\frac{2\int_0^{r_p} e^{-\tau}r{\rm d}r
                 \ +\ r_p^2} {\pi R_s^2}
      \end{eqnarray}                                                         */
-
   res = ipv[ipn1]*ipv[ipn1] - 2.0*res;
 
   /* If the planet is going to be transparent with its maximum optical

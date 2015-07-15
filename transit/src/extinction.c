@@ -433,7 +433,7 @@ computemolext(struct transit *tr, /* transit struct                         */
     /* Print Lorentz and Doppler broadening widths:                         */
     if(i <= 0)
       transitprint(1, verblevel, "Broadening (cm-1): Lorentz: %.5e, Doppler: "
-              "%.5e (T=%d).\n", alphal[i], alphad[i]*wn[0], (int)temp);
+              "%.5e (T=%.2f).\n", alphal[i], alphad[i]*wn[0], temp);
 
     maxwidth = fmax(alphal[i], alphad[i]*wn[0]); /* Max between Dop and Lor */
     minwidth = fmin(minwidth, maxwidth);
