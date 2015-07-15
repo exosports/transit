@@ -176,6 +176,9 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
   int rs, i=0;
   const int maxiterations=50;
 
+  /* Auxiliary variables for Simson integration:                            */
+  double *hsum, *hratio, *hfactor, *h;
+
   transiterror(TERR_CRITICAL, "This routine has not been implemented yet.\n");
 
   /* Look for closest approach radius:                                      */
@@ -241,13 +244,32 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
     dt[i] = ex[i]/sqrt(1-r0a*r0a);
   }
 
-  /* Integrate:                                                             */
-  if(nrad-rs > 2){
-    /* FINDME: Not implemented                                              */
+  /* Allocate auxillary integration arrays                                  */
+  hsum    = calloc((nrad-rs)/2, sizeof(double));
+  hratio  = calloc((nrad-rs)/2, sizeof(double));
+  hfactor = calloc((nrad-rs)/2, sizeof(double));
+  h       = calloc(nrad-rs-1,   sizeof(double));
+
+  /* Allocate array to hold integration range                               */
+  double *radtemp;
+  double *dttemp;
+  radtemp = calloc(nrad-rs, sizeof(double));
+  dttemp  = calloc(nrad-rs, sizeof(double));
+
+  for(i=rs;i<nrad;i++){
+    radtemp[i-rs] = rad[i];
+    dttemp[i-rs]  = dt[i];
   }
-  /* Else, use trapezoidal integration when there are only two points:      */
-  else if (nrad-rs > 1)
-    res += integ_trasim(rad[1]-rad[0], dt+rs, nrad-rs);
+
+  /* Integrate extinction along the path:                                    */
+  makeh(radtemp, h, nrad-rs);
+  geth(h, hsum, hratio, hfactor, nrad);
+  res += simps(dttemp, h, hsum, hratio, hfactor, nrad-rs);
+
+  free(hsum);
+  free(hratio);
+  free(hfactor);
+  free(h);
 
   return 2*res;
 }
