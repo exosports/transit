@@ -69,7 +69,7 @@ readcia(struct transit *tr){
   int npairs = tr->ds.cia->nfiles = tr->ds.th->ncia; /* Number of CIA files */
   int p;                 /* Auxiliary wavenumber index                      */
   long nt = 0, wa;       /* Number of temperature, wn samples in CIA file   */
-  char rc;               
+  char rc;
   char *lp, *lpa;        /* Pointers in file                                */
   int maxline=300, n=0;  /* Max length of line. Counter                     */
   long lines;            /* Lines read counter                              */
@@ -357,33 +357,33 @@ interpolatecia(struct transit *tr){
    interpolates the second dimension and then the first. The result is
    added to whatever it is already existent in 'res'
 
-   Return: 0 on success                                                 */
+   Return: 0 on success                                                     */
 int
-bicubicinterpolate(double **res, /* target array [t1][t2]  */
-                   double **src, /* Source array [x1][x2]  */
-                   double *x1,   /* Source first array     */
-                   long nx1,     /* Size of x1             */
-                   double *x2,   /* Source second array    */
-                   long nx2,     /* Size of x2             */
-                   double *t1,   /* Requested fisrt array  */
-                   long nt1,     /* Size of t1             */
-                   double *t2,   /* Requested second array */
-                   long nt2){    /* Size of t2             */
-  long i, j; /* Auxiliary for indices        */
-  /* First and last values of source arrays: */
-  double fx1=x1[0], fx2=x2[0], lx1=x1[nx1-1], lx2=x2[nx2-1];
-  long lj=nt2, fj=0;
-  long li=nt1, fi=0;
+bicubicinterpolate(double **res,  /* target array [t1][t2]                  */
+                   double **src,  /* Source array [x1][x2]                  */
+                   double *x1,    /* Source first array                     */
+                   long nx1,      /* Size of x1                             */
+                   double *x2,    /* Source second array                    */
+                   long nx2,      /* Size of x2                             */
+                   double *t1,    /* Requested first array                  */
+                   long nt1,      /* Size of t1                             */
+                   double *t2,    /* Requested second array                 */
+                   long nt2){     /* Size of t2                             */
 
-#ifndef _USE_GSL
-#error We cannot spline interpolate without GSL to obtain CIA opacities
-#endif
+  long i, j;           /* Auxiliary for-loop indices                        */
+  double fx1 = x1[0],  /* First and last values of source arrays:           */
+         fx2 = x2[0],
+         lx1 = x1[nx1-1],
+         lx2 = x2[nx2-1];
+  long lj=nt2, fj=0;  /* Indices of edges of 2nd dimension                  */
+  long li=nt1, fi=0;  /* Indices of edges of 1st dimension                  */
+  double *z1, *z2;
 
-  /* Return if sampling regions don't match: */
+  /* Return if sampling regions don't match:                                */
   if(t1[0]>lx1 || t1[nt1-1]<fx1 || t2[0]>lx2 || t2[nt2-1]<fx2)
     return 0;
 
-  /* Find indices where requested array values are within source boundaries
+  /* Find indices where requested array values are within source boundaries.
      (i.e., do not extrapolate):                                            */
   while(t1[fi++]<fx1);
   fi--;
@@ -399,43 +399,45 @@ bicubicinterpolate(double **res, /* target array [t1][t2]  */
     if(t2[j]>lx2)
       lj = j;
 
+  /* Arrays created by spline_init to be used in interpolation calculation: */
+  z1 = calloc(nx2, sizeof(double));
+  z2 = calloc(nx1, sizeof(double));
+
+  /* Temporary middle array to hold data that has been interpolated in one
+     direction:                                                             */
   double **f2 = (double **)malloc(nt2    *sizeof(double *));
   f2[0]       = (double  *)malloc(nt2*nx1*sizeof(double  ));
   for(i=1; i<nt2; i++)
     f2[i] = f2[0] + i*nx1;
-  gsl_interp_accel *acc;
-  gsl_interp       *spl;
 
+  /* Interpolate the 2nd dimension:                                         */
   for(i=0; i<nx1; i++){
-    acc = gsl_interp_accel_alloc();
-    spl = gsl_interp_alloc(gsl_interp_cspline, nx2);
-    gsl_interp_init(spl, x2, src[i], nx2);
-    for(j=fj; j<lj; j++)
-      f2[j][i] = gsl_interp_eval(spl, x2, src[i], t2[j], acc);
-    gsl_interp_free(spl);
-    gsl_interp_accel_free(acc);
+    spline_init(z1, x2, src[i], nx2);
+    for(j=fj; j<lj; j++){
+      f2[j][i] = splinterp_pt(z1, nx2, x2, src[i], t2[j]);
+    }
   }
 
+  /* Interpolate the 1st dimension:                                         */
   for(j=fj; j<lj; j++){
-    acc = gsl_interp_accel_alloc();
-    spl = gsl_interp_alloc(gsl_interp_cspline, nx1);
-    gsl_interp_init(spl, x1, f2[j], nx1);
-    for(i=fi; i<li; i++)
-      res[i][j] += gsl_interp_eval(spl, x1, f2[j], t1[i], acc);
-    gsl_interp_free(spl);
-    gsl_interp_accel_free(acc);
+    spline_init(z2, x1, f2[j], nx1);
+    for(i=fi; i<li; i++){
+      res[i][j] += splinterp_pt(z2, nx1, x1, f2[j], t1[i]);
+    }
   }
 
   free(f2[0]);
   free(f2);
+  free(z1);
+  free(z2);
 
   return 0;
 }
 
-  
+
 /* \fcnfh
    Error printing function for lines longer than maxline in the CIA file    */
-void 
+void
 ciaerr(int max,    /* Max line length                                       */
        char *name, /* CIA file name                                         */
        int line){  /* Line number                                           */
@@ -447,7 +449,7 @@ ciaerr(int max,    /* Max line length                                       */
 
 
 /* \fcnfh
-   Free cia structure 
+   Free cia structure
    Return: 0 on success                                                     */
 int
 freemem_cia(struct cia *cia,

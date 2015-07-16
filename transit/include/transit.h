@@ -40,14 +40,12 @@
 #include <profile.h>
 #include <iomisc.h>
 #include <numerical.h>
+#include <spline.h>
 #include <xmalloc.h>
 #include <strings.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <alloca.h>
-#ifdef _USE_GSL
-#include <gsl/gsl_spline.h>
-#endif
 
 #define compattliversion 5
 

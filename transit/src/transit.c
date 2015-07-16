@@ -174,18 +174,18 @@ void do_transit(double * transit_out){
     /* Compute index of refraction:                                         */
     fw(idxrefrac, !=0, &transit);
     t0 = timecheck(verblevel, itr,  10, "idxrefrac", tv, t0);
- 
+
     /* Calculate extinction coefficient:                                    */
     fw(extwn, !=0, &transit);
     t0 = timecheck(verblevel, itr, 11, "extwn", tv, t0);
- 
+
     /* Initialize structures for the optical-depth calculation:            */
     fw(init_optdepth, !=0, &transit);
 
     /* Calculates optical depth for eclipse                                 */
     if(strcmp(transit.sol->name, "eclipse") == 0){
       transitprint(1, verblevel, "\nCalculating eclipse:\n");
-      
+
       fw(tau, !=0, &transit);
       t0 = timecheck(verblevel, itr, 12, "tau eclipse", tv, t0);
 
@@ -193,7 +193,7 @@ void do_transit(double * transit_out){
       for(i=0; i < transit.ann; i++){
         /* Fills out angle index                                            */
         transit.angleIndex = i;
-   
+
         /* Calculates eclipse intensity:                                    */
         /* In cgs units erg/s/sr/cm                                         */
         fw(emergent_intens, !=0, &transit);
@@ -218,7 +218,7 @@ void do_transit(double * transit_out){
       fw(modulation, !=0, &transit);
       t0 = timecheck(verblevel, itr, 13, "modulation", tv, t0);
    }
- 
+
     for(int i=0; i < transit.wns.n; i++){
       transit_out[i] = transit.ds.out->o[i];
     }

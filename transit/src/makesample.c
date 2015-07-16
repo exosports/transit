@@ -54,7 +54,7 @@ Thank you for using transit!
 #include <transit.h>
 
 /* \fcnfh DEF
-   Create a sampling array. Take values from hint or else from a 
+   Create a sampling array. Take values from hint or else from a
    reference sampling.
 
    Get units factor.  Get inital and final values.
@@ -173,7 +173,7 @@ makesample1(prop_samp *samp,       /* transit sampling    */
 
 
 /* \fcnfh  DEF
-   Create a sampling array. Take values from hint or else from a 
+   Create a sampling array. Take values from hint or else from a
    reference sampling.
 
    Get units factor.  Get inital and final values.
@@ -269,7 +269,7 @@ makesample(prop_samp *samp,  /* transit sampling                            */
       memcpy(samp->v, ref->v, samp->n*sizeof(PREC_RES));
       if(ref->o != 0)
         transiterror(TERR_WARNING,
-                     "Fixed sampling array of length %i was referenced. " 
+                     "Fixed sampling array of length %i was referenced. "
                      "But also oversampling was given (%li), ignoring it "
                      "in %s sampling.\n", samp->n, ref->o, TRH_NAME(fl));
       samp->o = 0;
@@ -371,7 +371,7 @@ makewnsample(struct transit *tr){
       transiterror(TERR_SERIOUS, "User specified wavenumber factor is "
                                  "negative (%g).\n", hsamp->fct);
     rsamp.i = hsamp->i*hsamp->fct;
-    transitprint(1, verblevel, "wave i1: %.3f = %.2f * %.2f\n", rsamp.i, 
+    transitprint(1, verblevel, "wave i1: %.3f = %.2f * %.2f\n", rsamp.i,
                  hsamp->i, hsamp->fct);
   }
   else if (wlsamp->f > 0){
@@ -491,7 +491,7 @@ makeradsample(struct transit *tr){
 
   /* We need to set-up limit so that the hinted values are compatible
      with the atmosphere                                                    */
- 
+
   /* If there is only one atmospheric point, don't do makesample:           */
   if(rsamp->n==1){
     rad->n    = 1;
@@ -500,7 +500,7 @@ makeradsample(struct transit *tr){
     rad->fct  = rsamp->fct;
     rad->d    = 0;
     rad->v    = (PREC_RES *)calloc(1, sizeof(PREC_RES));
-    rad->v[0] = rsamp->v[0]; 
+    rad->v[0] = rsamp->v[0];
     res       = 0;   /* makesample()-like output                            */
     /* FINDME: warn that hinted values are going to be useless              */
   }
@@ -539,18 +539,11 @@ makeradsample(struct transit *tr){
   atmt->p  = (PREC_ATM *)calloc(nrad, sizeof(PREC_ATM));
   atmt->mm = (double   *)calloc(nrad, sizeof(double));
 
-  resamplex(flag, rsamp->n, rsamp->v, nrad, rad->v);
   /* Interpolate the atm. temperature, pressure, and mean molecular mass:   */
-  resampley(flag, 3, atms->atm.t, atmt->t,
-                     atms->atm.p, atmt->p,
-                     atms->mm,    atmt->mm);
+  splinterp(rsamp->n, rsamp->v, atms->atm.t, nrad, rad->v, atmt->t);
+  splinterp(rsamp->n, rsamp->v, atms->atm.p, nrad, rad->v, atmt->p);
+  splinterp(rsamp->n, rsamp->v, atms->mm,    nrad, rad->v, atmt->mm);
 
-  /* Interpolate molecular density and abundance:                           */
-  for(i=0; i<nmol; i++)
-    resampley(flag, 2, atms->molec[i].d, molec[i].d,
-                       atms->molec[i].q, molec[i].q);
-  resample_free();
- 
   /* Temperature boundary check:                                            */
   for (i=0; i<nrad; i++){
     if (atmt->t[i] < li->tmin)
@@ -562,21 +555,25 @@ makeradsample(struct transit *tr){
                    "a higher temperature (%.1f K) than the highest allowed "
                    "TLI temperature (%.1f K).\n", i, atmt->t[i], li->tmax);
   }
+
+  /* Interpolate molecular density and abundance:                           */
+  for(i=0; i<nmol; i++){
+    splinterp(rsamp->n, rsamp->v, atms->molec[i].d,  nrad, rad->v, molec[i].d);
+    splinterp(rsamp->n, rsamp->v, atms->molec[i].q,  nrad, rad->v, molec[i].q);
+  }
+
   /* Interpolate isotopic partition function and cross section:             */
   for(i=0; i<ndb; i++){       /* For each database separately:              */
     iso1db = iso->db[i].s;    /* Index of first isotope in current DB       */
     isovs  = li->isov + iso1db;
-
-    resamplex(flag, li->db[i].t, li->db[i].T, nrad, atmt->t);
     for(j=0; j < iso->db[i].i; j++){
       transitASSERT(iso1db + j > niso-1,
                     "Trying to reference an isotope (%i) outside the extended "
                     "limit (%i).\n", iso1db+j, niso-1);
-      resampley(flag, 1, isovs[j].z, iso->isov[iso1db+j].z);
+      splinterp(li->db[i].t, li->db[i].T, isovs[j].z,
+                nrad,        atmt->t,     iso->isov[iso1db+j].z);
     }
   }
-  resample_free();
-
   /* Set progress indicator and return:                                     */
   if(res>=0)
     tr->pi |= TRPI_MAKERAD;
@@ -667,7 +664,7 @@ maketempsample(struct transit *tr){
 }
 
 
-/* \fcnfh  DEF
+/* FUNCTION
    Print sample info for a structure                                        */
 static void
 printsample(FILE *out,        /* File pointer to write out                  */

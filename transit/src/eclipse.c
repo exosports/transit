@@ -69,25 +69,27 @@ static PREC_RES *area_grid;
     CALCULATES OPTICAL DEPTH AT VARIOUS POINTS ON THE PLANET
    ######################################################### */
 
-/* \fcnfh
-   Computes optical depth for eclipse geometry for one ray, one wn, 
-   at various incident angles on the planet surface, 
-   between a certain layer in the atmosphere up to the top layer. 
+
+/* FUNCTION
+   Computes optical depth for eclipse geometry for one ray, one wn,
+   at various incident angles on the planet surface,
+   between a certain layer in the atmosphere up to the top layer.
    Returns: Optical depth divided by rad.fct:  \frac{tau}{units_{rad}}      */
-/* DEF */
 static PREC_RES
 eclipsetau(struct transit *tr,
            PREC_RES height,    /* Altitude down to where calculate tau      */
            PREC_RES *ex){      /* Extinction per layer [rad]                */
-  /* Incident angle:                                                        */
-  //PREC_RES angle = tr->angles[tr->angleIndex];
-  //PREC_RES angle_rad = angle * DEGREES;   
+
   /* Layers radius array:                                                   */
-  prop_samp *rads = &tr->rads;  /* Radius sampling                           */
-  PREC_RES *rad  = rads->v;     /* Radius array                              */
+  prop_samp *rads = &tr->rads;  /* Radius sampling                          */
+  PREC_RES *rad  = rads->v;     /* Radius array                             */
+
   /* Get the index rs, of the sampled radius immediately below or equal
      to height (i.e. rad[rs] <= height < rad[rs+1]):                        */
   int rs = binsearchapprox(rad, height, 0, tr->rads.n-1);
+
+  /* Auxiliary variables for Simson integration:                            */
+  double *hsum, *hratio, *hfactor, *h;
 
   /* Returns 0 if this is the top layer (no distance travelled):            */
   if (rs == tr->rads.n-1)
@@ -102,9 +104,6 @@ eclipsetau(struct transit *tr,
 
   PREC_RES res;          /* Optical depth divided by units of radius        */
   PREC_RES x3[3], r3[3]; /* Interpolation variables                         */
-
-  /* Conversion to radian:                                                  */
-  //PREC_RES angle_rad = angle * DEGREES;   
 
   /* Distance along the path:                                               */
   PREC_RES s[nrad];
@@ -133,31 +132,30 @@ eclipsetau(struct transit *tr,
   /* Distance along the path:                                               */
   s[0] = 0.0;
   for(int i=1; i < nrad; i++){
-    s[i] = s[i-1] + (rad[i] - rad[i-1]); // /cos(angle_rad);
+    s[i] = s[i-1] + (rad[i] - rad[i-1]);
   }
 
-  /* Integrate extinction along the path:                                   */
-  /* Use spline if GSL is available along with at least 3 points:           */
-//#ifdef _USE_GSL
-//  gsl_interp_accel *acc = gsl_interp_accel_alloc();
-//  gsl_interp *spl = gsl_interp_alloc(gsl_interp_cspline, nrad);
-//  gsl_interp_init(spl, s, ex, nrad);
-//  res = gsl_interp_eval_integ(spl, s, ex, 0, s[nrad-1], acc);
-//  gsl_interp_free(spl);
-//  gsl_interp_accel_free(acc);
-//#else
-//#error non equispaced integration is not implemented without GSL
-//#endif /* _USE_GSL */
+  hsum    = calloc(nrad/2, sizeof(double));
+  hratio  = calloc(nrad/2, sizeof(double));
+  hfactor = calloc(nrad/2, sizeof(double));
+  h       = calloc(nrad-1, sizeof(double));
 
-  /* Safety mode: GSL is acting up sometimes                                */
-  res = integ_trapz(s, ex, nrad);
+  /* Integrate extinction along the path:                                   */
+  makeh(s, h, nrad);
+  geth(h, hsum, hratio, hfactor, nrad);
+  res = simps(ex, h, hsum, hratio, hfactor, nrad);
+
+  free(hsum);
+  free(hratio);
+  free(hfactor);
+  free(h);
 
   /* Optical depth divided by units of radius:                              */
   return res;
 }
 
 
-/* ################################################# 
+/* #################################################
     CALCULATES EMERGENT INTENSITY FOR ONE WAVENUMBER
    ################################################# */
 
@@ -178,17 +176,20 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
   /* General variables:                                                     */
   PREC_RES res;                  /* Result                                  */
   PREC_ATM *temp = tr->atm.t;    /* Temperatures                            */
- 
-  PREC_RES angle = tr->angles[tr->angleIndex] * DEGREES;   
+
+  PREC_RES angle = tr->angles[tr->angleIndex] * DEGREES;
 
   /* Takes sampling properties for wavenumber from tr:                      */
-  prop_samp *wn = &tr->wns; 
+  prop_samp *wn = &tr->wns;
   /* Wavenumber units factor to cgs:                                        */
-  double wfct  = wn->fct; 
+  double wfct  = wn->fct;
 
   /* Radius parameter variables:                                            */
   long rnn  = rad->n;
   long i;
+
+  /* Auxiliary variables for Simson integration:                            */
+  double *hsum, *hratio, *hfactor, *h;
 
   /* Blackbody function at each layer:                                      */
   PREC_RES B[rnn];
@@ -197,9 +198,9 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
   PREC_RES tauInteg[rnn],  /* Integrand function                            */
            tauIV[rnn];     /* Tau integration variable                      */
 
-  /* Integrate for each of the planet's layer starting from the           
-     outermost until the closest layer. 
-     The order is opposite since tau starts from the top and 
+  /* Integrate for each of the planet's layer starting from the
+     outermost until the closest layer.
+     The order is opposite since tau starts from the top and
      radius array starts from the bottom.                                   */
 
   /* Planck function (erg/s/sr/cm) for wavenumbers:
@@ -216,20 +217,20 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
   /* Add all other layers to be 0.                                          */
   for(; i<rnn; i++){
     tauInteg[i] = 0;
-    /* Geometric progression is used to provide enough elements 
+    /* Geometric progression is used to provide enough elements
        for integral to work. It does not change the final outcome/result.   */
     tauIV[i] = tauIV[i-1] + 1;
    }
 
-  /* Adding additional 0 layer, plus the last represent number of elements 
+  /* Adding additional 0 layer, plus the last represent number of elements
      is -1, so we need to add one more. 2 in total.                         */
   last += 2;
 
-  /* If atmosphere is transparent, and at last level tau has not reached 
+  /* If atmosphere is transparent, and at last level tau has not reached
      tau.toomuch, last is set to max number of layers (rnn, instead of rnn-1
      because we added 2 on the previous step). The code requests never
      to go over it.                                                         */
-  if(last > rnn)    
+  if(last > rnn)
     last = rnn;
 
   /* Checks if we have enough radii to do spline, at least 3:               */
@@ -238,43 +239,25 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
                                 "integration.\n", last);
 
   /* Integrate along tau up to tau = toomuch:                               */
-#ifdef _USE_GSL
-  gsl_interp_accel *acc = gsl_interp_accel_alloc();
-  gsl_interp *spl       = gsl_interp_alloc(gsl_interp_cspline, last);
-  gsl_interp_init(spl, tauIV, tauInteg, last);
-  res = gsl_interp_eval_integ(spl, tauIV, tauInteg,
-                               tauIV[0], tauIV[last-1], acc);
-  gsl_interp_free(spl);
-  gsl_interp_accel_free (acc);
-#else
-# error computation of modulation() without GSL is not implemented
-#endif
+  hsum    = calloc(last/2, sizeof(double));
+  hratio  = calloc(last/2, sizeof(double));
+  hfactor = calloc(last/2, sizeof(double));
+  h       = calloc(last-1, sizeof(double));
 
-  /* GSL is stupid. I will use a trapezoidal rule for integration instead
-     (when I want to run the code in safety mode):                          */
-  //res = integ_trapz(tauIV, tauInteg, last);
+  makeh(tauIV, h, last);
+  geth(h, hsum, hratio, hfactor, last);
+  res = simps(tauInteg, h, hsum, hratio, hfactor, last);
 
-  //if (fabs(w-2877.00) <= 0.5){
-  //  transitprint(1, 2, "\nI(w=%.10g) = %.10g\n", w, res);
-  //  for (i=0; i<last; i++)
-  //    transitprint(1, 2, "  tau: %.10e   int:%.10e\n", tauIV[i], tauInteg[i]);
-  //  double res2 = integ_trapz(tauIV, tauInteg, last-1);
-  //  transitprint(1,2, "Trapezoidal integration: %.10e\n", res2);
-  //}
+  free(hsum);
+  free(hratio);
+  free(hfactor);
+  free(h);
 
-  //if (res < 0){
-  //if (fabs(w-1844.59) <= 0.005){
-  //  double res2 = integ_trapz(tauIV, tauInteg, last-1);
-  //  transitprint(1,2, "Trapezoidal integration: %.10e\n", res2);
-  //  transitprint(1, 2, "\nI(w=%.10g) = %.10g\n", w, res);
-  //  for (i=0; i<last; i++)
-  //    transitprint(1, 2, "  tau: %.10e   int:%.10g\n", tauIV[i], tauInteg[i]);
-  //}
   return res/cos(angle);
 }
 
 
-/* ############################################################### 
+/* ###############################################################
     CALCULATES EMERGENT INTENSITY AT VARIOUS POINTS ON THE PLANET
    ############################################################### */
 
@@ -349,7 +332,7 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
 
 /* FUNCTION
    Calculate the flux spectrum
-   Formula: 
+   Formula:
    Flux = pi * SUMM_i [I_i * (sin(theta_fin)^2 - sin(theta_in)^2)]
    I_i are calculated for each angle defined in the configuration file
    Returns: zero on success                                                 */
@@ -363,7 +346,7 @@ flux(struct transit *tr){  /* Transit structure                             */
   long int an = tr->ann;              /* Number of angles                   */
 
   /* Intensity for all angles and all wn                                    */
-  PREC_RES **intens_grid = tr->ds.intens->a; 
+  PREC_RES **intens_grid = tr->ds.intens->a;
 
   long int i, w;  /* for-loop indices                                       */
   PREC_RES area,  /* Projected area                                         */
@@ -416,7 +399,7 @@ printintens(struct transit *tr){
   long int wnn = wn->n;           /* Number of wavenumber samples           */
 
   /* Intensity for all angles and all wn:                                   */
-  PREC_RES **intens_grid = tr->ds.intens->a;   
+  PREC_RES **intens_grid = tr->ds.intens->a;
 
   /* Adds string to the output files to differentiate between outputs        */
   char our_fileName[512];
@@ -464,13 +447,13 @@ printintens(struct transit *tr){
 
 
 /* \fcnfh
-   Print (to file or stdout) the emergent intensity as function of wavenumber 
+   Print (to file or stdout) the emergent intensity as function of wavenumber
    (and wavelength)                                                         */
 void
 printflux(struct transit *tr){
   FILE *outf=stdout;
   /* The flux per wavenumber array:                                         */
-  PREC_RES *Flux = tr->ds.out->o; 
+  PREC_RES *Flux = tr->ds.out->o;
   int rn;
 
   /* Adds string to the output files to differentiate between outputs:      */
@@ -514,7 +497,7 @@ freemem_localeclipse(){
 int
 freemem_intensityGrid(struct grid *intens,   /* grid structure              */
                       long *pi){             /* progress indicator flag     */
-                   
+
   /* Free arrays:                                                           */
   free(intens->a[0]);
   free(intens->a);

@@ -127,25 +127,24 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
   s[0] = 0;
 
   /* Only valid for refraction index = 1.0                                  */
-  //transitprint(100, verblevel, "Delta-s = [");
   for(i=1; i<nrad; i++){
     s[i] = sqrt(rad[i]*rad[i] - r0*r0);
-    //transitprint(100, verblevel, "%.6f, ", s[i]);
   }
-  //transitprint(100, verblevel, "]\n");
 
   /* Integrate Extinction along ray path:                                   */
-  /* Use spline if GSL is available along with at least 3 points:           */
-#ifdef _USE_GSL
-  gsl_interp_accel *acc = gsl_interp_accel_alloc();
-  gsl_interp       *spl = gsl_interp_alloc(gsl_interp_cspline, nrad);
-  gsl_interp_init(spl, s, ex, nrad);
-  res = gsl_interp_eval_integ(spl, s, ex, 0, s[nrad-1], acc);
-  gsl_interp_free(spl);
-  gsl_interp_accel_free(acc);
-#else
-#error non equispaced integration is not implemented without GSL
-#endif /* _USE_GSL                                                          */
+  double *hsum;
+  double *hratio;
+  double *hfactor;
+  double *h;
+
+  hsum    = calloc(nrad/2, sizeof(double));
+  hratio  = calloc(nrad/2, sizeof(double));
+  hfactor = calloc(nrad/2, sizeof(double));
+  h       = calloc(nrad-1, sizeof(double));
+
+  makeh(s, h, nrad);
+  geth(h, hsum, hratio, hfactor, nrad);
+  res = simps(ex, h, hsum, hratio, hfactor, nrad);
 
   /* Reset original values of arrays:                                       */
   *ex  = tmpex;
@@ -177,8 +176,10 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
   int rs, i=0;
   const int maxiterations=50;
 
-  transiterror(TERR_CRITICAL|TERR_ALLOWCONT, "This routine has not been "
-               "tested yet.  You have been warned.\n");
+  /* Auxiliary variables for Simson integration:                            */
+  double *hsum, *hratio, *hfactor, *h;
+
+  transiterror(TERR_CRITICAL, "This routine has not been implemented yet.\n");
 
   /* Look for closest approach radius:                                      */
   while(1){
@@ -213,7 +214,7 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
      \tau_{\nu}(\rho) =
      \underbrace{\frac{2e_{\nu}\rho}{n}
                   \left(\sqrt{\left(\frac{nr_1}{\rho}\right)^2-1} -
-                        \sqrt{\left(\frac{nr_0}{\rho}\right)^2-1}\right) 
+                        \sqrt{\left(\frac{nr_0}{\rho}\right)^2-1}\right)
      }_{\rm{analitic}} +
      \underbrace{2\int_{r_1=r_0+\delta r}^{\infty}
                  \frac{e_{\nu}~n~r}{\sqrt{n^2r^2-\rho^2}}{\rm d} r
@@ -227,10 +228,10 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
     PREC_RES alpha = ( ex[rs] - ex[rs-1] ) / ( rad[rs] - rad[rs-1] );
     PREC_RES rm    = rad[rs];
     if(alpha<0)
-      res = - alpha * (rm * sqrt( rm*rm -  r0*r0) - r0*r0 * 
+      res = - alpha * (rm * sqrt( rm*rm -  r0*r0) - r0*r0 *
                         log(sqrt( rm*rm / (r0*r0) - 1) + rm/r0 )) / 2.0;
     else
-      res =   alpha * (rm * sqrt( rm*rm -  r0*r0) + r0*r0 * 
+      res =   alpha * (rm * sqrt( rm*rm -  r0*r0) + r0*r0 *
                         log(sqrt( rm*rm / (r0*r0) - 1) + rm/r0 ))  / 2.0;
   }
 
@@ -243,22 +244,34 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
     dt[i] = ex[i]/sqrt(1-r0a*r0a);
   }
 
-  /* Integrate: Use spline if GSL is available along with at least 3 points: */
-#ifdef _USE_GSL
-  if(nrad-rs > 2){
-    gsl_interp_accel *acc = gsl_interp_accel_alloc();
-    gsl_spline *spl = gsl_spline_alloc(gsl_interp_cspline, nrad-rs);
-    gsl_spline_init(spl, rad+rs, dt+rs, nrad-rs);
-    res += gsl_spline_eval_integ(spl, rad[rs], rad[nrad-1], acc);
-    gsl_spline_free(spl);
-    gsl_interp_accel_free(acc);
-  }
-  else /* Else, use trapezoidal integration when there are only two points: */
-#endif /* _USE_GSL */
-  if(nrad-rs > 1)
-    res += integ_trasim(rad[1]-rad[0], dt+rs, nrad-rs);
+  /* Allocate auxillary integration arrays                                  */
+  hsum    = calloc((nrad-rs)/2, sizeof(double));
+  hratio  = calloc((nrad-rs)/2, sizeof(double));
+  hfactor = calloc((nrad-rs)/2, sizeof(double));
+  h       = calloc(nrad-rs-1,   sizeof(double));
 
-  return 2*(res);
+  /* Allocate array to hold integration range                               */
+  double *radtemp;
+  double *dttemp;
+  radtemp = calloc(nrad-rs, sizeof(double));
+  dttemp  = calloc(nrad-rs, sizeof(double));
+
+  for(i=rs;i<nrad;i++){
+    radtemp[i-rs] = rad[i];
+    dttemp[i-rs]  = dt[i];
+  }
+
+  /* Integrate extinction along the path:                                    */
+  makeh(radtemp, h, nrad-rs);
+  geth(h, hsum, hratio, hfactor, nrad);
+  res += simps(dttemp, h, hsum, hratio, hfactor, nrad-rs);
+
+  free(hsum);
+  free(hratio);
+  free(hfactor);
+  free(h);
+
+  return 2*res;
 }
 
 
@@ -301,7 +314,7 @@ transittau(struct transit *tr,
 
    Return: the transit's modulation:
    1 - in-transit/out-of-transit flux ratio (Equation 3.12):
-    M_{\lambda} = \frac{1}{R_\star^2}\left(R^2 - 
+    M_{\lambda} = \frac{1}{R_\star^2}\left(R^2 -
                    2\int_{0}^{R} \exp^{-\tau_\lambda(r)} r\,{\rm d}r\right) */
 static PREC_RES
 modulation1(PREC_RES *tau,        /* Optical depth array                    */
@@ -317,6 +330,8 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
   long ipn  = ip->n;
   long ipn1 = ipn-1;
   long i;
+  int nrad = last;
+  double *hsum, *hratio, *hfactor, *h;
 
   /* Max overall tau, for the tr.ds.sg.transparent=True case:               */
   const PREC_RES maxtau = tau[last] > toomuch? tau[last]:toomuch;
@@ -345,24 +360,21 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
   /* Increment last to represent the number of elements, check that we
      have enough:                                                           */
   last++;
-  if(last<3)
+  if(last < 3)
     transiterror(TERR_CRITICAL, "Condition failed, less than 3 items "
                                 "(only %i) for radial integration.\n", last);
 
   /* Integrate along radius:                                                */
-#ifdef _USE_GSL
-  gsl_interp_accel *acc = gsl_interp_accel_alloc();
-  gsl_interp *spl       = gsl_interp_alloc(gsl_interp_cspline, last);
-  gsl_interp_init(spl, ipv+ipn-last, rinteg+ipn-last, last);
-  res = gsl_interp_eval_integ(spl, ipv+ipn-last, rinteg+ipn-last,
-                               ipv[ipn-last], ipv[ipn1], acc);
-  gsl_interp_free(spl);
-  gsl_interp_accel_free (acc);
-#else
-# error computation of modulation() without GSL is not implemented
-#endif
+  hsum    = calloc(last/2, sizeof(double));
+  hratio  = calloc(last/2, sizeof(double));
+  hfactor = calloc(last/2, sizeof(double));
+  h       = calloc(last-1, sizeof(double));
 
-  /* TD: Add real unblocked area of the star, considering geometry          */
+
+  makeh(ipv+ipn-last, h, last);
+  geth(h, hsum, hratio, hfactor, last);
+  res = simps(rinteg+ipn-last, h, hsum, hratio, hfactor, last);
+
   /* Substract the total area blocked by the planet. This is from the
      following:
      \begin{eqnarray}
@@ -371,9 +383,8 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
          = & -\frac{\int_0^{r_p}\int e^{-\tau}r{\rm d}\theta {\rm d}r
                   \ +\ Area_{p}} {\pi R_s^2}                       \\
          = & -\frac{2\int_0^{r_p} e^{-\tau}r{\rm d}r
-                \ +\ r_p^2} {\pi R_s^2}   
+                \ +\ r_p^2} {\pi R_s^2}
      \end{eqnarray}                                                         */
-
   res = ipv[ipn1]*ipv[ipn1] - 2.0*res;
 
   /* If the planet is going to be transparent with its maximum optical
@@ -383,6 +394,11 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
 
   /* Normalize by the stellar radius:                                       */
   res *= 1.0 / (srad*srad);
+
+  free(hsum);
+  free(hratio);
+  free(hfactor);
+  free(h);
 
   return res;
 }

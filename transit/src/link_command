@@ -13,4 +13,4 @@ slantpath.o
 tau.o
 transit.o
 transit_wrap.o
-transitstd.o ../../pu/src/voigt.o ../../pu/src/procopt.o ../../pu/src/iomisc.o ../../pu/src/numerical.o ../../pu/src/xmalloc.o ../../pu/src/sampling.o -o _transit_module.so
+transitstd.o ../../pu/src/voigt.o ../../pu/src/procopt.o ../../pu/src/iomisc.o ../../pu/src/numerical.o ../../pu/src/xmalloc.o ../../pu/src/sampling.o ../../pu/src/spline.o -o _transit_module.so

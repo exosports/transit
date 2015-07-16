@@ -340,10 +340,11 @@ calcopacity(struct transit *tr,
   struct isotopes  *iso=tr->ds.iso; /* Isotopes struct                      */
   struct molecules *mol=tr->ds.mol; /* Molecules struct                     */
   struct lineinfo *li=tr->ds.li;    /* Lineinfo struct                      */
-  long Nmol, Ntemp, Nlayer, Nwave,  /* Opacity-grid  dimension sizes        */
-       flag;                        /* Interpolation flag                   */
+  long Nmol, Ntemp, Nlayer, Nwave;  /* Opacity-grid  dimension sizes        */
   int i, j, t, r,                   /* for-loop indices                     */
       rn, iso1db;
+  double *z;
+  int k;
 
   PREC_ATM *density = (PREC_ATM *)calloc(mol->nmol, sizeof(PREC_ATM));
   double   *Z       = (double   *)calloc(iso->n_i,  sizeof(double));
@@ -371,21 +372,22 @@ calcopacity(struct transit *tr,
   for(i=1; i<iso->n_i; i++)
     op->ziso[i] = op->ziso[0] + i*Ntemp;
 
-  /* Set interpolation function flag:                                       */
-  flag = tr->interpflag;
-  flag = 1;  /* FINDME: Temporary hack                                      */
-  /* Interpolate isotopic partition function:                               */
+  /* Interpolate the partition function:                                    */
   for(i=0; i<iso->n_db; i++){  /* For each database separately:             */
     iso1db = iso->db[i].s;     /* Index of first isotope in current DB      */
 
-    resamplex(flag, li->db[i].t, li->db[i].T, Ntemp, op->temp);
     for(j=0; j < iso->db[i].i; j++){
       transitASSERT(iso1db + j > iso->n_i-1, "Trying to reference an isotope "
              "(%i) outside the extended limit (%i).\n", iso1db+j, iso->n_i-1);
-      resampley(flag, 1, li->isov[iso1db+j].z, op->ziso[iso1db+j]);
+
+      z = calloc(li->db[i].t, sizeof(double));
+      spline_init(z, li->db[i].T, li->isov[iso1db+j].z, li->db[i].t);
+      for(k=0;k<Ntemp;k++)
+        op->ziso[iso1db+j][k] = splinterp_pt(z, li->db[i].t, li->db[i].T,
+                                       li->isov[iso1db+j].z, op->temp[k]);
+      free(z);
     }
   }
-  resample_free();
 
   /* Get pressure array from transit (save in CGS units):                   */
   Nlayer = op->Nlayer = tr->rads.n;
@@ -460,7 +462,7 @@ calcopacity(struct transit *tr,
     fwrite(&op->temp[0],  sizeof(PREC_RES), Ntemp,  fp);
     fwrite(&op->press[0], sizeof(PREC_RES), Nlayer, fp);
     fwrite(&op->wns[0],   sizeof(PREC_RES), Nwave,  fp);
-    
+
     /* Save opacity:                                                        */
     for (r=0; r<Nlayer; r++)
       for (t=0; t<Ntemp; t++)
@@ -469,7 +471,7 @@ calcopacity(struct transit *tr,
 
     fclose(fp);
   }
-  transitprint(2, verblevel, "Done.\n"); 
+  transitprint(2, verblevel, "Done.\n");
   return 0;
 }
 
