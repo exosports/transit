@@ -76,6 +76,8 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
   PREC_RES res;          /* Half-path optical depth                         */
   PREC_RES x3[3], r3[3]; /* Auxiliary interpolation variables               */
 
+  double *hsum, *hratio, *hfactor, *h;
+
   /* Closest approach radius:                                               */
   PREC_RES r0 = b/refr;
 
@@ -132,11 +134,6 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
   }
 
   /* Integrate Extinction along ray path:                                   */
-  double *hsum;
-  double *hratio;
-  double *hfactor;
-  double *h;
-
   hsum    = calloc(nrad/2, sizeof(double));
   hratio  = calloc(nrad/2, sizeof(double));
   hfactor = calloc(nrad/2, sizeof(double));
@@ -151,7 +148,12 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
   *rad = tmprad;
 
   /* Return:                                                                */
-  return 2*(res);
+  free(hsum);
+  free(hratio);
+  free(hfactor);
+  free(h);
+
+  return 2*res;
 }
 
 
@@ -330,7 +332,6 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
   long ipn  = ip->n;
   long ipn1 = ipn-1;
   long i;
-  int nrad = last;
   double *hsum, *hratio, *hfactor, *h;
 
   /* Max overall tau, for the tr.ds.sg.transparent=True case:               */
