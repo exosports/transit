@@ -1971,6 +1971,13 @@ Recalculate radius array according to hydrostatic pressure, and find the radial 
 \item[-] Increment to the next radius layer.
 \end{enumerate}
 \item[-] Reallocate the arrays down to the final size according to the number of radius layers incremented in the infinite loop.
+\item[-] Loop over the radius layers to check sorting:
+\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] If each radius value is greater or equal to the next one, or each pressure value is less or equal to the next one, set sorting boolean to false.
+\item[-] If each radius value is less or equal to the next one, or each pressure value is greater or equal to the next one, set reversed boolean to false.
+\end{enumerate}
+\item[-] If the sorting and reversed booleans are both false, raise an error.
+\item[-] If the reversed boolean is true, loop through the first half of the sampling arrays and call \ttblue{swap} from iomisc.c to swap the atmospheric layer values (reversing them to be sorted the correct way).
 \item[-] Return the number of radius layers.
 \end{enumerate}
 
