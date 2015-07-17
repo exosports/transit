@@ -81,6 +81,7 @@ long    countfields (char *l, char sep)
 int     valueinarray(int *array, int value)
 double *logspace(double min, double max, int n)
 int     binsearchapprox(double *array, double value, int lo, int hi)
+int     swap(array, i, j)
 */
 
 #include <iomisc.h>
@@ -1225,5 +1226,19 @@ parseArray(double **array,
   }
 
   return 0;
+}
+
+
+/* Swap the i- and j-indexed values from an array                           */
+int
+swap(double *array,
+     int i,
+     int j){
+
+  double tmp;
+  tmp = array[i];
+  array[i] = array[j];
+  array[j] = tmp;
+  return 1;
 }
 
