@@ -501,7 +501,9 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
   char line[maxline], *lp, *lp2;
   prop_mol *molec = at->molec;
   struct molecules *mol = tr->ds.mol;
-  int i, j,         /* Auxiliary for-loop indices                           */
+  int sorted=1,    /* Flag to check if the layers are bottom-top sorted     */
+      reversed=1;  /* Flag to check if the layers are top-bottom sorted     */
+  int i, j,        /* Auxiliary for-loop indices                            */
       iH2=valueinarray(mol->ID, 105, mol->nmol),
       iHe=valueinarray(mol->ID,   2, mol->nmol);
 
@@ -619,6 +621,39 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
   transitprint(1, verblevel, "Read %li layers between pressures %.3e and "
                              "%.3e barye.\n", r, at->atm.p[0  ]*at->atm.pfct,
                                                  at->atm.p[r-1]*at->atm.pfct);
+
+  /* Check that the atmospheric layers are sorted from the bottom to
+     the top layer:                                                         */
+  for (i=0; i<nrad-1; i++){
+    /* Sorted atmospheric layers:                                           */
+    if ((rads->v[i] >= rads->v[i+1]) || (at->atm.p[i] <= at->atm.p[i+1])){
+      sorted = 0;
+    }
+    /* Reversed atmospheric layers:                                         */
+    if ((rads->v[i] <= rads->v[i+1]) || (at->atm.p[i] >= at->atm.p[i+1])){
+      reversed = 0;
+    }
+  }
+
+  if (sorted == 0 && reversed == 0)
+    transiterror(TERR_SERIOUS, "The atmospheric layers are neither sorted "
+                               "from the bottom up, not from the top down.\n");
+  else if (reversed == 1){
+    transiterror(TERR_WARNING, "The atmospheric layers are in reversed "
+                               "order (top-bottom).  Resorting to be from "
+                               "the bottom-up.\n");
+    /* Swap atmospheric-layer values:                                       */
+    for (i=0; i<nrad/2; i++){
+      swap(rads->v,   i, nrad-1-i);
+      swap(at->atm.p, i, nrad-1-i);
+      swap(at->atm.t, i, nrad-1-i);
+      swap(at->mm,    i, nrad-1-i);
+      for (j=0; j<at->n_aiso; j++){
+        swap(molec[j].d, i, nrad-1-i);
+        swap(molec[j].q, i, nrad-1-i);
+      }
+    }
+  }
 
   return nrad;
 }

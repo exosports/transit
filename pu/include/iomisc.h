@@ -77,8 +77,9 @@ extern char *nextfield(char *lp);
 extern int valueinarray(int *array, int value, int arraylen);
 extern double *logspace(double min, double max, int n);
 extern int binsearchapprox(double *array, double value, int lo, int hi);
-extern  int * divisors(int n, int *m);
+extern int * divisors(int n, int *m);
 extern int parseArray(double **array, int *narray, char *line);
+extern int swap(double *array, int i, int j);
 #undef P_
 
 #endif /* _IOMISC_H */
