@@ -269,16 +269,15 @@ class voplez(dbdriver):
           ut.lrprint(verbose-3, "Wavenumber (cm-1): {:.2f}, Elow (eV): {:.3f}, "
                      "gf: {:.4e}".format(wnumber[i], elow[i], gf[i]))
           ut.lrprint(verbose-2, "Wavelength (um): {:.3f},  IsoID: {:d},  "
-                     "Elow (cm-1): {:.5e}, gf: {:.5e}".format(
-                       1.0/(wnumber[i]*c.MTC), 1, elow[i]*c.eV2kayser, gf[i]))
+                     "Elow (cm-1): {:.5e}, gf: {:.5e}".
+                     format(1.0/(wnumber[i]*c.MTC), isoID[i],
+                            elow[i]*c.eV2kayser, gf[i]))
       i += 1
 
     # Convert wavelength to TLI format (microns):
     wlength[:] = 1.0 / (wnumber * c.MTC)
     # Convert Elow from eV to cm-1:
     elow[:] = elow * c.eV2kayser
-    # Isotopic index:
-    isoID[:]   = np.ones(nread, int)
 
     ut.lrprint(verbose, "Done.\n")
     data.close()
