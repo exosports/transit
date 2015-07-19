@@ -142,8 +142,8 @@ def parseargs():
                      dest="part_list")
   group.add_argument("-t", "--dbtype",         action="append",
                      help="Database type (string).  'ps' for Partridge & "
-                          "Schwenke's H2O; 'hit' for HITRAN and HITEMP; or "
-                          "'ts' for Schwenke's TiO.",
+                          "Schwenke's H2O; 'hit' for HITRAN and HITEMP; "
+                          "'ts' for Schwenke's TiO, or 'vo' for Plez's VO.",
                      choices=('ps', 'hit', 'ts', 'vo'),
                      dest="dbtype")
   # Wavelength Options:
@@ -403,12 +403,12 @@ if __name__ == "__main__":
   TLIout.write(struct.pack("i", nTransitions))
   ut.lrprint(verbose-3, "Writing {:d} transition lines.".format(nTransitions))
   # Write the number of transitions for each isotope:
-  Niso = len(Nisotran)
+  nIso = len(Nisotran)
   # Note that nIso may differ from accumiso, since accum iso accounts for
   # all the existing isotopes for an species, whereas nIso accounts only
   # for the isotopes that do have line transitions in the given range.
-  TLIout.write(struct.pack("i",Niso))
-  TLIout.write(struct.pack(str(Niso)+"i", *list(Nisotran)))
+  TLIout.write(struct.pack("i",nIso))
+  TLIout.write(struct.pack(str(nIso)+"i", *list(Nisotran)))
 
   # Write the Line-transition data:
   ti = time.time()
