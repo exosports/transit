@@ -71,7 +71,7 @@ readcia(struct transit *tr){
   long nt = 0, wa;       /* Number of temperature, wn samples in CIA file   */
   char rc;
   char *lp, *lpa;        /* Pointers in file                                */
-  int maxline=300, n=0;  /* Max length of line. Counter                     */
+  int maxline=1000, n=0;  /* Max length of line. Counter                     */
   long lines;            /* Lines read counter                              */
   long i;                /* Auxiliary for indices                           */
   char line[maxline+1];  /* Array to hold line being read                   */

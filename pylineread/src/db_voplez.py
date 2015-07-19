@@ -53,6 +53,7 @@
 
 import struct, time
 import numpy as np
+from scipy.interpolate import InterpolatedUnivariateSpline
 
 import utils as ut
 import constants as c
@@ -155,6 +156,7 @@ class voplez(dbdriver):
     ---------------------
     2015-06-14  patricio  Initial implementation.  pcubillos@fulbrightmail.org
     2015-06-21  sally     Calculates pf for Vanadium (II) Oxide (VO)
+    2015-06-14  Jasmina	  Extrapolated pf values from 0 to 1000 K
     """
     # Temperature array:
     Temp = np.arange(1000.0, 7001.0, 50.0)
@@ -177,6 +179,24 @@ class voplez(dbdriver):
                  self.PFcoeffs[5]*(np.log(Temp[i]))**5 )
     # Get the exponential of log(PF):
     PF = np.exp(PF)
+
+    # Add start point for temp and PF arrays
+    temp_ext = np.insert(Temp,  0, 0.0)
+    PF_ext   = np.insert(PF[0], 0, 0.0)
+
+    # Interpolate using quadratic spline
+    temp_int = np.arange(50.0,1000.0, 50.0)
+    s = InterpolatedUnivariateSpline(temp_ext, PF_ext, k=2)
+    PF_int = s(temp_int)
+
+    # Insert interpolated range into Temp and PF arrays
+    Temp      = np.insert(temp_ext, 1, temp_int)
+    PF_insert = np.insert(PF_ext  , 1, PF_int)
+
+    # Update PF array
+    PF = np.zeros((Niso, len(Temp)), np.double)
+    PF[0] = PF_insert
+
     return Temp, PF
 
 
