@@ -143,17 +143,25 @@ class dbdriver(object):
     else:
       irec = ihi
 
-    # Check value of next entry (for multiple records with same wavelength):
-    while (self.readwl(dbfile, irec) == rec_wl):
+    # Check value of contiguous entries:
+    icheck  = irec  # Record index to test
+    bounded = True  # Record's wavelength is still within boundaries
+
+    while bounded:
+      # Update irec:
+      irec = icheck
+      # Check index boundaries:
+      if irec == imin or irec == imax:
+        break
+      # Check wavelength boundaries:
       if searchup:
-        if irec == imax:
-          break
-        irec += 1
+        icheck += 1
+        bounded = self.readwl(dbfile, icheck) < wavelength
       else:
-        if irec == imin:
-          break
-        irec -= 1
- 
+        icheck -= 1
+        bounded = self.readwl(dbfile, icheck) > wavelength
+
+
     # Move file pointer to begining:
     dbfile.seek(0)
  
