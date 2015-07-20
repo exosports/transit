@@ -117,6 +117,9 @@ class dbdriver(object):
                           included searchup parameter
                                                     pcubillos@fulbrightmail.org
     """
+    # imin and imax are the fixed boundaries where to search:
+    imin, imax = ilo, ihi
+
     # Wavelength of record:
     rec_wl = 0
     irec   = 0
@@ -134,16 +137,33 @@ class dbdriver(object):
       else:
         ilo = irec
  
-    # Search up/or down if there are multiple records with the same wavelength:
-    while (self.readwl(dbfile, irec) == rec_wl):
+    # Start linear search:
+    if searchup:
+      irec = ilo
+    else:
+      irec = ihi
+
+    # Check value of contiguous entries:
+    icheck  = irec  # Record index to test
+    bounded = True  # Record's wavelength is still within boundaries
+
+    while bounded:
+      # Update irec:
+      irec = icheck
+      # Check index boundaries:
+      if irec == imin or irec == imax:
+        break
+      # Check wavelength boundaries:
       if searchup:
-        irec += 1
+        icheck += 1
+        bounded = self.readwl(dbfile, icheck) < wavelength
       else:
-        irec -= 1
- 
+        icheck -= 1
+        bounded = self.readwl(dbfile, icheck) > wavelength
+
+
     # Move file pointer to begining:
     dbfile.seek(0)
  
-    #print("Found wavelength %d at position %d."%(rec_wl, ihi))
     return irec
 

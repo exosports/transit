@@ -236,19 +236,9 @@ class voplez(dbdriver):
     data.seek(0, 2)
     nlines   = data.tell() / self.recsize
 
-    # Get database limiting wavenumbers:
-    firstwl = self.readwl(data,        0)  # Highest wn in DB
-    lastwl  = self.readwl(data, nlines-1)  # Lowest wn in DB
-
-    # Find the record index for iwl:
-    if iwl > firstwl:
-      irec_init = self.binsearch(data, iwl, 0,         nlines, 1)
-    else:
-      irec_init = 0
-    if fwl < lastwl:
-      irec_fin  = self.binsearch(data, fwl, irec_init, nlines, 0)
-    else:
-      irec_fin = nlines-1
+    # Find the record index for iwl and fwl:
+    irec_init = self.binsearch(data, iwl, 0,         nlines-1, 1)
+    irec_fin  = self.binsearch(data, fwl, irec_init, nlines-1, 0)
 
     # Number of records to read:
     nread = irec_fin - irec_init + 1
