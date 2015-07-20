@@ -364,20 +364,9 @@ class hitran(dbdriver):
     fwn = 1.0 / (iwl * c.MTC)  # Microns to centimeters
     iwn = 1.0 / (fwl * c.MTC)  # Microns to centimeters
 
-    # Get database limiting wavenumbers:
-    lastwn  = self.readwl(data, nlines-1)
-    firstwn = self.readwl(data, 0)
-
-    # Find the record index for fwn:
-    if fwn < lastwn:
-      irec_init = self.binsearch(data, fwn, 0, nlines,    1)
-    else:
-      irec_init = nlines-1
-    # Find the record index for iwn:
-    if iwn > firstwn:
-      irec_fin  = self.binsearch(data, iwn, 0, irec_init, 0)
-    else:
-      irec_fin  = 0
+    # Find the record index for iwn and fwn:
+    irec_init = self.binsearch(data, fwn, 0, nlines-1,  1)
+    irec_fin  = self.binsearch(data, iwn, 0, irec_init, 0)
 
     # Allocates arrays for values to extract:
     wlength = np.zeros(irec_init-irec_fin+1, np.double)

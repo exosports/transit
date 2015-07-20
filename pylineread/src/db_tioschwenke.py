@@ -238,9 +238,9 @@ class tioschwenke(dbdriver):
     iwav = np.log(iwav) / self.ratiolog
     fwav = np.log(fwav) / self.ratiolog
  
-    # Find the positions of iwl and fwl, then jump to wl_i position:
-    irec = self.binsearch(data, iwav, 0,    nlines, 0)
-    frec = self.binsearch(data, fwav, irec, nlines, 1)
+    # Find the positions of iwl and fwl:
+    irec = self.binsearch(data, iwav, 0,    nlines-1, 0)
+    frec = self.binsearch(data, fwav, irec, nlines-1, 1)
     nread = frec - irec + 1  # Number of records to read
 
     # Store data in two arrays for doubles and integers:
