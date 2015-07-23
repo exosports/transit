@@ -71,17 +71,15 @@ INCL        = ./include/
 INLINEFLAGS = -fgnu89-inline  #necessary for 'extern inlines' of GSL
 EXTPRM      = $(INLINEFLAGS) -DTRANSIT #-O1 #-static
 WARNFLAGS   = -Wall -Winline -Wno-unused-result
-GSLPRM      = -D_USE_GSL
-GSLLIB      = -lgsl -lblas
 #-W -Werror
 INCLFLAGS   = -I/usr/X11R6/include -I/home/devel/include -I/usr/include/python2.7 \
 	      -I$(INCL) -I. $(INCLUDES)
 LIBFLAGS    = -L/usr/X11R6/lib -L/home/devel/lib
-CPROTOFLAGS = $(INCLFLAGS) $(GSLPRM) -f 3 -m -e -i -X 0
+CPROTOFLAGS = $(INCLFLAGS) -f 3 -m -e -i -X 0
 
 # pu/ include flag:
 PUFLAGS="-I../pu/include -L../pu"
-CFLAGS += -fPIC -lgslcblas -O3 -ffast-math
+CFLAGS += -fPIC -O3 -ffast-math
 
 NODBGFLAGS  = 
 DBGFLAGS    = -g3 -gdwarf-2
@@ -91,10 +89,10 @@ else
 STDFLAGS    = $(DBGFLAGS)
 endif
 STDFLAGS   += $(INCLFLAGS) $(LIBFLAGS) $(WARNFLAGS) -pedantic \
-	      -std=c99 $(EXTPRM) $(CPUOPTION) $(GSLPRM) $(CFLAGS) $(PUFLAGS)
+	      -std=c99 $(EXTPRM) $(CPUOPTION) $(CFLAGS) $(PUFLAGS)
 
 #libraries to link
-LIBS  = -lm $(GSLLIB) -lpu
+LIBS  = -lm -lpu
 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL}

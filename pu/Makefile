@@ -96,9 +96,9 @@ STDFLAGS    = $(NODBGFLAGS)
 else
 STDFLAGS    = $(DBGFLAGS)
 endif
-CFLAGS      = -fPIC -lgslcblas -O3 -ffast-math
+CFLAGS      = -fPIC -O3 -ffast-math
 STDFLAGS   += $(INCLFLAGS) $(LIBFLAGS) $(WARNFLAGS) -pedantic \
-	      -std=c99 $(EXTPRM) $(CPUOPTION) $(GSLPRM) $(CFLAGS)
+	      -std=c99 $(EXTPRM) $(CPUOPTION) $(CFLAGS)
 
 
 include Beauty.mk

@@ -41,7 +41,7 @@ PIC_OBJS := $(PIC_OBJS) $(PIC_OBJS_$(d))
 
 #extra dependencies and local variables
 $(local_$(d)): $(d)/Rules.mk
-$(local_$(d)): CF_LOCAL := -D_USE_GSL -Iinclude \
+$(local_$(d)): CF_LOCAL := -Iinclude \
 	`pkg-config --cflags gtk+-2.0`
 $(local_$(d)): LL_LOCAL := -lm  `pkg-config --libs gtk+-2.0`
 

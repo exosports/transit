@@ -1,4 +1,4 @@
-gcc -shared -lgsl -lgslcblas argum.o
+gcc -shared argum.o
 cia.o
 eclipse.o
 extinction.o

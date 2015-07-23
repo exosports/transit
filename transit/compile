@@ -2,8 +2,6 @@ gcc -fPIC -c `ls src/*.c` \
 -ltransit                              \
 -lm                                    \
 -lpu                                   \
--lgsl                                  \
--lblas                                 \
 -I/usr/lib/openmpi/include             \
 -L.                                    \
 -Iinclude/                             \
@@ -13,5 +11,4 @@ gcc -fPIC -c `ls src/*.c` \
 -L../pu                                \
 -I/usr/include/python3.4m              \
 -std=c99                               \
--lgslcblas                             \
 -w                                      
