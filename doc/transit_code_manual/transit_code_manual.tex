@@ -90,7 +90,6 @@ unistd.h        &  Collision-induced absorption data  \\
 sampling.h      &  Voigt profile data type \\
 profile.h       &  Precise Voigt profile data type \\
 iomisc.h        &  Declares miscellaneous input/output functions \\
-numerical.h     &  Declares functions of numerical.c \\
 xmalloc.h       &  Redefines \ttblue{malloc, realloc, calloc} \\
 strings.h       &  Defines several string manipulation functions \\
 stdlib.h        &  Defines many general purpose functions \\
@@ -2609,8 +2608,8 @@ int freemem\_cia(struct cia *cia, long *pi)}
 \item[-] Set the first and last values of the source array.
 \item[-] Check that the sampling regions match. If not, return 0.
 \item[-] Find indices where the target array is within the source array boundaries (so that the result is an interpolation, not an extrapolation).
-\item[-] Use GSL to perform cubic interpolation over the first index.
-\item[-] Use GSL to perform cubic interpolation over the second index.
+\item[-] Call \ttblue{splinterp\_pt} from spline.c to perform cubic interpolation over the first index.
+\item[-] Call \ttblue{splinterp\_pt} from spline.c to perform cubic interpolation over the second index.
 \item[-] Free temporary arrays.
 \item[-] Return 0.
 \end{enumerate}
@@ -3093,7 +3092,10 @@ freemem\_intensityGrid(struct grid *intens, long *pi)}
 \item[-] Move pointers to the location of height.
 \item[-] Check that there are sufficient points for spline integration. If not, create them halfway between the given points.
 \item[-] Calculate the distance along the path for each radius.
-\item[-] Use trapezoidal integration along the path to calculate optical depth per unit radius.
+\item[-] Allocate auxillary arrays for integration.
+\item[-] Call to \ttblue{makeh} from spline.c to calculate spacing array for integration.
+\item[-] Call to \ttblue{geth} from spline.c to calculate auxillary integration arrays.
+\item[-] Call to \ttblue{simps} from spline.c to perform Simpson's integration of the extinction along the light path.
 \item[-] Return optical depth per unit radius.
 \end{enumerate}
 
@@ -3103,7 +3105,11 @@ freemem\_intensityGrid(struct grid *intens, long *pi)}
 \item[-] Calculate the Planck blackbody function for each radial layer. See Equation \ref{eqn:planck}.
 \item[-] Calculate the transmission function for each layer of the planet. This is the integrand of the integral in Equation \ref{eqn:intens}.
 \item[-] After tau reaches toomuch, fill remaining layers with 0 flux.
-\item[-] Use GSL to integrate tau up to maximum tau. See Equation \ref{eqn:intens}.
+\item[-] Check that there are enough points for Simpson's integration.
+\item[-] Allocate auxillary arrays for integration.
+\item[-] Call to \ttblue{makeh} from spline.c to calculate spacing array for integration.
+\item[-] Call to \ttblue{geth} from spline.c to calculate auxillary integration arrays.
+\item[-] Call to \ttblue{simps} from spline.c to perform Simpson's integration of optical depth up to the maximum optical depth to calculate intensity. See Equation \ref{eqn:intens}.
 \item[-] Return integration result (intensity).
 \end{enumerate}
 
@@ -3203,7 +3209,10 @@ nor planet emission.} \newline
 \item[-] If there are only two elements in the extinction and radius
   arrays, create a 3rd temporary element between the two values.
 \item[-] Calculate the distance along the lightray path.
-\item[-] Calculate the optical depth by integrating (with GSL) the
+\item[-] Allocate auxillary arrays for integration.
+\item[-] Call to \ttblue{makeh} from spline.c to calculate spacing array for integration.
+\item[-] Call to \ttblue{geth} from spline.c to calculate auxillary integration arrays.
+\item[-] Call to \ttblue{simps} from spline.c to perform Simpson's integration to calculate the optical depth by integrating the
   extinction along the ray path (up to the closest approach). See Equation \ref{eqn:tau}.
 \item[-] Reset the original values of the extinction and radius arrays
   (in case of 2 elements).
@@ -3222,11 +3231,12 @@ nor planet emission.} \newline
 \item[-] Move the radius pointer to the element corresponding to the
   sampled radius index.
 \item[-] Calculate the analytical part of the extinction integral.
-\item[-] Calculate the optical depth by integrating (with GSL) if
+\item[-] Allocate auxillary arrays for integration.
+\item[-] Call to \ttblue{makeh} from spline.c to calculate spacing array for integration.
+\item[-] Call to \ttblue{geth} from spline.c to calculate auxillary integration arrays.
+\item[-] Call to \ttblue{simps} from spline.c to perform Simpson's integration to calculate the optical depth by integrating if
   there are at least 3 points available. See Equation \ref{eqn:tau}.
-\item[-] If there are only two points available, use Trapezium integration.
-\item[-] Return the result of integration to account for full
- multiplied by 2.
+\item[-] Return the result of integration multiplied by 2 to account for full path.
 \end{enumerate}
 
 
@@ -3254,7 +3264,10 @@ nor planet emission.} \newline
 \item[-] Calculate integrand of modulation. See Equation \ref{eqn:mod}.
 \item[-] Add a layer with an integrand value of 0.
 \item[-] Raise an error if there are not enough points for integration.
-\item[-] Integrate the integrand along radius using GSL.
+\item[-] Allocate auxillary arrays for integration.
+\item[-] Call to \ttblue{makeh} from spline.c to calculate spacing array for integration.
+\item[-] Call to \ttblue{geth} from spline.c to calculate auxillary integration arrays.
+\item[-] Call to \ttblue{simps} from spline.c to perform Simpson's integration of the integrand along radius.
 \item[-] Subtract the total area blocked by the planet.
 \item[-] Adjust the result if the planet is transparent.
 \item[-] Normalize to the stellar radius.
