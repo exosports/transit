@@ -1,106 +1,189 @@
+# Makefile - prepared for Transit
 #
-# Makefile - prepared for transit.
-# Copyright (C) 2004-2006 Patricio Rojo (pato@astro.cornell.edu)
+# The original Makefile for the Transit module (which is no longer in use) was
+# created by Patricio Rojo (pato@astro.cornell.edu). This Makefile was written
+# by AJ Foster (aj.foster@knights.ucf.edu).
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of version 2 of the GNU General 
-# Public License as published by the Free Software Foundation.
+# Makefile tasks:
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# `make` - Build and compile the transit executable and python extension.
+# `make clean` - Remove all compiled (non-source) files that are created.
+#
+# If you are interested in the commands being run by this makefile, you may add
+# "VERBOSE=1" to the end of any `make` command, i.e.:
+#
+# 		make VERBOSE=1
+#
+# This will display the exact commands being used for building, etc.
+#
 
-# Revision        March 19th,   2014 Jasmina Blecic
-#                 added PUFLAG
+#############
+# Variables #
+#############
 
-#uncomment for clean compilation without debugging info
-#NODEBUG  = 1
+# Compiler command
+#
+COMPILER = ${SCRIPTS_DIR}ccd-gcc.sh
 
-SHELL = /bin/sh
+# Directories
+#
+C_FILES_DIR = ./src/
+H_FILES_DIR = ./include/
+SCRIPTS_DIR = ./scripts/
 
-srcdir = .
-top_srcdir = .
-tobasedir = .
+# Files to be compiled
+#
+C_FILES = argum \
+					cia \
+					eclipse \
+					extinction \
+					geometry \
+					idxrefraction \
+					makesample \
+					observable \
+					opacity \
+					readatm \
+					readlineinfo \
+					slantpath \
+					tau \
+					transit \
+					transitstd
 
-SUBDIRS = src
+# Files to be cleaned (non-source)
+#
+O_FILES = $(C_FILES:%=$(C_FILES_DIR)%.o) \
+					$(C_FILES:%=$(C_FILES_DIR)%.o.d) \
+					transit \
+					./python/transit_module.py \
+					./python/_transit_module.so \
+					./src/transit_wrap.c
 
-#make specials
-.PHONY=clean dep proto
+
+#####################
+# Compilation Flags #
+#####################
+
+# Warning flags
+#
+# -Wall: Display all warnings
+# -Winline: Display warnings about inlining functions
+# -Wno-unused-result: Ignore results about unused function results
+# -pedantic: Show warnings related to the C standard
+#
+WARN_FLAG = -Wall \
+						-Winline \
+						-Wno-unused-result \
+						-pedantic
+
+# Included directories
+#
+INCL_FLAG = -I/usr/X11R6/include \
+						-I/usr/include/python2.7 \
+						-I./include/ \
+						-I./src/ \
+						-I. \
+						-I../pu/include
+
+# Library inclusions
+#
+LIBR_FLAG = -L/usr/X11R6/lib \
+						-L../pu
+
+# Other flags
+#
+OTHR_FLAG = -DTRANSIT \
+						-ffast-math \
+						-fgnu89-inline \
+						-fPIC \
+						-O3 \
+						-std=c99 \
+						-g3 \
+						-gdwarf-2
+
+# Combination of the previous flags
+#
+COMP_FLAG = $(WARN_FLAG) $(INCL_FLAG) $(LIBR_FLAG) $(OTHR_FLAG)
+
+# Library linking must be last in the GCC command
+#
+LINK_FLAG = -lm -lpu
 
 
-#installation directories
-ifndef prefix
-prefix = ../../
+##############
+# Make Tasks #
+##############
+
+# First, set verbosity
+#
+Q = @
+O = > /dev/null
+ifdef VERBOSE
+	ifeq ("$(origin VERBOSE)", "command line")
+		Q =
+		O =
+	endif
 endif
-exec_prefix = ${prefix}
 
-bindir = ${exec_prefix}/bin
-sbindir = ${exec_prefix}/sbin
-libexecdir = ${exec_prefix}/libexec
-datadir = ${prefix}/share
-sysconfdir = ${prefix}/etc
-sharedstatedir = ${prefix}/com
-localstatedir = ${prefix}/var
-libdir = ${exec_prefix}/lib
-infodir = ${prefix}/info
-mandir = ${prefix}/man
-includedir = ${prefix}/include
+# Main task: `make`
+#
+# - Create .o files
+# - Compile Transit binary
+# - Run swig.sh
+# - Run setup.py
+#
+.PHONY: all
+all: swig binary python
 
-#programs
-CPROTO  = /usr/bin/cproto
-RANLIB  = ranlib
-AR      = ar ru
-MAKEDEP = $(CC) -MM
-CLATEX  = $(HOME)/bin/clatex.pl
+# Clean task: `make clean`
+#
+# - Remove object files
+# - Remove executable files
+#
+.PHONY: clean
+clean:
+	@echo "Removing non-source files."
+	$(Q) rm -f $(O_FILES)
 
-EXEEXT =
-scriptdir = ./scripts/
-mkinstalldirs = $(scriptdir)mkinstalldirs
-CC = ${scriptdir}ccd-gcc.sh
+# Compile Transit Binary
+#
+# Called by "all"
+# Depends on .o files
+#
+.PHONY: binary
+binary: $(C_FILES:%=$(C_FILES_DIR)%.o)
+	@echo "Building executable \"transit\"."
+	$(Q) $(COMPILER) $(COMP_FLAG) -o transit $(filter %.c %.o,$^) $(LINK_FLAG)
 
-#parameters
-INCL        = ./include/
-#CPUOPTION   = -mcpu=athlon-xp -march=athlon-xp
-#CPUOPTION  = -mtune=athlon-tbird
-#CPUOPTION  = -mtune=pentium3
-INLINEFLAGS = -fgnu89-inline  #necessary for 'extern inlines' of GSL
-EXTPRM      = $(INLINEFLAGS) -DTRANSIT #-O1 #-static
-WARNFLAGS   = -Wall -Winline -Wno-unused-result
-#-W -Werror
-INCLFLAGS   = -I/usr/X11R6/include -I/home/devel/include -I/usr/include/python2.7 \
-	      -I$(INCL) -I. $(INCLUDES)
-LIBFLAGS    = -L/usr/X11R6/lib -L/home/devel/lib
-CPROTOFLAGS = $(INCLFLAGS) -f 3 -m -e -i -X 0
+# Python task
+#
+# Called by "all"
+# Depends on "binary"
+#
+.PHONY: python
+python: binary
+	@echo "Building python extension."
+	$(Q) python $(SCRIPTS_DIR)setup.py build_ext --inplace $(O)
+	@echo "Cleaning up python build."
+	$(Q) sh $(SCRIPTS_DIR)python_clean.sh
 
-# pu/ include flag:
-PUFLAGS="-I../pu/include -L../pu"
-CFLAGS += -fPIC -O3 -ffast-math
+# Swig task
+#
+# Called by "all"
+#
+.PHONY: swig
+swig:
+	@echo "Running swig."
+	$(Q) sh $(SCRIPTS_DIR)swig.sh
 
-NODBGFLAGS  = 
-DBGFLAGS    = -g3 -gdwarf-2
-ifdef NODEBUG
-STDFLAGS    = $(NODBGFLAGS)
-else
-STDFLAGS    = $(DBGFLAGS)
-endif
-STDFLAGS   += $(INCLFLAGS) $(LIBFLAGS) $(WARNFLAGS) -pedantic \
-	      -std=c99 $(EXTPRM) $(CPUOPTION) $(CFLAGS) $(PUFLAGS)
+# Create .o files
+#
+# Called by "binary"
+# Called by "all"
+# Depends on .c files
+#
+.SUFFIXES:
+.SUFFIXES: .c .o
+%.o: %.c
+	@echo "Compiling $@."
+	$(Q) $(COMPILER) -c $(COMP_FLAG) -o $@ $<
 
-#libraries to link
-LIBS  = -lm -lpu
-
-INSTALL = /usr/bin/install -c
-INSTALL_PROGRAM = ${INSTALL}
-INSTALL_DATA = ${INSTALL} -m 644
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-INSTALL_SCRIPT = ${INSTALL}
-INSTALL_HEADER = $(INSTALL_DATA)
-
-include Beauty.mk
-include Rules.mk
