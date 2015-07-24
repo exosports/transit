@@ -26,6 +26,9 @@ def main():
     # Open file for reading
     f_in = open(infile, 'r')
 
+    ntoa = 2.6867805e19 # Conversion factor from number density (in cm-3)
+                        # to amagats
+    
     # Read in the header and split into fields
     line = str.split(f_in.readline())
 
@@ -62,6 +65,8 @@ def main():
         # Increment number of loop repetitions
         j +=1
 
+    data *= ntoa # Convert to correct units
+        
     f_in.close()
 
     # Open file for writing
@@ -76,7 +81,7 @@ def main():
     f_out.write('t ' + str(temp) + '\n')
 
     # Write comment on units
-    f_out.write('\n # Wavenumber in cm-1, cross section in cm^2/molecule \n')
+    f_out.write('\n # Wavenumber in cm-1, cross section in cm-1 amagat-1 \n')
 
     # Write data in format required by Transit program
     for i in range(ndata):
