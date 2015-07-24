@@ -180,5 +180,5 @@ extern void freemem_transit P_((struct transit *tr));
 #include <geometry.h>
 #include <cia.h>
 #include <eclipse.h>
-
+#include <slantpath.h>
 #endif /* _TRANSIT_H */
