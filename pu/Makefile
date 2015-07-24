@@ -1,109 +1,183 @@
+# Makefile - prepared for pu
+#
+# The original Makefile for the pu module (which is no longer in use) was
+# created by Patricio Rojo (pato@astro.cornell.edu). This Makefile was written
+# by AJ Foster (aj.foster@knights.ucf.edu).
+#
+# Makefile tasks:
+#
+# `make` - Build and compile the libpu shared object file and object archive.
+# `make clean` - Remove all compiled (non-source) files that are created.
+#
+# If you are interested in the commands being run by this makefile, you may add
+# "VERBOSE=1" to the end of any `make` command, i.e.:
+#
+#     make VERBOSE=1
+#
+# This will display the exact commands being used for building, etc.
+#
 
-# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
-# This Makefile.in is free software; the Free Software Foundation
-# gives unlimited permission to copy and/or distribute it,
-# with or without modifications, as long as this notice is preserved.
+#############
+# Variables #
+#############
 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
-# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-# PARTICULAR PURPOSE.
+# Archiver command
+#
+ARCHIVER = ar ruc
 
-#  uncomment the following if testgtk requires the math library
-#testgtk_LDADD=-lm
+# Compiler command
+#
+COMPILER = ${SCRIPTS_DIR}ccd-gcc.sh
+
+# Directories
+#
+C_FILES_DIR = ./src/
+H_FILES_DIR = ./include/
+SCRIPTS_DIR = ./scripts/
+
+# Files to be compiled
+#
+C_FILES = iomisc \
+					messagep \
+					numerical \
+					procopt \
+					sampling \
+					spline \
+					voigt \
+					xmalloc
+
+# Files to be cleaned (non-source)
+#
+O_FILES = $(C_FILES:%=$(C_FILES_DIR)%.o) \
+					$(C_FILES:%=$(C_FILES_DIR)%.o.d) \
+					./libpu.a \
+					./libpu.so.1
 
 
-SHELL = /bin/sh
+#####################
+# Compilation Flags #
+#####################
 
-srcdir = .
-top_srcdir = .
+# Warning flags
+#
+# -Wall: Display all warnings
+# -Winline: Display warnings about inlining functions
+# -Wno-unused-result: Ignore results about unused function results
+# -pedantic: Show warnings related to the C standard
+#
+WARN_FLAG = -Wall \
+						-Winline \
+						-Wno-unused-result \
+						-pedantic
 
-prefix = /usr/local
-exec_prefix = ${prefix}
+# Included directories
+#
+INCL_FLAG = -I/usr/X11R6/include \
+						-I./include/ \
+						-I./src/ \
+						-I.
 
-bindir = ${exec_prefix}/bin
-sbindir = ${exec_prefix}/sbin
-libexecdir = ${exec_prefix}/libexec
-datadir = ${prefix}/share
-sysconfdir = ${prefix}/etc
-sharedstatedir = ${prefix}/com
-localstatedir = ${prefix}/var
-libdir = ${exec_prefix}/lib
-infodir = ${prefix}/info
-mandir = ${prefix}/man
-includedir = ${prefix}/include
-oldincludedir = /usr/include
+# Library inclusions
+#
+LIBR_FLAG = -L/usr/X11R6/lib
 
-DESTDIR =
+# Other flags
+#
+OTHR_FLAG = -ffast-math \
+						-fgnu89-inline \
+						-fPIC \
+						-O3 \
+						-std=c99 \
+						-g3 \
+						-gdwarf-2
 
-pkgdatadir = $(datadir)/@PACKAGE@
-pkglibdir = $(libdir)/@PACKAGE@
-pkgincludedir = $(includedir)/@PACKAGE@
+# Combination of the previous flags
+#
+COMP_FLAG = $(WARN_FLAG) $(INCL_FLAG) $(LIBR_FLAG) $(OTHR_FLAG)
 
-top_builddir = .
+# Archive flags
+#
+ARCH_FLAG = -Wl,--whole-archive
 
-ACLOCAL = @ACLOCAL@
-AUTOCONF = @AUTOCONF@
-AUTOMAKE = @AUTOMAKE@
-AUTOHEADER = @AUTOHEADER@
+# Flags for linking the m library
+#
+LIBM_FLAG = -Wl,--no-whole-archive -lm
 
-INSTALL = /usr/bin/install -c
-INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
-INSTALL_DATA = ${INSTALL} -m 644
-INSTALL_SCRIPT = ${INSTALL}
-transform = s,x,x,
+# Flags for naming the library
+#
+NAME_FLAG = -Wl,-soname -Wl,libpu.so.1
 
-NORMAL_INSTALL = :
-PRE_INSTALL = :
-POST_INSTALL = :
-NORMAL_UNINSTALL = :
-PRE_UNINSTALL = :
-POST_UNINSTALL = :
-host_alias = 
-host_triplet = @host@
-CCR = gcc
-HAVE_LIB = @HAVE_LIB@
-ISODATE = @ISODATE@
-LIB = @LIB@
-LTLIB = @LTLIB@
-MAKEINFO = @MAKEINFO@
-PACKAGE = @PACKAGE@
-VERSION = @VERSION@
+# Library linking must be last in the GCC command
+#
+LINK_FLAG = -lm
 
-NROFF = nroff
-TAR = tar
-GZIP_ENV = --best
-DVIPS = dvips
 
-distdir = $(PACKAGE)-$(VERSION)
-top_distdir = $(distdir)
+##############
+# Make Tasks #
+##############
 
-mkinstalldirs = ./mkinstalldirs
-includedirpkg = $(includedir)/pu
-
-CC = scripts/ccd-gcc.sh
-
-ARFLAGS     = ruc
-INCLFLAGS   = -I/usr/X11R6/include -I. $(INCLUDES)
-LIBFLAGS    = -L/usr/X11R6/lib
-EXTPRM      = -DTESTGTK
-WARNFLAGS   = -Wall -Winline -Wno-unused-result
-
-NODBGFLAGS  = 
-DBGFLAGS    = -g3 -gdwarf-2
-ifdef NODEBUG
-STDFLAGS    = $(NODBGFLAGS)
-else
-STDFLAGS    = $(DBGFLAGS)
+# First, set verbosity
+#
+Q = @
+ifdef VERBOSE
+	ifeq ("$(origin VERBOSE)", "command line")
+		Q =
+	endif
 endif
-CFLAGS      = -fPIC -O3 -ffast-math
-STDFLAGS   += $(INCLFLAGS) $(LIBFLAGS) $(WARNFLAGS) -pedantic \
-	      -std=c99 $(EXTPRM) $(CPUOPTION) $(CFLAGS)
 
+# Main task: `make`
+#
+# - Create .o files
+# - Compile pu shared object library
+#
+.PHONY: all
+all: archive library
 
-include Beauty.mk
-include Rules.mk
+# Create object archive
+#
+# Called by "all"
+# Depends on .o files
+#
+.PHONY: archive
+archive: $(C_FILES:%=$(C_FILES_DIR)%.o)
+	@echo "Creating object archive \"libpu.a\"."
+	$(Q) $(ARCHIVER) libpu.a $(C_FILES:%=$(C_FILES_DIR)%.o)
+	@touch libpu.a
 
-# Tell versions [3.59,3.63) of GNU make to not export all variables.
-# Otherwise a system limit (for SysV at least) may be exceeded.
-.NOEXPORT:
+# Clean task: `make clean`
+#
+# - Remove object files
+# - Remove shared object files
+#
+.PHONY: clean
+clean:
+	@echo "Removing non-source files."
+	$(Q) rm -f $(O_FILES)
+
+# Compile Shared Object
+#
+# Called by "all"
+# Depends on .o files
+#
+.PHONY: library
+library: $(C_FILES:%=$(C_FILES_DIR)%.o)
+	@echo "Building shared object \"libpu\"."
+	$(Q) $(COMPILER) -shared \
+			 $(ARCH_FLAG) $(C_FILES:%=$(C_FILES_DIR)%.o) \
+			 $(LIBM_FLAG) \
+			 $(NAME_FLAG) \
+			 -o libpu.so.1 \
+			 $(LINK_FLAG)
+
+# Create .o files
+#
+# Called by "archive" and "library"
+# Called by "all"
+# Depends on .c files
+#
+.SUFFIXES:
+.SUFFIXES: .c .o
+%.o: %.c
+	@echo "Compiling $@."
+	$(Q) $(COMPILER) -c $(COMP_FLAG) -o $@ $<
+
