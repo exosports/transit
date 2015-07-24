@@ -9,7 +9,8 @@ pu  = op.realpath(op.join(op.dirname(\
 
 
 transit_module = Extension('_transit_module',sources=['src/transit_wrap.c'],
-                            extra_objects=[op.join(src,'argum.o'),op.join(src,'cia.o'),
+                            extra_objects=[op.join(src,'argum.o'),
+                                           op.join(src,'crosssec.o'),
                                            op.join(src,'eclipse.o'),
                                            op.join(src,'extinction.o'),
                                            op.join(src,'geometry.o'),

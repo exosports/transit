@@ -118,9 +118,9 @@ void transit_init(int argc, char **argv){
   fw(opacity, <0, &transit);
   t0 = timecheck(verblevel, itr,  5, "opacity", tv, t0);
 
-  /* Initialize CIA:                                                        */
-  fw(readcia, !=0, &transit);
-  t0 = timecheck(verblevel, itr,  6, "readcia", tv, t0);
+  /* Initialize Cross section:                                              */
+  fw(readcs, !=0, &transit);
+  t0 = timecheck(verblevel, itr,  6, "readcs", tv, t0);
   init_run = 1;
 }
 
@@ -167,9 +167,9 @@ void do_transit(double * transit_out){
       transitprint(7, verblevel, "makeipsample() modified some of the hinted "
                                  "parameters. Flag: 0x%lx.\n", fw_status);
 
-    /* Interpolate CIA:                                                     */
-    fw(interpolatecia, !=0, &transit);
-    t0 = timecheck(verblevel, itr,  9, "interpolatecia", tv, t0);
+    /* Interpolate the cross section:                                       */
+    fw(interpcs, !=0, &transit);
+    t0 = timecheck(verblevel, itr,  9, "interpcs", tv, t0);
 
     /* Compute index of refraction:                                         */
     fw(idxrefrac, !=0, &transit);
@@ -241,16 +241,15 @@ void do_transit(double * transit_out){
 }
 
 void free_memory(void){
-  /* This function frees all the memory used in transit, and should be
+  /* Free all the memory used in transit, and should be
      called at the end of the program. Check if all these data structures
-     can be used when called from bart, In MPItransit not all the frees
-     happen.                                                                */
+     can be used when called from bart.                                     */
   freemem_molecules( transit.ds.mol, &transit.pi);
   freemem_atmosphere(transit.ds.at,  &transit.pi);
   if (transit.fp_opa == NULL)
     freemem_linetransition(&transit.ds.li->lt,  &transit.pi);
-  freemem_lineinfo(  transit.ds.li,  &transit.pi);
-  freemem_cia(       transit.ds.cia, &transit.pi);
+  freemem_lineinfo(transit.ds.li,  &transit.pi);
+  freemem_cs(transit.ds.cross,     &transit.pi);
   freemem_transit(&transit);
   init_run = 0;
 }

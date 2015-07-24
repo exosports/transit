@@ -130,7 +130,7 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_DETEXT,
     CLA_DETCIA,
     CLA_DETTAU,
-    CLA_CIAFILE,
+    CLA_CSFILE,
     CLA_SAVEEXT,
     CLA_STARRAD,
     CLA_SOLUTION_TYPE,
@@ -303,9 +303,9 @@ processparameters(int argc,            /* Number of command-line args  */
     {"detailcia",  CLA_DETCIA,      required_argument, NULL,
      "filename:wn1,wn2,...",
      "Save extinction due to CIA at specified wavenumbers in filename."},
-    {"cia",        CLA_CIAFILE,     required_argument, NULL,    "filenames",
-     "Use the indicated filenames for CIA opacities, it is a comma"
-     "separated list."},
+    {"csfile",      CLA_CSFILE,      required_argument, NULL,    "filenames",
+     "Use the indicated filenames for cross-section opacities (comma-"
+     "separated list)."},
     {"saveext",    CLA_SAVEEXT,     required_argument, NULL,    "filename",
      "Save extinction array in this file which won't need to be recomputed "
      "if only the radius scale (scale height) changes."},
@@ -414,11 +414,12 @@ processparameters(int argc,            /* Number of command-line args  */
     /* Print info to screen if debugging:   */
     transitDEBUG(21, verblevel, "Processing option '%c' / %d, argum: %s\n",
                  rn, rn, optarg);
-    /* Handle each case: */
+    /* Handle each case:                                                    */
     switch(rn){
-    case CLA_CIAFILE:
-      hints->ncia    = nchar(optarg, ',') + 1;        /* Count files */
-      hints->ciafile = splitnzero_alloc(optarg, ','); /* Get files   */
+    /* Cross-section data files:                                            */
+    case CLA_CSFILE:
+      hints->ncross  = nchar(optarg, ',') + 1;        /* Count files        */
+      hints->csfile = splitnzero_alloc(optarg, ',');  /* Get file names     */
       break;
     case CLA_SAVEEXT:  /* Extinction array    */
       hints->save.ext = xstrdup(optarg);
@@ -873,8 +874,8 @@ savehint(FILE *out,
   savestr(out, hints->f_toomuch);
   savestr(out, hints->f_outsample);
   savestr(out, hints->solname);
-  for(int i=0; i<hints->ncia; i++){
-    savestr(out, hints->ciafile[i]);
+  for(int i=0; i<hints->ncross; i++){
+    savestr(out, hints->csfile[i]);
   }
 
   /* Save sub-structures:                                                   */
@@ -922,8 +923,8 @@ resthint(FILE *in,
   if(rn<0) return rn; else res += rn;
   rn = reststr(in, &hint->solname);
   if(rn<0) return rn; else res += rn;
-  for(int i=0; i<hint->ncia; i++){
-    rn = reststr(in, hint->ciafile+i);
+  for(int i=0; i<hint->ncross; i++){
+    rn = reststr(in, hint->csfile+i);
     if(rn<0) return rn; else res += rn;
   }
 
@@ -974,9 +975,9 @@ freemem_hints(struct transithint *h){
 
   /* Free other strings:                                                    */
   free(h->solname);
-  if (h->ncia){
-    free(h->ciafile[0]);
-    free(h->ciafile);
+  if (h->ncross){
+    free(h->csfile[0]);
+    free(h->csfile);
   }
 
   /* Free sub-structures:                                                   */

@@ -18,14 +18,6 @@
  * 02111-1307, USA.
  */
 
-/* Initial version January 23rd, 2014 Jasmina Blecic
-                   implemented eclipse                                     */
-/* Revision        March 19th,   2014 Jasmina Blecic
-                   implemented switch eclipse/transit                      */
-/* Revision        April 26th,   2014 Jasmina Blecic
-                   implemented intensity grid and flux                     */
-
-
 #ifndef _TRANSIT_STRUCTURES_H
 #define _TRANSIT_STRUCTURES_H
 
@@ -311,15 +303,15 @@ struct detailout{
 };
 
 
-struct cia{
-  int nfiles;         /* Number of CIA files                                */
-  PREC_CIA **e;       /* Extinction from all CIA sources [wn][temp]         */
-  PREC_CIA ***cia;    /* Tabulated CIA extinction    [nfiles][nwave][ntemp] */
-  PREC_CIA **wn;      /* Tabulated wavenumber  arrays  [nfiles][nwave]      */
-  PREC_CIA **temp;    /* Tabulated temperature arrays  [nfiles][ntemp]      */
-  int *nwave;         /* Number of wavenumber samples  [nfiles]             */
-  int *ntemp;         /* Number of temperature samples [nfiles]             */
-  int *mol1, *mol2;   /* Pairs of molecule's ID        [nfiles]             */
+struct cross{
+  int nfiles;         /* Number of cross-section files                      */
+  PREC_CS **e;        /* Extinction from all CS sources [nwn][nrad]         */
+  PREC_CS ***cs;      /* Tabulated CS extinction     [nfiles][nwave][ntemp] */
+  PREC_CS **wn;       /* Tabulated wavenumber arrays [nfiles][nwave]        */
+  PREC_CS **temp;     /* Tabulated temperatures      [nfiles][ntemp]        */
+  int *nwave;         /* Number of wavenumbers       [nfiles]               */
+  int *ntemp;         /* Number of temperatures      [nfiles]               */
+  int *mol1, *mol2;   /* Pairs of molecule's ID      [nfiles]               */
   double tmin, tmax;  /* CIAs minimum and maximum temperatures              */
 };
 
@@ -372,8 +364,8 @@ struct transithint{
   struct detailout det;
 
   double ethresh;       /* Lower extinction-coefficient threshold            */
-  char **ciafile;
-  int ncia;
+  char **csfile;
+  int ncross;
 
 };
 
@@ -446,7 +438,7 @@ struct transit{
     struct extcloud    *cl;
     struct extscat     *sc;
     struct detailout   *det;
-    struct cia         *cia;
+    struct cross       *cross;
   }ds;
 };
 

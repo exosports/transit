@@ -158,9 +158,9 @@ tau(struct transit *tr){
   PREC_ATM *temp = tr->atm.t,    /* Temperature array                       */
            tfct  = tr->atm.tfct; /* Temperature units                       */
 
-  prop_samp *wn = &tr->wns; /* Wavenumber sampling                          */
-  long int wnn  = wn->n;    /* Number of wavenumber samples                 */
-  double wfct   = wn->fct;  /* Wavenumber units factor                      */
+  prop_samp *wn = &tr->wns;      /* Wavenumber sampling                     */
+  long int wnn  = wn->n;         /* Number of wavenumber samples            */
+  double wfct   = wn->fct;       /* Wavenumber units factor                 */
 
   PREC_RES er[rnn];   /* Array of extinction per radius                     */
   int lastr = rnn-1;  /* Radius index of last computed extinction           */
@@ -170,7 +170,7 @@ tau(struct transit *tr){
 
   double e_s[rnn],                  /* Extinction from scattering           */
          e_c[rnn];                  /* Extinction from clouds               */
-  PREC_CIA **e_cia = tr->ds.cia->e; /* Extinction from CIA                  */
+  PREC_CS **e_cs = tr->ds.cross->e; /* Cross-section extinction             */
   struct extscat *sc = tr->ds.sc;   /* Scattering extinction struct         */
 
   /* FINDME: TRANSIT ONLY */
@@ -254,7 +254,7 @@ tau(struct transit *tr){
     /* Put the extinction values in a new array, the values may be
        temporarily overwritten by (fcn)(), but they should be restored:     */
     for(ri=0; ri < rnn; ri++)
-      er[ri] = e[ri][wi] + e_s[ri] + e_c[ri] + e_cia[wi][ri];
+      er[ri] = e[ri][wi] + e_s[ri] + e_c[ri] + e_cs[wi][ri];
 
     /* For each height:                                                     */
     for(ri=0; ri < nh; ri++){
@@ -288,7 +288,7 @@ tau(struct transit *tr){
             ex->computed[lastr] = 1;
             /* Update the value of the extinction at the right place:       */
             er[lastr] = e[lastr][wi] + e_s[lastr] + e_c[lastr] +
-                        e_cia[wi][lastr];
+                        e_cs[wi][lastr];
           }
         }while(h[ri]*hfct < r[lastr]*rfct);
       }
@@ -357,7 +357,7 @@ tau(struct transit *tr){
   if(tr->ds.det->ext.n)
     detailout(&tr->wns, &tr->rads, &tr->ds.det->ext, e, CIA_RADFIRST);
   if(tr->ds.det->cia.n)
-    detailout(&tr->wns, &tr->rads, &tr->ds.det->cia, (double **)e_cia,
+    detailout(&tr->wns, &tr->rads, &tr->ds.det->cia, (double **)e_cs,
               CIA_DOFLOAT);
 
   if(tr->save.ext)
@@ -442,17 +442,17 @@ savemolExtion(struct transit *tr, long ri){
 
 
 /* \fcnfh
-  Print to a file CIA                                                      */
+  Print to a file CIA                                                       */
 void
 saveCIA(struct transit *tr){
-  PREC_CIA **e_cia = tr->ds.cia->e; /* Extinction from CIA                  */
+  PREC_CS **e_cs = tr->ds.cross->e; /* Cross-section extinction             */
 
-  prop_samp *wn = &tr->wns;   /* Wavenumber sampling                        */
-  long int wnn = wn->n;      /* Number of wavenumber samples               */
-  prop_samp *rad = &tr->rads; /* Radius sampling                            */
-  long int rnn = rad->n;     /* Number of layers                           */
+  prop_samp *wn =&tr->wns;   /* Wavenumber sampling                         */
+  prop_samp *rad=&tr->rads;  /* Radius sampling                             */
+  long int wnn=wn->n;        /* Number of wavenumber samples                */
+  long int rnn=rad->n;       /* Number of layers                            */
 
-  /* open file to write                                                     */
+  /* Open file to write:                                                    */
   FILE *myFile = fopen("CIA.dat", "w");
 
   /* format of the characters written                                       */
@@ -461,11 +461,11 @@ saveCIA(struct transit *tr){
   /* write header                                                           */
   fprintf(myFile, "\n");
   fprintf(myFile, "# 2D CIA extinction\n");
-  fprintf(myFile, "# e_cia [wn][rad]; wn[0]=min(wn); row[0]=bottom (max(p))\n");
+  fprintf(myFile, "# e_cs [wn][rad]; wn[0]=min(wn); row[0]=bottom (max(p))\n");
   fprintf(myFile, "\n");
 
   /* call 2D array function, row --> [wnn], column --> [rnn]                */
-  print2dArrayDouble(myFile, e_cia, wnn, rnn, format, wn);
+  print2dArrayDouble(myFile, e_cs, wnn, rnn, format, wn);
 
   /* close the file                                                         */
   fflush(myFile);
@@ -542,8 +542,8 @@ savetau(struct transit *tr){
 
 
 /* FUNCTION
-   Print to file the optical depth, cia, or extinction at the requested
-   wavenumbers
+   Print to file the optical depth, cross section, or extinction at the
+   requested wavenumbers
    Return: 0 on success                                                     */
 int
 detailout(prop_samp *wn,         /* transit's wavenumber array              */
