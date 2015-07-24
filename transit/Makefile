@@ -40,7 +40,6 @@ C_FILES = argum \
 					geometry \
 					idxrefraction \
 					makesample \
-					observable \
 					opacity \
 					readatm \
 					readlineinfo \
