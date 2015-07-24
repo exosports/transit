@@ -5,7 +5,6 @@ extinction.o
 geometry.o
 idxrefraction.o
 makesample.o
-observable.o
 opacity.o
 readatm.o
 readlineinfo.o

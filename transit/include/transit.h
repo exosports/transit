@@ -178,7 +178,6 @@ extern void freemem_transit P_((struct transit *tr));
 #include <tau.h>
 #include <argum.h>
 #include <geometry.h>
-#include <observable.h>
 #include <cia.h>
 #include <eclipse.h>
 
