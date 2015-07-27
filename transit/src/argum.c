@@ -185,7 +185,7 @@ processparameters(int argc,            /* Number of command-line args  */
     {"atm",        CLA_ATMOSPHERE, required_argument, "NULL",  "atmfile",
      "File containing atmospheric info (Radius, pressure, temperature). A dash"
      " (-) indicates alternative input."},
-    {"linedb",     CLA_LINEDB,     required_argument, "NULL",
+    {"linedb",     CLA_LINEDB,     required_argument, NULL,
      "linedb", "File containing line information (TLI format, as given by "
                "'pylineread'."},
     {"outtoomuch", CLA_OUTTOOMUCH, required_argument, NULL, "filename",
