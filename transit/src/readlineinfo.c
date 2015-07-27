@@ -285,13 +285,12 @@ readtli_bin(FILE *fp,
   //transitprint(3, verblevel, "Iso ratio: %.5g %.5g %.5g %.5g\n", iso->isoratio[0], iso->isoratio[1], iso->isoratio[2], iso->isoratio[3]);
 
   /* Update structure values:                                               */
-  li->ni = iso->n_i = niso; /* Number of isotopes                           */
-  li->ndb = ndb;            /* Number of databases                          */
+  li->ni  = iso->n_i  = niso;  /* Number of isotopes                        */
+  li->ndb = iso->n_db = ndb;   /* Number of databases                       */
   /* Position of first line data (there's still one integer to be read):    */
   li->endinfo = ftell(fp) + sizeof(int);
   li->wi = iniw;            /* Initial wavelength                           */
   li->wf = finw;            /* Final wavelength                             */
-  iso->n_db = ndb;          /* Number of databases                          */
   /* Allocate isotope's variable data                                       */
   iso->isov = (prop_isov *)calloc(iso->n_i, sizeof(prop_isov));
 
@@ -354,12 +353,6 @@ checkrange(struct transit *tr,   /* General parameters and  hints           */
   double cm_to_micron = 1e4,                /* Conversion factor to microns */
          fct;
 
-  /* FINDME: hack prints: */
-  //transitprint(1, verblevel, " hsamp->f: %g,  hsamp->i: %g\n",
-  //               hsamp->f, hsamp->i);
-  //transitprint(1, verblevel, " hsamp->fct: %g\n", hsamp->fct);
-  //transitprint(1, verblevel, " db i: %g,  db f: %g\n", dbini, dbfin);
-
   /* Initialize modified hints:                                             */
   msamp->n = -1;
   msamp->d = -1;
@@ -382,8 +375,8 @@ checkrange(struct transit *tr,   /* General parameters and  hints           */
                "The database max and min wavelengths are %6g and %6g cm.\n",
                hsamp->i*fct, hsamp->f*fct, dbini, dbfin);
 
-  /* Set final wavelength:                                         */
-  /* If invalid/not set hint final wavelength, default it to zero: */
+  /* Set final wavelength:                                                  */
+  /* If invalid/not set hint final wavelength, default it to zero:          */
   if(hsamp->f < 0){
     hsamp->f = 0;
     transiterror(TERR_WARNING,
@@ -450,82 +443,47 @@ checkrange(struct transit *tr,   /* General parameters and  hints           */
 
 /* FUNCTION:
    Check TLI file exists.  Check that machine formating is compatible
-   with lineread.  Determine if TLI is ASCII or binary.  Read either
-   ASCII or binary TLI file. Declare line_transition.
+   with lineread.  Read either TLI file.  Declare line_transition.
 
-  TD:  Checks on allocation errors.
   Return: 1 on success
          -1 unavailable file
-         -2 Filename not hinted
-         -3 TLI format not valid (missing magic bytes)
-         -4 Improper TLI-ASCII input                              */
+         -2 Filename not hinted                                             */
 int
 readinfo_tli(struct transit *tr,
              struct lineinfo *li){
+  struct transithint *th = tr->ds.th;  /* Pointer to hint:                  */
   int rn;
-  FILE *fp;  /* File pointer of info file: */
+  FILE *fp;  /* File pointer of info file:                                  */
 
-  /* Decalre and initialize the union sign:                         */
-  /* sign.s contains the magic numbers of this machine's and TLI's: */
+  /* Decalre and initialize the union sign:                                 */
+  /* sign.s contains the magic numbers of this machine's and TLI's:         */
   union {char sig[4]; int32_t s[2];} sign =
     {.s={0, ((0xff-'T')<<24)|((0xff-'L')<<16)|((0xff-'I')<<8)|(0xff)}};
-  char line[maxline+1];
 
-  /* Pointer to hint: */
-  struct transithint *th = tr->ds.th;
-
-  /* Get TLI file name from hint:                              */
-  if(!th->f_line){  /* Check if it was defined in hint         */
+  /* Get TLI file name from hint:                                           */
+  if(!th->f_line){  /* Check if it was defined in hint                      */
     transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Undefined TLI file name.\n");
     return -2;
   }
-  /* Check that the file exists and make a pointer to read it: */
+  /* Attempt to open the TLI file and make a pointer to it:                 */
   if((rn=fileexistopen(th->f_line, &fp)) != 1){
     transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
                  "Line info file '%s' is not found. "
                  "fileexistopen() error code %i.\n", th->f_line, rn);
     return -1;
   }
-  /* Set transit TLI file pointer and TLI file name: */
+  /* Set transit TLI file pointer and TLI file name:                        */
   tr->fp_line = fp;
   tr->f_line  = th->f_line;
 
   /* Read first four bytes, they should be either
-  `(0xff-T)(0xff-L)(0xff-I)(0xff)' or '\#TLI'. They are stored as integer.
+  `(0xff-T)(0xff-L)(0xff-I)(0xff)'.  They are stored as integer.
   This checks whether the machine where the TLI file and the one this
-  program is being run have the same endian order.  If the first two are
-  '\#TLI', then the first line should also start as '\#TLI-ascii'           */
+  program is being run have the same endian order.                          */
   fread(sign.s, sizeof(int32_t), 1, fp);
 
-  /* Determine if TLI is binary (asciiline=0) or ASCII (asciiline=1):       */
-  li->asciiline = 0;
-  transitDEBUG(13, verblevel, "Comparing %i and %i for Magic Number (len: "
-                            "%li)\n", sign.s[0], sign.s[1], sizeof(sign.s[0]));
-
-  if(sign.s[0] != sign.s[1]){
-    /* Does it look like an ASCII TLI?, if so check it:                     */
-    rn = strncasecmp(sign.sig, "#TLI", 4);  /* FINDME: strncasecmp */
-    if(!rn){
-      strcpy(line, "#TLI");
-      fread(line+4, sizeof(char), 6, fp);
-      rn = strncasecmp(line, "#TLI-ascii", 10);
-    }
-    /* If it wasn't a valid TLI, throw error and exit:                      */
-    if(rn){
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                   "The file '%s' has not a valid TLI format. It might be "
-                   "because the machine were the file was created have "
-                   "different endian order, which is incompatible.\n",
-                   tr->f_line);
-      return -3;
-    }
-    li->asciiline = 1;
-    /* Ignore the rest of the first line: */
-    fgetupto_err(line, maxline, fp, &linetoolong, tr->f_line, 1);
-  }
-
-  /* Read binary TLI:  */
-  if((rn=readtli_bin(fp, tr, li))!=0){
+  /* Read binary TLI:                                                       */
+  if((rn=readtli_bin(fp, tr, li)) != 0){
     transiterror(TERR_CRITICAL|TERR_ALLOWCONT,
                  "readtli_bin() return error code %i.\n", rn);
     return -6;
@@ -701,10 +659,11 @@ readlineinfo(struct transit *tr){
 
   /* Read hinted info file:                                                 */
   transitprint(1, verblevel, "Reading info file '%s' ...\n", th->f_line);
-  if((rn=readinfo_tli(tr, &li)) != 1)
+  rn = readinfo_tli(tr, &li);
+  if (rn != 1)
     transiterror(TERR_SERIOUS, "readinfo_tli() returned an error "
                  "code %i.\n", rn);
-  transitprint(1, verblevel, " Done.\n\n");
+  transitprint(1, verblevel, "Done.\n\n");
 
   /* Get the molecule index for the isotopes:                               */
   /* FINDME: Move this out of readline later.                               */
