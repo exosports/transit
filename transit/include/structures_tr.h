@@ -311,7 +311,8 @@ struct cross{
   PREC_CS **temp;     /* Tabulated temperatures      [nfiles][ntemp]        */
   int *nwave;         /* Number of wavenumbers       [nfiles]               */
   int *ntemp;         /* Number of temperatures      [nfiles]               */
-  int *mol1, *mol2;   /* Pairs of molecule's ID      [nfiles]               */
+  int *nspec;         /* Number of species           [nfiles]               */
+  int **mol;          /* Species' ID for each file   [nfiles][2]            */
   double tmin, tmax;  /* CIAs minimum and maximum temperatures              */
 };
 

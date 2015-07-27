@@ -67,14 +67,15 @@ readcs(struct transit *tr){
   static struct cross st_cross;  /* Cross-section structure                 */
   tr->ds.cross = &st_cross;
   /* Number of Cross-section files:                                         */
-  int npairs = tr->ds.cross->nfiles = tr->ds.th->ncross;
-  int p;                  /* Auxiliary wavenumber index                     */
+  int nfiles = tr->ds.cross->nfiles = tr->ds.th->ncross;
   long nt = 0, wa;        /* Number of temperature & wn samples in CSfile   */
   char rc;
   char *lp, *lpa;         /* Pointers in file                               */
-  int maxline=3000, n=0;  /* Max length of line. Counter                    */
+  int maxline=3000,       /* Max length of line                             */
+      j, k, n=0;          /* Counters                                       */
   long lines;             /* Lines read counter                             */
-  long i;                 /* Auxiliary for indices                          */
+  long i,                 /* Auxiliary for indices                          */
+       nspec;             /* Number of species in cross-section file        */
   char line[maxline+1];   /* Array to hold line being read                  */
   struct molecules *mol=tr->ds.mol;
 
@@ -85,43 +86,47 @@ readcs(struct transit *tr){
   /* Allocate Transit extinction array (in cm-1):                           */
   st_cross.e    = (PREC_CS **)calloc(tr->wns.n,            sizeof(PREC_CS *));
   st_cross.e[0] = (PREC_CS  *)calloc(tr->wns.n*tr->rads.n, sizeof(PREC_CS));
-  for(p=1; p < tr->wns.n; p++)
-    st_cross.e[p] = st_cross.e[0] + p*tr->rads.n;
+  for(j=1; j < tr->wns.n; j++)
+    st_cross.e[j] = st_cross.e[0] + j*tr->rads.n;
   memset(st_cross.e[0], 0, tr->wns.n*tr->rads.n*sizeof(double));
 
   /* If there are no files, allocate tr.ds.cross.e (extinction) and return: */
-  if(!npairs){
+  if(!nfiles){
     return 0;
   }
   transitprint(1, verblevel, "Computing cross-section opacities for %i "
-                             "database%s:\n", npairs, npairs>1 ? "s":"");
+                             "database%s:\n", nfiles, nfiles>1 ? "s":"");
 
   /* Allocate string for molecule names:                                    */
   colname = (char *)calloc(maxline, sizeof(char));
 
-  /* Allocate molecules' ID:                                                */
-  st_cross.mol1 = (int   *)calloc(npairs, sizeof(int));
-  st_cross.mol2 = (int   *)calloc(npairs, sizeof(int));
+  /* Allocate species' ID array:                                            */
+  st_cross.mol    = (int **)calloc(nfiles, sizeof(int *));
+  st_cross.mol[0] = (int  *)calloc(nfiles*2, sizeof(int));
+  for(i=1; i < nfiles; i++)
+    st_cross.mol[i] = st_cross.mol[0] + i*2;
+
   /* Number of temperature and wavenumber samples per file:                 */
-  st_cross.ntemp = (int  *)calloc(npairs, sizeof(int));
-  st_cross.nwave = (int  *)calloc(npairs, sizeof(int));
+  st_cross.ntemp = (int  *)calloc(nfiles, sizeof(int));
+  st_cross.nwave = (int  *)calloc(nfiles, sizeof(int));
+  st_cross.nspec = (int  *)calloc(nfiles, sizeof(int));
   /* Temperature and wavenumber samples:                                    */
-  st_cross.cs   = (PREC_CS ***)calloc(npairs, sizeof(PREC_CS **));
-  st_cross.temp = (PREC_CS  **)calloc(npairs, sizeof(PREC_CS  *));
-  st_cross.wn   = (PREC_CS  **)calloc(npairs, sizeof(PREC_CS  *));
+  st_cross.cs   = (PREC_CS ***)calloc(nfiles, sizeof(PREC_CS **));
+  st_cross.temp = (PREC_CS  **)calloc(nfiles, sizeof(PREC_CS  *));
+  st_cross.wn   = (PREC_CS  **)calloc(nfiles, sizeof(PREC_CS  *));
   /* Min and max allowed temperatures in CS files:                          */
   st_cross.tmin = -1.0;
   st_cross.tmax = 100000.0;
 
-  for (p=0; p < npairs; p++){
+  for (j=0; j < nfiles; j++){
     /* Copy file names from hint:                                           */
-    file = xstrdup(tr->ds.th->csfile[p]);
+    file = xstrdup(tr->ds.th->csfile[j]);
 
     /* Attempt to open the files:                                           */
     if((fp=fopen(file, "r")) == NULL)
       transiterror(TERR_SERIOUS, "Cannot read cross-section file '%s'.\n",file);
     transitprint(10, verblevel, "  Cross-section file (%d/%d): '%s'\n",
-                                p+1, npairs, file);
+                                j+1, nfiles, file);
     lines = 0; /* lines read counter                                        */
     lpa   = 0;
     /* Read the file headers:                                               */
@@ -137,43 +142,38 @@ readcs(struct transit *tr){
       switch(rc){
       case 'i': /* Read the name of the isotopes:                           */
         while(isblank(*++lp));
-        /* Check that there are exactly two isotopes:                       */
-        if(countfields(lp, ' ') != 2)
-          transiterror(TERR_SERIOUS, "Wrong line %i in cross section file "
-                       "'%s', if it begins with a "
-                       "'i', it should have the species separated by blank "
-                       "spaces.  Rest of line:\n'%s'\n", lines, file, lp);
+        /* Count the number of species:                                     */
+        nspec = st_cross.nspec[j] = countfields(lp, ' ');
+        if (nspec != 1 && nspec != 2)
+          transiterror(TERR_SERIOUS, "Wrong header in cross section file "
+                       "'%s', The 'i'-line should contain either one or "
+                       "two species, separated by blank spaces.  "
+                       "The line reads:\n  '%s'\n", file, lp);
 
-        st_cross.mol1[p] = st_cross.mol2[p] = -1;
-        /* Allocate and copy the name of the first moleculee:               */
-        getname(lp, colname);
-        /* Find the ID of the first molecule:                               */
-        for(i=0; i<mol->nmol; i++)
-          if(strcmp(mol->name[i], colname)==0)
-            st_cross.mol1[p] = i;
-        /* If the molecule is not in the atmosphere file:                   */
-        if(st_cross.mol1[p] == -1)
-          transiterror(TERR_SERIOUS, "Cross-section species '%s' from file "
-                       "'%s' does not match any in the atmsopheric file.\n",
-                       colname, file);
+        for (k=0; k<nspec; k++){
+          /* Read the name of the species:                                  */
+          getname(lp, colname);
+          /* Find the ID of the species:                                    */
+          for(i=0; i<mol->nmol; i++)
+            if(strcmp(mol->name[i], colname)==0)
+              st_cross.mol[j][k] = i;
+          /* If the species is not in the atmosphere file:                  */
+          if(st_cross.mol[j][k] == -1)
+            transiterror(TERR_SERIOUS, "Cross-section species '%s' from file "
+                         "'%s' does not match any in the atmsopheric file.\n",
+                         colname, file);
+          lp = nextfield(lp);
+        }
 
-        /* Allocate and store the name of the second isotope:               */
-        lp = nextfield(lp);
-        getname(lp, colname);
-        for(i=0; i < mol->nmol; i++)
-          if(strcmp(mol->name[i], colname)==0)
-            st_cross.mol2[p] = i;
-        if(st_cross.mol2[p] == -1)
-          transiterror(TERR_SERIOUS, "Cross-section species '%s' from file "
-                       "'%s' does not match any in the atmsopheric file.\n",
-                       colname, file);
-        transitprint(10, verblevel, "  Cross-section species: [%s, %s]\n",
-                     mol->name[st_cross.mol1[p]], mol->name[st_cross.mol2[p]]);
+        transitprint(10, verblevel, "  Cross-section species: ");
+        for (k=0; k<nspec; k++)
+          transitprint(10, verblevel, "%s, ", mol->name[st_cross.mol[j][k]]);
+        transitprint(10, verblevel, "\n");
         continue;
 
       case 't': /* Read the sampling temperatures array:                    */
         while(isblank(*++lp));
-        nt = st_cross.ntemp[p] = countfields(lp, ' ');  /* Number of temps. */
+        nt = st_cross.ntemp[j] = countfields(lp, ' ');  /* Number of temps. */
         transitprint(5, verblevel, "  Number of temperature samples: %ld\n",
                                    nt);
         if(!nt)
@@ -182,14 +182,14 @@ readcs(struct transit *tr){
                        "blank-separated fields with the temperatures. Rest "
                        "of line: '%s'.\n", lines, file, lp);
         /* Allocate and store the temperatures array:                       */
-        st_cross.temp[p] = (PREC_CS *)calloc(nt, sizeof(PREC_CS));
+        st_cross.temp[j] = (PREC_CS *)calloc(nt, sizeof(PREC_CS));
         n = 0;    /* Count temperatures per line                            */
         lpa = lp; /* Pointer in line                                        */
         transitprint(20, verblevel, "  Temperatures (K) = [");
         while(n < nt){
           while(isblank(*lpa++));
-          st_cross.temp[p][n] = strtod(--lpa, &lp);  /* Get value           */
-          transitprint(20, verblevel, "%d, ", (int)st_cross.temp[p][n]);
+          st_cross.temp[j][n] = strtod(--lpa, &lp);  /* Get value           */
+          transitprint(20, verblevel, "%d, ", (int)st_cross.temp[j][n]);
           if(lp==lpa)
             transiterror(TERR_CRITICAL, "Less fields (%i) than expected (%i) "
                          "were read for temperature in the cross-section "
@@ -206,8 +206,8 @@ readcs(struct transit *tr){
       break;
     }
     /* Set tmin and tmax:                                                   */
-    st_cross.tmin = fmax(st_cross.tmin, st_cross.temp[p][  0]);
-    st_cross.tmax = fmin(st_cross.tmax, st_cross.temp[p][n-1]);
+    st_cross.tmin = fmax(st_cross.tmin, st_cross.temp[j][  0]);
+    st_cross.tmax = fmin(st_cross.tmax, st_cross.temp[j][n-1]);
 
     /* Set an initial value for allocated wavenumber fields:                */
     wa = 32;
@@ -261,7 +261,7 @@ readcs(struct transit *tr){
 
     /* Re-allocate arrays to their final sizes:                             */
     if(n<wa){
-      st_cross.wn[p] = (PREC_CS  *)realloc(wn,   n*   sizeof(PREC_CS));
+      st_cross.wn[j] = (PREC_CS  *)realloc(wn,   n*   sizeof(PREC_CS));
       a              = (PREC_CS **)realloc(a,    n*   sizeof(PREC_CS *));
       a[0]           = (PREC_CS  *)realloc(a[0], n*nt*sizeof(PREC_CS));
       for(i=1; i<n; i++)
@@ -270,20 +270,20 @@ readcs(struct transit *tr){
     transitprint(5, verblevel, "  Number of wavenumber samples: %d\n", n);
     transitprint(5, verblevel, "  Wavenumber array (cm-1) = [%.1f, %.1f, "
                                "%.1f, ..., %.1f, %.1f, %.1f]\n",
-                               st_cross.wn[p][  0], st_cross.wn[p][  1],
-                               st_cross.wn[p][  2], st_cross.wn[p][n-3],
-                               st_cross.wn[p][n-2], st_cross.wn[p][n-1]);
+                               st_cross.wn[j][  0], st_cross.wn[j][  1],
+                               st_cross.wn[j][  2], st_cross.wn[j][n-3],
+                               st_cross.wn[j][n-2], st_cross.wn[j][n-1]);
     /* Wavenumber boundaries check:                                         */
-    if ((st_cross.wn[p][  0] > tr->wns.v[          0]) ||
-        (st_cross.wn[p][n-1] < tr->wns.v[tr->wns.n-1]) ){
+    if ((st_cross.wn[j][  0] > tr->wns.v[          0]) ||
+        (st_cross.wn[j][n-1] < tr->wns.v[tr->wns.n-1]) ){
       transiterror(TERR_SERIOUS, "The wavelength range [%.2f, %.2f] cm-1 of "
                    "the cross-section file:\n  '%s',\ndoes not cover "
                    "Transit's wavelength range [%.2f, %.2f] cm-1.\n", file,
-                   st_cross.wn[p][0], st_cross.wn[p][n-1],
+                   st_cross.wn[j][0], st_cross.wn[j][n-1],
                    tr->wns.v[0],    tr->wns.v[tr->wns.n-1]);
     }
-    st_cross.cs[p] = a;
-    st_cross.nwave[p] = n;
+    st_cross.cs[j] = a;
+    st_cross.nwave[j] = n;
     fclose(fp);
   }
   free(colname);
@@ -299,10 +299,11 @@ interpcs(struct transit *tr){
   struct cross     *cross=tr->ds.cross;
   prop_atm *atm = &tr->atm;
   PREC_CS **e;  /* Temporary interpolated cia                               */
-  double *tmpw = malloc(tr->wns.n  * sizeof(double)); /* temperatures array */
-  double *tmpt = malloc(tr->rads.n * sizeof(double)); /* wavenumber array   */
-  double *densiso1, *densiso2, amagat2; /* Density arrays and square amagat */
-  int i, j, n;
+  double *tmpw = malloc(tr->wns.n  * sizeof(double)); /* Temperatures array */
+  double *tmpt = malloc(tr->rads.n * sizeof(double)); /* Wavenumber array   */
+  double dens;  /* Density scaling factor                                   */
+  int i, j, k, n,
+      icsmol;  /* Cross-section species index                               */
 
   /* Reset the cross-section opacity to zero:                               */
   memset(cross->e[0], 0, tr->wns.n*tr->rads.n*sizeof(double));
@@ -337,17 +338,22 @@ interpcs(struct transit *tr){
                                         cross->temp[n], cross->ntemp[n],
                                         tmpw, tr->wns.n, tmpt, tr->rads.n);
 
-    /* Get density profile of isotopes from atmosphere-file isotopes:       */
-    densiso1 = mol->molec[cross->mol1[n]].d;
-    densiso2 = mol->molec[cross->mol2[n]].d;
-
     /* Calculate absorption coefficients in cm-1 units:                     */
     for(i=0; i < tr->rads.n; i++){
-      amagat2 = densiso1[i]*densiso2[i]/(AMU*mol->mass[cross->mol1[n]] *AMAGAT *
-                                         AMU*mol->mass[cross->mol2[n]] *AMAGAT);
+      dens = 1.0;
+      for(k=0; k < cross->nspec[n]; k++){
+        icsmol = cross->mol[n][k];
+        dens *= mol->molec[icsmol].d[i] / (AMU * mol->mass[icsmol] * AMAGAT);
+        //if (i == 0)
+          //transitprint(1,2,"%.5e  %.5e\n", mol->molec[icsmol].d[i],
+          //                                 mol->mass[icsmol]);
+      }
+      //transitprint(1, 2, "%.2e, ", dens);
+      //transitprint(1, 2, "%.2e, ", dens*e[0][i]);
       for(j=0; j < tr->wns.n; j++)
-        cross->e[j][i] += e[j][i]*amagat2;
+        cross->e[j][i] += e[j][i] * dens;
     }
+    //transitprint(1, 2, "\n");
   }
   free(e[0]);
   free(e);
@@ -474,10 +480,11 @@ freemem_cs(struct cross *cross,
     free(cross->wn);
     free(cross->temp);
 
-    free(cross->mol1);
-    free(cross->mol2);
+    free(cross->mol[0]);
+    free(cross->mol);
     free(cross->nwave);
     free(cross->ntemp);
+    free(cross->nspec);
   }
 
   /* Unset appropiate flags:                                                */
