@@ -124,12 +124,9 @@ struct lineinfo{             /* Line information parameters:                */
   unsigned short tli_ver;    /* TLI version                                 */
   unsigned short lr_ver;     /* lineread version                            */
   unsigned short lr_rev;     /* lineread revision                           */
-  prop_samp wavs;            /* Wavelength sampling                         */
   double wi, wf;             /* Initial and final wavelength in database    */
   long endinfo;              /* Position at the end of the info part
                                 of the info file                            */
-  int asciiline;             /* TLI line of first transition.
-                                Zero if a binary file.                      */
   int ni;                    /* Number of isotopes                          */
   int ndb;                   /* Number of databases                         */
   prop_isov *isov;           /* Variable isotope information (w/temp) [iso] */

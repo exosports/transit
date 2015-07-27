@@ -282,8 +282,6 @@ readtli_bin(FILE *fp,
   transitprint(3, verblevel, "\b\b].\n");
   transitprint(3, verblevel, "acum Iso: %2d.\n", niso);
 
-  //transitprint(3, verblevel, "Iso ratio: %.5g %.5g %.5g %.5g\n", iso->isoratio[0], iso->isoratio[1], iso->isoratio[2], iso->isoratio[3]);
-
   /* Update structure values:                                               */
   li->ni  = iso->n_i  = niso;  /* Number of isotopes                        */
   li->ndb = iso->n_db = ndb;   /* Number of databases                       */
@@ -345,97 +343,48 @@ checkrange(struct transit *tr,   /* General parameters and  hints           */
            struct lineinfo *li){ /* Values returned by readinfo_tli         */
 
   int res=0;                                /* Return value                 */
-  struct transithint *th = tr->ds.th;       /* transithint                  */
-  prop_samp *msamp = &li->wavs;             /* transit wavelength sampling  */
-  prop_samp *hsamp = &th->wavs;             /* hint    wavelength sampling  */
+  prop_samp *tsamp = &tr->wns;              /* Transit wavenumber sampling  */
   PREC_LNDATA dbini = li->wi*TLI_WAV_UNITS, /* Minimum DB wavelength        */
               dbfin = li->wf*TLI_WAV_UNITS; /* Maximum DB wavelength        */
-  double cm_to_micron = 1e4,                /* Conversion factor to microns */
-         fct;
+  double cm_to_micron = 1e4;                /* Conversion factor to microns */
+  double wlmin, wlmax;
 
-  /* Initialize modified hints:                                             */
-  msamp->n = -1;
-  msamp->d = -1;
-  msamp->v = NULL;
-  msamp->fct = 1;
-
-  /* Check that the hinted wavelength units factor is positive & non-zero:  */
-  if(hsamp->fct <= 0)
-    transiterror(TERR_SERIOUS, "User specified wavelength factor is "
-                               "negative (%g).\n", hsamp->fct);
-
-  /* Set lineinfo wavelength units factor equal to transithint factor:      */
-  msamp->fct = hsamp->fct;
-
-  /* transit lineinfo.wavs conversion factor to cgs:                        */
-  fct = msamp->fct;
+  /* Transit wavelength limits in cgs units:                                */
+  wlmin = 1.0/(tsamp->f*tsamp->fct);
+  wlmax = 1.0/(tsamp->i*tsamp->fct);
 
   transitDEBUG(10, verblevel,
-               "Hinted initial and final wavelengths are %6g and %6g cm.\n"
-               "The database max and min wavelengths are %6g and %6g cm.\n",
-               hsamp->i*fct, hsamp->f*fct, dbini, dbfin);
+               "Transit initial and final wavelengths are %6g and %6g cm.\n"
+               "The database max and min wavelengths are  %6g and %6g cm.\n",
+               wlmin, wlmax, dbini, dbfin);
 
-  /* Set final wavelength:                                                  */
-  /* If invalid/not set hint final wavelength, default it to zero:          */
-  if(hsamp->f < 0){
-    hsamp->f = 0;
-    transiterror(TERR_WARNING,
-                 "Incorrect upper wavelength limit in hint.  Default: setting "
-                 "to %g before extraction.\n", hsamp->f*fct);
+  /* Check that it is not below the minimum value:                          */
+  if(dbini > wlmax){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Final wavelength (%g) "
+                 "is smaller than minimum wavelength in database (%g).\n",
+                 wlmax, dbini);
+    return -3;
   }
-  /* If hint is 0, set it to max db wavelength:                             */
-  if(hsamp->f <= 0){
-      msamp->f = dbfin/fct;
-  }
-  else{  /* Else, hinted f is a positive value:                             */
-    transitDEBUG(20, verblevel, "dbini: %g  sampf: %g.\n",
-                 dbini, hsamp->f);
-    /* Check that it is not below the minimum value:                        */
-    if(dbini > hsamp->f * fct){
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Final wavelength (%g * %g) "
-                   "is smaller than minimum wavelength in database (%g).\n",
-                   hsamp->f, fct, dbini);
-      return -3;
-    }
-    /* Warn if it is above maximum value with information:                  */
-    if(hsamp->f * fct > dbfin)
-      transiterror(TERR_WARNING, "Final requested wavelength (%g microns) "
-                   "is larger than the maximum informative value in database "
-                   "(%g microns).\n", hsamp->f*fct * cm_to_micron,
-                                      dbfin        * cm_to_micron);
-    /* Set the final wavelength value:                                      */
-    msamp->f = hsamp->f;
-  }
-  /* Set initial wavelength:                                                */
-  /* If invalid value, default it to 0:                                     */
-  if(hsamp->i < 0){
-    hsamp->i = 0;
-    transiterror(TERR_WARNING, "Setting hinted lower wavelength limit "
-                 "before extraction as %g cgs. It was not user-hinted.\n",
-                 hsamp->i*fct);
-  }
-  /* If default value, set it to min db wavelength:                         */
-  if(hsamp->i<=0)
-    msamp->i = dbini/fct;
-  else{
-    transitDEBUG(20, verblevel, "dbfin: %g  sampi: %g.\n",
-                 dbfin, fct*hsamp->i);
-    /* Check that it is not larger than the maximum db wavelength:          */
-    if(dbfin < fct * hsamp->i){
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Initial wavelength (%g cm) "
-                   "is larger than maximum wavelength in database (%g cm).\n",
-                   fct*hsamp->i, dbfin);
-      return -2;
-    }
-    if(fct * hsamp->i < dbini)
-      transiterror(TERR_WARNING, "Initial requested wavelength (%g microns) "
-                   "is smaller than the minimum informative value in database "
-                   "(%g microns).\n", hsamp->i * fct * cm_to_micron,
-                                      dbini          * cm_to_micron);
-    msamp->i = hsamp->i;
-  }
+  /* Warn if it is above the maximum TLI value:                             */
+  if(wlmax > dbfin)
+    transiterror(TERR_WARNING, "Final requested wavelength (%g microns) "
+                 "is larger than the maximum informative value in database "
+                 "(%g microns).\n", wlmax*cm_to_micron, dbfin*cm_to_micron);
 
-  /* Set progress indicator and return status:                     */
+  /* Check that it is not larger than the maximum db wavelength:            */
+  if(dbfin < wlmin){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Initial wavelength (%g cm) "
+                 "is larger than maximum wavelength in database (%g cm).\n",
+                 wlmin, dbfin);
+    return -2;
+  }
+  /* Warn if it is below the maximum TLI value:                             */
+  if(wlmin < dbini)
+    transiterror(TERR_WARNING, "Initial requested wavelength (%g microns) "
+                 "is smaller than the minimum informative value in database "
+                 "(%g microns).\n", wlmin*cm_to_micron, dbini*cm_to_micron);
+
+  /* Set progress indicator and return status:                              */
   tr->pi |= TRPI_CHKRNG;
   return res;
 }
@@ -533,21 +482,15 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
   long ifirst, ilast;
 
   /* Auxiliary variables to keep wavelength limits:                         */
-  PREC_LNDATA iniw = li->wavs.i * li->wavs.fct / TLI_WAV_UNITS;
-  PREC_LNDATA finw = li->wavs.f * li->wavs.fct / TLI_WAV_UNITS;
-  PREC_LNDATA wltmp;   /* Auxiliary variable to store wavelength            */
-  (void) wltmp;        /* Suppress warning for this unused variable         */
+  PREC_LNDATA iniw = 1.0/(tr->wns.f*tr->wns.fct) / TLI_WAV_UNITS;
+  PREC_LNDATA finw = 1.0/(tr->wns.i*tr->wns.fct) / TLI_WAV_UNITS;
 
   /* Open line data file:                                                   */
   if((rn=fileexistopen(tr->f_line, &fp)) != 1){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Data file '%s' not found.  fileexistopen() error "
-                 "code: %i.\n", tr->f_line, rn);
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Data file '%s' not found.  "
+                "fileexistopen() error code: %i.\n", tr->f_line, rn);
     return -1;
   }
-
-  /* Find starting point in datafile.  First with a binary search, then
-     with a sequential search:                                              */
 
   /* Check seekability:                                                     */
   if(fseek(fp, 0, SEEK_CUR)){
@@ -558,7 +501,7 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
 
   /* Read total number of transitions in TLI file:                          */
   /* FINDME: May be better to put endinfo to the right position
-             (avoid this  -sizeof(int)):                                    */
+             (i.e., avoid this  -sizeof(int)):                              */
   fseek(fp, li->endinfo - sizeof(int), SEEK_SET);
   fread(&nlines, sizeof(int), 1, fp);
   transitprint(1, verblevel, "TLI has %d transition lines.\n", nlines);
@@ -662,7 +605,7 @@ readlineinfo(struct transit *tr){
   rn = readinfo_tli(tr, &li);
   if (rn != 1)
     transiterror(TERR_SERIOUS, "readinfo_tli() returned an error "
-                 "code %i.\n", rn);
+                               "code %i.\n", rn);
   transitprint(1, verblevel, "Done.\n\n");
 
   /* Get the molecule index for the isotopes:                               */
@@ -677,12 +620,6 @@ readlineinfo(struct transit *tr){
   if(rn>0 && verblevel>1)
     transiterror(TERR_WARNING, "checkrange() modified the suggested "
                                "parameters, it returned code 0x%x.\n\n", rn);
-
-  /* Scale factors:                                                         */
-  double fct = li.wavs.fct;
-  double fct_to_microns = fct/1e-4;
-  transitprint(2, verblevel, "The wavelength range to be used is %g to %g "
-               "cm.\n", fct*tr->ds.li->wavs.i, fct*tr->ds.li->wavs.f);
 
   /* Check for an opacity file:                                             */
   filecheck = access(th->f_opa, F_OK);
@@ -702,15 +639,14 @@ readlineinfo(struct transit *tr){
     tr->pi |= TRPI_READDATA;
   }
 
+  /* Scale factors:                                                         */
+  double fct_to_microns = 1.0/tr->wns.fct/1e-4;
   /* Status so far:                                                         */
   transitprint(2, verblevel, "Status so far:\n"
-               " * I read %li records from the datafile.\n"
-               " * The wavelength range read was %.8g to %.8g microns.\n",
-               li.n_l, li.wavs.i*fct_to_microns, li.wavs.f*fct_to_microns);
-
-  transitDEBUG(21, verblevel,
-               "Database min and max: %.10g(%.10g) and %.10g(%.10g)\n",
-               li.wi, tr->ds.li->wi, li.wf, tr->ds.li->wf);
+                  " * I read %li records from the datafile.\n"
+                  " * The wavelength range read was %.8g to %.8g microns.\n",
+                   li.n_l, 1.0/tr->wns.f*fct_to_microns,
+                           1.0/tr->wns.i*fct_to_microns);
   return 0;
 }
 
@@ -760,8 +696,6 @@ freemem_lineinfo(struct lineinfo *li,
     free_dbnoext(li->db+i);
   free(li->db);
 
-  free_samp(&li->wavs);
-
   /* Zero all the structure:                                                */
   memset(li, 0, sizeof(struct lineinfo));
 
@@ -770,7 +704,8 @@ freemem_lineinfo(struct lineinfo *li,
   return 0;
 }
 
-/* FUNCTION  */
+
+/* FUNCTION                                                                 */
 int
 freemem_linetransition(struct line_transition *lt,
                        long *pi){
