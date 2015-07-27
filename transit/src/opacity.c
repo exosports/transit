@@ -113,7 +113,6 @@ opacity(struct transit *tr){
     freemem_linetransition(&tr->ds.li->lt, &tr->pi);
     tr->pi |= TRPI_READDATA;
     tr->pi |= TRPI_READINFO;
-    tr->pi |= TRPI_CHKRNG;
 
     /* Set progress indicator and return success:                           */
     tr->pi |= TRPI_OPACITY;

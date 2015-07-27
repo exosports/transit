@@ -481,9 +481,11 @@ makeradsample(struct transit *tr){
     tr->pi &= ~(TRPI_MAKERAD);
   }
   /* Check that variables are not NULL:                                     */
-  transitASSERT(atms->rads.n<1 || !ndb || !niso || !nmol,
+  transitASSERT(atms->rads.n<1 || !nmol,
+  //transitASSERT(atms->rads.n<1 || !ndb || !niso || !nmol,
                 "makeradsample():: called but essential variables are "
-                "missing (%d, %d, %d, %d).\n", atms->rads.n, ndb, niso, nmol);
+                "missing (%d, %d).\n", atms->rads.n, nmol);
+                //"missing (%d, %d, %d, %d).\n", atms->rads.n, ndb, niso, nmol);
 
   /* Set interpolation function flag:                                       */
   flag = tr->interpflag;

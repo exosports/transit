@@ -209,7 +209,7 @@ tau(struct transit *tr){
     transitprint(1, verblevel, "Computing extinction at outermost layer.\n");
     if (tr->fp_opa != NULL)
       rn = interpolmolext(tr, rnn-1, ex->e);
-    else{
+    else if (tr->f_line != NULL){
       for (i=0; i < tr->ds.mol->nmol; i++)
         density[i] = tr->ds.mol->molec[i].d[rnn-1];
       for (i=0; i < tr->ds.iso->n_i; i++)
@@ -275,7 +275,7 @@ tau(struct transit *tr){
                                         lastr+1, r[lastr]*rfct);
             if (tr->fp_opa != NULL)
               rn = interpolmolext(tr, lastr, ex->e);
-            else{
+            else if (tr->f_line != NULL){
               for (i=0; i < tr->ds.mol->nmol; i++)
                 density[i] = tr->ds.mol->molec[i].d[lastr];
               for (i=0; i < tr->ds.iso->n_i; i++)

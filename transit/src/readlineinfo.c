@@ -178,9 +178,6 @@ readtli_bin(FILE *fp,
   iso->isof     = (prop_isof    *)calloc(1,   sizeof(prop_isof));
   li->isov      = (prop_isov    *)calloc(1,   sizeof(prop_isov));
   iso->isoratio = (double       *)calloc(1,   sizeof(double));
-  /* Min and max allowed temperatures in TLI files:                         */
-  li->tmin      = -1.0;
-  li->tmax      = 10000.0;
 
   /* Read info for each database:                                           */
   for(i=0; i<ndb; i++){
@@ -292,6 +289,7 @@ readtli_bin(FILE *fp,
   /* Allocate isotope's variable data                                       */
   iso->isov = (prop_isov *)calloc(iso->n_i, sizeof(prop_isov));
 
+  tr->pi |= TRPI_READBIN;
   return 0;
 }
 
@@ -303,6 +301,10 @@ setimol(struct transit *tr){
   struct molecules *mol = tr->ds.mol;
   struct isotopes  *iso = tr->ds.iso;
   int i; /* Auxiliary for-loop index                                        */
+
+  /* Return if there are no isotopes (i.e., no line transitions):           */
+  if (iso->n_i == 0)
+    return 0;
 
   iso->imol = (int *)calloc(iso->n_i, sizeof(int));
   iso->nmol = 0;
@@ -384,8 +386,7 @@ checkrange(struct transit *tr,   /* General parameters and  hints           */
                  "is smaller than the minimum informative value in database "
                  "(%g microns).\n", wlmin*cm_to_micron, dbini*cm_to_micron);
 
-  /* Set progress indicator and return status:                              */
-  tr->pi |= TRPI_CHKRNG;
+  /* Return status:                                                         */
   return res;
 }
 
@@ -411,7 +412,8 @@ readinfo_tli(struct transit *tr,
 
   /* Get TLI file name from hint:                                           */
   if(!th->f_line){  /* Check if it was defined in hint                      */
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Undefined TLI file name.\n");
+    transiterror(TERR_WARNING, "No TLI file set.\n");
+    tr->pi |= TRPI_READINFO;
     return -2;
   }
   /* Attempt to open the TLI file and make a pointer to it:                 */
@@ -486,7 +488,13 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
   PREC_LNDATA finw = 1.0/(tr->wns.i*tr->wns.fct) / TLI_WAV_UNITS;
 
   /* Open line data file:                                                   */
-  if((rn=fileexistopen(tr->f_line, &fp)) != 1){
+  rn = fileexistopen(tr->f_line, &fp);
+  if (rn == 0){  /* No file given */
+    li->n_l = 0;
+    return 0;
+  }
+
+  else if (rn != 1){
     transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Data file '%s' not found.  "
                 "fileexistopen() error code: %i.\n", tr->f_line, rn);
     return -1;
@@ -599,35 +607,39 @@ readlineinfo(struct transit *tr){
   tr->ds.li  = &li;   /* lineinfo                                           */
   tr->ds.iso = &iso;  /* isotopes                                           */
 
+  /* Set some defaults:                                                     */
+  li.ni  = iso.n_i  = 0;  /* Number of isotopes                             */
+  li.ndb = iso.n_db = 0;  /* Number of databases                            */
+  /* Min and max allowed temperatures in TLI files:                         */
+  li.tmin =     0.0;
+  li.tmax = 70000.0;
 
   /* Read hinted info file:                                                 */
   transitprint(1, verblevel, "Reading info file '%s' ...\n", th->f_line);
   rn = readinfo_tli(tr, &li);
-  if (rn != 1)
-    transiterror(TERR_SERIOUS, "readinfo_tli() returned an error "
-                               "code %i.\n", rn);
   transitprint(1, verblevel, "Done.\n\n");
-
-  /* Get the molecule index for the isotopes:                               */
-  /* FINDME: Move this out of readline later.                               */
-  rn = setimol(tr);
 
   /* Check the remainder range of the hinted values
      related to line database reading:                                      */
-  if((rn=checkrange(tr, &li)) < 0)
-    transiterror(TERR_SERIOUS, "checkrange() returned error code %i.\n", rn);
-  /* Output status so far if the verbose level is enough:                   */
-  if(rn>0 && verblevel>1)
-    transiterror(TERR_WARNING, "checkrange() modified the suggested "
-                               "parameters, it returned code 0x%x.\n\n", rn);
+  if (rn != -2){
+    if((rn=checkrange(tr, &li)) < 0)
+      transiterror(TERR_SERIOUS, "checkrange() returned error code %i.\n", rn);
+    /* Output status so far if the verbose level is enough:                 */
+    if(rn>0 && verblevel>1)
+      transiterror(TERR_WARNING, "checkrange() modified the suggested "
+                                 "parameters, it returned code 0x%x.\n\n", rn);
+  }
+
+  /* Get the molecule index for the isotopes:                               */
+  setimol(tr);
 
   /* Check for an opacity file:                                             */
   filecheck = access(th->f_opa, F_OK);
   /* Only read the TLI file if there is no opacity file                     */
-  if(filecheck == -1){
+  if(filecheck == -1 && rn != -2){
     /* Read data file:                                                      */
     transitprint(1, verblevel, "Reading data.\n");
-    if((rn=readdatarng(tr, &li))<1)
+    if((rn=readdatarng(tr, &li)) < 0)
       transiterror(TERR_SERIOUS, "readdatarng returned error code %li.\n", rn);
     transitprint(1, verblevel, "Done.\n\n");
   }
@@ -653,29 +665,33 @@ readlineinfo(struct transit *tr){
 
 /* FUNCTION:
    Frees lineinfo structure
-   Return: 0 on success                                      */
+   Return: 0 on success                                                     */
 int
 freemem_isotopes(struct isotopes *iso,
                  long *pi){
   int i;
 
-  /* Free structures:                                         */
-  for(i=0; i < iso->n_i; i++){      /* Allocated in readlineinfo */
-    free_isof(iso->isof+i);
-    free_isov(iso->isov+i);
+  /* Free structures:                                                       */
+  if (*pi &= TRPI_READBIN){
+    for(i=0; i < iso->n_i; i++){
+      free_isof(iso->isof+i);
+      free_isov(iso->isov+i);
+    }
+    for(i=0; i < iso->n_db; i++)
+      free_db(iso->db+i);
+
+    /* Free arrays:                                                         */
+    free(iso->isov);
+    free(iso->isof);
+    free(iso->db);
+    free(iso->imol);
+    free(iso->isoratio);
+    /* Unset appropiate flags:                                              */
+    *pi &= ~(TRPI_READBIN);
   }
-  for(i=0; i < iso->n_db; i++)
-    free_db(iso->db+i);
 
-  /* Free arrays:                                             */
-  free(iso->isov);
-  free(iso->isof);
-  free(iso->db);
-  free(iso->imol);
-  free(iso->isoratio);
-
-  /* Unset flags:                                             */
-  *pi &= ~(TRPI_READINFO | TRPI_READDATA | TRPI_CHKRNG | TRPI_GETATM);
+  /* Unset flags:                                                           */
+  *pi &= ~(TRPI_READINFO | TRPI_READDATA | TRPI_GETATM);
   return 0;
 }
 
@@ -688,19 +704,25 @@ freemem_lineinfo(struct lineinfo *li,
                  long *pi){
   int i;
 
-  /* Free isov, dbnoext and samp in li:                                     */
-  free_isov(li->isov);
-  free(li->isov);
+  //transitprint(1,2, "%ld\n", *pi &= TRPI_READINFO);
+  //transitprint(1,2, "%ld\n\n", *pi &= TRPI_READBIN);
+  if (*pi &= TRPI_READBIN){
+    /* Free isov, dbnoext and samp in li:                                     */
+    free_isov(li->isov);
+    free(li->isov);
 
-  for(i=0; i<li->ndb; i++)
-    free_dbnoext(li->db+i);
-  free(li->db);
+    for(i=0; i<li->ndb; i++)
+      free_dbnoext(li->db+i);
+    free(li->db);
 
-  /* Zero all the structure:                                                */
-  memset(li, 0, sizeof(struct lineinfo));
+    /* Zero all the structure:                                                */
+    memset(li, 0, sizeof(struct lineinfo));
+    /* Unset appropiate flags:                                                */
+    *pi &= ~(TRPI_READBIN);
+  }
 
   /* Unset appropiate flags:                                                */
-  *pi &= ~(TRPI_READINFO | TRPI_CHKRNG);
+  *pi &= ~(TRPI_READINFO);
   return 0;
 }
 

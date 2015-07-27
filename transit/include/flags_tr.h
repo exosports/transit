@@ -106,7 +106,7 @@
 /* Progress indicator flags:                                                */
 #define TRPI_READINFO     0x000001  /* readinfofile()   completed           */
 #define TRPI_READDATA     0x000002  /* readdatarng()    completed           */
-#define TRPI_CHKRNG       0x000004  /* checkrange()     completed           */
+#define TRPI_READBIN      0x000004  /* readtli_bin()    completed           */
 #define TRPI_GETATM       0x000008  /* getatm()         completed           */
 #define TRPI_MAKERAD      0x000010  /* makeradsample()  completed           */
 #define TRPI_MAKEWAV      0x000020  /* makewavsample()  completed           */
