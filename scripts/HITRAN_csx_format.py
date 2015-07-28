@@ -17,11 +17,11 @@ def main():
   Usage
   -----
   Run from the shell:
-  $ ./HITRAN_csx_format.py <inputfile> <outputfile>
+  $ ./HITRAN_csx_format.py inputfile1 [... inputfileN] outputfile
 
   Examples
   --------
-  $ ./HITRAN_csx_format.py CH4_023C_XSC.xsc methane_296K.dat
+  $ ./HITRAN_csx_format.py CH4_*C_XSC.xsc CH4_cross-section_Hargreaves.dat
   """
   infile  = sys.argv[1:-1]
   outfile = sys.argv[-1]
@@ -29,10 +29,12 @@ def main():
   # There is one temperature sample per file:
   ntemp = nfiles = len(infile)
   # Array of sampled temperatures:
-  temp = np.zeros(nfiles, np.double)
+  temp = np.zeros(ntemp, np.double)
 
   # Number of data points per line:
   linelen = 10
+  # Error message:
+  error = ""
 
   for i in np.arange(nfiles):
     # Open file for reading:
@@ -41,24 +43,28 @@ def main():
     line = str.split(f_in.readline())
     # Set the fields from the header:
     if i == 0:
-      mol     = str(  line[0]) # Molecule designation (eg CH4)
-      wn_init = float(line[1]) # Initial wavenumber (cm-1)
-      wn_fin  = float(line[2]) # Final wavenumber (cm-1)
-      nwave   = int(  line[3]) # Number of data points
-      press   = float(line[5]) # Pressure (Torr)
-      max_cs  = float(line[6]) # Maximum cross section (cm2 molecule-1)
-      res     = float(line[7]) # Resolution of measurement (cm-1)
-      molname = str(  line[8]) # Full molecule name (eg Methane)
+      mol     = str(  line[0])  # Molecule designation (eg CH4)
+      wn_init = float(line[1])  # Initial wavenumber (cm-1)
+      wn_fin  = float(line[2])  # Final wavenumber (cm-1)
+      nwave   = int(  line[3])  # Number of data points
+      press   = float(line[5])  # Pressure (Torr)
+      res     = float(line[7])  # Resolution of measurement (cm-1)
 
       # Array to be filled with cross section data
       data = np.zeros((nwave, ntemp), np.double)
     else:
       # Check that the data from the other files match:
       if str(line[0]) != mol:
-        print("Can't combine files for different species.")
+        error += "for different species, "
+      if (float(line[1]) != wn_init or
+          float(line[2]) != wn_fin  ):
+        error += "with different wavelength ranges, "
+
+      if error != "":
+        print("Can't combine files {:s}".format(error))
         return
 
-    temp[i] = line[4]  # Add temperature (K) to list
+    temp[i] = line[4]  # Add temperature (in K) to list
 
     # For counting loop repetitions
     j = 0
@@ -75,7 +81,7 @@ def main():
 
     f_in.close()
 
-  # Convert from [FINDME] to cm-1 amagat-1 units:
+  # Convert from cm^2 molecule-1 to cm-1 amagat-1 units:
   data *= N0
 
   # Wavenumber array to be printed in output file
