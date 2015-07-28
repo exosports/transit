@@ -344,16 +344,11 @@ interpcs(struct transit *tr){
       for(k=0; k < cross->nspec[n]; k++){
         icsmol = cross->mol[n][k];
         dens *= mol->molec[icsmol].d[i] / (AMU * mol->mass[icsmol] * AMAGAT);
-        //if (i == 0)
-          //transitprint(1,2,"%.5e  %.5e\n", mol->molec[icsmol].d[i],
-          //                                 mol->mass[icsmol]);
       }
-      //transitprint(1, 2, "%.2e, ", dens);
-      //transitprint(1, 2, "%.2e, ", dens*e[0][i]);
-      for(j=0; j < tr->wns.n; j++)
+      for(j=0; j < tr->wns.n; j++){
         cross->e[j][i] += e[j][i] * dens;
+      }
     }
-    //transitprint(1, 2, "\n");
   }
   free(e[0]);
   free(e);
@@ -398,18 +393,18 @@ bicubicinterpolate(double **res,  /* target array [t1][t2]                  */
 
   /* Find indices where requested array values are within source boundaries.
      (i.e., do not extrapolate):                                            */
-  while(t1[fi++]<fx1);
+  while(t1[fi++] < fx1);
   fi--;
 
   for(i=0; i<li; i++)
-    if(t1[i]>lx1)
+    if(t1[i] > lx1)
       li = i;
 
-  while(t2[fj++]<fx2);
+  while(t2[fj++] < fx2);
   fj--;
 
   for(j=0; j<lj; j++)
-    if(t2[j]>lx2)
+    if(t2[j] > lx2)
       lj = j;
 
   /* Arrays created by spline_init to be used in interpolation calculation: */
