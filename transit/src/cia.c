@@ -379,6 +379,7 @@ bicubicinterpolate(double **res,  /* target array [t1][t2]                  */
   long li=nt1, fi=0;  /* Indices of edges of 1st dimension                  */
   double *z1, *z2;
 
+  memset(res[0], 0, nt1*nt2*sizeof(double));
   /* Return if sampling regions don't match:                                */
   if(t1[0]>lx1 || t1[nt1-1]<fx1 || t2[0]>lx2 || t2[nt2-1]<fx2)
     return 0;
