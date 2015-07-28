@@ -1,3 +1,8 @@
+:::::::::::::: WARNING ::::::::::::::::::::::::::::::::::::::::::::::
+  Note that this Example is terribly outdates.
+  Nobody should use it!
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 This is the example run number 01:
 It runs a transit for a basic configuration (config_example01.cfg) to
 calculate the spectrum between wavelengths 2.5 and 3.5 microns.

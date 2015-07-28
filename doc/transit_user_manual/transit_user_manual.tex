@@ -353,7 +353,7 @@ strength, and isotpe index; and a tabulated list of partition-function
 values as a function of temperature.
 
 The inputs for transit are (1) an atmospheric file, (2) a TLI file
-(output from pylineread), (3) a collision-induced-absorption (CIA),
+(output from pylineread), (3) one or more cross-section (CS) file,
 (4) a molecular information file, and optionally (5) an opacity file.
 See section \ref{sec:input-transit} for further details on the transit
 input files and their required formats.
@@ -361,8 +361,8 @@ input files and their required formats.
 The atmospheric file defines the atmospheric model, indicating the
 species present, and their physical properties (radius, pressure,
 temperature, and species mole mixing ratio) given in a layer-by-layer
-style.  The input TLI file is the output from pylineread.  The CIA
-file is a tabulated list of CIA opacities as function of wavenumber
+style.  The input TLI file is the output from pylineread.  The CS
+file is a tabulated list of opacities as function of wavenumber
 and temperature.  The molecular information file contains additional
 species properties, is not expected to change (mass and collision
 diameter).  This file is provided by the Transit module.  The optional
@@ -610,7 +610,7 @@ command-line arguments.  Alternatively, the command-line arguments can
 be specified using a configuration file.  Before running {\transit},
 the user needs to obtain three types of input files, an atmospheric
 file, transit-line information (TLI) files (created by {\pylineread}),
-and collision-induced absorption (CIA) files.  Additionally,
+and cross-section (CS) files (e.g., for collision-induced absorption).  Additionally,
 {\transit} uses a molecules data file (included in the code).  Lastly,
 an optional opacity file can be used to provide a pre-calculated table
 of opacities (this file can be created by {\transit} itself).
@@ -648,8 +648,8 @@ execute: \newline
 \argument{{-}{-}linedb=$<$linedb$>$}{Input line information (TLI) file(s)
   (as given by `pylineread').}
 
-\argument{{-}{-}cia=$<$filenames$>$}{Input collision-induced absorption
-  (CIA) opacities file(s) (comma-separated list if more than one
+\argument{{-}{-}csfile=$<$filenames$>$}{Input cross-section opacities file(s)
+  (comma-separated list if more than one
   file).}
 
 \argument{{-}{-}outtoomuch=$<$filename$>$}{Ouput file to store the depth
@@ -997,8 +997,8 @@ transit configuration file, which is further explained below: \newline
 atm    /home/.../HD209458b_atm.tea
 # Path to transit line information (TLI) file:
 linedb /home/.../HITRAN_CH4.tli
-# Path to collision induced absorption (CIA) file:
-cia    /home/.../h2h2.dat
+# Path to cross-section (CS) file:
+csfile /home/.../h2h2.dat
 
 # ::::::::::  Spectrum sampling  :::::::::::::::::::::::::::::::::::::
 # Lowest wavelength boundary (also can be set as the wavenumber
@@ -1120,14 +1120,14 @@ and weighted oscillator strength), mass, isotopic ratio, and a
 tabulated partition-function array as function of temperature for each
 one.  The TLI file is the output of the {\pylineread} module.
 
-\subsubsection{CIA File}
+\subsubsection{Cross-section File}
 
-The CIA file provides tabulated collision-induced absorption data for
-Transit.  CIA data can be obtained from Aleksandra Borysow's webpage
+The cross-section files provide tabulated absorption data for
+Transit (e.g., for collision-induced absorption, CIA).  CIA data can be obtained from Aleksandra Borysow's webpage
 (\href{http://www.astro.ku.dk/~aborysow/programs/index.html}
 {astro.ku.dk/{\sim}aborysow/programs/index.html}).
 See below (and {\tttm
-  transit/inputs/CIA\_H2H2\_400-7000K.dat}) for a CIA file sample:
+  transit/inputs/CIA\_H2H2\_400-7000K.dat}) for a CS file sample:
 \newline
 \begin{plain}
 # CIA Header for H2-H2:
@@ -1142,7 +1142,7 @@ t         1000      2000      3000      4000      5000      6000      7000
 20000.00  0.269E-14 0.567E-12 0.597E-11 0.205E-10 0.382E-10 0.103E-09 0.144E-09
 \end{plain}
 
-A valid CIA file is a plain text file that contains a
+A valid CS file is a plain text file that contains a
 header and a main body.  Comment lines (starting with the `{\tttm \#}'
 character) and blank lines are allowed and ignored by {\transit}.  The
 header must contain two keyword arguments.  A line starting with the
@@ -1150,10 +1150,11 @@ header must contain two keyword arguments.  A line starting with the
 blank spaces (names should match those from the atmospheric file).  A
 line starting with the `{\tttm t}' keyword contains the list of
 temperatures (blank-space separated, in Kelvin degrees) sampled in the
-CIA file.
+CS file.
 
-The body of the CIA file contains a tabulated list with the absorption
-coefficients (in units of cm$\sp{-1}$ amagat$\sp{-2}$) evaluated as a
+The body of the CS file contains a tabulated list with the absorption
+coefficients (in units of cm$\sp{-1}$ amagat$\sp{-2}$ for CIA data,
+or cm$\sp{-1}$ amagat$\sp{-1}$ for line-transition data) evaluated as a
 function of wavenumber (in units of cm$\sp{-1}$) and temperature.
 Each line contains the wavenumber (first column) and the coefficient
 corresponding to the temperatures specified in the header (values
@@ -1614,7 +1615,7 @@ execution): \\
 \routine{readlineinfo.c}{Read and process the input TLI
   (transition-lines information) file.}
 
-\routine{cia.c}{Read and process the collision-induced-absorption
+\routine{crosssec.c}{Read and process the cross-section absorption
   files.}
 
 \routine{idxrefraction.c}{Calculate the index of refraction of the
