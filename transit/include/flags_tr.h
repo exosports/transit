@@ -103,25 +103,25 @@
 #define TRU_EXTBITS     0x00f00000 /* FINDME                                */
 #define TRU_TAUBITS     0x0f000000 /* FINDME                                */
 
-/* Progress indicator flags:  */
-#define TRPI_READINFO     0x000001 /* readinfofile()   completed */
-#define TRPI_READDATA     0x000002 /* readdatarng()    completed */
-#define TRPI_CHKRNG       0x000004 /* checkrange()     completed */
-#define TRPI_GETATM       0x000008 /* getatm()         completed */
-#define TRPI_MAKERAD      0x000010 /* makeradsample()  completed */
-#define TRPI_MAKEWAV      0x000020 /* makewavsample()  completed */
-#define TRPI_MAKEWN       0x000040 /* makewnsample()   completed */
-#define TRPI_MAKEIP       0x000080 /* makeipsample()   completed */
-#define TRPI_MAKETEMP     0x000100 /* maketempsample() completed */
-#define TRPI_IDXREFRAC    0x000200 /* idxrefrac()      completed */
-#define TRPI_EXTWN        0x000400 /* extwn()          completed */
-#define TRPI_TAU          0x000800 /* tau()            completed */
-#define TRPI_GEOMETRY     0x001000 /* setgeom()        completed */
-#define TRPI_GEOMETRYHINT 0x002000 /* setgeomhint()    completed */
-#define TRPI_MODULATION   0x004000 /* modulation()     completed */
-#define TRPI_CIA          0x008000 /* interpolatecia() completed */
-#define TRPI_GRID         0x010000 /* intens_grid()    completed */
-#define TRPI_OPACITY      0x020000 /* idxrefrac()      completed */
+/* Progress indicator flags:                                                */
+#define TRPI_READINFO     0x000001  /* readinfofile()   completed           */
+#define TRPI_READDATA     0x000002  /* readdatarng()    completed           */
+#define TRPI_READBIN      0x000004  /* readtli_bin()    completed           */
+#define TRPI_GETATM       0x000008  /* getatm()         completed           */
+#define TRPI_MAKERAD      0x000010  /* makeradsample()  completed           */
+#define TRPI_MAKEWAV      0x000020  /* makewavsample()  completed           */
+#define TRPI_MAKEWN       0x000040  /* makewnsample()   completed           */
+#define TRPI_MAKEIP       0x000080  /* makeipsample()   completed           */
+#define TRPI_MAKETEMP     0x000100  /* maketempsample() completed           */
+#define TRPI_IDXREFRAC    0x000200  /* idxrefrac()      completed           */
+#define TRPI_EXTWN        0x000400  /* extwn()          completed           */
+#define TRPI_TAU          0x000800  /* tau()            completed           */
+#define TRPI_GEOMETRY     0x001000  /* setgeom()        completed           */
+#define TRPI_GEOMETRYHINT 0x002000  /* setgeomhint()    completed           */
+#define TRPI_MODULATION   0x004000  /* modulation()     completed           */
+#define TRPI_CS           0x008000  /* readcs()         completed           */
+#define TRPI_GRID         0x010000  /* intens_grid()    completed           */
+#define TRPI_OPACITY      0x020000  /* idxrefrac()      completed           */
 
 /* flags for transiterror:  */
 #define TERR_MESSAGE      0x000000

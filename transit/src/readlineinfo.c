@@ -178,9 +178,6 @@ readtli_bin(FILE *fp,
   iso->isof     = (prop_isof    *)calloc(1,   sizeof(prop_isof));
   li->isov      = (prop_isov    *)calloc(1,   sizeof(prop_isov));
   iso->isoratio = (double       *)calloc(1,   sizeof(double));
-  /* Min and max allowed temperatures in TLI files:                         */
-  li->tmin      = -1.0;
-  li->tmax      = 10000.0;
 
   /* Read info for each database:                                           */
   for(i=0; i<ndb; i++){
@@ -282,19 +279,17 @@ readtli_bin(FILE *fp,
   transitprint(3, verblevel, "\b\b].\n");
   transitprint(3, verblevel, "acum Iso: %2d.\n", niso);
 
-  //transitprint(3, verblevel, "Iso ratio: %.5g %.5g %.5g %.5g\n", iso->isoratio[0], iso->isoratio[1], iso->isoratio[2], iso->isoratio[3]);
-
   /* Update structure values:                                               */
-  li->ni = iso->n_i = niso; /* Number of isotopes                           */
-  li->ndb = ndb;            /* Number of databases                          */
+  li->ni  = iso->n_i  = niso;  /* Number of isotopes                        */
+  li->ndb = iso->n_db = ndb;   /* Number of databases                       */
   /* Position of first line data (there's still one integer to be read):    */
   li->endinfo = ftell(fp) + sizeof(int);
   li->wi = iniw;            /* Initial wavelength                           */
   li->wf = finw;            /* Final wavelength                             */
-  iso->n_db = ndb;          /* Number of databases                          */
   /* Allocate isotope's variable data                                       */
   iso->isov = (prop_isov *)calloc(iso->n_i, sizeof(prop_isov));
 
+  tr->pi |= TRPI_READBIN;
   return 0;
 }
 
@@ -306,6 +301,10 @@ setimol(struct transit *tr){
   struct molecules *mol = tr->ds.mol;
   struct isotopes  *iso = tr->ds.iso;
   int i; /* Auxiliary for-loop index                                        */
+
+  /* Return if there are no isotopes (i.e., no line transitions):           */
+  if (iso->n_i == 0)
+    return 0;
 
   iso->imol = (int *)calloc(iso->n_i, sizeof(int));
   iso->nmol = 0;
@@ -346,186 +345,96 @@ checkrange(struct transit *tr,   /* General parameters and  hints           */
            struct lineinfo *li){ /* Values returned by readinfo_tli         */
 
   int res=0;                                /* Return value                 */
-  struct transithint *th = tr->ds.th;       /* transithint                  */
-  prop_samp *msamp = &li->wavs;             /* transit wavelength sampling  */
-  prop_samp *hsamp = &th->wavs;             /* hint    wavelength sampling  */
+  prop_samp *tsamp = &tr->wns;              /* Transit wavenumber sampling  */
   PREC_LNDATA dbini = li->wi*TLI_WAV_UNITS, /* Minimum DB wavelength        */
               dbfin = li->wf*TLI_WAV_UNITS; /* Maximum DB wavelength        */
-  double cm_to_micron = 1e4,                /* Conversion factor to microns */
-         fct;
+  double cm_to_micron = 1e4;                /* Conversion factor to microns */
+  double wlmin, wlmax;
 
-  /* FINDME: hack prints: */
-  //transitprint(1, verblevel, " hsamp->f: %g,  hsamp->i: %g\n",
-  //               hsamp->f, hsamp->i);
-  //transitprint(1, verblevel, " hsamp->fct: %g\n", hsamp->fct);
-  //transitprint(1, verblevel, " db i: %g,  db f: %g\n", dbini, dbfin);
-
-  /* Initialize modified hints:                                             */
-  msamp->n = -1;
-  msamp->d = -1;
-  msamp->v = NULL;
-  msamp->fct = 1;
-
-  /* Check that the hinted wavelength units factor is positive & non-zero:  */
-  if(hsamp->fct <= 0)
-    transiterror(TERR_SERIOUS, "User specified wavelength factor is "
-                               "negative (%g).\n", hsamp->fct);
-
-  /* Set lineinfo wavelength units factor equal to transithint factor:      */
-  msamp->fct = hsamp->fct;
-
-  /* transit lineinfo.wavs conversion factor to cgs:                        */
-  fct = msamp->fct;
+  /* Transit wavelength limits in cgs units:                                */
+  wlmin = 1.0/(tsamp->f*tsamp->fct);
+  wlmax = 1.0/(tsamp->i*tsamp->fct);
 
   transitDEBUG(10, verblevel,
-               "Hinted initial and final wavelengths are %6g and %6g cm.\n"
-               "The database max and min wavelengths are %6g and %6g cm.\n",
-               hsamp->i*fct, hsamp->f*fct, dbini, dbfin);
+               "Transit initial and final wavelengths are %6g and %6g cm.\n"
+               "The database max and min wavelengths are  %6g and %6g cm.\n",
+               wlmin, wlmax, dbini, dbfin);
 
-  /* Set final wavelength:                                         */
-  /* If invalid/not set hint final wavelength, default it to zero: */
-  if(hsamp->f < 0){
-    hsamp->f = 0;
-    transiterror(TERR_WARNING,
-                 "Incorrect upper wavelength limit in hint.  Default: setting "
-                 "to %g before extraction.\n", hsamp->f*fct);
+  /* Check that it is not below the minimum value:                          */
+  if(dbini > wlmax){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Final wavelength (%g) "
+                 "is smaller than minimum wavelength in database (%g).\n",
+                 wlmax, dbini);
+    return -3;
   }
-  /* If hint is 0, set it to max db wavelength:                             */
-  if(hsamp->f <= 0){
-      msamp->f = dbfin/fct;
-  }
-  else{  /* Else, hinted f is a positive value:                             */
-    transitDEBUG(20, verblevel, "dbini: %g  sampf: %g.\n",
-                 dbini, hsamp->f);
-    /* Check that it is not below the minimum value:                        */
-    if(dbini > hsamp->f * fct){
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Final wavelength (%g * %g) "
-                   "is smaller than minimum wavelength in database (%g).\n",
-                   hsamp->f, fct, dbini);
-      return -3;
-    }
-    /* Warn if it is above maximum value with information:                  */
-    if(hsamp->f * fct > dbfin)
-      transiterror(TERR_WARNING, "Final requested wavelength (%g microns) "
-                   "is larger than the maximum informative value in database "
-                   "(%g microns).\n", hsamp->f*fct * cm_to_micron,
-                                      dbfin        * cm_to_micron);
-    /* Set the final wavelength value:                                      */
-    msamp->f = hsamp->f;
-  }
-  /* Set initial wavelength:                                                */
-  /* If invalid value, default it to 0:                                     */
-  if(hsamp->i < 0){
-    hsamp->i = 0;
-    transiterror(TERR_WARNING, "Setting hinted lower wavelength limit "
-                 "before extraction as %g cgs. It was not user-hinted.\n",
-                 hsamp->i*fct);
-  }
-  /* If default value, set it to min db wavelength:                         */
-  if(hsamp->i<=0)
-    msamp->i = dbini/fct;
-  else{
-    transitDEBUG(20, verblevel, "dbfin: %g  sampi: %g.\n",
-                 dbfin, fct*hsamp->i);
-    /* Check that it is not larger than the maximum db wavelength:          */
-    if(dbfin < fct * hsamp->i){
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Initial wavelength (%g cm) "
-                   "is larger than maximum wavelength in database (%g cm).\n",
-                   fct*hsamp->i, dbfin);
-      return -2;
-    }
-    if(fct * hsamp->i < dbini)
-      transiterror(TERR_WARNING, "Initial requested wavelength (%g microns) "
-                   "is smaller than the minimum informative value in database "
-                   "(%g microns).\n", hsamp->i * fct * cm_to_micron,
-                                      dbini          * cm_to_micron);
-    msamp->i = hsamp->i;
-  }
+  /* Warn if it is above the maximum TLI value:                             */
+  if(wlmax > dbfin)
+    transiterror(TERR_WARNING, "Final requested wavelength (%g microns) "
+                 "is larger than the maximum informative value in database "
+                 "(%g microns).\n", wlmax*cm_to_micron, dbfin*cm_to_micron);
 
-  /* Set progress indicator and return status:                     */
-  tr->pi |= TRPI_CHKRNG;
+  /* Check that it is not larger than the maximum db wavelength:            */
+  if(dbfin < wlmin){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Initial wavelength (%g cm) "
+                 "is larger than maximum wavelength in database (%g cm).\n",
+                 wlmin, dbfin);
+    return -2;
+  }
+  /* Warn if it is below the maximum TLI value:                             */
+  if(wlmin < dbini)
+    transiterror(TERR_WARNING, "Initial requested wavelength (%g microns) "
+                 "is smaller than the minimum informative value in database "
+                 "(%g microns).\n", wlmin*cm_to_micron, dbini*cm_to_micron);
+
+  /* Return status:                                                         */
   return res;
 }
 
 
 /* FUNCTION:
    Check TLI file exists.  Check that machine formating is compatible
-   with lineread.  Determine if TLI is ASCII or binary.  Read either
-   ASCII or binary TLI file. Declare line_transition.
+   with lineread.  Read either TLI file.  Declare line_transition.
 
-  TD:  Checks on allocation errors.
   Return: 1 on success
          -1 unavailable file
-         -2 Filename not hinted
-         -3 TLI format not valid (missing magic bytes)
-         -4 Improper TLI-ASCII input                              */
+         -2 Filename not hinted                                             */
 int
 readinfo_tli(struct transit *tr,
              struct lineinfo *li){
+  struct transithint *th = tr->ds.th;  /* Pointer to hint:                  */
   int rn;
-  FILE *fp;  /* File pointer of info file: */
+  FILE *fp;  /* File pointer of info file:                                  */
 
-  /* Decalre and initialize the union sign:                         */
-  /* sign.s contains the magic numbers of this machine's and TLI's: */
+  /* Decalre and initialize the union sign:                                 */
+  /* sign.s contains the magic numbers of this machine's and TLI's:         */
   union {char sig[4]; int32_t s[2];} sign =
     {.s={0, ((0xff-'T')<<24)|((0xff-'L')<<16)|((0xff-'I')<<8)|(0xff)}};
-  char line[maxline+1];
 
-  /* Pointer to hint: */
-  struct transithint *th = tr->ds.th;
-
-  /* Get TLI file name from hint:                              */
-  if(!th->f_line){  /* Check if it was defined in hint         */
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Undefined TLI file name.\n");
+  /* Get TLI file name from hint:                                           */
+  if(!th->f_line){  /* Check if it was defined in hint                      */
+    transiterror(TERR_WARNING, "No TLI file set.\n");
+    tr->pi |= TRPI_READINFO;
     return -2;
   }
-  /* Check that the file exists and make a pointer to read it: */
+  /* Attempt to open the TLI file and make a pointer to it:                 */
   if((rn=fileexistopen(th->f_line, &fp)) != 1){
     transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
                  "Line info file '%s' is not found. "
                  "fileexistopen() error code %i.\n", th->f_line, rn);
     return -1;
   }
-  /* Set transit TLI file pointer and TLI file name: */
+  /* Set transit TLI file pointer and TLI file name:                        */
   tr->fp_line = fp;
   tr->f_line  = th->f_line;
 
   /* Read first four bytes, they should be either
-  `(0xff-T)(0xff-L)(0xff-I)(0xff)' or '\#TLI'. They are stored as integer.
+  `(0xff-T)(0xff-L)(0xff-I)(0xff)'.  They are stored as integer.
   This checks whether the machine where the TLI file and the one this
-  program is being run have the same endian order.  If the first two are
-  '\#TLI', then the first line should also start as '\#TLI-ascii'           */
+  program is being run have the same endian order.                          */
   fread(sign.s, sizeof(int32_t), 1, fp);
 
-  /* Determine if TLI is binary (asciiline=0) or ASCII (asciiline=1):       */
-  li->asciiline = 0;
-  transitDEBUG(13, verblevel, "Comparing %i and %i for Magic Number (len: "
-                            "%li)\n", sign.s[0], sign.s[1], sizeof(sign.s[0]));
-
-  if(sign.s[0] != sign.s[1]){
-    /* Does it look like an ASCII TLI?, if so check it:                     */
-    rn = strncasecmp(sign.sig, "#TLI", 4);  /* FINDME: strncasecmp */
-    if(!rn){
-      strcpy(line, "#TLI");
-      fread(line+4, sizeof(char), 6, fp);
-      rn = strncasecmp(line, "#TLI-ascii", 10);
-    }
-    /* If it wasn't a valid TLI, throw error and exit:                      */
-    if(rn){
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                   "The file '%s' has not a valid TLI format. It might be "
-                   "because the machine were the file was created have "
-                   "different endian order, which is incompatible.\n",
-                   tr->f_line);
-      return -3;
-    }
-    li->asciiline = 1;
-    /* Ignore the rest of the first line: */
-    fgetupto_err(line, maxline, fp, &linetoolong, tr->f_line, 1);
-  }
-
-  /* Read binary TLI:  */
-  if((rn=readtli_bin(fp, tr, li))!=0){
+  /* Read binary TLI:                                                       */
+  if((rn=readtli_bin(fp, tr, li)) != 0){
     transiterror(TERR_CRITICAL|TERR_ALLOWCONT,
                  "readtli_bin() return error code %i.\n", rn);
     return -6;
@@ -575,21 +484,21 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
   long ifirst, ilast;
 
   /* Auxiliary variables to keep wavelength limits:                         */
-  PREC_LNDATA iniw = li->wavs.i * li->wavs.fct / TLI_WAV_UNITS;
-  PREC_LNDATA finw = li->wavs.f * li->wavs.fct / TLI_WAV_UNITS;
-  PREC_LNDATA wltmp;   /* Auxiliary variable to store wavelength            */
-  (void) wltmp;        /* Suppress warning for this unused variable         */
+  PREC_LNDATA iniw = 1.0/(tr->wns.f*tr->wns.fct) / TLI_WAV_UNITS;
+  PREC_LNDATA finw = 1.0/(tr->wns.i*tr->wns.fct) / TLI_WAV_UNITS;
 
   /* Open line data file:                                                   */
-  if((rn=fileexistopen(tr->f_line, &fp)) != 1){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Data file '%s' not found.  fileexistopen() error "
-                 "code: %i.\n", tr->f_line, rn);
-    return -1;
+  rn = fileexistopen(tr->f_line, &fp);
+  if (rn == 0){  /* No file given */
+    li->n_l = 0;
+    return 0;
   }
 
-  /* Find starting point in datafile.  First with a binary search, then
-     with a sequential search:                                              */
+  else if (rn != 1){
+    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Data file '%s' not found.  "
+                "fileexistopen() error code: %i.\n", tr->f_line, rn);
+    return -1;
+  }
 
   /* Check seekability:                                                     */
   if(fseek(fp, 0, SEEK_CUR)){
@@ -600,7 +509,7 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
 
   /* Read total number of transitions in TLI file:                          */
   /* FINDME: May be better to put endinfo to the right position
-             (avoid this  -sizeof(int)):                                    */
+             (i.e., avoid this  -sizeof(int)):                              */
   fseek(fp, li->endinfo - sizeof(int), SEEK_SET);
   fread(&nlines, sizeof(int), 1, fp);
   transitprint(1, verblevel, "TLI has %d transition lines.\n", nlines);
@@ -698,40 +607,39 @@ readlineinfo(struct transit *tr){
   tr->ds.li  = &li;   /* lineinfo                                           */
   tr->ds.iso = &iso;  /* isotopes                                           */
 
+  /* Set some defaults:                                                     */
+  li.ni  = iso.n_i  = 0;  /* Number of isotopes                             */
+  li.ndb = iso.n_db = 0;  /* Number of databases                            */
+  /* Min and max allowed temperatures in TLI files:                         */
+  li.tmin =     0.0;
+  li.tmax = 70000.0;
 
   /* Read hinted info file:                                                 */
   transitprint(1, verblevel, "Reading info file '%s' ...\n", th->f_line);
-  if((rn=readinfo_tli(tr, &li)) != 1)
-    transiterror(TERR_SERIOUS, "readinfo_tli() returned an error "
-                 "code %i.\n", rn);
-  transitprint(1, verblevel, " Done.\n\n");
-
-  /* Get the molecule index for the isotopes:                               */
-  /* FINDME: Move this out of readline later.                               */
-  rn = setimol(tr);
+  rn = readinfo_tli(tr, &li);
+  transitprint(1, verblevel, "Done.\n\n");
 
   /* Check the remainder range of the hinted values
      related to line database reading:                                      */
-  if((rn=checkrange(tr, &li)) < 0)
-    transiterror(TERR_SERIOUS, "checkrange() returned error code %i.\n", rn);
-  /* Output status so far if the verbose level is enough:                   */
-  if(rn>0 && verblevel>1)
-    transiterror(TERR_WARNING, "checkrange() modified the suggested "
-                               "parameters, it returned code 0x%x.\n\n", rn);
+  if (rn != -2){
+    if((rn=checkrange(tr, &li)) < 0)
+      transiterror(TERR_SERIOUS, "checkrange() returned error code %i.\n", rn);
+    /* Output status so far if the verbose level is enough:                 */
+    if(rn>0 && verblevel>1)
+      transiterror(TERR_WARNING, "checkrange() modified the suggested "
+                                 "parameters, it returned code 0x%x.\n\n", rn);
+  }
 
-  /* Scale factors:                                                         */
-  double fct = li.wavs.fct;
-  double fct_to_microns = fct/1e-4;
-  transitprint(2, verblevel, "The wavelength range to be used is %g to %g "
-               "cm.\n", fct*tr->ds.li->wavs.i, fct*tr->ds.li->wavs.f);
+  /* Get the molecule index for the isotopes:                               */
+  setimol(tr);
 
   /* Check for an opacity file:                                             */
   filecheck = access(th->f_opa, F_OK);
   /* Only read the TLI file if there is no opacity file                     */
-  if(filecheck == -1){
+  if(filecheck == -1 && rn != -2){
     /* Read data file:                                                      */
     transitprint(1, verblevel, "Reading data.\n");
-    if((rn=readdatarng(tr, &li))<1)
+    if((rn=readdatarng(tr, &li)) < 0)
       transiterror(TERR_SERIOUS, "readdatarng returned error code %li.\n", rn);
     transitprint(1, verblevel, "Done.\n\n");
   }
@@ -743,44 +651,47 @@ readlineinfo(struct transit *tr){
     tr->pi |= TRPI_READDATA;
   }
 
+  /* Scale factors:                                                         */
+  double fct_to_microns = 1.0/tr->wns.fct/1e-4;
   /* Status so far:                                                         */
   transitprint(2, verblevel, "Status so far:\n"
-               " * I read %li records from the datafile.\n"
-               " * The wavelength range read was %.8g to %.8g microns.\n",
-               li.n_l, li.wavs.i*fct_to_microns, li.wavs.f*fct_to_microns);
-
-  transitDEBUG(21, verblevel,
-               "Database min and max: %.10g(%.10g) and %.10g(%.10g)\n",
-               li.wi, tr->ds.li->wi, li.wf, tr->ds.li->wf);
+                  " * I read %li records from the datafile.\n"
+                  " * The wavelength range read was %.8g to %.8g microns.\n",
+                   li.n_l, 1.0/tr->wns.f*fct_to_microns,
+                           1.0/tr->wns.i*fct_to_microns);
   return 0;
 }
 
 
 /* FUNCTION:
    Frees lineinfo structure
-   Return: 0 on success                                      */
+   Return: 0 on success                                                     */
 int
 freemem_isotopes(struct isotopes *iso,
                  long *pi){
   int i;
 
-  /* Free structures:                                         */
-  for(i=0; i < iso->n_i; i++){      /* Allocated in readlineinfo */
-    free_isof(iso->isof+i);
-    free_isov(iso->isov+i);
+  /* Free structures:                                                       */
+  if (*pi &= TRPI_READBIN){
+    for(i=0; i < iso->n_i; i++){
+      free_isof(iso->isof+i);
+      free_isov(iso->isov+i);
+    }
+    for(i=0; i < iso->n_db; i++)
+      free_db(iso->db+i);
+
+    /* Free arrays:                                                         */
+    free(iso->isov);
+    free(iso->isof);
+    free(iso->db);
+    free(iso->imol);
+    free(iso->isoratio);
+    /* Unset appropiate flags:                                              */
+    *pi &= ~(TRPI_READBIN);
   }
-  for(i=0; i < iso->n_db; i++)
-    free_db(iso->db+i);
 
-  /* Free arrays:                                             */
-  free(iso->isov);
-  free(iso->isof);
-  free(iso->db);
-  free(iso->imol);
-  free(iso->isoratio);
-
-  /* Unset flags:                                             */
-  *pi &= ~(TRPI_READINFO | TRPI_READDATA | TRPI_CHKRNG | TRPI_GETATM);
+  /* Unset flags:                                                           */
+  *pi &= ~(TRPI_READINFO | TRPI_READDATA | TRPI_GETATM);
   return 0;
 }
 
@@ -793,25 +704,30 @@ freemem_lineinfo(struct lineinfo *li,
                  long *pi){
   int i;
 
-  /* Free isov, dbnoext and samp in li:                                     */
-  free_isov(li->isov);
-  free(li->isov);
+  //transitprint(1,2, "%ld\n", *pi &= TRPI_READINFO);
+  //transitprint(1,2, "%ld\n\n", *pi &= TRPI_READBIN);
+  if (*pi &= TRPI_READBIN){
+    /* Free isov, dbnoext and samp in li:                                     */
+    free_isov(li->isov);
+    free(li->isov);
 
-  for(i=0; i<li->ndb; i++)
-    free_dbnoext(li->db+i);
-  free(li->db);
+    for(i=0; i<li->ndb; i++)
+      free_dbnoext(li->db+i);
+    free(li->db);
 
-  free_samp(&li->wavs);
-
-  /* Zero all the structure:                                                */
-  memset(li, 0, sizeof(struct lineinfo));
+    /* Zero all the structure:                                                */
+    memset(li, 0, sizeof(struct lineinfo));
+    /* Unset appropiate flags:                                                */
+    *pi &= ~(TRPI_READBIN);
+  }
 
   /* Unset appropiate flags:                                                */
-  *pi &= ~(TRPI_READINFO | TRPI_CHKRNG);
+  *pi &= ~(TRPI_READINFO);
   return 0;
 }
 
-/* FUNCTION  */
+
+/* FUNCTION                                                                 */
 int
 freemem_linetransition(struct line_transition *lt,
                        long *pi){

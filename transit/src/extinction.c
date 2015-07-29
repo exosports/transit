@@ -196,7 +196,7 @@ extwn(struct transit *tr){
   struct extinction *ex = &st_ex;
   int i;
 
-  /* Check these routines have been called: */
+  /* Check these routines have been called:                                 */
   transitcheckcalled(tr->pi, "extwn", 4,
                              "readinfo_tli",  TRPI_READINFO,
                              "readdatarng",   TRPI_READDATA,
@@ -229,9 +229,8 @@ extwn(struct transit *tr){
   /* FINDME: This should not be a condition, we may want
      to calculate an atmosphere with only CIA for example.                  */
   if(niso < 1){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "You are requiring a spectra of zero isotopes!.\n");
-    return -5;
+    transiterror(TERR_WARNING,
+                 "You are requiring a spectra of zero isotopes.\n");
   }
 
   /* Get the extinction coefficient threshold:                              */

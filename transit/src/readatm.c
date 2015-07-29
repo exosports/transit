@@ -599,11 +599,11 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
                                    mol->mass[2], at->atm.p[r]*at->atm.pfct,
                                    at->atm.t[r]*at->atm.tfct);
     }
-    for(i=0; i<at->n_aiso; i++)
+    for(i=0; i<at->n_aiso; i++){
       molec[i].d[r] = stateeqnford(at->mass, molec[i].q[r], at->mm[r],
                                    mol->mass[i], at->atm.p[r]*at->atm.pfct,
                                    at->atm.t[r]*at->atm.tfct);
-    transitprint(30, verblevel, "dens[%2li]: %.14f,   ", r, molec[2].d[r]);
+    }
     r++;
   }
 

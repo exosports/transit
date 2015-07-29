@@ -34,7 +34,7 @@ SCRIPTS_DIR = ./scripts/
 # Files to be compiled
 #
 C_FILES = argum \
-					cia \
+					crosssec \
 					eclipse \
 					extinction \
 					geometry \
