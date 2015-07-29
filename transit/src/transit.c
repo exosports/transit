@@ -262,8 +262,12 @@ void free_memory(void){
   init_run = 0;
 }
 
+#ifdef TEST_TRANSIT
+int _tr_main(int argc, char **argv) {
+#else
+int main(int argc, char **argv) {
+#endif
 
-int main(int argc, char **argv){
   transit_init(argc, argv);
   int trans_size = get_no_samples();
   double tmp[trans_size];
