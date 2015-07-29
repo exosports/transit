@@ -49,7 +49,8 @@ O_FILES = $(C_FILES_DIR)*.o \
 					test_transit \
 					./python/transit_module.py \
 					./python/_transit_module.so \
-					./python/transit_wrap.c
+					./python/transit_wrap.c \
+					./src/transit_wrap.c
 
 
 #####################
