@@ -8,6 +8,7 @@
 #
 # `make` - Build and compile the transit executable and python extension.
 # `make clean` - Remove all compiled (non-source) files that are created.
+# `make test` - Build, compile, and run the test suite.
 #
 # If you are interested in the commands being run by this makefile, you may add
 # "VERBOSE=1" to the end of any `make` command, i.e.:
@@ -29,33 +30,26 @@ COMPILER = ${SCRIPTS_DIR}ccd-gcc.sh
 #
 C_FILES_DIR = ./src/
 H_FILES_DIR = ./include/
+T_FILES_DIR = ./test/
 SCRIPTS_DIR = ./scripts/
 
 # Files to be compiled
 #
-C_FILES = argum \
-					crosssec \
-					eclipse \
-					extinction \
-					geometry \
-					idxrefraction \
-					makesample \
-					opacity \
-					readatm \
-					readlineinfo \
-					slantpath \
-					tau \
-					transit \
-					transitstd
+C_FILES = $(wildcard $(C_FILES_DIR)*.c) \
+					$(wildcard $(T_FILES_DIR)*.c)
 
 # Files to be cleaned (non-source)
 #
-O_FILES = $(C_FILES:%=$(C_FILES_DIR)%.o) \
-					$(C_FILES:%=$(C_FILES_DIR)%.o.d) \
+O_FILES = $(C_FILES_DIR)*.o \
+					$(C_FILES_DIR)*.o.d \
+					$(T_FILES_DIR)*.o \
+					$(T_FILES_DIR)*.o.d \
 					transit \
+					transit.d \
+					test_transit \
 					./python/transit_module.py \
 					./python/_transit_module.so \
-					./src/transit_wrap.c
+					./python/transit_wrap.c
 
 
 #####################
@@ -80,6 +74,8 @@ INCL_FLAG = -I/usr/X11R6/include \
 						-I/usr/include/python2.7 \
 						-I./include/ \
 						-I./src/ \
+						-I./test/include/ \
+						-I./test/ \
 						-I. \
 						-I../pu/include
 
@@ -103,9 +99,17 @@ OTHR_FLAG = -DTRANSIT \
 #
 COMP_FLAG = $(WARN_FLAG) $(INCL_FLAG) $(LIBR_FLAG) $(OTHR_FLAG)
 
+# Target of the complication, i.e. the name of the executable to build
+#
+TARGET = transit
+
 # Library linking must be last in the GCC command
 #
 LINK_FLAG = -lm -lpu
+
+# These flags relate to compiling / running the test suite
+#
+TEST_FLAG = -DTEST_TRANSIT
 
 
 ##############
@@ -121,6 +125,13 @@ ifdef VERBOSE
 		Q =
 		O =
 	endif
+endif
+
+# Second, make special considerations for testing
+#
+ifneq (,$(findstring test,$(MAKECMDGOALS)))
+	COMP_FLAG += $(TEST_FLAG)
+	TARGET = test_transit
 endif
 
 # Main task: `make`
@@ -143,15 +154,22 @@ clean:
 	@echo "Removing non-source files."
 	$(Q) rm -f $(O_FILES)
 
+# Test task
+#
+.PHONY: test
+test: clean binary
+	@echo "Starting test suite."
+	$(Q) ./test_transit
+
 # Compile Transit Binary
 #
 # Called by "all"
 # Depends on .o files
 #
 .PHONY: binary
-binary: $(C_FILES:%=$(C_FILES_DIR)%.o)
-	@echo "Building executable \"transit\"."
-	$(Q) $(COMPILER) $(COMP_FLAG) -o transit $(filter %.c %.o,$^) $(LINK_FLAG)
+binary: $(C_FILES:.c=.o)
+	@echo "Building executable \"$(TARGET)\"."
+	$(Q) $(COMPILER) $(COMP_FLAG) -o $(TARGET) $(filter %.c %.o,$^) $(LINK_FLAG)
 
 # Python task
 #
