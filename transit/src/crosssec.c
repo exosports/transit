@@ -90,6 +90,10 @@ readcs(struct transit *tr){
     st_cross.e[j] = st_cross.e[0] + j*tr->rads.n;
   memset(st_cross.e[0], 0, tr->wns.n*tr->rads.n*sizeof(double));
 
+  /* Min and max allowed temperatures in CS files:                          */
+  st_cross.tmin =     0.0;
+  st_cross.tmax = 70000.0;
+
   /* If there are no files, allocate tr.ds.cross.e (extinction) and return: */
   if(!nfiles){
     return 0;
@@ -114,9 +118,6 @@ readcs(struct transit *tr){
   st_cross.cs   = (PREC_CS ***)calloc(nfiles, sizeof(PREC_CS **));
   st_cross.temp = (PREC_CS  **)calloc(nfiles, sizeof(PREC_CS  *));
   st_cross.wn   = (PREC_CS  **)calloc(nfiles, sizeof(PREC_CS  *));
-  /* Min and max allowed temperatures in CS files:                          */
-  st_cross.tmin = -1.0;
-  st_cross.tmax = 100000.0;
 
   for (j=0; j < nfiles; j++){
     /* Copy file names from hint:                                           */
