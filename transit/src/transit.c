@@ -160,7 +160,19 @@ void run_transit(double *re_input, int transtint, double *transit_out,
 
 void do_transit(double * transit_out){
   int i;
-  if (init_run > 0){
+
+  if (init_run == 0){
+    /* Warn the user if Transit init has not been executed:                 */
+    printf("Transit init not run, please initialize transit.\n");
+  }
+
+  else if (transit.opabreak){
+    /* Do not calculate spectra:                                            */
+    /* Nothing to do here ...                                               */
+  }
+
+  else{
+    /* Else, run the code:                                                  */
     fw(makeipsample, <0, &transit);
     t0 = timecheck(verblevel, itr,  6, "makeipsample", tv, t0);
     if(fw_status>0)
@@ -179,10 +191,10 @@ void do_transit(double * transit_out){
     fw(extwn, !=0, &transit);
     t0 = timecheck(verblevel, itr, 11, "extwn", tv, t0);
 
-    /* Initialize structures for the optical-depth calculation:            */
+    /* Initialize structures for the optical-depth calculation:             */
     fw(init_optdepth, !=0, &transit);
 
-    /* Calculates optical depth for eclipse                                 */
+    /* Calculate optical depth for eclipse:                                 */
     if(strcmp(transit.sol->name, "eclipse") == 0){
       transitprint(1, verblevel, "\nCalculating eclipse:\n");
 
@@ -191,11 +203,10 @@ void do_transit(double * transit_out){
 
       /* Calculate optical depth for eclipse:                               */
       for(i=0; i < transit.ann; i++){
-        /* Fills out angle index                                            */
+        /* Set the angle index:                                             */
         transit.angleIndex = i;
 
-        /* Calculates eclipse intensity:                                    */
-        /* In cgs units erg/s/sr/cm                                         */
+        /* Calculate eclipse intensity (erg/s/sr/cm):                       */
         fw(emergent_intens, !=0, &transit);
         t0 = timecheck(verblevel, itr, 13, "emergent intensity", tv, t0);
       }
@@ -214,10 +225,10 @@ void do_transit(double * transit_out){
       fw(tau, !=0, &transit);
       t0 = timecheck(verblevel, itr, 12, "tau transit", tv, t0);
 
-      /* Calculates transit modulation:                                     */
+      /* Calculate transit modulation:                                      */
       fw(modulation, !=0, &transit);
       t0 = timecheck(verblevel, itr, 13, "modulation", tv, t0);
-   }
+    }
 
     for(int i=0; i < transit.wns.n; i++){
       transit_out[i] = transit.ds.out->o[i];
@@ -234,9 +245,6 @@ void do_transit(double * transit_out){
     t0 = timecheck(verblevel, itr, 14, "THE END", tv, t0);
     transitprint(1, verblevel, "----------------------------\n");
     itr++;
-  }
-  else{
-    printf("Transit init not run, please initialize transit\n");
   }
 }
 
