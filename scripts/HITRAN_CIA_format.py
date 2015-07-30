@@ -80,7 +80,6 @@ for i in np.arange(number_temps):
         data[j][i] = point[1]
 
 
-print(np.amax(wn), wstep)
 # Thin the arrays if requested:
 if tstep is not None  and  wstep is not None:
   # Thinned arrays:
