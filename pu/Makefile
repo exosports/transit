@@ -48,8 +48,8 @@ C_FILES = iomisc \
 
 # Files to be cleaned (non-source)
 #
-O_FILES = $(C_FILES:%=$(C_FILES_DIR)%.o) \
-					$(C_FILES:%=$(C_FILES_DIR)%.o.d) \
+O_FILES = $(C_FILES_DIR)*.o \
+					$(C_FILES_DIR)*.o.d \
 					./libpu.a \
 					./libpu.so.1
 

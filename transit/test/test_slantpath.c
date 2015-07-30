@@ -51,6 +51,10 @@ USA
 Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
+// Disable this file until it can be incorporated into the test suite.
+typedef int make_compiler_happy;
+#if 0
+
 #include <transit.h>
 #include <test_common.h>
 #include "slantpath.c"
@@ -559,3 +563,5 @@ main(int argc, char *argv[])
 
   exit(EXIT_SUCCESS);
 }
+
+#endif

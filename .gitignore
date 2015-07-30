@@ -7,3 +7,4 @@ pu/libpu.a
 pu/libpu.so.1
 transit/src/transit_wrap.c
 transit/transit
+transit/test_transit
