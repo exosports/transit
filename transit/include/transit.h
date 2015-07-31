@@ -88,6 +88,11 @@ stateeqnford(_Bool mass,  /* Abundance by mass (1) or by number (0)         */
   return rho * mi;
 }
 
+#define tr_output(level, verblevel, ...) do { \
+  if (((level) & TOUT_VERBMASK) <= verblevel) tr_output_fcn(level, __FILE__, \
+    __LINE__, __VA_ARGS__); \
+} while(0)
+
 #define DEBUG_ERROR
 #ifdef  DEBUG_ERROR
 #define DBGERR | TERR_DBG

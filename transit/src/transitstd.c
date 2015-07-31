@@ -66,6 +66,56 @@ inline void transitdot(int thislevel,
     fwrite(".", 1, 1, stderr);
 }
 
+void
+tr_output_fcn (int level,
+               const char *file,
+               const long line,
+               const char *str,
+               ...) {
+
+  va_list format;
+  va_start(format, str);
+  tr_output_vfcn(level, file, line, str, format);
+  va_end(format);
+}
+
+void
+tr_output_vfcn (int level,
+                const char *file,
+                const long line,
+                const char *str,
+                va_list format) {
+
+  // First decide to where the 
+  FILE *output = ((level & TOUT_VERBMASK) == TOUT_ERROR) ? stderr : stdout;
+
+  // Header message?
+  if (level & TOUT_BANNER)
+    fprintf(output, "\n--------------------------------------------------\n");
+
+  if ((level & TOUT_VERBMASK) == TOUT_ERROR)
+    fprintf(output, "Transit ERROR :: (%s, line %lu)\n", file, line);
+
+  else if ((level & TOUT_VERBMASK) == TOUT_WARN)
+    fprintf(output, "Transit WARNING :: (%s, line %lu)\n", file, line);
+
+  else if ((level & TOUT_LOCATE) && ((level & TOUT_VERBMASK) == TOUT_INFO))
+    fprintf(output, "Transit INFO :: (%s, line %lu)\n", file, line);
+
+  else if ((level & TOUT_LOCATE) && ((level & TOUT_VERBMASK) == TOUT_RESULT))
+    fprintf(output, "Transit RESULT :: (%s, line %lu)\n", file, line);
+
+  else if ((level & TOUT_LOCATE) && ((level & TOUT_VERBMASK) == TOUT_DEBUG))
+    fprintf(output, "Transit DEBUG :: (%s, line %lu)\n", file, line);
+
+  // Message
+  vfprintf(output, str, format);
+
+  // Wrap up? I don't think so
+  if (level & TOUT_BANNER)
+    fprintf(output, "--------------------------------------------------\n");
+}
+
 int
 transiterror_fcn(int flags,
                  const char *file,
