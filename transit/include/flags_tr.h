@@ -134,6 +134,17 @@
 #define TERR_ALLOC        0x000040
 #define TERR_DBG          0x000080
 
+/* Flags for tr_output: */
+#define TOUT_ERROR        0x000001
+#define TOUT_WARN         0x000002
+#define TOUT_INFO         0x000003
+#define TOUT_RESULT       0x000004
+#define TOUT_DEBUG        0x000005
+
+#define TOUT_VERBMASK     0x00000f
+#define TOUT_LOCATE       0x000010
+#define TOUT_BANNER       0x000020
+
 /* Shared memory flags: */
 #define TSHM_START        0x000000 /* Default state     */
 #define TSHM_INIT         0x000001 /* Space initialized */
