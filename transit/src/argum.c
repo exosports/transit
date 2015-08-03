@@ -452,7 +452,7 @@ processparameters(int argc,            /* Number of command-line args  */
       det->n = getad(0, ',', optarg+i, &det->ref);
       /* Check for errors: */
       if(det->n<1 || i==rn-1)
-        transiterror(TERR_SERIOUS,
+        tr_output(TOUT_ERROR | TOUT_BANNER,
                      "Bad format for detailed %s parameter, no valid "
                      "wavenumbers\n", det->name);
       break;
@@ -616,7 +616,7 @@ processparameters(int argc,            /* Number of command-line args  */
       break;
 
     case 'q':  /* Quiet run:                                                */
-      verblevel = 0;
+      verblevel = 1;
       break;
 
     case 'v':  /* Increase verbose level:                                   */
@@ -634,14 +634,17 @@ processparameters(int argc,            /* Number of command-line args  */
       break;
     case '?':
       rn = optopt;
-      transiterror(TERR_SERIOUS, "Unknown, unsupported, or missing parameter "
-                   "to option of code %i (%s) passed as argument, use '-h' "
-                   "to see the available options.\n", rn, (char)rn);
+      tr_output(TOUT_ERROR | TOUT_BANNER,
+        "Unknown, unsupported, or missing parameter to option of "
+        "code %i (%s) passed as argument, use '-h' to see the "
+        "available options.\n", rn, (char)rn);
+      exit(0);
       break;
     default:   /* Ask for syntax help:                                      */
-      transiterror(TERR_CRITICAL, "Even though option of code %i (%c) had a "
-                   "valid structure element, it had no switch control "
-                   "statement.\n", rn, (char)rn);
+      tr_output(TOUT_ERROR | TOUT_BANNER,
+        "Even though option of code %i (%c) had a valid structure "
+        "element, it had no switch control statement.\n", rn, (char)rn);
+      exit(0);
       break;
     case 'h':  /* Print out doc-string help:                                */
       prochelp(EXIT_SUCCESS);
@@ -676,20 +679,28 @@ processparameters(int argc,            /* Number of command-line args  */
 
     case CLA_CLOUD:      /* Cloud arguments:                                */
       hints->cl.cloudext = strtod(optarg, &optarg);
-      if(*optarg != ','  ||  optarg[1] == '\0')
-        transiterror(TERR_SERIOUS, "Syntax error in option '--cloudrad', "
-                "parameters need to be given as cloudext,cloudtop,cloudbot.\n");
+      if(*optarg != ','  ||  optarg[1] == '\0') {
+        tr_output(TOUT_ERROR, "Syntax error in option '--cloudrad', "
+          "parameters need to be given as cloudext,cloudtop,cloudbot.\n");
+        exit(0);
+      }
+
       hints->cl.cloudtop = strtod(optarg+1, &optarg);
-      if(*optarg != ','  ||  optarg[1] == '\0')
-        transiterror(TERR_SERIOUS, "Syntax error in option '--cloudrad', "
-                "parameters need to be given as cloudext,cloudtop,cloudbot.\n");
+      if(*optarg != ','  ||  optarg[1] == '\0') {
+        tr_output(TOUT_ERROR, "Syntax error in option '--cloudrad', "
+          "parameters need to be given as cloudext,cloudtop,cloudbot.\n");
+        exit(0);
+      }
+
       hints->cl.cloudbot = strtod(optarg+1, NULL);
       /* Safety check that top > bottom:                                    */
       if((hints->cl.cloudtop < hints->cl.cloudbot) ||
-         (hints->cl.cloudbot <= 0 && hints->cl.cloudtop != 0))
-        transiterror(TERR_SERIOUS, "Syntax error in '--cloud', the cloud top "
+         (hints->cl.cloudbot <= 0 && hints->cl.cloudtop != 0)) {
+        tr_output(TOUT_ERROR, "Syntax error in '--cloud', the cloud top "
                  "(%g) needs to be larger than the cloud bottom (%g) and both "
                  "greater than 0.\n", hints->cl.cloudtop, hints->cl.cloudbot);
+        exit(0);
+      }
       break;
     case CLA_INTENS_GRID:    /* Intensity grid                              */
       hints->angles = xstrdup(optarg);
@@ -759,13 +770,12 @@ acceptgenhints(struct transit *tr){
 
   /* Initialize solution type, accept hinted solution if it's in list:      */
   if(acceptsoltype(&tr->sol, th->solname) != 0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Solution kind '%s' is "
-                 "invalid.\nCurrently Accepted are:\n", th->solname);
+    tr_output(TOUT_ERROR, "Solution kind '%s' is invalid.\n"
+      "Currently Accepted are:\n", th->solname);
 
     ray_solution **sol = (ray_solution **)raysols;
     while(*sol)
-      transiterror(TERR_SERIOUS | TERR_NOPREAMBLE | TERR_ALLOWCONT,
-                   " %s\n", (*sol++)->name);
+      tr_output(TOUT_ERROR, " %s\n", (*sol++)->name);
     exit(EXIT_FAILURE);
     /* FINDME: Fix this error message                                       */
   }
@@ -782,17 +792,17 @@ acceptgenhints(struct transit *tr){
   /* Check that timesalpha (profile half width in units of Doppler/Lorentz
      broadening half widths) is > 1, and set it's value in transit:         */
   if(th->timesalpha < 1){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Times of maximum width has to be greater than one: %i\n",
-                 th->timesalpha);
+    tr_output(TOUT_ERROR,
+      "Times of maximum width has to be greater than one: %i\n",
+      th->timesalpha);
     return -1;
   }
   tr->timesalpha = th->timesalpha;
 
   if (th->ethresh <= 0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Extinction-coefficient threshold (%.3e) has to be "
-                 "positive.\n", th->ethresh);
+    tr_output(TOUT_ERROR,
+      "Extinction-coefficient threshold (%.3e) has to be positive.\n",
+      th->ethresh);
     return -1;
   }
 
@@ -814,28 +824,29 @@ acceptgenhints(struct transit *tr){
     tr->interpflag = SAMP_SPLINE;
     break;
   default:
-    transiterror(TERR_SERIOUS, "Invalid sampling function specified.\n");
+    tr_output(TOUT_ERROR, "Invalid sampling function specified.\n");
+    exit(EXIT_FAILURE);
   }
   transitprint(10, verblevel, "transit interpolation flag: %li.\n",
                                tr->interpflag);
 
   if (th->r0 < 0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Reference radius level (%g) must be positive.\n", th->r0);
+    tr_output(TOUT_ERROR,
+      "Reference radius level (%g) must be positive.\n", th->r0);
     return -1;
   }
   tr->r0 = th->r0;
 
   if (th->p0 < 0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Reference pressure level (%g) must be positive.\n", th->p0);
+    tr_output(TOUT_ERROR,
+      "Reference pressure level (%g) must be positive.\n", th->p0);
     return -1;
   }
   tr->p0 = th->p0;
 
   if (th->gsurf < 0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                "Surface gravity (%g cm s^-2) must be positive.\n", th->gsurf);
+    tr_output(TOUT_ERROR,
+      "Surface gravity (%g cm s^-2) must be positive.\n", th->gsurf);
     return -1;
   }
   tr->gsurf = th->gsurf;
@@ -847,9 +858,11 @@ acceptgenhints(struct transit *tr){
   }
   if (th->qscale){
    parseArray(&tr->qscale, &tr->nqmol, th->qscale);
-   if (countfields(th->qmol, ' ') != tr->nqmol)
-     transiterror(TERR_SERIOUS, "qscale (%d) and qmol (%d) should have the "
-          "same number of elements.\n", tr->nqmol, countfields(th->qmol,' '));
+   if (countfields(th->qmol, ' ') != tr->nqmol) {
+     tr_output(TOUT_ERROR, "qscale (%d) and qmol (%d) should have the "
+        "same number of elements.\n", tr->nqmol, countfields(th->qmol,' '));
+     exit(EXIT_FAILURE);
+   }
   }
   else
     tr->nqmol = 0;
