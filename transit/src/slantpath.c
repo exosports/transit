@@ -88,8 +88,9 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
     return 0;  /* If it is the outmost layer                                */
   /* If some other error occurred:                                          */
   else if(rs < 0){
-    transiterror(TERR_CRITICAL, "Closest approach (%g) is larger than the "
-                 "top layer of the atmosphere (%g).\n", r0, rad[nrad-1]);
+    tr_output(TOUT_ERROR, "Closest approach (%g) is larger than the "
+      "top layer of the atmosphere (%g).\n", r0, rad[nrad-1]);
+    exit(EXIT_FAILURE);
   }
 
   /* Move extinction and radius pointers to the rs-th element:              */
@@ -181,17 +182,20 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
   /* Auxiliary variables for Simson integration:                            */
   double *hsum, *hratio, *hfactor, *h;
 
-  transiterror(TERR_CRITICAL, "This routine has not been implemented yet.\n");
+  tr_output(TOUT_ERROR, "This routine has not been implemented yet.\n");
+  exit(EXIT_FAILURE);
 
   /* Look for closest approach radius:                                      */
   while(1){
     r0 = b/lineinterp(r0a, rad, refr, nrad);
     if(r0==r0a)
       break;
-    if(i++ > maxiterations)
-      transiterror(TERR_CRITICAL, "Maximum iterations (%i) reached while "
-                   "looking for r0. Convergence not reached (%.6g!=%.6g).\n",
-                   maxiterations, r0, r0a);
+    if(i++ > maxiterations) {
+      tr_output(TOUT_ERROR, "Maximum iterations (%i) reached while "
+        "looking for r0. Convergence not reached (%.6g!=%.6g).\n",
+        maxiterations, r0, r0a);
+      exit(EXIT_FAILURE);
+    }
     r0a = r0;
   }
 
@@ -202,10 +206,12 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
     return 0;
 
   /* If some other error occurred:                                          */
-  else if(rs<0)
-    transiterror(TERR_CRITICAL,
-                 "Closest approach value(%g) is outside sampled radius "
-                 "range(%g - %g).\n", r0, rad[0], rad[nrad-1]);
+  else if(rs<0) {
+    tr_output(TOUT_ERROR,
+      "Closest approach value(%g) is outside sampled radius "
+      "range(%g - %g).\n", r0, rad[0], rad[nrad-1]);
+    exit(EXIT_FAILURE);
+  }
   /* Move pointer to rs-th element:                                         */
   rs++;
   /* FINDME: This will break                                                */
@@ -302,9 +308,10 @@ transittau(struct transit *tr,
     return totaltau2(b, rad,  refr, ex, nrad);
     break;
   default:
-    transiterror(TERR_CRITICAL,
-                 "slantpath:: totaltau:: Level %i of detail has not been "
-                 "implemented to compute optical depth.\n", tr->taulevel);
+    tr_output(TOUT_ERROR,
+      "slantpath:: totaltau:: Level %i of detail has not been "
+      "implemented to compute optical depth.\n", tr->taulevel);
+    exit(EXIT_FAILURE);
     return 0;
   }
 }
@@ -349,15 +356,18 @@ modulation(struct transit *tr){
     if (out[w] < 0){
       switch(-(int)out[w]){
       case 1:
-        if(tr->modlevel == -1)
-          transiterror(TERR_SERIOUS, "Optical depth didn't reach limiting "
-                       "%g at wavenumber %g cm-1 (only reached %g).  Cannot "
-                       "use critical radius technique (-1).\n", tau->toomuch,
-                       tau->t[w][tau->last[w]], wn->v[w]*wn->fct);
+        if(tr->modlevel == -1) {
+          tr_output(TOUT_ERROR, "Optical depth didn't reach limiting "
+            "%g at wavenumber %g cm-1 (only reached %g).  Cannot "
+            "use critical radius technique (-1).\n", tau->toomuch,
+            tau->t[w][tau->last[w]], wn->v[w]*wn->fct);
+          exit(EXIT_FAILURE);
+        }
       default:
-        transiterror(TERR_SERIOUS, "There was a problem while calculating "
-                     "modulation at wavenumber %g cm-1. Error code %i.\n",
-                     wn->v[w]*wn->fct, (int)out[w]);
+        tr_output(TOUT_ERROR, "There was a problem while calculating "
+          "modulation at wavenumber %g cm-1. Error code %i.\n",
+          wn->v[w]*wn->fct, (int)out[w]);
+        exit(EXIT_FAILURE);
         break;
       }
       exit(EXIT_FAILURE);
@@ -429,9 +439,11 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
   /* Increment last to represent the number of elements, check that we
      have enough:                                                           */
   last++;
-  if(last < 3)
-    transiterror(TERR_CRITICAL, "Condition failed, less than 3 items "
-                                "(only %i) for radial integration.\n", last);
+  if(last < 3) {
+    tr_output(TOUT_ERROR, "Condition failed, less than 3 items "
+      "(only %i) for radial integration.\n", last);
+    exit(EXIT_FAILURE);
+  }
 
   /* Integrate along radius:                                                */
   hsum    = calloc(last/2, sizeof(double));
@@ -532,9 +544,10 @@ modulationperwn(struct transit *tr,  /* Transit structure                   */
     return modulationm1(tau, last, toomuch, ip, sg);
     break;
   default:
-    transiterror(TERR_CRITICAL, "slantpath:: modulationperwn:: Level %i of "
-                 "detail has not been implemented to compute modulation.\n",
-                 tr->modlevel);
+    tr_output(TOUT_ERROR, "slantpath:: modulationperwn:: Level %i of "
+      "detail has not been implemented to compute modulation.\n",
+      tr->modlevel);
+    exit(EXIT_FAILURE);
     return 0;
   }
 }
