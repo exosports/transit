@@ -124,8 +124,10 @@ readcs(struct transit *tr){
     file = xstrdup(tr->ds.th->csfile[j]);
 
     /* Attempt to open the files:                                           */
-    if((fp=fopen(file, "r")) == NULL)
-      transiterror(TERR_SERIOUS, "Cannot read cross-section file '%s'.\n",file);
+    if((fp=fopen(file, "r")) == NULL) {
+      tr_output(TOUT_ERROR, "Cannot read cross-section file '%s'.\n",file);
+      exit(EXIT_FAILURE);
+    }
     transitprint(10, verblevel, "  Cross-section file (%d/%d): '%s'\n",
                                 j+1, nfiles, file);
     lines = 0; /* lines read counter                                        */
@@ -136,20 +138,24 @@ readcs(struct transit *tr){
       while((rc=fgetupto_err(lp=line, maxline, fp, &cserr, file, lines++))
              =='#' || rc=='\n');
       /* If it is end of file, stop loop:                                   */
-      if(!rc)
-        transiterror(TERR_SERIOUS, "File '%s' finished before opacity info.\n",
-                     file);
+      if(!rc) {
+        tr_output(TOUT_ERROR,
+          "File '%s' finished before opacity info.\n", file);
+        exit(EXIT_FAILURE);
+      }
 
       switch(rc){
       case 'i': /* Read the name of the isotopes:                           */
         while(isblank(*++lp));
         /* Count the number of species:                                     */
         nspec = st_cross.nspec[j] = countfields(lp, ' ');
-        if (nspec != 1 && nspec != 2)
-          transiterror(TERR_SERIOUS, "Wrong header in cross section file "
-                       "'%s', The 'i'-line should contain either one or "
-                       "two species, separated by blank spaces.  "
-                       "The line reads:\n  '%s'\n", file, lp);
+        if (nspec != 1 && nspec != 2) {
+          tr_output(TOUT_ERROR,
+            "Wrong header in cross section file '%s', The 'i'-line "
+            "should contain either one or two species, separated by "
+            "blank spaces. The line reads:\n  '%s'\n", file, lp);
+          exit(EXIT_FAILURE);
+        }
 
         for (k=0; k<nspec; k++){
           /* Read the name of the species:                                  */
@@ -159,10 +165,12 @@ readcs(struct transit *tr){
             if(strcmp(mol->name[i], colname)==0)
               st_cross.mol[j][k] = i;
           /* If the species is not in the atmosphere file:                  */
-          if(st_cross.mol[j][k] == -1)
-            transiterror(TERR_SERIOUS, "Cross-section species '%s' from file "
-                         "'%s' does not match any in the atmsopheric file.\n",
-                         colname, file);
+          if(st_cross.mol[j][k] == -1) {
+            tr_output(TOUT_ERROR,
+              "Cross-section species '%s' from file '%s' does not match "
+              "any in the atmsopheric file.\n", colname, file);
+            exit(EXIT_FAILURE);
+          }
           lp = nextfield(lp);
         }
 
@@ -177,11 +185,14 @@ readcs(struct transit *tr){
         nt = st_cross.ntemp[j] = countfields(lp, ' ');  /* Number of temps. */
         transitprint(5, verblevel, "  Number of temperature samples: %ld\n",
                                    nt);
-        if(!nt)
-          transiterror(TERR_SERIOUS, "Wrong line %i in cross-section file "
-                       "'%s', if it begins with a 't' then it should have the "
-                       "blank-separated fields with the temperatures. Rest "
-                       "of line: '%s'.\n", lines, file, lp);
+        if(!nt) {
+          tr_output(TOUT_ERROR,
+            "Wrong line %i in cross-section file '%s', if it begins with "
+            "a 't' then it should have the blank-separated fields with "
+            "the temperatures. Rest of line: '%s'.\n", lines, file, lp);
+          exit(EXIT_FAILURE);
+        }
+
         /* Allocate and store the temperatures array:                       */
         st_cross.temp[j] = (PREC_CS *)calloc(nt, sizeof(PREC_CS));
         n = 0;    /* Count temperatures per line                            */
@@ -191,10 +202,13 @@ readcs(struct transit *tr){
           while(isblank(*lpa++));
           st_cross.temp[j][n] = strtod(--lpa, &lp);  /* Get value           */
           transitprint(20, verblevel, "%d, ", (int)st_cross.temp[j][n]);
-          if(lp==lpa)
-            transiterror(TERR_CRITICAL, "Less fields (%i) than expected (%i) "
-                         "were read for temperature in the cross-section "
-                         "file '%s'.\n", n, nt, file);
+          if(lp==lpa) {
+            tr_output(TOUT_ERROR,
+              "Less fields (%i) than expected (%i) were read for "
+              "temperature in the cross-section file '%s'.\n", n, nt, file);
+            exit(EXIT_FAILURE);
+          }
+
           if((lp[0]|0x20) == 'k') lp++; /* Remove trailing K if exists      */
           lpa = lp;
           n++;
@@ -244,16 +258,23 @@ readcs(struct transit *tr){
       /* Store new line: wavenumber first, then loop over cross sections:   */
       while(isblank(*lp++));
       wn[n] = strtod(lp-1, &lpa);  /* Store wavenumber                      */
-      if(lp==lpa+1)
-        transiterror(TERR_CRITICAL, "Invalid fields for the %ith wavenumber "
-                     "in the cross-section file '%s'.\n", n+1, file);
+      if(lp==lpa+1) {
+        tr_output(TOUT_ERROR,
+          "Invalid fields for the %ith wavenumber in the cross-section "
+          "file '%s'.\n", n+1, file);
+        exit(EXIT_FAILURE);
+      }
+
       i = 0;
       while(i<nt){
         a[n][i] = strtod(lpa, &lp); /* Store cross-section extinction       */
-        if(lp==lpa)
-          transiterror(TERR_CRITICAL, "Less fields (%i) than expected (%i) "
-                       "were read for the %ith wavenumber in the cross-section "
-                       "file '%s'.\n", i, nt, n+1, file);
+        if(lp==lpa) {
+          tr_output(TOUT_ERROR,
+            "Less fields (%i) than expected (%i) were read for the %ith "
+            "wavenumber in the cross-section file '%s'.\n", i, nt, n+1, file);
+          exit(EXIT_FAILURE);
+        }
+
         lpa = lp;
         i++;
       }
@@ -277,11 +298,12 @@ readcs(struct transit *tr){
     /* Wavenumber boundaries check:                                         */
     if ((st_cross.wn[j][  0] > tr->wns.v[          0]) ||
         (st_cross.wn[j][n-1] < tr->wns.v[tr->wns.n-1]) ){
-      transiterror(TERR_SERIOUS, "The wavelength range [%.2f, %.2f] cm-1 of "
-                   "the cross-section file:\n  '%s',\ndoes not cover "
-                   "Transit's wavelength range [%.2f, %.2f] cm-1.\n", file,
-                   st_cross.wn[j][0], st_cross.wn[j][n-1],
-                   tr->wns.v[0],    tr->wns.v[tr->wns.n-1]);
+      tr_output(TOUT_ERROR,
+        "The wavelength range [%.2f, %.2f] cm-1 of the cross-section "
+        "file:\n  '%s',\ndoes not cover Transit's wavelength range "
+        "[%.2f, %.2f] cm-1.\n", file, st_cross.wn[j][0], st_cross.wn[j][n-1],
+        tr->wns.v[0], tr->wns.v[tr->wns.n-1]);
+      exit(EXIT_FAILURE);
     }
     st_cross.cs[j] = a;
     st_cross.nwave[j] = n;
@@ -319,16 +341,20 @@ interpcs(struct transit *tr){
   for(i=0; i<tr->rads.n; i++){
     tmpt[i] = atm->tfct * atm->t[i];
     /* Check for temperature boundaries:                                    */
-    if (tmpt[i] < cross->tmin)
-      transiterror(TERR_SERIOUS, "The layer %d in the atmospheric model has "
-                   "a lower temperature (%.1f K) than the lowest allowed "
-                   "cross-section temperature (%.1f K).\n",
-                   i, tmpt[i], cross->tmin);
-    if (tmpt[i] > cross->tmax)
-      transiterror(TERR_SERIOUS, "The layer %d in the atmospheric model has "
-                   "a higher temperature (%.1f K) than the highest allowed "
-                   "cross-section temperature (%.1f K).\n",
-                   i, tmpt[i], cross->tmax);
+    if (tmpt[i] < cross->tmin) {
+      tr_output(TOUT_ERROR,
+        "The layer %d in the atmospheric model has a lower temperature "
+        "(%.1f K) than the lowest allowed cross-section temperature "
+        "(%.1f K).\n", i, tmpt[i], cross->tmin);
+      exit(EXIT_FAILURE);
+    }
+    if (tmpt[i] > cross->tmax) {
+      tr_output(TOUT_ERROR,
+        "The layer %d in the atmospheric model has a higher temperature "
+        "(%.1f K) than the highest allowed  cross-section temperature "
+        "(%.1f K).\n", i, tmpt[i], cross->tmax);
+      exit(EXIT_FAILURE);
+    }
   }
   for(i=0; i<tr->wns.n; i++)
     tmpw[i] = tr->wns.fct * tr->wns.v[i];
@@ -450,9 +476,11 @@ void
 cserr(int max,     /* Max line length                                       */
       char *name,  /* Cross-section file name                               */
       int line){   /* Line number                                           */
-  transiterror(TERR_SERIOUS, "Line %i of cross-section file '%s' is longer "
-               "than %i characters ...\n hard coded values in file '%s' need "
-               "to be changed.\n", line, name, max, __FILE__);
+  tr_output(TOUT_ERROR,
+    "Line %i of cross-section file '%s' is longer than %i characters ...\n "
+    "hard coded values in file '%s' need to be changed.\n", line, name,
+    max, __FILE__);
+  exit(EXIT_FAILURE);
 }
 
 
