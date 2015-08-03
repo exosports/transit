@@ -234,9 +234,11 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
     last = rnn;
 
   /* Checks if we have enough radii to do spline, at least 3:               */
-  if(last < 3)
-    transiterror(TERR_CRITICAL, "Less than 3 items (%i given) for radial "
-                                "integration.\n", last);
+  if(last < 3) {
+    tr_output(TOUT_ERROR,
+      "Less than 3 items (%i given) for radial integration.\n", last);
+    exit(EXIT_FAILURE);
+  }
 
   /* Integrate along tau up to tau = toomuch:                               */
   hsum    = calloc(last/2, sizeof(double));
