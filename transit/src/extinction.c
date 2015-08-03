@@ -85,9 +85,12 @@ getprofile(PREC_VOIGT **pr,  /* Pointer to 1D profile                       */
     nvgt = 2*nwave + 1;
 
   /* Basic check that 'lor' or 'dop' are within sense:                      */
-  if(nvgt < 0)
-    transiterror(TERR_CRITICAL, "Number of Voigt bins (%d) are not positive.  "
-                 "Doppler width: %g, Lorentz width: %g.\n", nvgt, dop, lor);
+  if(nvgt < 0) {
+    tr_output(TOUT_ERROR,
+      "Number of Voigt bins (%d) are not positive. Doppler width: "
+      "%g, Lorentz width: %g.\n", nvgt, dop, lor);
+    exit(EXIT_FAILURE);
+  }
 
   /* Allocate profile array:                                                */
   *pr = (PREC_VOIGT *)calloc(nvgt, sizeof(PREC_VOIGT));
@@ -95,8 +98,10 @@ getprofile(PREC_VOIGT **pr,  /* Pointer to 1D profile                       */
   /* Calculate voigt using a width that gives an integer number of 'dwn'
      spaced bins:                                                           */
   if((j=voigtn(nvgt, dwn*(long)(nvgt/2), lor, dop, pr, -1,
-               nvgt > _voigt_maxelements ? VOIGT_QUICK:0)) != 1)
-    transiterror(TERR_CRITICAL, "voigtn2() returned error code %i.\n", j);
+               nvgt > _voigt_maxelements ? VOIGT_QUICK:0)) != 1) {
+    tr_output(TOUT_ERROR, "voigtn2() returned error code %i.\n", j);
+    exit(EXIT_FAILURE);
+  }
 
   return nvgt/2;
 }
@@ -113,10 +118,9 @@ savefile_extinct(char *filename,
   FILE *fp;
 
   if((fp=fopen(filename, "w")) == NULL){
-    transiterror(TERR_WARNING,
-                 "Extinction savefile '%s' cannot be opened for writing.\n"
-                 " Continuing without saving\n"
-                 ,filename);
+    tr_output(TOUT_WARN,
+      "Extinction savefile '%s' cannot be opened for writing.\n"
+      "Continuing without saving\n", filename);
     return;
   }
 
@@ -149,20 +153,20 @@ restfile_extinct(char *filename,
   FILE *fp;
 
   if((fp=fopen(filename, "r")) == NULL){
-    transiterror(TERR_WARNING,
-                 "Extinction savefile '%s' cannot be opened for reading.\n"
-                 "Continuing without restoring. You can safely ignore "
-                 "this warning if this the first time you run for this "
-                 "extinction savefile.\n", filename);
+    tr_output(TOUT_WARN,
+      "Extinction savefile '%s' cannot be opened for reading.\n"
+      "Continuing without restoring. You can safely ignore "
+      "this warning if this the first time you run for this "
+      "extinction savefile.\n", filename);
     return;
   }
 
   char mn[5];
   if(fread(mn, sizeof(char), 5, fp) != 5 || strncmp(mn,"@E@S@",5) != 0){
-     transiterror(TERR_WARNING,
-                  "Given filename for extinction savefile '%s' exists\n"
-                  "and is not a valid extinction file. Remove it\n"
-                  "before trying to use extinction savefile\n", filename);
+     tr_output(TOUT_WARN,
+      "Given filename for extinction savefile '%s' exists\n"
+      "and is not a valid extinction file. Remove it\n"
+      "before trying to use extinction savefile\n", filename);
      fclose(fp);
      return;
   }
@@ -212,25 +216,24 @@ extwn(struct transit *tr){
   /* Check there is at least one atmospheric layer:                         */
   /* FINDME: Move to readatm                                                */
   if(tr->rads.n < 1){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "There are no atmospheric parameters specified. I need at "
-                 "least one atmospheric point to calculate a spectra.\n");
+    tr_output(TOUT_ERROR,
+      "There are no atmospheric parameters specified. I need at "
+      "least one atmospheric point to calculate a spectra.\n");
     return -2;
   }
   /* Check there are at least two wavenumber sample points:                 */
   /* FINDME: Move to makewnsample                                           */
   if(tr->wns.n < 2){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "I need at least 2 wavenumber points to compute "
-                 "anything; I need resolution.\n");
+    tr_output(TOUT_ERROR,
+      "I need at least 2 wavenumber points to compute anything; "
+      "I need resolution.\n");
     return -3;
   }
   /* Check there is at least one isotope linelist                           */
   /* FINDME: This should not be a condition, we may want
      to calculate an atmosphere with only CIA for example.                  */
   if(niso < 1){
-    transiterror(TERR_WARNING,
-                 "You are requiring a spectra of zero isotopes.\n");
+    tr_output(TOUT_WARN, "You are requiring a spectra of zero isotopes.\n");
   }
 
   /* Get the extinction coefficient threshold:                              */
@@ -238,9 +241,11 @@ extwn(struct transit *tr){
 
   /* Declare extinction-coefficient array:                                  */
   ex->e        = (PREC_RES **)calloc(nrad,     sizeof(PREC_RES *));
-  if((ex->e[0] = (PREC_RES  *)calloc(nrad*nwn, sizeof(PREC_RES)))==NULL)
-    transiterror(TERR_CRITICAL|TERR_ALLOC, "Unable to allocate %li = %li*%li "
-                 "for the extinction coefficient.\n", nrad*nwn, nrad, nwn);
+  if((ex->e[0] = (PREC_RES  *)calloc(nrad*nwn, sizeof(PREC_RES)))==NULL) {
+    tr_output(TOUT_ERROR, "Unable to allocate %li = %li*%li "
+      "for the extinction coefficient.\n", nrad*nwn, nrad, nwn);
+    exit(EXIT_FAILURE);
+  }
 
   for(i=1; i<nrad; i++){
     ex->e[i] = ex->e[0] + i*nwn;
