@@ -95,8 +95,8 @@ opacity(struct transit *tr){
 
     /* Immediately return if the file could not be opened:                  */
     if (tr->fp_opa == NULL){
-      transiterror(TERR_WARNING, "Opacity filename '%s' cannot be opened "
-                                 "for writing.\n", tr->f_opa);
+      tr_output(TOUT_WARN, "Opacity filename '%s' cannot be opened "
+        "for writing.\n", tr->f_opa);
       return -1;
     }
 
@@ -355,14 +355,18 @@ calcopacity(struct transit *tr,
   for (i=0; i<Ntemp; i++)
     op->temp[i] = tr->temp.v[i];
   /* Temperature boundaries check:                                          */
-  if (op->temp[0] < li->tmin)
-    transiterror(TERR_SERIOUS, "The opacity file attempted to sample a "
-                 "temperature (%.1f K) below the lowest allowed "
-                 "TLI temperature (%.1f K).\n", op->temp[0], li->tmin);
-  if (op->temp[Ntemp-1] > li->tmax)
-    transiterror(TERR_SERIOUS, "The opacity file attempted to sample a "
-                 "temperature (%.1f K) beyond the highest allowed "
-                 "TLI temperature (%.1f K).\n", op->temp[Ntemp-1], li->tmax);
+  if (op->temp[0] < li->tmin) {
+    tr_output(TOUT_ERROR, "The opacity file attempted to sample a "
+      "temperature (%.1f K) below the lowest allowed "
+      "TLI temperature (%.1f K).\n", op->temp[0], li->tmin);
+    exit(EXIT_FAILURE);
+  }
+  if (op->temp[Ntemp-1] > li->tmax) {
+    tr_output(TOUT_ERROR, "The opacity file attempted to sample a "
+      "temperature (%.1f K) beyond the highest allowed "
+      "TLI temperature (%.1f K).\n", op->temp[Ntemp-1], li->tmax);
+    exit(EXIT_FAILURE);
+  }
   transitprint(1, verblevel, "There are %li temperature samples.\n", Ntemp);
 
   /* Evaluate the partition at these temperatures:                          */
@@ -444,9 +448,11 @@ calcopacity(struct transit *tr,
                        tr->atm.mm[r], mol->mass[j], op->press[r], op->temp[t]);
         for (j=0; j < iso->n_i; j++)
           Z[j] = op->ziso[j][t];
-        if((rn=computemolext(tr, op->o[r][t], op->temp[t], density, Z, 1)) != 0)
-          transiterror(TERR_CRITICAL, "extinction() returned error code %i.\n",
-                                      rn);
+        if((rn=computemolext(tr, op->o[r][t], op->temp[t], density, Z, 1))
+          != 0) {
+          tr_output(TOUT_ERROR, "extinction() returned error code %i.\n", rn);
+          exit(EXIT_FAILURE);
+        }
       }
     }
 
@@ -625,7 +631,7 @@ attachopacity(struct transit *tr){ /* transit struct                        */
 
   /* If allocation failed, abort:                                           */
   if (op->mainID == -1) {
-    transiterror(TERR_WARNING, "Failed to allocate main shared memory.\n");
+    tr_output(TOUT_WARN, "Failed to allocate main shared memory.\n");
     transitprint(1, verblevel, "Attachment failed. shmget() returned -1.\n");
     return 1;
   }
@@ -634,7 +640,7 @@ attachopacity(struct transit *tr){ /* transit struct                        */
   op->mainaddr = shmat(op->mainID, (void *) 0, 0);
 
   if (op->mainaddr == (void *) -1) {
-    transiterror(TERR_WARNING, "Failed to attach to main shared memory.\n");
+    tr_output(TOUT_WARN, "Failed to attach to main shared memory.\n");
     transitprint(1, verblevel, "Attachment failed. shmat() returned -1.\n");
     return 1;
   }
