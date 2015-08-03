@@ -156,12 +156,14 @@ readtli_bin(FILE *fp,
   fread(&li->lr_ver,  sizeof(unsigned short), 1, fp);
   fread(&li->lr_rev,  sizeof(unsigned short), 1, fp);
   /* Check compatibility of versions:                                       */
-  if(li->tli_ver != compattliversion)
-    transiterror(TERR_SERIOUS,
-                 "The version of the TLI file: %i (lineread v%i.%i) is not "
-                 "compatible with this version of transit, which can only "
-                 "read version %i.\n", li->tli_ver, li->lr_ver,
-                 li->lr_rev, compattliversion);
+  if(li->tli_ver != compattliversion) {
+    tr_output(TOUT_ERROR,
+      "The version of the TLI file: %i (lineread v%i.%i) is not "
+      "compatible with this version of transit, which can only "
+      "read version %i.\n", li->tli_ver, li->lr_ver,
+      li->lr_rev, compattliversion);
+    exit(EXIT_FAILURE);
+  }
 
   /* Read initial wavelength, final wavelength, and number of databases:    */
   fread(&iniw, sizeof(double), 1, fp);
@@ -362,27 +364,26 @@ checkrange(struct transit *tr,   /* General parameters and  hints           */
 
   /* Check that it is not below the minimum value:                          */
   if(dbini > wlmax){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Final wavelength (%g) "
-                 "is smaller than minimum wavelength in database (%g).\n",
-                 wlmax, dbini);
+    tr_output(TOUT_ERROR,
+      "Final wavelength (%g) is smaller than minimum wavelength "
+      "in database (%g).\n", wlmax, dbini);
     return -3;
   }
   /* Warn if it is above the maximum TLI value:                             */
   if(wlmax > dbfin)
-    transiterror(TERR_WARNING, "Final requested wavelength (%g microns) "
+    tr_output(TOUT_WARN, "Final requested wavelength (%g microns) "
                  "is larger than the maximum informative value in database "
                  "(%g microns).\n", wlmax*cm_to_micron, dbfin*cm_to_micron);
 
   /* Check that it is not larger than the maximum db wavelength:            */
   if(dbfin < wlmin){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Initial wavelength (%g cm) "
-                 "is larger than maximum wavelength in database (%g cm).\n",
-                 wlmin, dbfin);
+    tr_output(TOUT_ERROR, "Initial wavelength (%g cm) is larger than "
+      "maximum wavelength in database (%g cm).\n", wlmin, dbfin);
     return -2;
   }
   /* Warn if it is below the maximum TLI value:                             */
   if(wlmin < dbini)
-    transiterror(TERR_WARNING, "Initial requested wavelength (%g microns) "
+    tr_output(TOUT_WARN, "Initial requested wavelength (%g microns) "
                  "is smaller than the minimum informative value in database "
                  "(%g microns).\n", wlmin*cm_to_micron, dbini*cm_to_micron);
 
@@ -412,15 +413,15 @@ readinfo_tli(struct transit *tr,
 
   /* Get TLI file name from hint:                                           */
   if(!th->f_line){  /* Check if it was defined in hint                      */
-    transiterror(TERR_WARNING, "No TLI file set.\n");
+    tr_output(TOUT_WARN, "No TLI file set.\n");
     tr->pi |= TRPI_READINFO;
     return -2;
   }
   /* Attempt to open the TLI file and make a pointer to it:                 */
   if((rn=fileexistopen(th->f_line, &fp)) != 1){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Line info file '%s' is not found. "
-                 "fileexistopen() error code %i.\n", th->f_line, rn);
+    tr_output(TOUT_ERROR,
+      "Line info file '%s' is not found. "
+      "fileexistopen() error code %i.\n", th->f_line, rn);
     return -1;
   }
   /* Set transit TLI file pointer and TLI file name:                        */
@@ -435,8 +436,7 @@ readinfo_tli(struct transit *tr,
 
   /* Read binary TLI:                                                       */
   if((rn=readtli_bin(fp, tr, li)) != 0){
-    transiterror(TERR_CRITICAL|TERR_ALLOWCONT,
-                 "readtli_bin() return error code %i.\n", rn);
+    tr_output(TOUT_ERROR, "readtli_bin() return error code %i.\n", rn);
     return -6;
   }
   transitprint(3, verblevel, "TLI file read from %g to %g microns.\n",
@@ -495,15 +495,14 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
   }
 
   else if (rn != 1){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT, "Data file '%s' not found.  "
-                "fileexistopen() error code: %i.\n", tr->f_line, rn);
+    tr_output(TOUT_ERROR, "Data file '%s' not found. "
+      "fileexistopen() error code: %i.\n", tr->f_line, rn);
     return -1;
   }
 
   /* Check seekability:                                                     */
   if(fseek(fp, 0, SEEK_CUR)){
-    transiterror(TERR_CRITICAL|TERR_ALLOWCONT,
-                 "File '%s' was not seekable.\n", tr->f_line);
+    tr_output(TOUT_ERROR, "File '%s' was not seekable.\n", tr->f_line);
     return -2;
   }
 
@@ -535,10 +534,12 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
   lt->elow  = (PREC_LNDATA *)calloc(nlines, sizeof(PREC_LNDATA));
   lt->isoid = (short       *)calloc(nlines, sizeof(short));
   /* Check for allocation errors:                                           */
-  if(!lt->gf || !lt->wl || !lt->elow || !lt->isoid)
-    transiterror(TERR_CRITICAL|TERR_ALLOC, "Couldn't allocate memory for "
-                 "linetran structure array of length %i, in function "
-                 "readdatarng.\n", nlines);
+  if(!lt->gf || !lt->wl || !lt->elow || !lt->isoid) {
+    tr_output(TOUT_ERROR, "Couldn't allocate memory for "
+      "linetran structure array of length %i, in function "
+      "readdatarng.\n", nlines);
+    exit(EXIT_FAILURE);
+  }
 
   /* Starting location for wavelength, isoID, Elow, and gf data in file:    */
   wl_loc  = start;
@@ -622,12 +623,14 @@ readlineinfo(struct transit *tr){
   /* Check the remainder range of the hinted values
      related to line database reading:                                      */
   if (rn != -2){
-    if((rn=checkrange(tr, &li)) < 0)
-      transiterror(TERR_SERIOUS, "checkrange() returned error code %i.\n", rn);
+    if((rn=checkrange(tr, &li)) < 0) {
+      tr_output(TOUT_ERROR, "checkrange() returned error code %i.\n", rn);
+      exit(EXIT_FAILURE);
+    }
     /* Output status so far if the verbose level is enough:                 */
     if(rn>0 && verblevel>1)
-      transiterror(TERR_WARNING, "checkrange() modified the suggested "
-                                 "parameters, it returned code 0x%x.\n\n", rn);
+      tr_output(TOUT_WARN, "checkrange() modified the suggested "
+        "parameters, it returned code 0x%x.\n\n", rn);
   }
 
   /* Get the molecule index for the isotopes:                               */
@@ -639,8 +642,10 @@ readlineinfo(struct transit *tr){
   if(filecheck == -1 && rn != -2){
     /* Read data file:                                                      */
     transitprint(1, verblevel, "Reading data.\n");
-    if((rn=readdatarng(tr, &li)) < 0)
-      transiterror(TERR_SERIOUS, "readdatarng returned error code %li.\n", rn);
+    if((rn=readdatarng(tr, &li)) < 0) {
+      tr_output(TOUT_ERROR, "readdatarng returned error code %li.\n", rn);
+      exit(EXIT_FAILURE);
+    }
     transitprint(1, verblevel, "Done.\n\n");
   }
   /* If there is an opacity file, update progress indicator so that
@@ -782,8 +787,10 @@ int main(int argc, char **argv){
   if(Pgeti(0, &ti1, 6)>0)
     nbins = ti1;
 
-  if((i=readlineinfo(&tr))!=0)
-    transiterror(TERR_CRITICAL, "Error code: %i.\n", i);
+  if((i=readlineinfo(&tr))!=0) {
+    tr_output(TOUT_ERROR, "Error code: %i.\n", i);
+    exit(EXIT_FAILURE);
+  }
   transitDEBUG(20, verblevel, "range: %.10g to %.10g.\n",
                tr.ds.li->wi, tr.ds.li->wf);
   li = tr.ds.li;
