@@ -150,9 +150,11 @@ tau(struct transit *tr){
     hfct = ip->fct;
   }
   /* Request at least four layers to calculate a spline interpolation:     */
-  if(nh < 4)
-    transiterror(TERR_SERIOUS, "At least four layers (%d given) are required "
-                 "(three for spline, one for the analitical part).\n", nh);
+  if(nh < 4) {
+    tr_output(TOUT_ERROR, "At least four layers (%d given) are required "
+      "(three for spline, one for the analitical part).\n", nh);
+    exit(EXIT_FAILURE);
+  }
 
   PREC_RES *tau_wn;              /* Optical depth array                     */
   PREC_ATM *temp = tr->atm.t,    /* Temperature array                       */
@@ -216,9 +218,11 @@ tau(struct transit *tr){
         Z[i]       = tr->ds.iso->isov[i].z [rnn-1];
 
       if((rn=computemolext(tr, ex->e+(rnn-1), tr->atm.t[rnn-1]*tr->atm.tfct,
-                           density, Z, 0)) != 0)
-        transiterror(TERR_CRITICAL,  "computemolext() returned error "
-                                     "code %i.\n", rn);
+                           density, Z, 0)) != 0) {
+        tr_output(TOUT_ERROR,  "computemolext() returned error "
+          "code %i.\n", rn);
+        exit(EXIT_FAILURE);
+      }
     }
     ex->computed[rnn-1] = 1;
   }
@@ -281,9 +285,11 @@ tau(struct transit *tr){
               for (i=0; i < tr->ds.iso->n_i; i++)
                 Z[i]       = tr->ds.iso->isov[i].z [lastr];
               if((rn=computemolext(tr, ex->e+lastr,
-                         tr->atm.t[lastr]*tr->atm.tfct, density, Z, 0)) != 0)
-                transiterror(TERR_CRITICAL,  "computemolext() returned error "
-                                             "code %i.\n", rn);
+                         tr->atm.t[lastr]*tr->atm.tfct, density, Z, 0)) != 0) {
+                tr_output(TOUT_ERROR,
+                  "computemolext() returned error code %i.\n", rn);
+                exit(EXIT_FAILURE);
+              }
             }
             ex->computed[lastr] = 1;
             /* Update the value of the extinction at the right place:       */
@@ -299,12 +305,12 @@ tau(struct transit *tr){
       /* Check if the optical depth reached toomuch:                        */
       if (tau_wn[ri] > tau->toomuch){
         tau->last[wi] = ri;   /* Set tau.last                               */
-        if (ri < 3){
-          transiterror(TERR_WARNING, "At wavenumber %g (cm-1), the optical "
-                       "depth (%g) exceeded toomuch (%g) at the height "
-                       "level %li (%g km), this should have happened in a "
-                       "deeper layer.\n", wn->v[wi],
-                       tau_wn[ri], tau->toomuch, ri, h[ri]*hfct/1e5);
+        if (ri < 3) {
+          tr_output(TOUT_WARN, "At wavenumber %g (cm-1), the optical "
+            "depth (%g) exceeded toomuch (%g) at the height "
+            "level %li (%g km), this should have happened in a "
+            "deeper layer.\n", wn->v[wi],
+            tau_wn[ri], tau->toomuch, ri, h[ri]*hfct/1e5);
         }
         break;  /* Exit height loop when the optical depth reached toomuch  */
       }
@@ -564,9 +570,11 @@ detailout(prop_samp *wn,         /* transit's wavenumber array              */
   double val;
   float **arrf = (float **)arr;       /* Float-casted array                 */
   FILE *out = fopen(det->file, "w");  /* Pointer to file                    */
-  if(!out)
-    transiterror(TERR_SERIOUS, "Cannot open '%s' for writing fine detail.\n",
-                               det->file);
+  if(!out) {
+    tr_output(TOUT_ERROR, "Cannot open '%s' for writing fine detail.\n",
+      det->file);
+    exit(EXIT_FAILURE);
+  }
   transitprint(1, verblevel, "\nPrinting in '%s'. Fine detail of %s at "
                              "selected wavenumbers.\n", det->file, det->name);
 
@@ -642,8 +650,8 @@ printtoomuch(char *file,            /* Filename to save the info            */
   if(file[0] != '-')
     out = fopen(file, "w");
   if(!out)
-    transiterror(TERR_WARNING, "Cannot open '%s' for writing depth where the "
-                               "optical depth reached toomuch.\n", file);
+    tr_output(TOUT_WARN, "Cannot open '%s' for writing depth where the "
+      "optical depth reached toomuch.\n", file);
 
   transitprint(20, verblevel, "\nPrinting in '%s' the depth where the "
                    "optical depth got larger than %g.\n", file, tau->toomuch);
