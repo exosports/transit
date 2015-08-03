@@ -125,7 +125,6 @@ PREC\_LNDATA & double &  Line-transition data  \\
 PREC\_RES    & double &  Partial result  \\
 PREC\_ATM    & double &  Atmospheric data  \\
 PREC\_CS     & double &  Cross-section data  \\
-PREC\_CIA    & double &  Collision-induced absorption data  \\
 PREC\_VOIGT  & float  &  Voigt profile data type \\
 PREC\_VOIGTP & double &  Precise Voigt profile data type \\
 \hline
@@ -344,12 +343,9 @@ struct lineinfo{
   unsigned short tli_ver;    /* TLI version                                 */
   unsigned short lr_ver;     /* lineread version                            */
   unsigned short lr_rev;     /* lineread revision                           */
-  prop_samp wavs;            /* Wavelength sampling                         */
   double wi, wf;             /* Initial and final wavelength in database    */
   long endinfo;              /* Position at the end of the info part
                                 of the info file                            */
-  int asciiline;             /*  TLI line of first transition.
-                                Zero if a binary file.                      */
   int ni;                    /* Number of isotopes                          */
   int ndb;                   /* Number of databases                         */
   prop_isov *isov;           /* Variable isotope information (w/temp) [iso] */
@@ -659,38 +655,38 @@ struct detailout{
 \end{plain}
 
 \noindent
-Collision-Induced Absorption (CIA) extinction information.
+Cross-section extinction information.
 \begin{plain}
-struct cia{
-  int nfiles;       /* Number of CIA files                                  */
-  PREC_CIA **e;     /* Extinction from all CIA sources [wn][temp]           */
-    /* ALLOCATED:	readcia						    */
-    /* FILLED OUT:      interpolatecia					    */
-    /* FREED:           freemem_cia					    */ 
-  PREC_CIA ***cia;  /* Tabulated CIA extinction      [nfiles][nwave][ntemp] */
-    /* ALLOCATED:	readcia						    */
-    /* FILLED OUT:	readcia						    */
-    /* FREED:           freemem_cia					    */ 
-  PREC_CIA **wn;    /* Tabulated wavenumber  arrays  [nfiles][nwave]        */
-    /* ALLOCATED:	readcia						    */
-    /* FILLED OUT:	readcia						    */
-    /* FREED:           freemem_cia					    */ 
-  PREC_CIA **temp;  /* Tabulated temperature arrays  [nfiles][ntemp]        */
-    /* ALLOCATED:	readcia						    */
-    /* FILLED OUT:	readcia						    */
-    /* FREED:           f0reemem_cia					    */ 
+struct cross{
+  int nfiles;       /* Number of CS files                                  */
+  PREC_CS **e;     /* Extinction from all CS sources [wn][temp]           */
+    /* ALLOCATED:	readcs						    */
+    /* FILLED OUT:      interpolatecs					    */
+    /* FREED:           freemem_cs					    */ 
+  PREC_CS ***cs;  /* Tabulated CS extinction      [nfiles][nwave][ntemp] */
+    /* ALLOCATED:	readcs						    */
+    /* FILLED OUT:	readcs						    */
+    /* FREED:           freemem_cs					    */ 
+  PREC_CS **wn;    /* Tabulated wavenumber  arrays  [nfiles][nwave]        */
+    /* ALLOCATED:	readcs						    */
+    /* FILLED OUT:	readcs						    */
+    /* FREED:           freemem_cs					    */ 
+  PREC_CS **temp;  /* Tabulated temperature arrays  [nfiles][ntemp]        */
+    /* ALLOCATED:	readcs						    */
+    /* FILLED OUT:	readcs						    */
+    /* FREED:           freemem_cs					    */ 
   int *nwave;       /* Number of wavenumber samples  [nfiles]               */
-    /* ALLOCATED:	readcia						    */
-    /* FILLED OUT:	readcia						    */
-    /* FREED:           freemem_cia					    */ 
+    /* ALLOCATED:	readcs						    */
+    /* FILLED OUT:	readcs						    */
+    /* FREED:           freemem_cs					    */ 
   int *ntemp;       /* Number of temperature samples [nfiles]               */
-    /* ALLOCATED:	readcia						    */
-    /* FILLED OUT:	readcia						    */
-    /* FREED:           freemem_cia					    */ 
+    /* ALLOCATED:	readcs						    */
+    /* FILLED OUT:	readcs						    */
+    /* FREED:           freemem_cs					    */ 
   int *mol1, *mol2; /* Pairs of molecule's ID        [nfiles]               */
-    /* ALLOCATED:	readcia						    */
-    /* FILLED OUT:	readcia						    */
-    /* FREED:           freemem_cia					    */ 
+    /* ALLOCATED:	readcs						    */
+    /* FILLED OUT:	readcs						    */
+    /* FREED:           freemem_cs					    */ 
 };
 \end{plain}
 
@@ -739,8 +735,8 @@ struct transithint{
   struct detailout det;
 
   double ethresh;       /* Lower extinction-coefficient threshold            */
-  char **ciafile;
-  int ncia;
+  char **csfile;
+  int ncross;
 };
 \end{plain}
 
@@ -848,7 +844,7 @@ struct transit{
     struct extcloud    *cl;
     struct extscat     *sc;
     struct detailout   *det;
-    struct cia         *cia;
+    struct cross       *cross;
   }ds;
 };
 \end{plain}
@@ -857,6 +853,7 @@ struct transit{
 \section{List of Functions in the \texttt{transit} Files}
 \label{sec:functions}
 In this section we list all functions, sorted by source file, give a brief description of what they do, list all variables that they alter, and provide a walkthrough for each. A modified variable is written in \ttred{red}, a function is written in \ttblue{blue}, and an unmodified variable is written in {\tt typewriter}. Unless impractical, each subsection has a diagram which indicates the function structure of that source file.
+
 \subsection{transit.c}
 This file contains the main {\tt transit} driver functions. The \ttblue{main} function calls \ttblue{transit\_init} and \ttblue{do\_transit}, the driver functions which do the initialization and calculation. Then \ttblue{main} calls \ttblue{free\_memory} which frees the remaining memory. This structure is shown in Figure \ref{fig:transitc}.
 
@@ -916,7 +913,7 @@ void freemem\_transit(struct transit *tr)}
 \item[-] Call \ttblue{readlineinfo} from readlineinfo.c to read the TLI file.
 \item[-] Call \ttblue{makeradsample} from makesample.c to create the radius sampling.
 \item[-] Call \ttblue{opacity} from opacity.c to calculate the opacity grid.
-\item[-] Call \ttblue{readcia} from cia.c to read CIA file(s).
+\item[-] Call \ttblue{readcs} from crosssec.c to read CS file(s).
 \item[-] Set boolean to indicate that {\tt transit} has been initiated.
 \end{enumerate}
 
@@ -950,7 +947,6 @@ void freemem\_transit(struct transit *tr)}
 \item[-] Call \ttblue{realoadatm} from readatm.c to reload the atmospheric data.
 \item[-] Call \ttblue{do\_transit} to run calculations.
 \end{enumerate}
-
 \subsubsection{do\_transit}
 \paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
@@ -963,7 +959,7 @@ void freemem\_transit(struct transit *tr)}
 \item[-] If \ttblue{transit\_init} has been run:
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Call \ttblue{makeipsample} from makesample.c to create the impact parameter sampling.
-\item[-] Call \ttblue{interpolatecia} from cia.c to interpolate the CIA grid.
+\item[-] Call \ttblue{interpcs} from crosssec.c to interpolate the cross-section grid.
 \item[-] Call \ttblue{idxrefrac} from idxrefraction.c to compute the index of refraction.
 \item[-] Call \ttblue{extwn} from extinction.c to calculate the extinction coefficient.
 \item[-] Call \ttblue{init\_optdepth} to initialize optical depth structures.
@@ -997,7 +993,7 @@ void freemem\_transit(struct transit *tr)}
 \item[-] Call to \ttblue{freemem\_atmosphere} to free atmospheric data.
 \item[-] If no opacity file was given (it was created), then call to \ttblue{freemem\_linetransition} to free the line transition data.
 \item[-] Call to \ttblue{freemem\_lineinfo} to free line transition information.
-\item[-] Call to \ttblue{freemem\_cia} to free CIA data.
+\item[-] Call to \ttblue{freemem\_cs} to free cross-section data.
 \item[-] Call to \ttblue{freemem\_transit} to free the transit structure.
 \item[-] Reset transit initiation boolean to 0.
 \end{enumerate}
@@ -1013,7 +1009,14 @@ void freemem\_transit(struct transit *tr)}
 \end{enumerate}
 
 \subsection{transitstd.c:}
-This file contains a number of standard functions. As they are largely unrelated, and called when necessary throughout the code, there is no general structure to the functions in this file.
+This file contains a number of standard functions. As they are largely unrelated, and called when necessary throughout the code, there is no relative structure to the functions in this file. Figure \ref{fig:transitstdc} shows the function structure of transitstd.c.
+
+\begin{figure}
+\includegraphics{fig/transitstdc}
+\caption{Function structure of transitstd.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, green functions are used in both, and red functions are unused at this time.}
+\label{fig:transitstdc}
+\end{figure}
+
 \subsubsection{List of Functions Defined in transitstd.c}
 \function{
 inline void transitdot(int thislevel, int verblevel, ...)}
@@ -1233,14 +1236,14 @@ void freemem\_detailfld(struct detailfld *f)}
 \paragraph{Variables Modified:}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Set \ttred{tr.ds.th.verbnoise, tr.ds.th.mass, tr.ds.th.savefiles} (verbosity, abuncance type, and file saving boolean) to defaults.
-\item[-] Set \ttred{tr.ds.th.ncia, tr.ds.th.ciafile} (number of CIA files, CIA filenames) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.ncross, tr.ds.th.csfile} (number of CS files, CS filenames) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.save.ext} (saved extinction grid) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.f\_opa} (opacity filename) from command line arguments/config file.
 \item[-] Initialize \ttred{tr.ds.th.det.cia, tr.ds.th.det.tau, tr.ds.th.det.ext} (detailed field structures for CIA, optical depth, and/or extinction) if specifed by command line arguments/config file.
 \item[-] Fill in the \ttred{tr.ds.th.det} structure values.
 \item[-] Set \ttred{tr.ds.th.ethresh} (factor threshold for line profile calculation) from command line arguments/config file.
 \item[-] Allocate and set \ttred{tr.ds.th.solname} (ray solution type) from command line arguments/config file.
-\item[-] Allocate and set \ttred{tr.ds.th.f\_atm, tr.ds.th.f\_line, tr.ds.th.f\_molfile, \\ tr.ds.th.f\_outmod, tr.ds.th.f\_outsample, tr.ds.th.f\_toomuch, tr.ds.th.f\_outflux, \\ tr.ds.th.f\_outintens} (input and output filenames) from command line arguments/config file.
+\item[-] Allocate and set \ttred{tr.ds.th.f\_atm, tr.ds.th.f\_line, tr.ds.th.f\_molfile, \\ tr.ds.th.f\_outmod, tr.ds.th.f\_outsample, tr.ds.th.f\_toomuch, \\ tr.ds.th.f\_outflux,  tr.ds.th.f\_outintens} (input and output filenames) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.savefiles} (boolean to save files or not) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.p0, tr.ds.th.r0, tr.ds.th.gsurf} (surface pressure, radius, and gravity) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.allowrq} (variance from unity allowed in total abundance) from command line arguments/config file.
@@ -1303,7 +1306,7 @@ makes the command-line-argument parser, resets the transithint struct, and fill 
   output filename).
 \item[-] Copy \ttred{tr.f\_outflux} from {\tt th\_outflux} or default (flux output filename).
 \item[-] Copy \ttred{tr.f\_toomuch, tr.f\_outsample, tr.outintens} from {\tt
-    th.f\_toomuch, th.f\_outsample, th.f\_outintens} (maximum optical depth,
+    th.f\_toomuch, \\ th.f\_outsample, th.f\_outintens} (maximum optical depth,
   sampling output, and intensity output filenames).
 \item[-] Copy \ttred{tr.ds.det} from {\tt th.det} (detailed output structure).
 \item[-] Copy \ttred{tr.timesalpha} from {\tt th.timesalpha} (Voigt profile width).
@@ -1347,14 +1350,14 @@ makes the command-line-argument parser, resets the transithint struct, and fill 
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Write the hint structure to file.
-\item[-] Call to \ttblue{savestr} from transitstd.c to write input and output filenames, in binary, to file (atmosphere, TLI, CIA, modulation, flux, intensity, radius where maximum tau was reached, and sampling files). Write the solution name to file.
+\item[-] Call to \ttblue{savestr} from transitstd.c to write input and output filenames, in binary, to file (atmosphere, TLI, CS, modulation, flux, intensity, radius where maximum tau was reached, and sampling files). Write the solution name to file.
 \item[-] Call to \ttblue{savesample\_arr} from makesample.c to save the radius, wavelength, wavenumber, and impact parameter sampling to file.
 \end{enumerate}
 
 \subsubsection{resthint:}
 \paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Restore \ttred{tr.ds.th.f\_atm, tr.ds.th.f\_line, tr.ds.th.f\_outmod,\\ tr.ds.th.f\_outflux,  tr.ds.th.f\_outintens, tr.ds.th.f\_toomuch, \\ tr.ds.th.f\_outsample, tr.ds.th.solname,  tr.ds.th.ciafile} from file.
+\item[-] Restore \ttred{tr.ds.th.f\_atm, tr.ds.th.f\_line, tr.ds.th.f\_outmod,\\ tr.ds.th.f\_outflux,  tr.ds.th.f\_outintens, tr.ds.th.f\_toomuch, \\ tr.ds.th.f\_outsample, tr.ds.th.solname,  tr.ds.th.csfile} from file.
 \item[-] Restore \ttred{tr.ds.th.rads, tr.ds.th.wavs, tr.ds.th.wns, tr.ds.th.ips} from file.
 \end{enumerate}
 
@@ -1370,7 +1373,7 @@ makes the command-line-argument parser, resets the transithint struct, and fill 
 \subsubsection{freemem\_hints:}
 \paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Free \ttred{th.f\_atm, th.f\_line, th.f\_outmod, th.f\_outflux, th.f\_outintens,\\ th.f\_toomuch, th.f\_outsample, th.f\_molfile, th.solname, th.ciafile}.
+\item[-] Free \ttred{tr.ds.th.f\_atm, tr.ds.th.f\_line, tr.ds.th.f\_outmod, tr.ds.th.f\_outflux, \\ tr.ds.th.f\_outintens, tr.ds.th.f\_toomuch, tr.ds.th.f\_outsample, \\ tr.ds.th.f\_molfile, tr.ds.th.solname, tr.ds.th.csfile}.
 \end{enumerate}
 
 \paragraph{Walkthrough}
@@ -1521,16 +1524,18 @@ int main(int argc, char **argv)}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Reset \ttred{tr.ds.li, tr.ds.iso} (lineinfo and
   isotopes structures).
+\item[-] Set \ttred{tr.ds.li.tmin, tr.ds.li.tmax} (min and max temperatures in TLI files).
 \item[-] If an opacity file exists, update \ttred{tr.pi} to account for TRPI\_READINFO and TRPI\_READDATA.
 \end{enumerate}
 
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Reset line information and isotopes structures.  
+\item[-] Reset line information and isotopes structures.
+\item[-] Set min and max allowed temperatures in TLI files.  
 \item[-] Call \ttblue{readinfo\_tli} to check if TLI file exists, open it, and get header information (all info exept line transitions). 
+\item[-] If \ttblue{readinfo\_tli} was successful, call \ttblue{checkrange} to check the range of the hinted values against the range of wavelengths in the TLI file.
 \item[-] Call \ttblue{setimol} to set the molecular index of each isotope. 
-\item[-] Call \ttblue{checkrange} to set up the lineinfo wavelength sampling and wavelength margin.
-\item[-] Check if an opacity file exists. If not, call \ttblue{readdatarng} to read the TLI file data. Otherwise, skip reading the TLI file and update the progress indicator to allow the program to continue.
+\item[-] Check if an opacity file exists. If not, and \ttblue{checkrange} was successful, call \ttblue{readdatarng} to read the TLI file data. Otherwise, skip reading the TLI file and update the progress indicator to allow the program to continue.
 \item[-] Return 0 on success.
 \end{enumerate}
 
@@ -1541,7 +1546,6 @@ int main(int argc, char **argv)}
 \item[-] Set \ttred{tr.f\_line} from {\tt th.f\_line} if file
   exists and could be opened (TLI filename).
 \item[-] Set \ttred{tr.fp\_line} (pointer to TLI file).
-\item[-] Set \ttred{tr.ds.li.asciiline} according to the format of the TLI file.
 \item[-] Declare \ttred{tr.ds.li.lt}.
 \item[-] Set \ttred{tr.ds.li.lt.wfct, tr.ds.li.lt.efct} from
   default values (line-transition wavelength and lowE units factor).
@@ -1550,17 +1554,11 @@ int main(int argc, char **argv)}
 
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Declare a union variable which is used to determine the type of the TLI file (ASCII or binary) and to check endianness compatibility.
+\item[-] Declare a union variable which is used to determine endianness compatibility.
 \item[-] Check that a TLI file name was given. If not, raise an error and return -2.
 \item[-] Check if TLI file exists. If not, raise an error and return -1.
 \item[-] Set the TLI file name and file pointer from hint structure.
 \item[-] Read the first four bytes of the TLI file into the union variable.
-\item[-] If the file appears to be an ASCII file:
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] If the first four bytes of the TLI file indicate the file is ASCII, compare them with '#TLI'. If they match, read the next six bytes, append them to the first four and compare with '#TLI-ascii'. If either compare did not match, raise an error and return -3. 
-\item[-] Set the ASCII file indicator to 1.
-\item[-] Read past the rest of the first line of the TLI file.
-\end{enumerate}
 \item[-] Call to \ttblue{readtli\_bin} to read the binary TLI file. Raise an error and return -6 if \ttblue{readtli\_bin} returns an error.
 \item[-] Set the wavelength and lowE units conversion factor for line transitions.
 \item[-] Update the progress indicator.
@@ -1605,6 +1603,7 @@ int main(int argc, char **argv)}
 \item[-] Allocate structures for databases for each isotope.
 \item[-] Allocate structures for fixed and variable isotope data.
 \item[-] Allocate isotopic abundance ratios.
+\item[-] Set max and min allowed temperatures.
 \item[-] Loop over each database (each species):
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Read database name length, allocate space for the name, and read the name from the TLI file.
@@ -1629,42 +1628,14 @@ int main(int argc, char **argv)}
 
 
 \subsubsection{checkrange:}
-\paragraph{Variables Modified:}
+\paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Set \ttred{tr.ds.li.wavs.fct} from {\tt tr.ds.th.wavs.fct} if
-  provided, else default to cgs units (lineinfo wavelength units
-  factor).
-\item[-] Set \ttred{tr.ds.li.wavs.f} from {\tt th.wavs.f} if
-  provided, else default to maximum wavelength in database {\tt
-    tr.ds.li.wf*TLI\_WAV\_UNITS/tr.ds.li.wavs.fct} (lineinfo final
-  wavelength).
-\item[-] Set \ttred{tr.ds.li.wavs.i} from {\tt th.wavs.i} if
-  provided, else default to minimum wavelength in database {\tt
-    tr.ds.li.wi*TLI\_WAV\_UNITS/tr.ds.li.wavs.fct} (lineinfo initial
-  wavelength).
-\item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_CHKRNG}.
-\end{enumerate}
-
-\paragraph{Walkthrough:}
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Initialize lineinfo's wavelength sample structure.  
-\item[-] Raise an error if the user supplied a negative wavelength factor.
-\item[-] Set the lineinfo wavelength unit conversion factor from the transithint structure
-\item[-] Check that the user supplied a positive final wavelength. If not, raise a warning and set to the default (maximum database wavelength).
-\item[-] If the user supplied a valid final wavelength:
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Check that the final wavelength is not lower than the initial wavelngth. If so, raise an error and return -3.
-\item[-] Check that the final wavelength is not higher than the maximum database wavelength. If so, raise a warning.
-\item[-] Set the final wavelength from the hint structure.
-\end{enumerate}
-\item[-] Check that the user supplied a positive inital wavelength. If not, raise a warning and set to the default (minimum database wavelength).
-\item[-] If the user supplied a valid wavelength:
-\begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Check that the initial wavelength is not higher than the maximum database wavelength. If so, raise and error and return -2.
-\item[-] Check that the initial wavelength is not smaller than the minimum database wavelength. If so, raise a warning.
-\item[-] Set the initial wavelength from the hint structure.
-\end{enumerate}
-\item[-] Update the progress indicator.
+\item[-] Calculate wavelength limits in cgs units.
+\item[-] If the final wavelength given is less than the minimum wavelength in the database, return -3.
+\item[-] If the final wavelength given is greater than the maximum wavelength in the database, raise a warning.
+\item[-] If the initial wavelength given is greater than the maximum wavelength in the database, return -2.
+\item[-] If the initial wavelength given is less than the minimumn wavelength in the database, raise a warning.
+\item[-] Return the result (0 on success).
 \end{enumerate}
 
 \subsubsection{readdatarng:}
@@ -1680,7 +1651,7 @@ int main(int argc, char **argv)}
 
 \paragraph{Walkthrough} 
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Call to \ttblue{fileexistopen} from iomisc.c to open the TLI file. Return -1 if the file cannot be opened.
+\item[-] Call to \ttblue{fileexistopen} from iomisc.c to open the TLI file. Return 0 if no file was given. If the file exists but cannot be opened, return -1.
 \item[-] Check if the file is 'seekable'. If not, raise an error and return -2.
 \item[-] Move the file pointer to the beginning of the transition data.
 \item[-] Read the number of transitions from the TLI file.
@@ -1730,6 +1701,7 @@ int main(int argc, char **argv)}
 
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
+\item[-] Return 0 if there are no isotopes.
 \item[-] Allocate molecular indices array.
 \item[-] Loop over isotopes:
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
@@ -1931,7 +1903,7 @@ Recalculate radius array according to hydrostatic pressure, and find the radial 
 \subsubsection{readatmfile:}
 \paragraph{Variables Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Reallocate \ttred{tr.ds.rads.v, tr.ds.at.atm.t, tr.ds.at.atm.p, tr.ds.at.mm, tr.ds.at.molec.d, tr.ds.at.molec.q} (radius sampling values, temperature, pressure, mean molecular mass, density, and abundance arrays) to accommodate more radius layers.
+\item[-] Reallocate \ttred{tr.ds.rads.v, tr.ds.at.atm.t, tr.ds.at.atm.p, tr.ds.at.mm, \\ tr.ds.at.molec.d, tr.ds.at.molec.q} (radius sampling values, temperature, pressure, mean molecular mass, density, and abundance arrays) to accommodate more radius layers.
 \item[-] Set \ttred{tr.ds.at.molec.n} to the new number of radius layers.
 \item[-] Fill in \ttred{tr.ds.rads.v, tr.ds.at.atm.p, tr.ds.at.atm.t} from atmosphere file.
 \item[-] Fill in \ttred{tr.ds.at.molec.q} from atmosphere file.
@@ -2478,23 +2450,23 @@ Free index of refraction array. \newline
 \end{enumerate}
 
 \newpage
-\subsection{cia.c:}
-This file contains routines which are used to read the CIA files(s) and interpolate the values therein to the {\tt transit} sampling. Figure \ref{fig:ciac} shows the function structure of cia.c.
+\subsection{crosssec.c:}
+This file contains routines which are used to read the cross-section (CS) files(s) and interpolate the values therein to the {\tt transit} sampling. Figure \ref{fig:crosssec} shows the function structure of crosssec.c.
 
 \begin{figure}
-\includegraphics{fig/ciac}
-\caption{Function structure of cia.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, and green functions are used in both.}
-\label{fig:ciac}
+\includegraphics{fig/crosssec}
+\caption{Function structure of crosssec.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, and green functions are used in both.}
+\label{fig:crosssec}
 \end{figure}
 
-\subsubsection{List of Functions Defined in cia.c:}
+\subsubsection{List of Functions Defined in crosssec.c:}
 \function{
-int readcia(struct transit *tr)}
-Read CIA info from tabulated files. \newline
+int readcs(struct transit *tr)}
+Read cross-section (CS) info from tabulated files. \newline
 
 \function{
-int interpolatecia(struct transit *tr)}
-\tgray{Get number of CIA files from hint. Allocate tr.ds.cia variables.
+int interpolatecs(struct transit *tr)}
+\tgray{Get number of CS files from hint. Allocate tr.ds.cia variables.
 Open files, read isotope names and sampled temperatures.
 Read tabulated data (wavenumber x temperatures).
 Interpolate values from tabulated sample to transit sample.
@@ -2510,32 +2482,32 @@ interpolates the second dimension and then the first. The result is
 added to 'res'.} \newline
 
 \function{
-void ciaerr(int max, char *name, int line)}
-\tgray{Error printing function for lines longer than maxline in the CIA file.} \newline
+void cserr(int max, char *name, int line)}
+\tgray{Error printing function for lines longer than maxline in the CS file.} \newline
 
 \function{
-int freemem\_cia(struct cia *cia, long *pi)}
-\tgray{Free cia structure.} \newline
+int freemem\_cs(struct cross *cross, long *pi)}
+\tgray{Free cross-section structure.} \newline
 
-\subsubsection{readcia:}
+\subsubsection{readcs:}
 \paragraph{Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Allocate \ttred{tr.ds.cia.e} (CIA extinction array).
-\item[-] Allocate \ttred{tr.ds.cia.mol1, tr.ds.cia.mol2} (molecule IDs).
-\item[-] Allocate \ttred{tr.ds.cia.ntemp, tr.ds.cia.nwave} (number of temperatures per file, number of wavenumbers per file).
-\item[-] Allocate \ttred{tr.ds.cia.cia, tr.ds.cia.temp, tr.ds.cia.wn} (3D CIA array, temperature array, wavenumber array).
-\item[-] Copy {\tt tr.ds.th.ncia} into \ttred{tr.ds.cia.ncia}.
-\item[-] Fill in \ttred{tr.ds.cia.cia, tr.ds.cia.wn, tr.ds.cia.temp, tr.ds.cia.ntemp, \\ tr.ds.cia.nwave, tr.ds.cia.mol1, tr.ds.cia.mol2} from file.
-\item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_CIA}.
+\item[-] Allocate \ttred{tr.ds.cross.e} (CS extinction array).
+\item[-] Allocate \ttred{tr.ds.cross.mol1, tr.ds.cross.mol2} (molecule IDs).
+\item[-] Allocate \ttred{tr.ds.cross.ntemp, tr.ds.cross.nwave} (number of temperatures per file, number of wavenumbers per file).
+\item[-] Allocate \ttred{tr.ds.cross.cs, tr.ds.cross.temp, tr.ds.cross.wn, tr.ds.cross.nspec} (3D CS array, temperature array, wavenumber array, number of species per file).
+\item[-] Copy {\tt tr.ds.th.nfiles} into \ttred{tr.ds.cross.nfiles}.
+\item[-] Fill in \ttred{tr.ds.cross.cs, tr.ds.cross.wn, tr.ds.cross.temp, tr.ds.cross.ntemp, \\ tr.ds.cross.nwave, tr.ds.cross.mol1, tr.ds.cross.mol2} from file.
+\item[-] Update \ttred{tr.pi} to account for {\tt TRPI\_CS}.
 \end{enumerate}
 
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Check that radius and wavenumber samples have been made.
-\item[-] Allocate extinction array in static cia structure.
-\item[-] If there are no CIA files, return 0.
-\item[-] Allocate molecule names, molecule IDs, number of temperatures and wavenumber samples per file, and CIA array.
-\item[-] Loop over each CIA file (each molecule pair):
+\item[-] Allocate extinction array in cross-section structure.
+\item[-] If there are no CS files, return 0.
+\item[-] Allocate molecule names, molecule IDs, number of molecules in each file, number of temperatures and wavenumber samples per file, and CS array.
+\item[-] Loop over each CS file:
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Read the file name from the transit hint structure.
 \item[-] Open the file.
@@ -2543,13 +2515,8 @@ int freemem\_cia(struct cia *cia, long *pi)}
 \item[-] When an 'i' character is encountered:
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] If pointing to a blank space, increment the pointer to the next character.
-\item[-] Count the number of words in the line. If not 2, raise an error.
-\item[-] Copy the name of the first molecule.
-\item[-] Find the ID of the first molecule by comparing its name with the molecule IDs.
-\item[-] Raise an error if the molecule from file does not match any IDs.
-\item[-] Copy the name of the second molecule.
-\item[-] Find the ID of the second molecule by comparing its name with the molecule IDs.
-\item[-] Raise an error if the molecule from file does not match any IDs.
+\item[-] Count the number of words in the line. If not 1 or 2, raise an error.
+\item[-] Loop over each molecule, copy the name of the molecule and find its ID by comparing its name with the molecule IDs. Raise an error if the molecule from file does not match any IDs.
 \item[-] Continue reading the file.
 \end{enumerate}
 \item[-] When a 't' character is encountered:
@@ -2557,46 +2524,46 @@ int freemem\_cia(struct cia *cia, long *pi)}
 \item[-] If pointing to a blank space, increment the pointer to the next character.
 \item[-] Count the number of temperature samples in the file.
 \item[-] Raise an error if no temperature samples are found.
-\item[-] Loop over the temperatures and copy them into the static cia temperature array.
+\item[-] Loop over the temperatures and copy them into the cross-section temperature array.
 \item[-] Continue reading the file.
 \end{enumerate}
-\item[-] Set the initial value for allocated wavenumber fields. This must be a power of 2 for sizing purposes.
+\item[-] Set the initial value for allocated wavenumber fields.
 \item[-] Allocate the wavenumber and extinction arrays.
 \item[-] Begin infinite loop to read in data:
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Increment the pointer past all comments and blank lines.
 \item[-] Check if the end of the file has been reached. If so, break the loop.
-\item[-] Check if the number of read wavelengths is equal to the allocated wavenumber fields. If so, reallocate the array to double its size by bitwise left-shifting the number of fields. Since this was initally set to a power of two, a bitwise left-shift will double the value.
+\item[-] Check if the number of read wavelengths is equal to the allocated wavenumber fields. If so, reallocate the array to double its size by bitwise left-shifting the number of fields. A bitwise left-shift doubles the value.
 \item[-] Increment the pointer past all blank spaces
 \item[-] Read in the wavenumber at pointer location.
 \item[-] Loop over each temperature and copy the corresponding extinction value to the extinction array.
 \item[-] Increment looping indices.
 \end{enumerate}
 \item[-] Reallocate the arrays to remove extra rows added when doubling the size.
-\item[-] Store the extinction array in the CIA structure.
+\item[-] Store the extinction array in the cross-section structure.
 \item[-] Close the file.
 \end{enumerate}
-\item[-] Update the progress indicator to account for {\tt TRPI\_CIA}.
+\item[-] Update the progress indicator to account for {\tt TRPI\_CS}.
 \item[-] Return 0 on success.
 \end{enumerate}
 
-\subsubsection{interpolatecia:}
+\subsubsection{interpcs:}
 \paragraph{Modified}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Fill out \ttred{tr.ds.cia.e} by calling \ttblue{bicubicinterpolate} for each CIA file.
+\item[-] Fill out \ttred{tr.ds.cross.e} by calling \ttblue{bicubicinterpolate} for each cross-section file.
 \end{enumerate}
 
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Allocate temporary temperature and wavenumber arrays.
-\item[-] Reset CIA opacity to zero.
+\item[-] Reset cross-section opacity to zero.
 \item[-] Allocate temporary array for opacity.
 \item[-] Set tempoarary temperature and wavenumber arrays from the transit structure.
-\item[-] For each CIA file:
+\item[-] For each cross-section file:
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Call \ttblue{bicubicinterpolate} from cia.c to interpolate CIA data to the wavenumber and temperature sampling.
+\item[-] Call \ttblue{bicubicinterpolate} from crosssec.c to interpolate CS data to the wavenumber and temperature sampling.
 \item[-] Get density profiles of isotopes from molecular information structure.
-\item[-] Calculate CIA absorption coefficients at each radius and wavenumber.
+\item[-] Calculate cross-section absorption coefficients at each radius and wavenumber.
 \end{enumerate}
 \item[-] Free temporary arrays.
 \item[-] Return 0 on success. 
@@ -2616,7 +2583,14 @@ int freemem\_cia(struct cia *cia, long *pi)}
 
 \newpage
 \subsection{idxrefraction.c:}
-This file is concerned with calculating the index of refraction at each radius level. Currently this is 1 at all layers (no light bending). Functions \ttblue{restidxref, saveidxref} are unused.
+This file is concerned with calculating the index of refraction at each radius level. Currently this is 1 at all layers (no light bending). Functions \ttblue{restidxref, saveidxref} are unused. Figure \ref{fig:idxrefracc} shows the function structure of idxrefraction.c
+
+\begin{figure}
+\includegraphics{fig/idxrefractionc}
+\caption{Function structure of idxrefrac.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, green functions are used in both, and red functions are unused at this time.}
+\label{fig:idxrefractionc}
+\end{figure}
+
 \subsubsection{List of Functions Defined in idxrefraction.c:}
 \function{
 int idxrefrac(struct transit *tr)}
@@ -2662,7 +2636,7 @@ This file contains routines associated with computing molecular extinction. That
 
 \begin{figure}
 \includegraphics{fig/extinctionc}
-\caption{Function structure of opacity.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, green functions are used in both, and red functions are unused at this time.}
+\caption{Function structure of extinction.c. The boxes contain function names, and arrows point from a function to the function it calls. Functions are called from left to right, then top to bottom.  Boxes are color-coded as follows:  purple functions are used for eclipse geometry, blue functions are used for transit geometry, green functions are used in both, and red functions are unused at this time.}
 \label{fig:extinctionc}
 \end{figure}
 
@@ -2747,7 +2721,7 @@ void computeextcloud(double *e, long n, struct extscat *sc, double *rad, \\
 
 \paragraph{Walkthrough:}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Check that \ttblue{readlineinfo\_tli, readdatarng, makewnsample,
+\item[-] Check that \ttblue{readinfo\_tli, readdatarng, makewnsample,
     makeradsample} have been executed.
 \item[-] Set extinction coefficient threshold from transithint structure.
 \item[-] Allocate extinction coefficient array.
@@ -2971,12 +2945,12 @@ variable \ttred{tr.sol} in the function \ttblue{acceptgenhints} from
 \paragraph{Walkthrough:}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Store the height of each layer (eclipse) or impact parameter (transit)
-     starting from the outermost layer in local variable h.
+     starting from the outermost layer in local variable {\tt h}.
 \item[-] Check that there are enough radius layers for interpolation (4+).  If not, raise an error.
 \item[-] Check that idxrefrac and extwn functions have been called.
-\item[-] Pass TAU flags from transithint structure to transit structure.
+\item[-] Pass {\tt TAU} flags from transithint structure to transit structure.
 \item[-] Declare arrays for cloud and scattering extinction (per wavenumber).
-\item[-] Restore extinction save file (if requested).
+\item[-] Call to \ttblue{restfile\_extinct} from extinction.c to restore extinction save file (if requested).
 \item[-] Compute molecular extinction at the outermost layer.
 \item[-] Start loop, over wavenumber, to calculate the extinction:
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
@@ -2985,15 +2959,18 @@ variable \ttred{tr.sol} in the function \ttblue{acceptgenhints} from
   \item[-] Start loop, over the layers/impact parameters:
   \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
   \item[-] Check if the molecular extinction has been calculated at this
-    layer, if not calculate it for all wavenumbers at this layer.
-  \item[-] Call transittau or eclipsetau (as fcn) to calculate the
+    layer. If not, call to \ttblue{interpolmolext} (if an opacity file exists) or \ttblue{computemolext} (if there is no opacity file and there is a TLI file) from extinction.c calculate it for all wavenumbers at this layer.
+  \item[-] Call \ttblue{transittau} or \ttblue{eclipsetau} (as fcn) to calculate the
     optical depth at given wavenumber and layer/impact parameter. See Equation \ref{eqn:tau}.
   \item[-] If the optical depth reached toomuch, end the
     layer/impact-parameter loop.
   \end{enumerate}
+  \item[-] Call to \ttblue{save1Darray} from tau.c to save total extinction, cloud extinction, and scattering 
+    extinction if requested.
 \end{enumerate}
-\item[-] Print to file detailed output of tau, extinction, and CIA if requested.
-\item[-] Print to file the lowest layer/impact parameter reached before
+\item[-] Call to \ttblue{savetau, saveCIA, savemolExtion} from tau.c to print to file the 2D arrays of tau, extinction, and CIA if requested. Call to \ttblue{closeFile} from iomisc.c to close these files.
+\item[-] Call to \ttblue{detailout} from argum.c to print detailed output of optical depth, extinction, and CIA to file if requested.
+\item[-] Call to \ttblue{printtoomuch} from tau.c to print to file the lowest layer/impact parameter reached before
   optical depth reached toomuch.
 \item[-] Update the progress indicator.
 \item[-] Return 0 on success.
