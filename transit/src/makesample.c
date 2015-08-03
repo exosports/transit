@@ -97,10 +97,9 @@ makesample1(prop_samp *samp,       /* transit sampling    */
   samp->f = ref->f;
   /* Check non-zero interval: */
   if (samp->f < samp->i){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Hinted final value for %s sampling (%g) is smaller than "
-                 "hinted initial value %.8g.\n", TRH_NAME(fl),
-                 samp->f, samp->i);
+    tr_output(TOUT_ERROR,
+      "Hinted final value for %s sampling (%g) is smaller than "
+      "hinted initial value %.8g.\n", TRH_NAME(fl), samp->f, samp->i);
     return -3;
   }
 
@@ -110,9 +109,8 @@ makesample1(prop_samp *samp,       /* transit sampling    */
 
   if (!dhint){
     /* If none of the ref exists then throw error: */
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Spacing (%g) was not hinted in %s sampling.\n",
-                 ref->d, TRH_NAME(fl));
+    tr_output(TOUT_ERROR,
+      "Spacing (%g) was not hinted in %s sampling.\n", ref->d, TRH_NAME(fl));
     return -5;
   }
   /* If spacing exists then trust it: */
@@ -121,8 +119,9 @@ makesample1(prop_samp *samp,       /* transit sampling    */
   }
   /* Else: */
   else{
-    transiterror(TERR_SERIOUS, "Invalid spacing (%g) in %s sampling.\n",
-                 samp->d, TRH_NAME(fl));
+    tr_output(TOUT_ERROR,
+      "Invalid spacing (%g) in %s sampling.\n", samp->d, TRH_NAME(fl));
+    exit(EXIT_FAILURE);
   }
 
   /* Make sampling based on spacing:       */
@@ -134,9 +133,8 @@ makesample1(prop_samp *samp,       /* transit sampling    */
 
   /* Check for hinted oversampling:        */
   if(ref->o <= 0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Invalid hinted oversampling for %s sampling.\n",
-                 TRH_NAME(fl));
+    tr_output(TOUT_ERROR,
+      "Invalid hinted oversampling for %s sampling.\n", TRH_NAME(fl));
     return -6;
   }
   samp->o = ref->o;
@@ -161,11 +159,11 @@ makesample1(prop_samp *samp,       /* transit sampling    */
   /* Check the final point: */
   if(si!=0 && samp->v[samp->n-1]!=samp->f && verblevel>2)
     /* FINDME: Consider removig the verblevel condition */
-    transiterror(TERR_WARNING,
-                 "Final sampled value (%g) of the %li points doesn't coincide "
-                 "exactly with required value (%g). %s sampling with "
-                 "pre-oversampling spacing of %g.\n", samp->v[samp->n-1],
-                 samp->n, samp->f, TRH_NAME(fl), samp->d);
+    tr_output(TOUT_WARN,
+      "Final sampled value (%g) of the %li points doesn't coincide "
+      "exactly with required value (%g). %s sampling with "
+      "pre-oversampling spacing of %g.\n", samp->v[samp->n-1],
+      samp->n, samp->f, TRH_NAME(fl), samp->d);
 
   /* Return the flags of accepted values: */
   return res;
@@ -243,10 +241,10 @@ makesample(prop_samp *samp,  /* transit sampling                            */
   if(!dhint){
     /* If none of the ref exists then throw error:                          */
     if((ref->d==0 && ref->n<=0)){
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                   "Spacing (%g) and number of elements (%i) were either both "
-                   "or none in the reference for %s sampling. And yes, none "
-                   "were hinted.\n", ref->d, ref->n, TRH_NAME(fl));
+      tr_output(TOUT_ERROR,
+        "Spacing (%g) and number of elements (%i) were either both "
+        "or none in the reference for %s sampling. And yes, none "
+        "were hinted.\n", ref->d, ref->n, TRH_NAME(fl));
       return -5;
     }
     /* If spacing exists then trust it:                                     */
@@ -257,21 +255,21 @@ makesample(prop_samp *samp,  /* transit sampling                            */
     else{
       /* If initial or final value were modified, then print out a warning: */
       if(res){
-        transiterror(TERR_WARNING,
-                     "Array of length %i was given as reference for %s "
-                     "sampling, but the initial (%g -> %g) or final "
-                     "(%g -> %g) values MIGHT have been modified.\n",
-                     ref->n, TRH_NAME(fl), ref->i, samp->i, ref->f, samp->f);
+        tr_output(TOUT_WARN,
+          "Array of length %i was given as reference for %s "
+          "sampling, but the initial (%g -> %g) or final "
+          "(%g -> %g) values MIGHT have been modified.\n",
+          ref->n, TRH_NAME(fl), ref->i, samp->i, ref->f, samp->f);
       }
       samp->n = ref->n;
       samp->d = 0;
       samp->v = (PREC_RES *)calloc(samp->n, sizeof(PREC_RES));
       memcpy(samp->v, ref->v, samp->n*sizeof(PREC_RES));
       if(ref->o != 0)
-        transiterror(TERR_WARNING,
-                     "Fixed sampling array of length %i was referenced. "
-                     "But also oversampling was given (%li), ignoring it "
-                     "in %s sampling.\n", samp->n, ref->o, TRH_NAME(fl));
+        tr_output(TOUT_WARN,
+          "Fixed sampling array of length %i was referenced. "
+          "But also oversampling was given (%li), ignoring it "
+          "in %s sampling.\n", samp->n, ref->o, TRH_NAME(fl));
       samp->o = 0;
       /* Return any possible modification: */
       return res;
@@ -285,16 +283,17 @@ makesample(prop_samp *samp,  /* transit sampling                            */
   }
   else{
     /* n can't be hinted: */
-    transiterror(TERR_SERIOUS, "Invalid sampling inputs.\n");
+    tr_output(TOUT_ERROR, "Invalid sampling inputs.\n");
+    exit(EXIT_FAILURE);
   }
 
   /* Check non-zero interval: */
   if((samp->f <= samp->i && samp->d > 0) ||
      (samp->f >= samp->i && samp->d < 0)){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "Initial accepted sampling value (%g) is greater or equal "
-                 "than final accepted sample value (%g). %s was being "
-                 "hinted.\n", samp->i, samp->f, TRH_NAME(fl));
+    tr_output(TOUT_ERROR,
+      "Initial accepted sampling value (%g) is greater or equal "
+      "than final accepted sample value (%g). %s was being "
+      "hinted.\n", samp->i, samp->f, TRH_NAME(fl));
     return -3;
   }
 
@@ -309,9 +308,9 @@ makesample(prop_samp *samp,  /* transit sampling                            */
   if(hint->o<=0){
     /* If not, check for ref oversampling: */
     if(ref->o<=0){  /* If not, throw error */
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                   "Not valid oversampling in the reference for "
-                   "%s sampling.\n", TRH_NAME(fl));
+      tr_output(TOUT_ERROR,
+        "Not valid oversampling in the reference for "
+        "%s sampling.\n", TRH_NAME(fl));
       return -6;
     }
     samp->o = ref->o;
@@ -340,11 +339,11 @@ makesample(prop_samp *samp,  /* transit sampling                            */
   /* Check the final point: */
   if(si != 0  &&  samp->v[samp->n-1] != samp->f  &&  verblevel > 2)
     /* FINDME: Consider removig the verblevel condition */
-    transiterror(TERR_WARNING,
-                 "Final sampled value (%g) of the %li points doesn't coincide "
-                 "exactly with required value (%g). %s sampling with "
-                 "pre-oversampling spacing of %g.\n", samp->v[samp->n-1],
-                 samp->n, samp->f, TRH_NAME(fl), samp->d);
+    tr_output(TOUT_WARN,
+      "Final sampled value (%g) of the %li points doesn't coincide "
+      "exactly with required value (%g). %s sampling with "
+      "pre-oversampling spacing of %g.\n", samp->v[samp->n-1],
+      samp->n, samp->f, TRH_NAME(fl), samp->d);
 
   /* Return the flags of accepted values: */
   return res;
@@ -367,39 +366,51 @@ makewnsample(struct transit *tr){
 
   /* Get initial wavenumber value:                                          */
   if (hsamp->i > 0){
-    if (hsamp->fct <= 0)
-      transiterror(TERR_SERIOUS, "User specified wavenumber factor is "
-                                 "negative (%g).\n", hsamp->fct);
+    if (hsamp->fct <= 0) {
+      tr_output(TOUT_ERROR, "User specified wavenumber factor is "
+        "negative (%g).\n", hsamp->fct);
+      exit(EXIT_FAILURE);
+    }
     rsamp.i = hsamp->i*hsamp->fct;
     transitprint(1, verblevel, "wave i1: %.3f = %.2f * %.2f\n", rsamp.i,
                  hsamp->i, hsamp->fct);
   }
   else if (wlsamp->f > 0){
-    if (wlsamp->fct <= 0)
-      transiterror(TERR_SERIOUS, "User specified wavelength factor is "
-                                 "negative (%g).\n", wlsamp->fct);
+    if (wlsamp->fct <= 0) {
+      tr_output(TOUT_ERROR, "User specified wavelength factor is "
+        "negative (%g).\n", wlsamp->fct);
+      exit(EXIT_FAILURE);
+    }
     rsamp.i = 1.0/(wlsamp->f*wlsamp->fct);
   }
-  else
-    transiterror(TERR_SERIOUS, "Initial wavenumber (nor final wavelength) "
-                               "were correctly provided by the user.\n");
+  else {
+    tr_output(TOUT_ERROR, "Initial wavenumber (nor final wavelength) "
+      "were correctly provided by the user.\n");
+    exit(EXIT_FAILURE);
+  }
 
   /* Get final wavenumber value:                                            */
   if (hsamp->f > 0){
-    if (hsamp->fct < 0)
-      transiterror(TERR_SERIOUS, "User specified wavenumber factor is "
-                                 "negative (%g).\n", hsamp->fct);
+    if (hsamp->fct < 0) {
+      tr_output(TOUT_ERROR, "User specified wavenumber factor is "
+        "negative (%g).\n", hsamp->fct);
+      exit(EXIT_FAILURE);
+    }
     rsamp.f = hsamp->f*hsamp->fct;
   }
   else if (wlsamp->i > 0){
-    if (wlsamp->fct < 0)
-      transiterror(TERR_SERIOUS, "User specified wavelength factor is "
-                                 "negative (%g).\n", wlsamp->fct);
+    if (wlsamp->fct < 0) {
+      tr_output(TOUT_ERROR, "User specified wavelength factor is "
+        "negative (%g).\n", wlsamp->fct);
+      exit(EXIT_FAILURE);
+    }
     rsamp.f = 1.0/(wlsamp->i*wlsamp->fct);
   }
-  else
-    transiterror(TERR_SERIOUS, "Final wavenumber (nor initial wavelength) "
-                               "were correctly provided by the user.\n");
+  else {
+    tr_output(TOUT_ERROR, "Final wavenumber (nor initial wavelength) "
+      "were correctly provided by the user.\n");
+    exit(EXIT_FAILURE);
+  }
 
   /* Set up reference wavenumber sampling:                                  */
   rsamp.o = hsamp->o;
@@ -412,10 +423,11 @@ makewnsample(struct transit *tr){
 
   /* Set spacing such that the wavenumber grid has the same
      number of points as the wavelength grid:                */
-  if (hsamp->d <= 0)
-    transiterror(TERR_SERIOUS,
-                 "Incorrect wavenumber spacing (%g), it must be positive.\n",
-                 hsamp->d);
+  if (hsamp->d <= 0) {
+    tr_output(TOUT_ERROR,
+      "Incorrect wavenumber spacing (%g), it must be positive.\n", hsamp->d);
+    exit(EXIT_FAILURE);
+  }
   rsamp.d = hsamp->d;
 
   /* Make the oversampled wavenumber sampling:                              */
@@ -548,14 +560,18 @@ makeradsample(struct transit *tr){
 
   /* Temperature boundary check:                                            */
   for (i=0; i<nrad; i++){
-    if (atmt->t[i] < li->tmin)
-      transiterror(TERR_SERIOUS, "The layer %d in the atmospheric model has "
-                   "a lower temperature (%.1f K) than the lowest allowed "
-                   "TLI temperature (%.1f K).\n", i, atmt->t[i], li->tmin);
-    if (atmt->t[i] > li->tmax)
-      transiterror(TERR_SERIOUS, "The layer %d in the atmospheric model has "
-                   "a higher temperature (%.1f K) than the highest allowed "
-                   "TLI temperature (%.1f K).\n", i, atmt->t[i], li->tmax);
+    if (atmt->t[i] < li->tmin) {
+      tr_output(TOUT_ERROR, "The layer %d in the atmospheric model has "
+        "a lower temperature (%.1f K) than the lowest allowed "
+        "TLI temperature (%.1f K).\n", i, atmt->t[i], li->tmin);
+      exit(EXIT_FAILURE);
+    }
+    if (atmt->t[i] > li->tmax) {
+      tr_output(TOUT_ERROR, "The layer %d in the atmospheric model has "
+        "a higher temperature (%.1f K) than the highest allowed "
+        "TLI temperature (%.1f K).\n", i, atmt->t[i], li->tmax);
+      exit(EXIT_FAILURE);
+    }
   }
 
   /* Interpolate molecular density and abundance:                           */
@@ -615,10 +631,12 @@ makeipsample(struct transit *tr){
     prop_samp rsamp = {0, -tr->rads.d,  tr->rads.v[tr->rads.n-1],
                        tr->rads.v[0],   tr->rads.o,   NULL,     tr->rads.fct};
 
-    if(usamp.f < usamp.i)
-      transiterror(TERR_SERIOUS,
-                 "Wrong specification of impact parameter, final value (%g) "
-                 "has to be bigger than initial (%g).\n", usamp.f, usamp.i);
+    if(usamp.f < usamp.i) {
+      tr_output(TOUT_ERROR,
+        "Wrong specification of impact parameter, final value (%g) "
+        "has to be bigger than initial (%g).\n", usamp.f, usamp.i);
+      exit(EXIT_FAILURE);
+    }
 
     transitcheckcalled(tr->pi, "makeipsample", 1, "makeradsample",TRPI_MAKERAD);
 
@@ -652,9 +670,11 @@ maketempsample(struct transit *tr){
   /* Reference temperature sample:                                          */
   prop_samp rsamp = {0, 0,          0,          0,          1, NULL, 1};
 
-  if (usamp.f < usamp.i)
-    transiterror(TERR_SERIOUS, "Wrong specification of temperature, final "
-        "value (%g) has to be bigger than initial (%g).\n", usamp.f, usamp.i);
+  if (usamp.f < usamp.i) {
+    tr_output(TOUT_ERROR, "Wrong specification of temperature, final "
+      "value (%g) has to be bigger than initial (%g).\n", usamp.f, usamp.i);
+    exit(EXIT_FAILURE);
+  }
 
   /* Make the sampling:                                                     */
   res = makesample(&tr->temp, &usamp, &rsamp, TRH_TEMP);
@@ -782,8 +802,8 @@ outsample(struct transit *tr){
   /* If default f_outsample, print to screen: */
   if(strcmp(filename, "-") != 0)
     if((out=fopen(filename, "w"))==NULL){
-      transiterror(TERR_WARNING, "Cannot open file '%s' for writing sampling "
-                                 "data.\n", filename);
+      tr_output(TOUT_WARN, "Cannot open file '%s' for writing sampling "
+        "data.\n", filename);
       return 1;
     }
 
