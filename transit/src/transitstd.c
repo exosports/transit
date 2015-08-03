@@ -279,30 +279,30 @@ verbfileopen(char *in,     /* Input filename              */
   case 1:
     return fp;
   case 0:
-    transiterror(TERR_SERIOUS, "No file was given to open.\n");
+    tr_output(TOUT_ERROR, "No file was given to open.\n");
     return NULL;
   /* File doesn't exist: */
   case -1:
-    transiterror(TERR_SERIOUS, "%s file '%s' doesn't exist.\n", desc, in);
+    tr_output(TOUT_ERROR, "%s file '%s' doesn't exist.\n", desc, in);
     return NULL;
   /* Filetype not valid: */
   case -2:
-    transiterror(TERR_SERIOUS, "%s file '%s' is not of a valid kind "
+    tr_output(TOUT_ERROR, "%s file '%s' is not of a valid kind "
                                "(it is a dir or device)\n", desc, in);
     return NULL;
   /* File not openable: */
   case -3:
-    transiterror(TERR_SERIOUS, "%s file '%s' is not openable. Probably "
+    tr_output(TOUT_ERROR, "%s file '%s' is not openable. Probably "
                                "because of permissions.\n", desc, in);
     return NULL;
   /* stat returned -1: */
   case -4:
-    transiterror(TERR_SERIOUS,
+    tr_output(TOUT_ERROR,
                  "Error happened for %s file '%s', stat() returned -1, "
                  "but file exists.\n", desc, in);
     return NULL;
   default:
-    transiterror(TERR_SERIOUS,
+    tr_output(TOUT_ERROR,
                  "Something weird in file %s, line %i.\n", __FILE__, __LINE__);
   }
   return NULL;
@@ -347,8 +347,10 @@ transitcheckcalled(const long pi,   /* Progress indicator variable          */
   }
   va_end(ap);
   /* Print out the error: */
-  if(stop)
-    transiterror(TERR_CRITICAL, mess, fcn);
+  if(stop) {
+    tr_output(TOUT_ERROR, mess, fcn);
+    exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -466,9 +468,9 @@ void
 linetoolong(int max,     /* Maxiumum length of an accepted line */
             char *file,  /* File from which we were reading     */
             int line){   /* Line who was being read             */
-  transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-               "Line %i of file '%s' has more than %i characters, "
-               "that is not allowed.\n", file, max);
+  tr_output(TOUT_ERROR,
+    "Line %i of file '%s' has more than %i characters, "
+    "that is not allowed.\n", file, max);
   exit(EXIT_FAILURE);
 }
 
