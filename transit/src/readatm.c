@@ -93,8 +93,8 @@ getatm(struct transit *tr){
 
   /* Check if atmospheric file was specified:                               */
   if(th->f_atm == NULL  ||  strcmp(th->f_atm, "-") == 0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "getatm() :: No atmospheric file specified.\n");
+    tr_output(TOUT_ERROR,
+      "getatm() :: No atmospheric file specified.\n");
     return -1;
   }
   else{
@@ -122,7 +122,7 @@ getatm(struct transit *tr){
 
   /* Read keyword-variables from file:                                      */
   if((i=getmnfromfile(fp, &at, tr))<1){
-    transiterror(TERR_SERIOUS, "getmnfromfile() returned error code %i\n", i);
+    tr_output(TOUT_ERROR, "getmnfromfile() returned error code %i\n", i);
     exit(EXIT_FAILURE);
   }
   nmol = at.n_aiso; /* Number of molecules in atmospheric file              */
@@ -178,10 +178,12 @@ checkaddmm(double *mm,            /* Mean molecular mass stored             */
   double sumq;  /* Fractional abundance sum                                 */
   int i;        /* for-loop index                                           */
 
-  if(r >= molec[0].n)
-    transiterror(TERR_CRITICAL,
-                 "In file %s (line %li) a radius beyond the allocated "
-                 "has been requested.", __FILE__, __LINE__);
+  if(r >= molec[0].n) {
+    tr_output(TOUT_ERROR,
+      "In file %s (line %li) a radius beyond the allocated "
+      "has been requested.", __FILE__, __LINE__);
+    exit(EXIT_FAILURE);
+  }
 
   /* Compute the mean molecular mass:                                       */
   sumq = *mm = 0;
@@ -197,8 +199,9 @@ checkaddmm(double *mm,            /* Mean molecular mass stored             */
 
   /* Check that sum of proportional abundances make sense:                  */
   if(sumq>1.001){
-    transiterror(TERR_SERIOUS, "Sum of abundances of isotopes adds up to "
+    tr_output(TOUT_ERROR, "Sum of abundances of isotopes adds up to "
                                "more than 1: %g\n", sumq);
+    exit(EXIT_FAILURE);
   }
 
   return sumq;
@@ -272,9 +275,9 @@ static void
 atmerr(int max,     /* Maximum length of an accepted line                   */
        char *file,  /* File from which we were reading                      */
        int line){   /* Line being read                                      */
-  transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-               "Line %i of file '%s' has more than %i characters, "
-               "that is not allowed\n", file, max);
+  tr_output(TOUT_ERROR,
+    "Line %i of file '%s' has more than %i characters, "
+    "that is not allowed\n", file, max);
   exit(EXIT_FAILURE);
 }
 
@@ -286,25 +289,27 @@ invalidfield(char *line,   /* Contents of the line                          */
              int nmb,      /* File number                                   */
              int fld,      /* Field with the error                          */
              char *fldn){  /* Name of the field                             */
-  transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-               "Line %i of file '%s': Field %i (%s) does not have a valid "
-               "value:\n%s.\n", nmb, atmfilename, fld, fldn, line);
+  tr_output(TOUT_ERROR,
+    "Line %i of file '%s': Field %i (%s) does not have a valid "
+    "value:\n%s.\n", nmb, atmfilename, fld, fldn, line);
   exit(EXIT_FAILURE);
 }
 
 
 /* \fcnfh
    Check that val is positive. Throw error message if not.                  */
-static inline void
+static void
 checkposvalue(PREC_RES val, /* Value to check                               */
               int field,    /* Field where it was read                      */
               long line){   /* Line from which it was read                  */
 
-  if(val<0)
-    transiterror(TERR_SERIOUS,
-                 "While reading the %i-th field in line %li of atmosphere "
-                 "file %s, a negative value was found (%g).\n", field,
-                 line-1, atmfilename, val);
+  if(val<0) {
+    tr_output(TOUT_ERROR,
+      "While reading the %i-th field in line %li of atmosphere "
+      "file %s, a negative value was found (%g).\n", field,
+      line-1, atmfilename, val);
+    exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -366,10 +371,10 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
       }
       continue;
     case 0:     /* Throw error if EOF:                                      */
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                   "readatm :: EOF unexpectedly found at line %i "
-                   "of file %s while no t,p data points have been read.\n",
-                   at->begline, tr->f_atm);
+      tr_output(TOUT_ERROR,
+        "readatm :: EOF unexpectedly found at line %i "
+        "of file %s while no t,p data points have been read.\n",
+        at->begline, tr->f_atm);
       exit(EXIT_FAILURE);
       continue;
 
@@ -386,10 +391,10 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
         at->mass = 1;      /* Mass abundance (mass mixing ratio)            */
         break;
       default:
-        transiterror(TERR_SERIOUS,
-                     "'q' option in the atmosphere file can only be followed "
-                     "by 'm' (for abundances by mass) or 'n' (for abundances "
-                     "by number). '%s' is invalid.\n", line);
+        tr_output(TOUT_ERROR,
+          "'q' option in the atmosphere file can only be followed "
+          "by 'm' (for abundances by mass) or 'n' (for abundances "
+          "by number). '%s' is invalid.\n", line);
         break;
       }
       continue;
@@ -412,8 +417,8 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
         at->atm.tfct = atof(line+2);
         break;
       default:
-        transiterror(TERR_SERIOUS, "Invalid unit factor indication in "
-                                   "atmosphere file.\n");
+        tr_output(TOUT_ERROR,
+          "Invalid unit factor indication in atmosphere file.\n");
         exit(EXIT_FAILURE);
       }
       continue;
@@ -452,10 +457,13 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
   }
   /* Check that there was at least one isotope defined and re-allocate
      array sizes to their final size:                                       */
-  if(!nmol)
-    transiterror(TERR_SERIOUS, "No species were found in the atmospheric file, "
-                               "make sure to specify them with the comment/"
-                               "header in the previous line '#SPECIES'.\n");
+  if(!nmol) {
+    tr_output(TOUT_ERROR,
+      "No species were found in the atmospheric file, "
+      "make sure to specify them with the comment/"
+      "header in the previous line '#SPECIES'.\n");
+    exit(EXIT_FAILURE);
+  }
 
   /* Set position of beginning of data:                                     */
   at->begpos = ftell(fp) - strlen(line) - 1;
@@ -588,9 +596,12 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
     /* Calculate mean molecular mass and check whether abundances add up
        to one (within allowq threshold):                                    */
     sumq = checkaddmm(at->mm+r, r, molec, mol, at->n_aiso, at->mass);
-    if(fabs(sumq-1.0) > allowq)
-      transiterror(TERR_WARNING, "In radius %i (%g km), abundances don't add "
-                                 "up to 1.0: %.9g\n", r, at->rads.v[r], sumq);
+    if(fabs(sumq-1.0) > allowq) {
+      tr_output(TOUT_ERROR,
+        "In radius %i (%g km), abundances don't add "
+        "up to 1.0: %.9g\n", r, at->rads.v[r], sumq);
+      exit(EXIT_FAILURE);
+    }
 
     /* Calculate densities using ideal gas law:                             */
     if (r>=0){
@@ -635,13 +646,16 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
     }
   }
 
-  if (sorted == 0 && reversed == 0)
-    transiterror(TERR_SERIOUS, "The atmospheric layers are neither sorted "
-                               "from the bottom up, not from the top down.\n");
+  if (sorted == 0 && reversed == 0) {
+    tr_output(TOUT_ERROR,
+      "The atmospheric layers are neither sorted "
+      "from the bottom up, not from the top down.\n");
+    exit(EXIT_FAILURE);
+  }
   else if (reversed == 1){
-    transiterror(TERR_WARNING, "The atmospheric layers are in reversed "
-                               "order (top-bottom).  Resorting to be from "
-                               "the bottom-up.\n");
+    tr_output(TOUT_WARN,
+      "The atmospheric layers are in reversed order (top-bottom). "
+      "Resorting to be from the bottom-up.\n");
     /* Swap atmospheric-layer values:                                       */
     for (i=0; i<nrad/2; i++){
       swap(rads->v,   i, nrad-1-i);
@@ -730,10 +744,11 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
   for (i=0; i<nmol; i++){
     /* Set the radius:                                                      */
     j = findstring(mol->name[i], rname, ndatamol);
-    if (j == -1){
-      transiterror(TERR_SERIOUS, "The atmospheric species '%s' is not "
-                   "present in the list of known species:\n '%s'.\n",
-                    mol->name[i], filename);
+    if (j == -1) {
+      tr_output(TOUT_ERROR,
+        "The atmospheric species '%s' is not present in the list "
+        "of known species:\n '%s'.\n", mol->name[i], filename);
+      exit(EXIT_FAILURE);
     }
     mol->radius[i] = radius[j] * ANGSTROM;
     /* Set the universal molecular ID:                                      */
@@ -778,8 +793,9 @@ reloadatm(struct transit *tr,
   for (i=0; i<nlayers; i++){
     sumq = checkaddmm(at->mm+i, i, at->molec, mol, nmol, at->mass);
     if(fabs(sumq-1.0) > allowq)
-      transiterror(TERR_WARNING, "In radius %i (%g km), abundances don't add "
-                                 "up to 1.0: %.9g\n", i, at->rads.v[i], sumq);
+      tr_output(TOUT_WARN,
+        "In radius %i (%g km), abundances don't add "
+        "up to 1.0: %.9g\n", i, at->rads.v[i], sumq);
 
     /* Re-calculate densities:                                              */
     for(j=0; j<nmol; j++)
@@ -792,9 +808,13 @@ reloadatm(struct transit *tr,
   transitprint(30, verblevel, "Old radius boundaries: [%.1f, %.1f]\n",
                    at->rads.v[0], at->rads.v[nlayers-1]);
   /* Check that r0, p0, and gsurf were defined:                             */
-  if (tr->p0 == 0 || tr->r0 == 0 || tr->gsurf == 0)
-    transiterror(TERR_SERIOUS, "Surface gravity (%.1f) or reference pressure "
-      "(%.3e) or radius (%.1f) were not defined.\n", tr->gsurf, tr->p0, tr->r0);
+  if (tr->p0 == 0 || tr->r0 == 0 || tr->gsurf == 0) {
+    tr_output(TOUT_ERROR,
+      "Surface gravity (%.1f) or reference pressure "
+      "(%.3e) or radius (%.1f) were not defined.\n",
+      tr->gsurf, tr->p0, tr->r0);
+    exit(EXIT_FAILURE);
+  }
   radpress(tr->gsurf, tr->p0, tr->r0, at->atm.t,
            at->mm, at->atm.p, at->rads.v, nlayers, at->rads.fct);
   /* Actualize other variables of at->rads:                                 */
@@ -835,8 +855,10 @@ int radpress(double g,         /* Surface gravity (m/s^2)                   */
 
   /* Reference pressure is no in given range:                               */
   if (i0 == -1){
-    transiterror(TERR_CRITICAL, "Reference pressure level (%.3e) not found "
-               "in range [%.3e, %.3e].\n", p0, pressure[0], pressure[nlayer-1]);
+    tr_output(TOUT_ERROR,
+      "Reference pressure level (%.3e) not found "
+      "in range [%.3e, %.3e].\n", p0, pressure[0], pressure[nlayer-1]);
+    exit(EXIT_FAILURE);
     return 0;
   }
 
