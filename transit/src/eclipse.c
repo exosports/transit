@@ -292,7 +292,7 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
   struct optdepth *tau = tr->ds.tau;
 
   /* Integrate for each wavelength:                                         */
-  transitprint(4, verblevel, "Integrating over wavelength.\n");
+  tr_output(TOUT_RESULT, "Integrating over wavelength.\n");
 
   /* Printing process variable:                                             */
   int nextw = wn->n/10;
@@ -318,11 +318,11 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
     /* Prints to screen the progress status:                                */
     if(w == nextw){
       nextw += wn->n/10;
-      transitprint(10, verblevel, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
+      tr_output(TOUT_DEBUG, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
     }
   }
-
-  transitprint(4, verblevel, "\nDone.\n");
+  tr_output(TOUT_DEBUG, "\n");
+  tr_output(TOUT_RESULT, "Done.\n");
 
   /* Sets progress indicator, and prints output:                             */
   tr->pi |= TRPI_MODULATION; /* FINDME: this is not a modulation calculation */
@@ -412,10 +412,10 @@ printintens(struct transit *tr){
     outf = fopen(our_fileName, "w");
   }
   else{
-    transitprint(1, verblevel, "No intensity file.\n");
+    tr_output(TOUT_WARN, "No intensity file.\n");
     return;
   }
-  transitprint(1, verblevel, "\nPrinting intensity in '%s'\n",
+  tr_output(TOUT_INFO, "\nPrinting intensity in '%s'\n",
                              tr->f_outintens ? our_fileName:"standard output");
 
   /* Print the header:                                                      */
@@ -467,8 +467,8 @@ printflux(struct transit *tr){
   if(tr->f_outflux && tr->f_outflux[0] != '-')
     outf = fopen(our_fileName, "w");
 
-  transitprint(1, verblevel, "\nPrinting flux in '%s'\n",
-               tr->f_outflux ? our_fileName:"standard output");
+  tr_output(TOUT_INFO, "\nPrinting flux in '%s'\n",
+    tr->f_outflux ? our_fileName : "standard output");
 
   /* Print the header:                                                      */
   fprintf(outf, "#wvl [um]%*sFlux [erg/s/cm]\n", 6, " ");
