@@ -124,7 +124,7 @@ savefile_extinct(char *filename,
     return;
   }
 
-  transitprint(2, verblevel, "Saving extinction file '%s'", filename);
+  tr_output(TOUT_INFO, "Saving extinction file: '%s'\n", filename);
 
   const char mn[] = "@E@S@";
   fwrite(mn, sizeof(char), 5, fp);
@@ -137,7 +137,7 @@ savefile_extinct(char *filename,
   for (i=0 ; i<nrad ; i++)
     if (c[i]) break;
 
-  transitprint(2, verblevel, " done (%li/%li radii computed)\n", nrad-i, nrad);
+  tr_output(TOUT_RESULT, "Done (%li/%li radii computed)\n", nrad-i, nrad);
 }
 
 
@@ -171,7 +171,7 @@ restfile_extinct(char *filename,
      return;
   }
 
-  transitprint(2, verblevel, "Restoring extinction file '%s'", filename);
+  tr_output(TOUT_INFO, "Restoring extinction file: '%s'\n", filename);
 
   fread(e[0], sizeof(PREC_RES), nrad*nwav, fp);
   fread(c,    sizeof(_Bool),    nrad,      fp);
@@ -180,7 +180,7 @@ restfile_extinct(char *filename,
   for (i=0; i<nrad; i++)
     if (c[i]) break;
 
-  transitprint(2, verblevel, " done (From the %lith radii)\n", i);
+  tr_output(TOUT_RESULT, "Done (from the %lith radii)\n", i);
 
   fclose(fp);
 
@@ -436,7 +436,7 @@ computemolext(struct transit *tr, /* transit struct                         */
 
     /* Print Lorentz and Doppler broadening widths:                         */
     if(i <= 0)
-      transitprint(1, verblevel, "Broadening (cm-1): Lorentz: %.5e, Doppler: "
+      tr_output(TOUT_RESULT, "Broadening (cm-1): Lorentz: %.5e, Doppler: "
               "%.5e (T=%.2f).\n", alphal[i], alphad[i]*wn[0], temp);
 
     maxwidth = fmax(alphal[i], alphad[i]*wn[0]); /* Max between Dop and Lor */
@@ -447,7 +447,7 @@ computemolext(struct transit *tr, /* transit struct                         */
     ilor[i] = binsearchapprox(aLor, alphal[i],       0, nLor);
   }
 
-  transitprint(10, verblevel, "Minimum width in layer: %.9f\n", minwidth);
+  tr_output(TOUT_DEBUG, "Minimum width in layer: %.9f\n", minwidth);
   /* Set oversampling resolution:                                           */
   for (i=1; i < tr->ndivs; i++)
     if (tr->odivs[i]*(dwn/tr->owns.o) >= 0.5 * minwidth){
@@ -456,9 +456,9 @@ computemolext(struct transit *tr, /* transit struct                         */
   ofactor = tr->odivs[i-1];         /* Dynamic-sampling oversampling factor */
   ddwn    = odwn * ofactor;         /* Dynamic-sampling grid interval       */
   dnwn    = 1 + (onwn-1) / ofactor; /* Number of dynamic-sampling values    */
-  transitprint(10, verblevel, "Dynamic-sampling grid interval: %.9f  "
+  tr_output(TOUT_DEBUG, "Dynamic-sampling grid interval: %.9f  "
                "(scale factor:%i)\n", ddwn, ofactor);
-  transitprint(10, verblevel, "Number of dynamic-sampling values:%li\n",
+  tr_output(TOUT_DEBUG, "Number of dynamic-sampling values:%li\n",
                                 dnwn);
 
   /* Determine the maximum and minimum line-strength per isotope:           */
@@ -540,10 +540,10 @@ computemolext(struct transit *tr, /* transit struct                         */
     /* Index of closest (but not larger than) dynamic-sampling wavenumber:  */
     idwn = (wavn - tr->wns.i)/ddwn;
 
-    transitprint(1000, 2, "own[nown:%li]=%.3f  (wf=%.3f)\n",
-                          onwn, tr->owns.v[onwn-1], tr->wns.f);
-    transitprint(1000, 2, "wavn=%.3f   own[%i]=%.3f\n",
-                          wavn, iown, tr->owns.v[iown]);
+    // transitprint(1000, 2, "own[nown:%li]=%.3f  (wf=%.3f)\n",
+    //                       onwn, tr->owns.v[onwn-1], tr->wns.f);
+    // transitprint(1000, 2, "wavn=%.3f   own[%i]=%.3f\n",
+    //                       wavn, iown, tr->owns.v[iown]);
 
     /* FINDME: de-hard code this threshold                                  */
     /* Update Doppler width according to the current wavenumber:            */
@@ -565,9 +565,10 @@ computemolext(struct transit *tr, /* transit struct                         */
     if (maxj > dnwn)
       maxj = dnwn;
 
-    transitprint(1000, verblevel, "minj:%li  maxj:%li  subw:%li  offset:%li  "
-                       "index1:%li\nf=np.array([",
-                 minj, maxj, subw, offset, ofactor*minj - offset);
+    tr_output(TOUT_DEBUG, "minj:%li  maxj:%li  subw:%li  offset:%li  "
+      "index1:%li\nf=np.array([",
+      minj, maxj, subw, offset, ofactor*minj - offset);
+
     /* Add the contribution from this line to the opacity spectrum:         */
     /* Adding in more complex but faster array indexing based on simpler
      * pointer arrithmatic                                                  */
@@ -583,12 +584,12 @@ computemolext(struct transit *tr, /* transit struct                         */
   for (m=0; m < Nmol; m++)
     downsample(ktmp[m], kiso[m], dnwn, tr->owns.o/ofactor);
 
-  transitprint(9, verblevel, "Number of co-added lines:     %8li  (%5.2f%%)\n",
-                             nadd,  nadd*100.0/nlines);
-  transitprint(9, verblevel, "Number of skipped profiles:   %8li  (%5.2f%%)\n",
-                             nskip, nskip*100.0/nlines);
-  transitprint(9, verblevel, "Number of evaluated profiles: %8li  (%5.2f%%)\n",
-                             neval, neval*100.0/nlines);
+  tr_output(TOUT_DEBUG, "Number of co-added lines:     %8li  (%5.2f%%)\n",
+    nadd,  nadd*100.0/nlines);
+  tr_output(TOUT_DEBUG, "Number of skipped profiles:   %8li  (%5.2f%%)\n",
+    nskip, nskip*100.0/nlines);
+  tr_output(TOUT_DEBUG, "Number of evaluated profiles: %8li  (%5.2f%%)\n",
+    neval, neval*100.0/nlines);
 
   /* Free allocated memory:                                                 */
   free(ktmp[0]);
@@ -637,8 +638,8 @@ interpolmolext(struct transit *tr, /* transit struct                        */
   itemp = binsearchapprox(gtemp, temp, 0, Ntemp);
   if (temp < gtemp[itemp])
     itemp--;
-  transitprint(30, verblevel, "Temperature: T[%i]=%.0f < %.2f < T[%.i]=%.0f\n",
-               itemp, gtemp[itemp], temp, itemp+1, gtemp[itemp+1]);
+  tr_output(TOUT_DEBUG, "Temperature: T[%i]=%.0f < %.2f < T[%.i]=%.0f\n",
+    itemp, gtemp[itemp], temp, itemp+1, gtemp[itemp+1]);
 
   for (i=0; i < Nwave; i++){
     /* Add contribution from each molecule:                                 */
