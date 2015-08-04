@@ -67,7 +67,7 @@ inline void transitdot(int thislevel,
 }
 
 void
-tr_output_fcn (int level,
+tr_output_fcn (int flags,
                const char *file,
                const long line,
                const char *str,
@@ -75,44 +75,62 @@ tr_output_fcn (int level,
 
   va_list format;
   va_start(format, str);
-  tr_output_vfcn(level, file, line, str, format);
+  tr_output_vfcn(flags, file, line, str, format);
   va_end(format);
 }
 
 void
-tr_output_vfcn (int level,
+tr_output_vfcn (int flags,
                 const char *file,
                 const long line,
                 const char *str,
                 va_list format) {
 
-  // First decide to where the 
-  FILE *output = ((level & TOUT_VERBMASK) == TOUT_ERROR) ? stderr : stdout;
+  // Obtain the level of output from the flag data.
+  int level = flags & TOUT_VERBMASK;
 
-  // Header message?
-  if (level & TOUT_BANNER)
+  // Choose output location: stdout or stderr.
+  FILE *output = (level == TOUT_ERROR) ? stderr : stdout;
+
+  // If the caller has chosen to use a banner, print the preceeding line.
+  if (flags & TOUT_BANNER)
     fprintf(output, "\n--------------------------------------------------\n");
 
-  if ((level & TOUT_VERBMASK) == TOUT_ERROR)
+  /* Always print debugging information (file and line number) for errors and
+   * warnings. Selectively print this information for other messages based on
+   * the TOUT_LOCATE flag.
+   */
+  if (level == TOUT_ERROR)
     fprintf(output, "Transit ERROR :: (%s, line %lu)\n", file, line);
 
-  else if ((level & TOUT_VERBMASK) == TOUT_WARN)
+  else if (level == TOUT_WARN)
     fprintf(output, "Transit WARNING :: (%s, line %lu)\n", file, line);
 
-  else if ((level & TOUT_LOCATE) && ((level & TOUT_VERBMASK) == TOUT_INFO))
-    fprintf(output, "Transit INFO :: (%s, line %lu)\n", file, line);
+  else if (flags & TOUT_LOCATE) {
 
-  else if ((level & TOUT_LOCATE) && ((level & TOUT_VERBMASK) == TOUT_RESULT))
-    fprintf(output, "Transit RESULT :: (%s, line %lu)\n", file, line);
+    switch(level) {
+      case TOUT_INFO:
+        fprintf(output, "Transit INFO :: (%s, line %lu)\n", file, line);
+        break;
 
-  else if ((level & TOUT_LOCATE) && ((level & TOUT_VERBMASK) == TOUT_DEBUG))
-    fprintf(output, "Transit DEBUG :: (%s, line %lu)\n", file, line);
+      case TOUT_RESULT:
+        fprintf(output, "Transit RESULT :: (%s, line %lu)\n", file, line);
+        break;
 
-  // Message
+      case TOUT_DEBUG:
+        fprintf(output, "Transit DEBUG :: (%s, line %lu)\n", file, line);
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  // Print the output message itself.
   vfprintf(output, str, format);
 
-  // Wrap up? I don't think so
-  if (level & TOUT_BANNER)
+  // If the caller has chosen to use a banner, print the succeeding line.
+  if (flags & TOUT_BANNER)
     fprintf(output, "--------------------------------------------------\n");
 }
 
