@@ -104,8 +104,8 @@ makesample1(prop_samp *samp,       /* transit sampling    */
   }
 
   /* Progress report: print flag, spacing, and number of points from hint: */
-  transitprint(21, verblevel, "Flags: 0x%lx    hint.d: %g   hint.n: %li\n",
-               fl, ref->d, ref->n);
+  tr_output(TOUT_DEBUG, "Flags: 0x%lx    hint.d: %g   hint.n: %li\n",
+    fl, ref->d, ref->n);
 
   if (!dhint){
     /* If none of the ref exists then throw error: */
@@ -215,9 +215,9 @@ makesample(prop_samp *samp,  /* transit sampling                            */
   /* If hint unset, use reference:                                          */
   if(hint->i <= 0){
     samp->i = ref->i;
-    transitprint(4, verblevel,
-                 "Using ref sampling %g [cgs] for initial value of %s.\n",
-                 samp->i*samp->fct, TRH_NAME(fl));
+    tr_output(TOUT_INFO,
+      "Using ref sampling %g [cgs] for initial value of %s.\n",
+      samp->i*samp->fct, TRH_NAME(fl));
     res |= 0x1;  /* Turn on modification flag for return output             */
   }
   else
@@ -226,16 +226,16 @@ makesample(prop_samp *samp,  /* transit sampling                            */
   /* Set final value (if hint unset, use reference):                        */
   if (hint->f <= 0){
     samp->f = ref->f;
-    transitprint(4, verblevel,
-                 "Using ref sampling %g [cgs] for final value of %s.\n",
-                  samp->f*samp->fct, TRH_NAME(fl));
+    tr_output(TOUT_INFO,
+      "Using ref sampling %g [cgs] for final value of %s.\n",
+      samp->f*samp->fct, TRH_NAME(fl));
     res |= 0x2; /* Turn on modification flag for return output              */
   } else
     samp->f = hint->f;
 
   /* Print flag, spacing, and number of points from hint:                   */
-  transitprint(21, verblevel, "Flags: 0x%lx    hint.d: %g   hint.n: %li\n",
-                              fl, hint->d, hint->n);
+  tr_output(TOUT_DEBUG, "Flags: 0x%lx    hint.d: %g   hint.n: %li\n",
+    fl, hint->d, hint->n);
 
   /* If dhint has not been hinted then use ref's:                           */
   if(!dhint){
@@ -372,8 +372,8 @@ makewnsample(struct transit *tr){
       exit(EXIT_FAILURE);
     }
     rsamp.i = hsamp->i*hsamp->fct;
-    transitprint(1, verblevel, "wave i1: %.3f = %.2f * %.2f\n", rsamp.i,
-                 hsamp->i, hsamp->fct);
+    tr_output(TOUT_RESULT, "wave i1: %.3f = %.2f * %.2f\n", rsamp.i,
+      hsamp->i, hsamp->fct);
   }
   else if (wlsamp->f > 0){
     if (wlsamp->fct <= 0) {
@@ -437,11 +437,11 @@ makewnsample(struct transit *tr){
   res = makesample1(&tr->wns,  &rsamp, TRH_WN);
   /* Get the exact divisors of the oversampling factor:                     */
   tr->odivs = divisors(tr->owns.o, &tr->ndivs);
-  transitprint(20, verblevel, "There are %i divisors of the oversampling "
-                              "factor (%i):\n", tr->ndivs, tr->owns.o);
+  tr_output(TOUT_DEBUG, "There are %i divisors of the oversampling "
+    "factor (%i):\n", tr->ndivs, tr->owns.o);
   for (int i=0; i<tr->ndivs; i++)
-    transitprint(25, verblevel, "%5i", tr->odivs[i]);
-  transitprint(25, verblevel, "\n");
+    tr_output(TOUT_DEBUG, "%5i", tr->odivs[i]);
+  tr_output(TOUT_DEBUG, "\n");
 
   /* Set progress indicator if sampling was successful and return status:   */
   if(res >= 0)
@@ -501,7 +501,7 @@ makeradsample(struct transit *tr){
 
   /* Set interpolation function flag:                                       */
   flag = tr->interpflag;
-  transitprint(30, verblevel, "transit interpolation flag: %li.\n", flag);
+  tr_output(TOUT_DEBUG, "transit interpolation flag: %li.\n", flag);
 
   /* We need to set-up limit so that the hinted values are compatible
      with the atmosphere                                                    */
@@ -807,8 +807,8 @@ outsample(struct transit *tr){
       return 1;
     }
 
-  transitprint(1, verblevel, "Printing sampling information in '%s'.\n\n",
-               filename);
+  tr_output(TOUT_INFO, "Printing sampling information in '%s'.\n\n",
+    filename);
 
   /* Print each sample: */
   printsample(out, &tr->wns,  "Wavenumber",       TRF_NOVALUE);
