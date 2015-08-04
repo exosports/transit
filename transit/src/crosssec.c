@@ -98,8 +98,8 @@ readcs(struct transit *tr){
   if(!nfiles){
     return 0;
   }
-  transitprint(1, verblevel, "Computing cross-section opacities for %i "
-                             "database%s:\n", nfiles, nfiles>1 ? "s":"");
+  tr_output(TOUT_RESULT, "Computing cross-section opacities for %i "
+    "database%s:\n", nfiles, (nfiles > 1 ? "s" : ""));
 
   /* Allocate string for molecule names:                                    */
   colname = (char *)calloc(maxline, sizeof(char));
@@ -128,8 +128,9 @@ readcs(struct transit *tr){
       tr_output(TOUT_ERROR, "Cannot read cross-section file '%s'.\n",file);
       exit(EXIT_FAILURE);
     }
-    transitprint(10, verblevel, "  Cross-section file (%d/%d): '%s'\n",
-                                j+1, nfiles, file);
+    tr_output(TOUT_DEBUG,
+      "  Cross-section file (%d/%d): '%s'\n", (j + 1), nfiles, file);
+
     lines = 0; /* lines read counter                                        */
     lpa   = 0;
     /* Read the file headers:                                               */
@@ -174,16 +175,16 @@ readcs(struct transit *tr){
           lp = nextfield(lp);
         }
 
-        transitprint(10, verblevel, "  Cross-section species: ");
+        tr_output(TOUT_DEBUG, "  Cross-section species: ");
         for (k=0; k<nspec; k++)
-          transitprint(10, verblevel, "%s, ", mol->name[st_cross.mol[j][k]]);
-        transitprint(10, verblevel, "\n");
+          tr_output(TOUT_DEBUG, "%s, ", mol->name[st_cross.mol[j][k]]);
+        tr_output(TOUT_DEBUG, "\n");
         continue;
 
       case 't': /* Read the sampling temperatures array:                    */
         while(isblank(*++lp));
         nt = st_cross.ntemp[j] = countfields(lp, ' ');  /* Number of temps. */
-        transitprint(5, verblevel, "  Number of temperature samples: %ld\n",
+        tr_output(TOUT_DEBUG, "  Number of temperature samples: %ld\n",
                                    nt);
         if(!nt) {
           tr_output(TOUT_ERROR,
@@ -197,11 +198,11 @@ readcs(struct transit *tr){
         st_cross.temp[j] = (PREC_CS *)calloc(nt, sizeof(PREC_CS));
         n = 0;    /* Count temperatures per line                            */
         lpa = lp; /* Pointer in line                                        */
-        transitprint(20, verblevel, "  Temperatures (K) = [");
+        tr_output(TOUT_DEBUG, "  Temperatures (K) = [");
         while(n < nt){
           while(isblank(*lpa++));
           st_cross.temp[j][n] = strtod(--lpa, &lp);  /* Get value           */
-          transitprint(20, verblevel, "%d, ", (int)st_cross.temp[j][n]);
+          tr_output(TOUT_DEBUG, "%d, ", (int)st_cross.temp[j][n]);
           if(lp==lpa) {
             tr_output(TOUT_ERROR,
               "Less fields (%i) than expected (%i) were read for "
@@ -213,7 +214,7 @@ readcs(struct transit *tr){
           lpa = lp;
           n++;
         }
-        transitprint(20, verblevel, "\b\b]\n");
+        tr_output(TOUT_DEBUG, "\b\b]\n");
         continue;
       default:
         break;
@@ -289,12 +290,13 @@ readcs(struct transit *tr){
       for(i=1; i<n; i++)
         a[i] = a[0] + i*nt;
     }
-    transitprint(5, verblevel, "  Number of wavenumber samples: %d\n", n);
-    transitprint(5, verblevel, "  Wavenumber array (cm-1) = [%.1f, %.1f, "
-                               "%.1f, ..., %.1f, %.1f, %.1f]\n",
-                               st_cross.wn[j][  0], st_cross.wn[j][  1],
-                               st_cross.wn[j][  2], st_cross.wn[j][n-3],
-                               st_cross.wn[j][n-2], st_cross.wn[j][n-1]);
+    tr_output(TOUT_DEBUG, "  Number of wavenumber samples: %d\n", n);
+    tr_output(TOUT_DEBUG, "  Wavenumber array (cm-1) = [%.1f, %.1f, "
+      "%.1f, ..., %.1f, %.1f, %.1f]\n",
+      st_cross.wn[j][  0], st_cross.wn[j][  1],
+      st_cross.wn[j][  2], st_cross.wn[j][n-3],
+      st_cross.wn[j][n-2], st_cross.wn[j][n-1]);
+
     /* Wavenumber boundaries check:                                         */
     if ((st_cross.wn[j][  0] > tr->wns.v[          0]) ||
         (st_cross.wn[j][n-1] < tr->wns.v[tr->wns.n-1]) ){
@@ -310,7 +312,7 @@ readcs(struct transit *tr){
     fclose(fp);
   }
   free(colname);
-  transitprint(1, verblevel, "Done.\n");
+  tr_output(TOUT_RESULT, "Done.\n");
   tr->pi |= TRPI_CS;
   return 0;
 }
