@@ -827,8 +827,8 @@ acceptgenhints(struct transit *tr){
     tr_output(TOUT_ERROR, "Invalid sampling function specified.\n");
     exit(EXIT_FAILURE);
   }
-  transitprint(10, verblevel, "transit interpolation flag: %li.\n",
-                               tr->interpflag);
+  tr_output(TOUT_DEBUG,
+    "transit interpolation flag: %li.\n", tr->interpflag);
 
   if (th->r0 < 0){
     tr_output(TOUT_ERROR,
@@ -962,13 +962,13 @@ printintro(){
     snprintf(rcname, 20, "-rc%i", version_rc);
   else
     rcname[0] = '\0';
-  transitprint(1, verblevel,
-               "-----------------------------------------------\n"
-               "                TRANSIT v%i.%i%s\n"
-               "-----------------------------------------------\n",
-               version, revision, rcname);
+  fprintf(stdout,
+    "--------------------------------------------------\n"
+    "                   TRANSIT v%i.%i%s\n"
+    "--------------------------------------------------\n",
+    version, revision, rcname);
   time_t tim = time(NULL);
-  transitprint(2, verblevel, "Started on %s\n", ctime(&tim));
+  tr_output(TOUT_INFO, "Started on %s\n", ctime(&tim));
 }
 
 
