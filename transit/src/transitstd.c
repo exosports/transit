@@ -54,7 +54,6 @@ Thank you for using transit!
 #include <transit.h>
 
 /* keeps tracks of number of errors that where allowed to continue. */
-int transit_nowarn=0;
 int verblevel;
 int maxline=1000;
 

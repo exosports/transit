@@ -149,8 +149,7 @@ long fw_status;
 #define _Bool short
 #endif
 
-extern int transit_nowarn;
-extern int verblevel;      /* Verbose level > 10 is only for debuging       */
+extern int verblevel;      /* Verbose level > 4 is only for debuging       */
 extern int maxline;        /* Initialized in transitstd                     */
 extern int version;
 extern int revision;

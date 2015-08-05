@@ -86,10 +86,6 @@ void transit_init(int argc, char **argv){
   /* Presentation:                                                          */
   printintro();
 
-  /* No program warnings if verblevel is 0 or 1:                            */
-  if(verblevel<2)
-    transit_nowarn = 1;
-
   /* Make wavenumber binning:                                               */
   fw(makewnsample, <0, &transit);
   t0 = timecheck(verblevel, itr,  1, "makewnsample", tv, t0);
