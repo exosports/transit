@@ -500,7 +500,7 @@ timestart(struct timeval tv,  /* timeval structure                          */
   gettimeofday(&tv, NULL);
   /* Calculate time in seconds:                                             */
   double sec = tv.tv_sec + 1e-6*tv.tv_usec;
-  transitprint(1, verblevel, "%s\n", str);
+  tr_output(TOUT_INFO, "%s\n", str);
   return sec;
 }
 
@@ -518,7 +518,7 @@ timecheck(int verblevel,      /* Verbosity level         */
   /* Calculate time in seconds: */
   double sec = tv.tv_sec + 1e-6*tv.tv_usec;
   /* Print time stamp:          */
-  transitprint(1, verblevel, "Check point: %02li - %02li %s:  dt = %.4f "
-                             "sec.\n\n", iter, index, str, sec-t0);
+  tr_output(TOUT_RESULT, "Check point: %02li - %02li %s:  dt = %.4f "
+    "sec.\n\n", iter, index, str, sec-t0);
   return sec;
 }
