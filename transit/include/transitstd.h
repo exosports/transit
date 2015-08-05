@@ -8,8 +8,6 @@
 extern inline void transitdot P_((int thislevel, int verblevel, ...));
 extern void tr_output_fcn P_((int level, const char *file, const long line, const char *str, ...));
 extern void tr_output_vfcn P_((int level, const char *file, const long line, const char *str, va_list format));
-extern int transiterror_fcn P_((int flags, const char *file, const long line, const char *str, ...));
-extern int vtransiterror_fcn P_((int flags, const char *file, const long line, const char *str, va_list ap));
 extern int fileexistopen P_((char *in, FILE **fp));
 extern FILE *verbfileopen P_((char *in, char *desc));
 extern void transitcheckcalled P_((const long pi, const char *fcn, const int n, ...));

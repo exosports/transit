@@ -54,7 +54,6 @@ Thank you for using transit!
 #include <transit.h>
 
 /* keeps tracks of number of errors that where allowed to continue. */
-static int terr_allown=0;
 int transit_nowarn=0;
 int verblevel;
 int maxline=1000;
@@ -132,106 +131,6 @@ tr_output_vfcn (int flags,
   // If the caller has chosen to use a banner, print the succeeding line.
   if (flags & TOUT_BANNER)
     fprintf(output, "--------------------------------------------------\n");
-}
-
-int
-transiterror_fcn(int flags,
-                 const char *file,
-                 const long line,
-                 const char *str,
-                  ...){
-  va_list ap;
-
-  va_start(ap, str);
-  int ret = vtransiterror_fcn(flags, file, line, str, ap);
-  va_end(ap);
-
-  return ret;
-}
-
-
-/*\fcnfh
-  transiterror: Error function for Transit package.
-
-  @returns Number of characters wrote to the standard error file
-             descriptor if PERR\_ALLOWCONT is set, otherwise, it ends
-             execution of program.
-           0 if it is a warning call and 'transit\_nowarn' is 1
-*/
-int vtransiterror_fcn(int flags,
-                      const char *file,
-                      const long line,
-                      const char *str,
-                      va_list ap){
-  char prepre_error[] =
-                     "\n******************************************************";
-  char pre_error[] = "\n*** Transit";
-  char error[7][22] = {"",
-                       " :: SYSTEM ERROR ***\n",  /* Produced by the code */
-                       " :: USER ERROR ***\n",    /* Produced by the user */
-                       " :: Warning ***\n",
-                       " :: Not implemented",
-                       " :: Not implemented",
-                       " :: Not implemented"
-  };
-  char *errormessage, *out;
-  int len, lenout, xtr;
-  char post_error[] =
-                     "******************************************************\n";
-
-
-  if(transit_nowarn && (flags & TERR_NOFLAGBITS)==TERR_WARNING)
-    return 0;
-
-  len = strlen(pre_error);
-  if(!(flags & TERR_NOPREAMBLE))
-    len += strlen(error[flags & TERR_NOFLAGBITS]) + strlen(post_error) +
-           strlen(prepre_error);
-  /* Symbols + digits + file: */
-  int debugchars = 0;
-  if(flags&TERR_DBG) debugchars = 5 + 6 + strlen(file);
-  len    += strlen(str) + 1 + debugchars;
-  lenout  = len;
-
-  errormessage = (char *)calloc(len   +10, sizeof(char));
-  out          = (char *)calloc(lenout+10, sizeof(char));
-
-  if(!(flags & TERR_NOPREAMBLE))
-    strcat(errormessage, prepre_error);
-  strcat(errormessage, pre_error);
-  if(flags & TERR_DBG){
-    char debugprint[debugchars];
-    sprintf(debugprint," (%s|%li)", file, line);
-    strcat(errormessage, debugprint);
-  }
-
-  if(!(flags&TERR_NOPREAMBLE))
-    strcat(errormessage, error[flags&TERR_NOFLAGBITS]);
-  strcat(errormessage, str);
-  if(!(flags&TERR_NOPREAMBLE))
-    strcat(errormessage, post_error);
-
-  va_list aq;
-  va_copy(aq, ap);
-  xtr = vsnprintf(out, lenout, errormessage, ap)+1;
-  va_end(ap);
-
-  if(xtr > lenout){
-    out = (char *)realloc(out, xtr+1);
-    xtr = vsnprintf(out, xtr+1, errormessage, aq)+1;
-  }
-  va_end(aq);
-  free(errormessage);
-
-  fwrite(out, sizeof(char), xtr-1, stderr);
-  free(out);
-
-  if (flags&TERR_ALLOWCONT || (flags&TERR_NOFLAGBITS)==TERR_WARNING){
-    terr_allown++;
-    return xtr;
-  }
-
-  exit(EXIT_FAILURE);
 }
 
 

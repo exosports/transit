@@ -117,9 +117,6 @@ long fw_status;
     }                                                    \
                                        }while(0)
 
-#define transitprint(thislevel, verblevel, ...) do{                         \
-  if(thislevel <= verblevel)  fprintf(stdout, __VA_ARGS__); }while(0)
-
 /* Add flag to transit if present in hint and change hint flag value:       */
 #define transitacceptflag(transit, hint, flag) do{                          \
         transit |= hint&flag; hint &= ~(flag); }while(0)
