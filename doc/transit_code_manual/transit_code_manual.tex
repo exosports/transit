@@ -1023,12 +1023,12 @@ inline void transitdot(int thislevel, int verblevel, ...)}
 \tgray{Print a '.' character.} \newline
 
 \function{
-int transiterror\_fcn(int flags, const char *file, const long line, const char *str, ...)}
-\tgray{Set up additional arguments and call the error function.} \newline
+int tr\_output\_fcn(int flags, const char *file, const long line, const char *str, ...)}
+\tgray{Set up additional arguments and call the output function.} \newline
 
 \function{
-int vtransiterror\_fcn(int flags, const char *file, const long line, const char *str, \\ va\_list ap)}
-\tgray{Error function for {\tt transit}.} \newline
+int tr\_output\_vfcn(int flags, const char *file, const long line, const char *str, \\ va\_list format)}
+\tgray{Output, error, and debug function for {\tt transit}.} \newline
 
 \function{
 int fileexistopen(char *in, FILE **fp)}
@@ -1094,38 +1094,22 @@ void linetoolong(int max, char *file, int line)}
 double timecheck(int verblevel, long iter, long index, char *str, \\ struct timeval tv, double t0)}
 \tgray{Print to screen the time since given time (t0).} \newline
 
-\subsubsection{transiterror\_fcn:}
+\subsubsection{tr_output\_fcn:}
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
 \item[-] Initialize variable arguments list.
-\item[-] Call to \ttblue{vtransiterror\_fcn} from transitstd.c to print the error message and exit (unless indicated to continue).
+\item[-] Call to \ttblue{tr\_output\_fcn} from transitstd.c to print the message with any decoration necessary.
 \item[-] End using the variable arguments list.
-\item[-] Return the return of \ttblue{vtransiterror\_fcn}.
 \end{enumerate}
 
-\subsubsection{vtransiterror\_fcn:}
+\subsubsection{tr\_output\_vfcn:}
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Set up all the parts of the error message to be printed.
-\item[-] If specified that no warnings should be given, return 0.
-\item[-] Set the length of the error to the length of the first line of the error message.
-\item[-] If the user has not specified that they want no error preamble, add the legnth of the error preamble and post-error message to the length of the total error message.
-\item[-] If in debug mode, add the length of debug message to the error message length.
-\item[-] Add the length of the specific error string to the error message length.
-\item[-] Allocate memory for the error message and 
-\item[-] If the error preamble is desired, append it to the error message.
-\item[-] Append the pre-error message to the error message.
-\item[-] If in debug mode, print the debug message and append the debug message to the error message.
-\item[-] If the error preamble is desired, append the error type to the error message.
-\item[-] Append the specific error string to the error message.
-\item[-] If the error preamble is desired, append the post-error message to the error message.
-\item[-] Compose the error message string using the specifiec variable arguments and store in output.
-\item[-] If an error occurred in composition, reallocate the size of the output and compose the error message again.
-\item[-] Free the error message
-\item[-] Print the output (the composed error message).
-\item[-] Free the output.
-\item[-] If the program is allowed to continue despite the error, increment the number of error encountered and return the size of the output.
-\item[-] Exit program.
+\item[-] Decide the output stream to use: errors go to stderr, and all other messages go to stdout.
+\item[-] If a banner was requested by the caller to make the message stand out, print the header line.
+\item[-] Errors, warnings, and other messages with the TOUT_LOCATE flag have the file and line number printed.
+\item[-] Print the given message.
+\item[-] If a banner was requested, print the footer line.
 \end{enumerate}
 
 \subsubsection{fileexistopen:}
@@ -1165,7 +1149,7 @@ double timecheck(int verblevel, long iter, long index, char *str, \\ struct time
 \item[-] Check each given function against the progress indicator.
 \item[-] If one of the functions has not been called, append the error message.
 \item[-] Append the names of the functions not called.
-\item[-] Call \ttblue{transiterror} to print the error.
+\item[-] Call \ttblue{tr\_output} to print the error.
 \end{enumerate}
 
 \subsubsection{error:}

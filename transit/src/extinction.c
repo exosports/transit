@@ -565,9 +565,9 @@ computemolext(struct transit *tr, /* transit struct                         */
     if (maxj > dnwn)
       maxj = dnwn;
 
-    tr_output(TOUT_DEBUG, "minj:%li  maxj:%li  subw:%li  offset:%li  "
-      "index1:%li\nf=np.array([",
-      minj, maxj, subw, offset, ofactor*minj - offset);
+    // tr_output(TOUT_DEBUG, "minj:%li  maxj:%li  subw:%li  offset:%li  "
+    //   "index1:%li\nf=np.array([",
+    //   minj, maxj, subw, offset, ofactor*minj - offset);
 
     /* Add the contribution from this line to the opacity spectrum:         */
     /* Adding in more complex but faster array indexing based on simpler
