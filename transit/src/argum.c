@@ -412,8 +412,8 @@ processparameters(int argc,            /* Number of command-line args  */
       break;
 
     /* Print info to screen if debugging:   */
-    transitDEBUG(21, verblevel, "Processing option '%c' / %d, argum: %s\n",
-                 rn, rn, optarg);
+    tr_output(TOUT_DEBUG, "Processing option '%c' / %d, argum: %s\n",
+      rn, rn, optarg);
     /* Handle each case:                                                    */
     switch(rn){
     /* Cross-section data files:                                            */

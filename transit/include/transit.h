@@ -134,7 +134,6 @@ long fw_status;
 #define free_null(x) do{free(x);x=NULL;}while(0)
 
 #ifdef NODEBUG_TRANSIT
-#define transitDEBUG(...) ((void)0)
 #define transitASSERT(...) ((void)0)
 #else
 #define free(x)  do{free(x);x=NULL;}while(0)
@@ -144,7 +143,6 @@ long fw_status;
     exit(EXIT_FAILURE); \
   } \
 } while(0)
-#define transitDEBUG(...) transitprint(__VA_ARGS__)
 #endif
 
 /* Maximum name length: */

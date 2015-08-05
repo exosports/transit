@@ -314,8 +314,8 @@ tau(struct transit *tr){
         }
         break;  /* Exit height loop when the optical depth reached toomuch  */
       }
-      transitDEBUG(22, verblevel, "Tau(lambda %li=%9.07g, r=%9.4g) : %g "
-          "(toomuch: %g)\n", wi, wn->v[wi], r[ri], tau_wn[ri], tau->toomuch);
+      tr_output(TOUT_DEBUG, "Tau(lambda %li=%9.07g, r=%9.4g) : %g "
+        "(toomuch: %g)\n", wi, wn->v[wi], r[ri], tau_wn[ri], tau->toomuch);
     }
 
     /* Write total, cloud, and scattering extinction to file if requested:  */

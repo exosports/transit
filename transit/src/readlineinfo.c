@@ -80,14 +80,14 @@ datafileBS(FILE *fp,            /* File pointer                             */
             hi=nfields-1,  /* Starting point of binary search               */
             loc;           /* Current location of closest value             */
 
-  transitDEBUG(30, verblevel, "BS: Start looking from %li in %li fields "
-                              "for %f\n", offs, nfields, target);
+  tr_output(TOUT_DEBUG, "BS: Start looking from %li in %li fields "
+    "for %f\n", offs, nfields, target);
   /* Binary search:                                                         */
   do{
     loc = (hi+lo)/2;                           /* Mid record's index        */
     fseek(fp, offs+reclength*loc, SEEK_SET);   /* Move pointer              */
     fread(&temp, sizeof(PREC_LNDATA), 1, fp);  /* Read value                */
-    transitDEBUG(30, verblevel, "BS: found wl %.8f microns at position %li\n",
+    tr_output(TOUT_DEBUG, "BS: found wl %.8f microns at position %li\n",
                                 temp*tli_to_microns, loc);
     /* Re-set lower or higher boundary:                                     */
     if(target > temp)
@@ -225,15 +225,14 @@ readtli_bin(FILE *fp,
     li->isov[correliso].z = (double *)calloc((correliso+nDBiso)*nT,
                                              sizeof(double));
 
-    transitDEBUG(21, verblevel, "So far, cumIsotopes: %i, at databases: %i, "
-                 "position %li.\n", correliso+nDBiso, i, ftell(fp));
+    tr_output(TOUT_DEBUG, "So far, cumIsotopes: %i, at databases: %i, "
+      "position %li.\n", correliso+nDBiso, i, ftell(fp));
 
     /* Display database general info:                                       */
-    transitDEBUG(23, verblevel, "DB %i: '%s' has %i (%i) temperatures, "
-                 "%i (%i) isotopes, and starts at cumulative isotope %i.\n",
-                 iso->isof[correliso].d, iso->db[i].n,
-                 li->db[i].t, nT,
-                 iso->db[i].i, nDBiso, iso->db[i].s);
+    tr_output(TOUT_DEBUG, "DB %i: '%s' has %i (%i) temperatures, "
+      "%i (%i) isotopes, and starts at cumulative isotope %i.\n",
+      iso->isof[correliso].d, iso->db[i].n,
+      li->db[i].t, nT, iso->db[i].i, nDBiso, iso->db[i].s);
 
 
     /* Read the isotopes from this data base:                               */
@@ -357,10 +356,10 @@ checkrange(struct transit *tr,   /* General parameters and  hints           */
   wlmin = 1.0/(tsamp->f*tsamp->fct);
   wlmax = 1.0/(tsamp->i*tsamp->fct);
 
-  transitDEBUG(10, verblevel,
-               "Transit initial and final wavelengths are %6g and %6g cm.\n"
-               "The database max and min wavelengths are  %6g and %6g cm.\n",
-               wlmin, wlmax, dbini, dbfin);
+  tr_output(TOUT_DEBUG,
+    "Transit initial and final wavelengths are %6g and %6g cm.\n"
+    "The database max and min wavelengths are  %6g and %6g cm.\n",
+    wlmin, wlmax, dbini, dbfin);
 
   /* Check that it is not below the minimum value:                          */
   if(dbini > wlmax){
@@ -791,8 +790,7 @@ int main(int argc, char **argv){
     tr_output(TOUT_ERROR, "Error code: %i.\n", i);
     exit(EXIT_FAILURE);
   }
-  transitDEBUG(20, verblevel, "range: %.10g to %.10g.\n",
-               tr.ds.li->wi, tr.ds.li->wf);
+  tr_output(TOUT_DEBUG, "range: %.10g to %.10g.\n", tr.ds.li->wi, tr.ds.li->wf);
   li = tr.ds.li;
   ltgf = tr.ds->lt.gf;
   ltwl = tr.ds->lt.wl;
