@@ -345,7 +345,7 @@ modulation(struct transit *tr){
   setgeom(sg, HUGE_VAL, &tr->pi);
 
   /* Integrate for each wavelength:                                         */
-  transitprint(1, verblevel, "Integrating over wavelength.\n");
+  tr_output(TOUT_RESULT, "Integrating over wavelength.\n");
 
   int nextw = wn->n/10;
 
@@ -376,10 +376,11 @@ modulation(struct transit *tr){
     /* Print to screen the progress status:                                 */
     if(w==nextw){
       nextw += wn->n/10;
-      transitprint(2, verblevel, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
+      tr_output(TOUT_DEBUG, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
     }
   }
-  transitprint(1, verblevel, "\nDone.\n");
+  tr_output(TOUT_DEBUG, "\n");
+  tr_output(TOUT_RESULT, "Done.\n");
 
   /* Set progress indicator, and print output:                              */
   tr->pi |= TRPI_MODULATION;
@@ -566,9 +567,9 @@ printmod(struct transit *tr){
   if(tr->f_outmod && tr->f_outmod[0] != '-')
     outf = fopen(tr->f_outmod, "w");
 
-  transitprint(1, verblevel,
-               "\nPrinting in-transit/out-transit modulation in '%s'.\n",
-               tr->f_outmod?tr->f_outmod:"standard output");
+  tr_output(TOUT_INFO,
+    "\nPrinting in-transit/out-transit modulation in '%s'.\n",
+    tr->f_outmod?tr->f_outmod:"standard output");
 
   /* Print: */
   char wlu[20], /* Wavelength units name */
