@@ -412,7 +412,7 @@ printintens(struct transit *tr){
     outf = fopen(our_fileName, "w");
   }
   else{
-    tr_output(TOUT_WARN, "No intensity file.\n");
+    tr_output(TOUT_INFO, "No intensity file requested.\n");
     return;
   }
   tr_output(TOUT_INFO, "\nPrinting intensity in '%s'\n",

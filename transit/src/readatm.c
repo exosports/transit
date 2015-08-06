@@ -595,12 +595,10 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
     /* Calculate mean molecular mass and check whether abundances add up
        to one (within allowq threshold):                                    */
     sumq = checkaddmm(at->mm+r, r, molec, mol, at->n_aiso, at->mass);
-    if(fabs(sumq-1.0) > allowq) {
-      tr_output(TOUT_ERROR,
+    if(fabs(sumq-1.0) > allowq)
+      tr_output(TOUT_WARN,
         "In radius %i (%g km), abundances don't add "
         "up to 1.0: %.9g\n", r, at->rads.v[r], sumq);
-      exit(EXIT_FAILURE);
-    }
 
     /* Calculate densities using ideal gas law:                             */
     if (r>=0){

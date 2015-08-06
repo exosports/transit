@@ -451,10 +451,12 @@ processparameters(int argc,            /* Number of command-line args  */
       /* Get wavenumbers, parse values into det.ref and how many in det.n: */
       det->n = getad(0, ',', optarg+i, &det->ref);
       /* Check for errors: */
-      if(det->n<1 || i==rn-1)
+      if(det->n<1 || i==rn-1) {
         tr_output(TOUT_ERROR | TOUT_BANNER,
                      "Bad format for detailed %s parameter, no valid "
                      "wavenumbers\n", det->name);
+        exit(EXIT_FAILURE);
+      }
       break;
 
     case CLA_ETHRESH:    /* Minimum extiction-coefficient threshold */
@@ -638,13 +640,13 @@ processparameters(int argc,            /* Number of command-line args  */
         "Unknown, unsupported, or missing parameter to option of "
         "code %i (%s) passed as argument, use '-h' to see the "
         "available options.\n", rn, (char)rn);
-      exit(0);
+      exit(EXIT_FAILURE);
       break;
     default:   /* Ask for syntax help:                                      */
       tr_output(TOUT_ERROR | TOUT_BANNER,
         "Even though option of code %i (%c) had a valid structure "
         "element, it had no switch control statement.\n", rn, (char)rn);
-      exit(0);
+      exit(EXIT_FAILURE);
       break;
     case 'h':  /* Print out doc-string help:                                */
       prochelp(EXIT_SUCCESS);
@@ -682,14 +684,14 @@ processparameters(int argc,            /* Number of command-line args  */
       if(*optarg != ','  ||  optarg[1] == '\0') {
         tr_output(TOUT_ERROR, "Syntax error in option '--cloudrad', "
           "parameters need to be given as cloudext,cloudtop,cloudbot.\n");
-        exit(0);
+        exit(EXIT_FAILURE);
       }
 
       hints->cl.cloudtop = strtod(optarg+1, &optarg);
       if(*optarg != ','  ||  optarg[1] == '\0') {
         tr_output(TOUT_ERROR, "Syntax error in option '--cloudrad', "
           "parameters need to be given as cloudext,cloudtop,cloudbot.\n");
-        exit(0);
+        exit(EXIT_FAILURE);
       }
 
       hints->cl.cloudbot = strtod(optarg+1, NULL);
@@ -699,7 +701,7 @@ processparameters(int argc,            /* Number of command-line args  */
         tr_output(TOUT_ERROR, "Syntax error in '--cloud', the cloud top "
                  "(%g) needs to be larger than the cloud bottom (%g) and both "
                  "greater than 0.\n", hints->cl.cloudtop, hints->cl.cloudbot);
-        exit(0);
+        exit(EXIT_FAILURE);
       }
       break;
     case CLA_INTENS_GRID:    /* Intensity grid                              */
