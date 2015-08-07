@@ -23,29 +23,31 @@ def main():
   --------
   $ ./HITRAN_csx_format.py CH4_*C_XSC.xsc CH4_cross-section_Hargreaves.dat
   """
+  # Input and output files
   infile  = sys.argv[1:-1]
   outfile = sys.argv[-1]
 
-  mol_start =  0
-  mol_end   = 20
+  # Start and end points of header records
+  mol_start     =  0
+  mol_end       = 20
 
   wn_init_start = 20
   wn_init_end   = 30
 
-  wn_fin_start = 30
-  wn_fin_end   = 40
+  wn_fin_start  = 30
+  wn_fin_end    = 40
 
-  nwave_start = 40
-  nwave_end   = 47
+  nwave_start   = 40
+  nwave_end     = 47
 
-  temp_start = 47
-  temp_end   = 54
+  temp_start    = 47
+  temp_end      = 54
 
-  press_start = 54
-  press_end   = 60
+  press_start   = 54
+  press_end     = 60
 
-  res_start = 70
-  res_end   = 75
+  res_start     = 70
+  res_end       = 75
   
   
   # There is one temperature sample per file:
@@ -65,12 +67,12 @@ def main():
     line = f_in.readline()
     # Set the fields from the header:
     if i == 0:
-      mol     = str(  line[mol_start    :mol_end    ].strip())  # Molecule designation (eg CH4)
-      wn_init = float(line[wn_init_start:wn_init_end].strip())  # Initial wavenumber (cm-1)
+      mol     = str(  line[mol_start    :mol_end    ].strip())  # Molecule name (eg CH4)
+      wn_init = float(line[wn_init_start:wn_init_end].strip())  # Init wavenumber (cm-1)
       wn_fin  = float(line[wn_fin_start :wn_fin_end ].strip())  # Final wavenumber (cm-1)
       nwave   = int(  line[nwave_start  :nwave_end  ].strip())  # Number of data points
       press   = float(line[press_start  :press_end  ].strip())  # Pressure (Torr)
-      res     = float(line[res_start    :res_end    ].strip())  # Resolution of measurement (cm-1)
+      res     = float(line[res_start    :res_end    ].strip())  # Resolution (cm-1)
       
       # Array to be filled with cross section data
       data = np.zeros((nwave, ntemp), np.double)
@@ -87,7 +89,7 @@ def main():
         return
 
     temp[i] = line[temp_start:temp_end].strip()  # Add temperature (in K) to list
-    print(':' + line[temp_start:temp_end] + ':')
+    
     # For counting loop repetitions
     j = 0
 
