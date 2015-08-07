@@ -26,6 +26,28 @@ def main():
   infile  = sys.argv[1:-1]
   outfile = sys.argv[-1]
 
+  mol_start =  0
+  mol_end   = 20
+
+  wn_init_start = 20
+  wn_init_end   = 30
+
+  wn_fin_start = 30
+  wn_fin_end   = 40
+
+  nwave_start = 40
+  nwave_end   = 47
+
+  temp_start = 47
+  temp_end   = 54
+
+  press_start = 54
+  press_end   = 60
+
+  res_start = 70
+  res_end   = 75
+  
+  
   # There is one temperature sample per file:
   ntemp = nfiles = len(infile)
   # Array of sampled temperatures:
@@ -40,32 +62,32 @@ def main():
     # Open file for reading:
     f_in = open(infile[i], 'r')
 
-    line = str.split(f_in.readline())
+    line = f_in.readline()
     # Set the fields from the header:
     if i == 0:
-      mol     = str(  line[0])  # Molecule designation (eg CH4)
-      wn_init = float(line[1])  # Initial wavenumber (cm-1)
-      wn_fin  = float(line[2])  # Final wavenumber (cm-1)
-      nwave   = int(  line[3])  # Number of data points
-      press   = float(line[5])  # Pressure (Torr)
-      res     = float(line[7])  # Resolution of measurement (cm-1)
-
+      mol     = str(  line[mol_start    :mol_end    ].strip())  # Molecule designation (eg CH4)
+      wn_init = float(line[wn_init_start:wn_init_end].strip())  # Initial wavenumber (cm-1)
+      wn_fin  = float(line[wn_fin_start :wn_fin_end ].strip())  # Final wavenumber (cm-1)
+      nwave   = int(  line[nwave_start  :nwave_end  ].strip())  # Number of data points
+      press   = float(line[press_start  :press_end  ].strip())  # Pressure (Torr)
+      res     = float(line[res_start    :res_end    ].strip())  # Resolution of measurement (cm-1)
+      
       # Array to be filled with cross section data
       data = np.zeros((nwave, ntemp), np.double)
     else:
       # Check that the data from the other files match:
-      if str(line[0]) != mol:
+      if str(line[mol_start:mol_end].strip()) != mol:
         error += "for different species, "
-      if (float(line[1]) != wn_init or
-          float(line[2]) != wn_fin  ):
+      if (float(line[wn_init_start:wn_init_end].strip()) != wn_init or
+          float(line[wn_fin_start :wn_fin_end ].strip()) != wn_fin  ):
         error += "with different wavelength ranges, "
 
       if error != "":
         print("Can't combine files {:s}".format(error))
         return
 
-    temp[i] = line[4]  # Add temperature (in K) to list
-
+    temp[i] = line[temp_start:temp_end].strip()  # Add temperature (in K) to list
+    print(':' + line[temp_start:temp_end] + ':')
     # For counting loop repetitions
     j = 0
 
@@ -98,7 +120,7 @@ def main():
   f_out.write('i {:s}\n'.format(mol))
   f_out.write('t ')
   for j in np.arange(ntemp):
-    f_out.write(' {:6.1f}'.format(temp[j]))
+    f_out.write(' {:6.2f}'.format(temp[j]))
   f_out.write('\n\n')
 
   # Write comment on units
