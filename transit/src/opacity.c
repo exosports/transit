@@ -70,7 +70,7 @@ opacity(struct transit *tr){
 
   /* Check if the opacity file exists:                                      */
   int file_exists = fileexistopen(th->f_opa, NULL);
-  transitprint(10, verblevel, "Opacity-file exist status = %d\n", file_exists);
+  tr_output(TOUT_INFO, "Opacity-file exist status = %d\n", file_exists);
 
   /* Set the file name in the transit struct:                               */
   tr->f_opa = th->f_opa;
@@ -79,7 +79,7 @@ opacity(struct transit *tr){
   if (file_exists < -1 || file_exists == 0) {
 
     /* Calculate Voigt profiles:                                            */
-    transitprint(1, verblevel, "Calculating grid of Voigt profiles.\n");
+    tr_output(TOUT_INFO, "Calculating grid of Voigt profiles.\n");
     calcprofiles(tr);
 
     /* Set progress indicator and return success:                           */
@@ -95,17 +95,17 @@ opacity(struct transit *tr){
 
     /* Immediately return if the file could not be opened:                  */
     if (tr->fp_opa == NULL){
-      transiterror(TERR_WARNING, "Opacity filename '%s' cannot be opened "
-                                 "for writing.\n", tr->f_opa);
+      tr_output(TOUT_WARN, "Opacity filename '%s' cannot be opened "
+        "for writing.\n", tr->f_opa);
       return -1;
     }
 
     /* Calculate Voigt profiles:                                            */
-    transitprint(1, verblevel, "Calculating grid of Voigt profiles.\n");
+    tr_output(TOUT_INFO, "Calculating grid of Voigt profiles.\n");
     calcprofiles(tr);
 
     /* Calculate the grid of opacities:                                     */
-    transitprint(1, verblevel, "Calculating new grid of opacities: '%s'.\n",
+    tr_output(TOUT_INFO, "Calculating new grid of opacities: '%s'.\n",
                                tr->f_opa);
     calcopacity(tr, tr->fp_opa);
 
@@ -122,14 +122,14 @@ opacity(struct transit *tr){
   /* Implied: The opacity file exists:                                      */
   file_exists = fileexistopen(th->f_opa, &tr->fp_opa);
   tr->f_opa = th->f_opa;
-  transitprint(10, verblevel, "Opacity-file exist status = %d\n", file_exists);
+  tr_output(TOUT_INFO, "Opacity-file exist status = %d\n", file_exists);
 
   if (file_exists != 1) {
 
-    transitprint(1, verblevel, "Opening opacity file failed.\n");
+    tr_output(TOUT_WARN, "Opening opacity file failed.\n");
 
     /* Calculate Voigt profiles:                                            */
-    transitprint(1, verblevel, "Calculating grid of Voigt profiles.\n");
+    tr_output(TOUT_INFO, "Calculating grid of Voigt profiles.\n");
     calcprofiles(tr);
 
     /* Set progress indicator and return success:                           */
@@ -147,10 +147,10 @@ opacity(struct transit *tr){
     /* If reserving the hint segment was unsuccessful, give up:             */
     if (op.hintID == -1) {
 
-      transitprint(1, verblevel, "Could not get hint shared memory ID.\n");
+      tr_output(TOUT_WARN, "Could not get hint shared memory ID.\n");
 
       /* Read the grid of opacities from file:                              */
-      transitprint(1, verblevel, "Reading opacity file: '%s'.\n", tr->f_opa);
+      tr_output(TOUT_INFO, "Reading opacity file: '%s'.\n", tr->f_opa);
       readopacity(tr, tr->fp_opa);
 
       /* Set progress indicator and return success:                         */
@@ -164,10 +164,10 @@ opacity(struct transit *tr){
     /* If attaching was unsuccessful, give up.                              */
     if (op.hint == (struct opacityhint *) -1) {
 
-      transitprint(1, verblevel, "Could not attach to hint shared memory.\n");
+      tr_output(TOUT_WARN, "Could not attach to hint shared memory.\n");
 
       /* Read the grid of opacities from file:                              */
-      transitprint(1, verblevel, "Reading opacity file: '%s'.\n", tr->f_opa);
+      tr_output(TOUT_INFO, "Reading opacity file: '%s'.\n", tr->f_opa);
       readopacity(tr, tr->fp_opa);
 
       /* Set progress indicator and return success:                         */
@@ -187,15 +187,15 @@ opacity(struct transit *tr){
     if (op.hint->master_PID == getpid()) {
 
       /* Share the grid of opacities from file:                             */
-      transitprint(1, verblevel, "Sharing opacity file: '%s'.\n", tr->f_opa);
+      tr_output(TOUT_INFO, "Sharing opacity file: '%s'.\n", tr->f_opa);
 
       if (shareopacity(tr, tr->fp_opa) || mountopacity(tr)) {
 
-        transitprint(1, verblevel, "Shared memory sh/mt error. Aborting.\n");
+        tr_output(TOUT_WARN, "Shared memory sh/mt error. Aborting.\n");
         op.hint->status |= TSHM_ERROR;
 
         /* Read the grid of opacities from file:                            */
-        transitprint(1, verblevel, "Reading opacity file: '%s'.\n",
+        tr_output(TOUT_INFO, "Reading opacity file: '%s'.\n",
                                     tr->f_opa);
         readopacity(tr, tr->fp_opa);
       }
@@ -211,7 +211,7 @@ opacity(struct transit *tr){
       }
       while (buf2.shm_nattch != buf1.shm_nattch);
 
-      transitprint(1, verblevel, "Marking shared memory for removal.\n");
+      tr_output(TOUT_DEBUG, "Marking shared memory for removal.\n");
       shmctl(op.hintID, IPC_RMID, &buf1);
       shmctl(op.mainID, IPC_RMID, &buf2);
 
@@ -227,11 +227,10 @@ opacity(struct transit *tr){
         /* If there's an error with the shared memory, abort.               */
         if (op.hint->status & TSHM_ERROR) {
 
-          transitprint(1, verblevel, "Shared memory error. Aborting.\n");
+          tr_output(TOUT_WARN, "Shared memory error. Aborting.\n");
 
           /* Read the grid of opacities from file:                          */
-          transitprint(1, verblevel, "Reading opacity file: '%s'.\n",
-                                      tr->f_opa);
+          tr_output(TOUT_INFO, "Reading opacity file: '%s'.\n", tr->f_opa);
           readopacity(tr, tr->fp_opa);
 
           /* Set progress indicator and return success:                     */
@@ -244,11 +243,10 @@ opacity(struct transit *tr){
     /* If there's an error attaching or mounting the memory, abort.     */
     if (attachopacity(tr) || mountopacity(tr)) {
 
-      transitprint(1, verblevel, "Shared memory att/mt error. Aborting.\n");
+      tr_output(TOUT_WARN, "Shared memory att/mt error. Aborting.\n");
 
       /* Read the grid of opacities from file:                          */
-      transitprint(1, verblevel, "Reading opacity file: '%s'.\n",
-                                  tr->f_opa);
+      tr_output(TOUT_INFO, "Reading opacity file: '%s'.\n", tr->f_opa);
       readopacity(tr, tr->fp_opa);
     }
   }
@@ -257,7 +255,7 @@ opacity(struct transit *tr){
   else {
 
     /* Read the grid of opacities from file:                                */
-    transitprint(1, verblevel, "Reading opacity file: '%s'.\n", tr->f_opa);
+    tr_output(TOUT_INFO, "Reading opacity file: '%s'.\n", tr->f_opa);
     readopacity(tr, tr->fp_opa);
   }
 
@@ -304,7 +302,7 @@ calcprofiles(struct transit *tr){
     op->profile[i] = op->profile[0] + i*nLor;
   }
   profile = op->profile;
-  transitprint(10, verblevel, "Number of Voigt profiles: %d.\n", nDop*nLor);
+  tr_output(TOUT_RESULT, "Number of Voigt profiles: %d.\n", nDop*nLor);
 
   t0 = timestart(tv, "Begin Voigt profiles calculation.");
   /* Evaluate the profiles for the array of widths:                         */
@@ -321,9 +319,8 @@ calcprofiles(struct transit *tr){
                              tr->wns.d/tr->owns.o, op->aDop[i], op->aLor[j],
                              timesalpha, tr->owns.n);
       }
-      transitprint(25, verblevel, "Profile[%2d][%2d] size = %4li  (D=%.3g, "
-                                  "L=%.3g).\n", i, j, 2*op->profsize[i][j]+1,
-                                   op->aDop[i], op->aLor[j]);
+      tr_output(TOUT_DEBUG, "Profile[%2d][%2d] size = %4li  (D=%.3g, "
+        "L=%.3g).\n", i, j, 2*op->profsize[i][j]+1, op->aDop[i], op->aLor[j]);
     }
   }
   t0 = timecheck(verblevel, 0, 0, "End Voigt-profile calculation.", tv, t0);
@@ -355,15 +352,19 @@ calcopacity(struct transit *tr,
   for (i=0; i<Ntemp; i++)
     op->temp[i] = tr->temp.v[i];
   /* Temperature boundaries check:                                          */
-  if (op->temp[0] < li->tmin)
-    transiterror(TERR_SERIOUS, "The opacity file attempted to sample a "
-                 "temperature (%.1f K) below the lowest allowed "
-                 "TLI temperature (%.1f K).\n", op->temp[0], li->tmin);
-  if (op->temp[Ntemp-1] > li->tmax)
-    transiterror(TERR_SERIOUS, "The opacity file attempted to sample a "
-                 "temperature (%.1f K) beyond the highest allowed "
-                 "TLI temperature (%.1f K).\n", op->temp[Ntemp-1], li->tmax);
-  transitprint(1, verblevel, "There are %li temperature samples.\n", Ntemp);
+  if (op->temp[0] < li->tmin) {
+    tr_output(TOUT_ERROR, "The opacity file attempted to sample a "
+      "temperature (%.1f K) below the lowest allowed "
+      "TLI temperature (%.1f K).\n", op->temp[0], li->tmin);
+    exit(EXIT_FAILURE);
+  }
+  if (op->temp[Ntemp-1] > li->tmax) {
+    tr_output(TOUT_ERROR, "The opacity file attempted to sample a "
+      "temperature (%.1f K) beyond the highest allowed "
+      "TLI temperature (%.1f K).\n", op->temp[Ntemp-1], li->tmax);
+    exit(EXIT_FAILURE);
+  }
+  tr_output(TOUT_RESULT, "There are %li temperature samples.\n", Ntemp);
 
   /* Evaluate the partition at these temperatures:                          */
   op->ziso    = (PREC_ATM **)calloc(iso->n_i,       sizeof(PREC_ATM *));
@@ -393,20 +394,20 @@ calcopacity(struct transit *tr,
   op->press = (PREC_RES *)calloc(Nlayer, sizeof(PREC_RES));
   for (i=0; i<Nlayer; i++)
     op->press[i] = tr->atm.p[i]*tr->atm.pfct;
-  transitprint(1, verblevel, "There are %li radius samples.\n", Nlayer);
+  tr_output(TOUT_RESULT, "There are %li radius samples.\n", Nlayer);
 
   /* Make molecules array from transit:                                     */
   Nmol = op->Nmol = tr->ds.iso->nmol;
   op->molID = (int *)calloc(Nmol, sizeof(int));
-  transitprint(1, verblevel, "There are %li molecules with line "
-                             "transitions.\n", Nmol);
+  tr_output(TOUT_RESULT, "There are %li molecules with line "
+    "transitions.\n", Nmol);
   for (i=0, j=0; i<iso->n_i; i++){
     /* If this molecule is not yet in molID array, add it's universal ID:   */
     if (valueinarray(op->molID, mol->ID[iso->imol[i]], j) < 0){
       op->molID[j++] = mol->ID[iso->imol[i]];
-      transitprint(10, verblevel, "Isotope's (%d) molecule ID: %d (%s) "
-                   "added at position %d.\n", i, op->molID[j-1],
-                   mol->name[iso->imol[i]], j-1);
+      tr_output(TOUT_DEBUG, "Isotope's (%d) molecule ID: %d (%s) "
+        "added at position %d.\n", i, op->molID[j-1],
+        mol->name[iso->imol[i]], j-1);
     }
   }
 
@@ -415,7 +416,7 @@ calcopacity(struct transit *tr,
   op->wns = (PREC_RES *)calloc(Nwave, sizeof(PREC_RES));
   for (i=0; i<Nwave; i++)
     op->wns[i] = tr->wns.v[i];
-  transitprint(1, verblevel, "There are %li wavenumber samples.\n", Nwave);
+  tr_output(TOUT_RESULT, "There are %li wavenumber samples.\n", Nwave);
 
   /* Allocate opacity array:                                                */
   if (fp != NULL){
@@ -431,12 +432,12 @@ calcopacity(struct transit *tr,
     }
 
     if (!op->o[0][0][0])
-      transitprint(1, verblevel, "Allocation fail.\n");
+      tr_output(TOUT_ERROR, "Allocation fail.\n");
 
     /* Compute extinction:                                                  */
     for (r=0;   r<Nlayer; r++){  /* For each layer:                         */
-      transitprint(3, verblevel, "\nOpacity Grid at layer %03d/%03ld.\n",
-                                 r+1, Nlayer);
+      tr_output(TOUT_DEBUG, "\nOpacity Grid at layer %03d/%03ld.\n",
+        r+1, Nlayer);
       for (t=0; t<Ntemp;  t++){  /* For each temperature:                   */
         /* Get density and partition-function arrays:                       */
         for (j=0; j < mol->nmol; j++)
@@ -444,9 +445,11 @@ calcopacity(struct transit *tr,
                        tr->atm.mm[r], mol->mass[j], op->press[r], op->temp[t]);
         for (j=0; j < iso->n_i; j++)
           Z[j] = op->ziso[j][t];
-        if((rn=computemolext(tr, op->o[r][t], op->temp[t], density, Z, 1)) != 0)
-          transiterror(TERR_CRITICAL, "extinction() returned error code %i.\n",
-                                      rn);
+        if((rn=computemolext(tr, op->o[r][t], op->temp[t], density, Z, 1))
+          != 0) {
+          tr_output(TOUT_ERROR, "extinction() returned error code %i.\n", rn);
+          exit(EXIT_FAILURE);
+        }
       }
     }
 
@@ -470,7 +473,7 @@ calcopacity(struct transit *tr,
 
     fclose(fp);
   }
-  transitprint(2, verblevel, "Done.\n");
+  tr_output(TOUT_RESULT, "Done.\n");
   return 0;
 }
 
@@ -488,12 +491,12 @@ readopacity(struct transit *tr,  /* transit struct                          */
   fread(&op->Ntemp,  sizeof(long), 1, fp);
   fread(&op->Nlayer, sizeof(long), 1, fp);
   fread(&op->Nwave,  sizeof(long), 1, fp);
-  transitprint(1, verblevel, "Opacity grid size: Nmolecules    = %5li\n"
-                             "                   Ntemperatures = %5li\n"
-                             "                   Nlayers       = %5li\n"
-                             "                   Nwavenumbers  = %5li\n",
-                             op->Nmol, op->Ntemp, op->Nlayer, op->Nwave);
-  transitprint(20, verblevel, "ftell = %li\n", ftell(fp));
+  tr_output(TOUT_INFO, "Opacity grid size: Nmolecules    = %5li\n"
+    "                   Ntemperatures = %5li\n"
+    "                   Nlayers       = %5li\n"
+    "                   Nwavenumbers  = %5li\n",
+    op->Nmol, op->Ntemp, op->Nlayer, op->Nwave);
+  tr_output(TOUT_DEBUG, "ftell = %li\n", ftell(fp));
 
   /* Allocate and read arrays:                                              */
   op->molID = (int      *)calloc(op->Nmol,   sizeof(int));
@@ -506,28 +509,28 @@ readopacity(struct transit *tr,  /* transit struct                          */
   fread(op->wns,   sizeof(PREC_RES), op->Nwave,  fp);
 
   /* DEBUGGING: Print temperature array                                     */
-  transitprint(10, verblevel, "Molecule IDs = [");
+  tr_output(TOUT_DEBUG, "Molecule IDs = [");
   for (i=0; i < op->Nmol; i++)
-    transitprint(10, verblevel, "%3d, ", op->molID[i]);
-  transitprint(10, verblevel, "\b\b]\n\n");
+    tr_output(TOUT_DEBUG, "%3d, ", op->molID[i]);
+  tr_output(TOUT_DEBUG, "\b\b]\n\n");
 
-  transitprint(10, verblevel, "Temperatures (K)  =  [");
+  tr_output(TOUT_DEBUG, "Temperatures (K)  =  [");
   for (i=0; i < op->Ntemp; i++)
-    transitprint(10, verblevel, "%6d, ", (int)op->temp[i]);
-  transitprint(10, verblevel, "\b\b] \n\n");
+    tr_output(TOUT_DEBUG, "%6d, ", (int)op->temp[i]);
+  tr_output(TOUT_DEBUG, "\b\b] \n\n");
 
-  transitprint(10, verblevel, "Pressures (bar) = [ ");
+  tr_output(TOUT_DEBUG, "Pressures (bar) = [ ");
   for (i=0; i < op->Nlayer; i++)
-    transitprint(10, verblevel, "%.2e, ", 1e-6*op->press[i]);
-  transitprint(10, verblevel, "\b\b] \n\n");
+    tr_output(TOUT_DEBUG, "%.2e, ", 1e-6*op->press[i]);
+  tr_output(TOUT_DEBUG, "\b\b] \n\n");
 
-  transitprint(10, verblevel, "Wavenumber (cm-1) = [");
+  tr_output(TOUT_DEBUG, "Wavenumber (cm-1) = [");
   for (i=0; i < 4; i++)
-    transitprint(10, verblevel, "%7.2f, ", op->wns[i]);
-  transitprint(10, verblevel, "..., ");
+    tr_output(TOUT_DEBUG, "%7.2f, ", op->wns[i]);
+  tr_output(TOUT_DEBUG, "..., ");
   for (i=op->Nwave-4; i < op->Nwave; i++)
-    transitprint(10, verblevel, "%7.2f, ", op->wns[i]);
-  transitprint(10, verblevel, "\b\b]\n\n");
+    tr_output(TOUT_DEBUG, "%7.2f, ", op->wns[i]);
+  tr_output(TOUT_DEBUG, "\b\b]\n\n");
 
   /* Allocate and read the opacity grid:                                    */
   op->o      = (PREC_RES ****)       calloc(op->Nlayer, sizeof(PREC_RES ***));
@@ -563,12 +566,12 @@ shareopacity(struct transit *tr, /* transit struct                          */
   fread(&op->Ntemp,  sizeof(long), 1, fp);
   fread(&op->Nlayer, sizeof(long), 1, fp);
   fread(&op->Nwave,  sizeof(long), 1, fp);
-  transitprint(1, verblevel, "Opacity grid size: Nmolecules    = %5li\n"
-                             "                   Ntemperatures = %5li\n"
-                             "                   Nlayers       = %5li\n"
-                             "                   Nwavenumbers  = %5li\n",
-                             op->Nmol, op->Ntemp, op->Nlayer, op->Nwave);
-  transitprint(20, verblevel, "ftell = %li\n", ftell(fp));
+  tr_output(TOUT_INFO, "Opacity grid size: Nmolecules    = %5li\n"
+    "                   Ntemperatures = %5li\n"
+    "                   Nlayers       = %5li\n"
+    "                   Nwavenumbers  = %5li\n",
+    op->Nmol, op->Ntemp, op->Nlayer, op->Nwave);
+  tr_output(TOUT_DEBUG, "ftell = %li\n", ftell(fp));
 
   /* Copy dimensional data into the shared hint struct:                     */
   oh->Nwave = op->Nwave;
@@ -625,8 +628,7 @@ attachopacity(struct transit *tr){ /* transit struct                        */
 
   /* If allocation failed, abort:                                           */
   if (op->mainID == -1) {
-    transiterror(TERR_WARNING, "Failed to allocate main shared memory.\n");
-    transitprint(1, verblevel, "Attachment failed. shmget() returned -1.\n");
+    tr_output(TOUT_WARN, "Failed to allocate main shared memory.\n");
     return 1;
   }
 
@@ -634,8 +636,7 @@ attachopacity(struct transit *tr){ /* transit struct                        */
   op->mainaddr = shmat(op->mainID, (void *) 0, 0);
 
   if (op->mainaddr == (void *) -1) {
-    transiterror(TERR_WARNING, "Failed to attach to main shared memory.\n");
-    transitprint(1, verblevel, "Attachment failed. shmat() returned -1.\n");
+    tr_output(TOUT_WARN, "Failed to attach to main shared memory.\n");
     return 1;
   }
 

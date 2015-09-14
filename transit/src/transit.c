@@ -79,25 +79,21 @@ void transit_init(int argc, char **argv){
   fw(processparameters, !=0, argc, argv, &transit);
   t0 = timecheck(verblevel, itr,  0, "processparameters", tv, t0);
 
-  transitprint(1, verblevel, "verblevel: %d\n", verblevel);
+  tr_output(TOUT_INFO, "verblevel: %d\n", verblevel);
 
   /* Accept all general hints:                                              */
   fw(acceptgenhints, !=0, &transit);
   /* Presentation:                                                          */
   printintro();
 
-  /* No program warnings if verblevel is 0 or 1:                            */
-  if(verblevel<2)
-    transit_nowarn = 1;
-
   /* Make wavenumber binning:                                               */
   fw(makewnsample, <0, &transit);
   t0 = timecheck(verblevel, itr,  1, "makewnsample", tv, t0);
   if(fw_status>0)
-    transitprint(7, verblevel,
-                 "makewnsample() modified some of the hinted "
-                 "parameters according to returned flag: 0x%lx.\n",
-                 fw_status);
+    tr_output(TOUT_INFO,
+      "makewnsample() modified some of the hinted "
+      "parameters according to returned flag: 0x%lx.\n",
+      fw_status);
 
   /* Read Atmosphere information:                                           */
   fw(getatm, !=0, &transit);
@@ -111,8 +107,8 @@ void transit_init(int argc, char **argv){
   fw(makeradsample, <0, &transit);
   t0 = timecheck(verblevel, itr,  4, "makeradsample", tv, t0);
   if(fw_status>0)
-    transitprint(7, verblevel, "makeradsample() modified some of the hinted "
-                               "parameters. Flag: 0x%lx.\n", fw_status);
+    tr_output(TOUT_INFO, "makeradsample() modified some of the hinted "
+      "parameters. Flag: 0x%lx.\n", fw_status);
 
   /* Calculate opacity grid:                                                */
   fw(opacity, <0, &transit);
@@ -176,8 +172,8 @@ void do_transit(double * transit_out){
     fw(makeipsample, <0, &transit);
     t0 = timecheck(verblevel, itr,  6, "makeipsample", tv, t0);
     if(fw_status>0)
-      transitprint(7, verblevel, "makeipsample() modified some of the hinted "
-                                 "parameters. Flag: 0x%lx.\n", fw_status);
+      tr_output(TOUT_INFO, "makeipsample() modified some of the hinted "
+        "parameters. Flag: 0x%lx.\n", fw_status);
 
     /* Interpolate the cross section:                                       */
     fw(interpcs, !=0, &transit);
@@ -196,7 +192,7 @@ void do_transit(double * transit_out){
 
     /* Calculate optical depth for eclipse:                                 */
     if(strcmp(transit.sol->name, "eclipse") == 0){
-      transitprint(1, verblevel, "\nCalculating eclipse:\n");
+      tr_output(TOUT_INFO, "\nCalculating eclipse:\n");
 
       fw(tau, !=0, &transit);
       t0 = timecheck(verblevel, itr, 12, "tau eclipse", tv, t0);
@@ -221,7 +217,7 @@ void do_transit(double * transit_out){
 
     /* Calculate optical depth for transit:                                 */
     else if (strcmp(transit.sol->name, "transit") == 0){
-      transitprint(1, verblevel, "\nCalculating transit:\n");
+      tr_output(TOUT_INFO, "\nCalculating transit:\n");
       fw(tau, !=0, &transit);
       t0 = timecheck(verblevel, itr, 12, "tau transit", tv, t0);
 
@@ -243,7 +239,8 @@ void do_transit(double * transit_out){
     freemem_outputray( transit.ds.out, &transit.pi);
 
     t0 = timecheck(verblevel, itr, 14, "THE END", tv, t0);
-    transitprint(1, verblevel, "----------------------------\n");
+    tr_output(TOUT_INFO,
+      "--------------------------------------------------\n");
     itr++;
   }
 }

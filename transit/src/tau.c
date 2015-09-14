@@ -150,9 +150,11 @@ tau(struct transit *tr){
     hfct = ip->fct;
   }
   /* Request at least four layers to calculate a spline interpolation:     */
-  if(nh < 4)
-    transiterror(TERR_SERIOUS, "At least four layers (%d given) are required "
-                 "(three for spline, one for the analitical part).\n", nh);
+  if(nh < 4) {
+    tr_output(TOUT_ERROR, "At least four layers (%d given) are required "
+      "(three for spline, one for the analitical part).\n", nh);
+    exit(EXIT_FAILURE);
+  }
 
   PREC_RES *tau_wn;              /* Optical depth array                     */
   PREC_ATM *temp = tr->atm.t,    /* Temperature array                       */
@@ -206,7 +208,7 @@ tau(struct transit *tr){
 
   /* Compute extinction at the outermost layer:                             */
   if(!comp[rnn-1]){
-    transitprint(1, verblevel, "Computing extinction at outermost layer.\n");
+    tr_output(TOUT_INFO, "Computing extinction at outermost layer.\n");
     if (tr->fp_opa != NULL)
       rn = interpolmolext(tr, rnn-1, ex->e);
     else if (tr->f_line != NULL){
@@ -216,9 +218,11 @@ tau(struct transit *tr){
         Z[i]       = tr->ds.iso->isov[i].z [rnn-1];
 
       if((rn=computemolext(tr, ex->e+(rnn-1), tr->atm.t[rnn-1]*tr->atm.tfct,
-                           density, Z, 0)) != 0)
-        transiterror(TERR_CRITICAL,  "computemolext() returned error "
-                                     "code %i.\n", rn);
+                           density, Z, 0)) != 0) {
+        tr_output(TOUT_ERROR,  "computemolext() returned error "
+          "code %i.\n", rn);
+        exit(EXIT_FAILURE);
+      }
     }
     ex->computed[rnn-1] = 1;
   }
@@ -236,14 +240,14 @@ tau(struct transit *tr){
               "# e_s [wn][rad]; wn[0]=min(wn), row[0]=bottom (max(p))\n");
   }
 
-  transitprint(1, verblevel, "Calculating optical depth at various radii:\n");
+  tr_output(TOUT_INFO, "Calculating optical depth at various radii:\n");
   /* For each wavenumber:                                                   */
   for(wi=0; wi<wnn; wi++){
     tau_wn = tau->t[wi];
 
     /* Print output every 10% progress:                                     */
     if(wi > wnextout){
-      transitprint(12, verblevel, "%i%%\n", (int)(100*(float)wi/wnn+0.5));
+      tr_output(TOUT_DEBUG, "%i%%\n", (int)(100*(float)wi/wnn+0.5));
       wnextout += (long)(wnn/10.0);
     }
 
@@ -264,14 +268,14 @@ tau(struct transit *tr){
         /* FINDME: What if the ray ends up going through a lower layer because
            of the refraction? */
         if(ri)
-          transitprint(30, verblevel, "Last Tau (height=%9.4g, wn=%9.4g): "
+          tr_output(TOUT_DEBUG, "Last Tau (height=%9.4g, wn=%9.4g): "
                                "%10.4g.\n", h[ri-1], wn->v[wi], tau_wn[ri-1]);
         /* While the extinction at a radius bigger than the impact
            parameter is not computed, go for it: */
         do{
           if(!comp[--lastr]){
             /* Compute extinction at given radius:                          */
-            transitprint(15, verblevel, "Radius %i: %.9g cm ... \n",
+            tr_output(TOUT_DEBUG, "Radius %i: %.9g cm ... \n",
                                         lastr+1, r[lastr]*rfct);
             if (tr->fp_opa != NULL)
               rn = interpolmolext(tr, lastr, ex->e);
@@ -281,9 +285,11 @@ tau(struct transit *tr){
               for (i=0; i < tr->ds.iso->n_i; i++)
                 Z[i]       = tr->ds.iso->isov[i].z [lastr];
               if((rn=computemolext(tr, ex->e+lastr,
-                         tr->atm.t[lastr]*tr->atm.tfct, density, Z, 0)) != 0)
-                transiterror(TERR_CRITICAL,  "computemolext() returned error "
-                                             "code %i.\n", rn);
+                         tr->atm.t[lastr]*tr->atm.tfct, density, Z, 0)) != 0) {
+                tr_output(TOUT_ERROR,
+                  "computemolext() returned error code %i.\n", rn);
+                exit(EXIT_FAILURE);
+              }
             }
             ex->computed[lastr] = 1;
             /* Update the value of the extinction at the right place:       */
@@ -299,17 +305,17 @@ tau(struct transit *tr){
       /* Check if the optical depth reached toomuch:                        */
       if (tau_wn[ri] > tau->toomuch){
         tau->last[wi] = ri;   /* Set tau.last                               */
-        if (ri < 3){
-          transiterror(TERR_WARNING, "At wavenumber %g (cm-1), the optical "
-                       "depth (%g) exceeded toomuch (%g) at the height "
-                       "level %li (%g km), this should have happened in a "
-                       "deeper layer.\n", wn->v[wi],
-                       tau_wn[ri], tau->toomuch, ri, h[ri]*hfct/1e5);
+        if (ri < 3) {
+          tr_output(TOUT_WARN, "At wavenumber %g (cm-1), the optical "
+            "depth (%g) exceeded toomuch (%g) at the height "
+            "level %li (%g km), this should have happened in a "
+            "deeper layer.\n", wn->v[wi],
+            tau_wn[ri], tau->toomuch, ri, h[ri]*hfct/1e5);
         }
         break;  /* Exit height loop when the optical depth reached toomuch  */
       }
-      transitDEBUG(22, verblevel, "Tau(lambda %li=%9.07g, r=%9.4g) : %g "
-          "(toomuch: %g)\n", wi, wn->v[wi], r[ri], tau_wn[ri], tau->toomuch);
+      tr_output(TOUT_DEBUG, "Tau(lambda %li=%9.07g, r=%9.4g) : %g "
+        "(toomuch: %g)\n", wi, wn->v[wi], r[ri], tau_wn[ri], tau->toomuch);
     }
 
     /* Write total, cloud, and scattering extinction to file if requested:  */
@@ -320,13 +326,13 @@ tau(struct transit *tr){
     }
 
     if(ri==nh){
-      transitprint(1, verblevel, "WARNING: At wavenumber %g cm-1, tau reached "
-                   "the bottom of the atmosphere with tau: %g (tau max: %g).\n",
-                   wn->v[wi], tau_wn[ri-1], tau->toomuch);
+      tr_output(TOUT_WARN, "At wavenumber %g cm-1, tau reached "
+        "the bottom of the atmosphere with tau: %g (tau max: %g).\n",
+        wn->v[wi], tau_wn[ri-1], tau->toomuch);
       tau->last[wi] = ri-1;
     }
   }
-  transitprint(1, verblevel, "Done.\n");
+  tr_output(TOUT_INFO, "Done.\n");
 
   /* Save various files if requested in the config file:                 */
 
@@ -564,11 +570,13 @@ detailout(prop_samp *wn,         /* transit's wavenumber array              */
   double val;
   float **arrf = (float **)arr;       /* Float-casted array                 */
   FILE *out = fopen(det->file, "w");  /* Pointer to file                    */
-  if(!out)
-    transiterror(TERR_SERIOUS, "Cannot open '%s' for writing fine detail.\n",
-                               det->file);
-  transitprint(1, verblevel, "\nPrinting in '%s'. Fine detail of %s at "
-                             "selected wavenumbers.\n", det->file, det->name);
+  if(!out) {
+    tr_output(TOUT_ERROR, "Cannot open '%s' for writing fine detail.\n",
+      det->file);
+    exit(EXIT_FAILURE);
+  }
+  tr_output(TOUT_INFO, "\nPrinting in '%s'. Fine detail of %s at "
+    "selected wavenumbers.\n", det->file, det->name);
 
   fprintf(out, "#Radius-w=>    ");
   /* Binary search to find the index for the requested wavenumbers:         */
@@ -642,11 +650,11 @@ printtoomuch(char *file,            /* Filename to save the info            */
   if(file[0] != '-')
     out = fopen(file, "w");
   if(!out)
-    transiterror(TERR_WARNING, "Cannot open '%s' for writing depth where the "
-                               "optical depth reached toomuch.\n", file);
+    tr_output(TOUT_WARN, "Cannot open '%s' for writing depth where the "
+      "optical depth reached toomuch.\n", file);
 
-  transitprint(20, verblevel, "\nPrinting in '%s' the depth where the "
-                   "optical depth got larger than %g.\n", file, tau->toomuch);
+  tr_output(TOUT_INFO, "\nPrinting in '%s' the depth where the "
+    "optical depth got larger than %g.\n", file, tau->toomuch);
 
   /* Print header:                                                          */
   fprintf(out,

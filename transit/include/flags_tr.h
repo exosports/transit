@@ -123,16 +123,16 @@
 #define TRPI_GRID         0x010000  /* intens_grid()    completed           */
 #define TRPI_OPACITY      0x020000  /* idxrefrac()      completed           */
 
-/* flags for transiterror:  */
-#define TERR_MESSAGE      0x000000
-#define TERR_CRITICAL     0x000001
-#define TERR_SERIOUS      0x000002
-#define TERR_WARNING      0x000003
-#define TERR_NOFLAGBITS   0x00000f
-#define TERR_ALLOWCONT    0x000010
-#define TERR_NOPREAMBLE   0x000020
-#define TERR_ALLOC        0x000040
-#define TERR_DBG          0x000080
+/* Flags for tr_output: */
+#define TOUT_ERROR        0x000001
+#define TOUT_WARN         0x000002
+#define TOUT_INFO         0x000003
+#define TOUT_RESULT       0x000004
+#define TOUT_DEBUG        0x000005
+
+#define TOUT_VERBMASK     0x00000f
+#define TOUT_LOCATE       0x000010
+#define TOUT_BANNER       0x000020
 
 /* Shared memory flags: */
 #define TSHM_START        0x000000 /* Default state     */

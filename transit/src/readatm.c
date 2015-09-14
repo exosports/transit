@@ -93,8 +93,8 @@ getatm(struct transit *tr){
 
   /* Check if atmospheric file was specified:                               */
   if(th->f_atm == NULL  ||  strcmp(th->f_atm, "-") == 0){
-    transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                 "getatm() :: No atmospheric file specified.\n");
+    tr_output(TOUT_ERROR,
+      "getatm() :: No atmospheric file specified.\n");
     return -1;
   }
   else{
@@ -104,7 +104,7 @@ getatm(struct transit *tr){
       exit(EXIT_FAILURE);
     atmfilename = tr->f_atm = th->f_atm;   /* Set file name                 */
     fp  = tr->fp_atm;        /* Pointer to file                             */
-    transitprint(1, verblevel, "Reading atmosphere file: '%s'.\n", tr->f_atm);
+    tr_output(TOUT_INFO, "Reading atmosphere file: '%s'.\n", tr->f_atm);
 
     /* nrad will be the amount of allocated radii so far:                   */
     nrad      = 8;
@@ -122,7 +122,7 @@ getatm(struct transit *tr){
 
   /* Read keyword-variables from file:                                      */
   if((i=getmnfromfile(fp, &at, tr))<1){
-    transiterror(TERR_SERIOUS, "getmnfromfile() returned error code %i\n", i);
+    tr_output(TOUT_ERROR, "getmnfromfile() returned error code %i\n", i);
     exit(EXIT_FAILURE);
   }
   nmol = at.n_aiso; /* Number of molecules in atmospheric file              */
@@ -148,7 +148,7 @@ getatm(struct transit *tr){
 
   /* Read isotopic abundances:                                              */
   nrad = readatmfile(fp, tr, &at, rads, nrad);
-  transitprint(1, verblevel, "Done.\n\n");
+  tr_output(TOUT_INFO, "Done.\n\n");
   fclose(fp);
 
   /* Set required values in 'rads' structure:                               */
@@ -178,10 +178,12 @@ checkaddmm(double *mm,            /* Mean molecular mass stored             */
   double sumq;  /* Fractional abundance sum                                 */
   int i;        /* for-loop index                                           */
 
-  if(r >= molec[0].n)
-    transiterror(TERR_CRITICAL,
-                 "In file %s (line %li) a radius beyond the allocated "
-                 "has been requested.", __FILE__, __LINE__);
+  if(r >= molec[0].n) {
+    tr_output(TOUT_ERROR,
+      "In file %s (line %li) a radius beyond the allocated "
+      "has been requested.", __FILE__, __LINE__);
+    exit(EXIT_FAILURE);
+  }
 
   /* Compute the mean molecular mass:                                       */
   sumq = *mm = 0;
@@ -197,8 +199,9 @@ checkaddmm(double *mm,            /* Mean molecular mass stored             */
 
   /* Check that sum of proportional abundances make sense:                  */
   if(sumq>1.001){
-    transiterror(TERR_SERIOUS, "Sum of abundances of isotopes adds up to "
+    tr_output(TOUT_ERROR, "Sum of abundances of isotopes adds up to "
                                "more than 1: %g\n", sumq);
+    exit(EXIT_FAILURE);
   }
 
   return sumq;
@@ -211,17 +214,16 @@ void
 telldefaults(struct isotopes *iso,
              struct atm_data *at){
   int i;
-  transitprint(1, verblevel,
-               "You are using one point atmospheric conditions:\n"
-               " Temperature:         %g K\n"
-               " Pressure:            %g dyne/cm2\n"
-               " Mean molecular mass: %g AMU\n",
-               at->atm.t[0]*at->atm.tfct, at->atm.p[0]*at->atm.pfct, at->mm[0]);
+  tr_output(TOUT_INFO,
+    "You are using one point atmospheric conditions:\n"
+    " Temperature:         %g K\n"
+    " Pressure:            %g dyne/cm2\n"
+    " Mean molecular mass: %g AMU\n",
+    at->atm.t[0]*at->atm.tfct, at->atm.p[0]*at->atm.pfct, at->mm[0]);
   /* Densities for all isotopes: */
   for(i=0; i<iso->n_i; i++)
-      transitprint(1, verblevel, " %-8s: density %8g g/cm3\n",
-                                   iso->isof[i].n,
-                                   at->molec[iso->imol[i]].d[0]);
+      tr_output(TOUT_INFO, " %-8s: density %8g g/cm3\n",
+        iso->isof[i].n, at->molec[iso->imol[i]].d[0]);
 }
 
 
@@ -272,9 +274,9 @@ static void
 atmerr(int max,     /* Maximum length of an accepted line                   */
        char *file,  /* File from which we were reading                      */
        int line){   /* Line being read                                      */
-  transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-               "Line %i of file '%s' has more than %i characters, "
-               "that is not allowed\n", file, max);
+  tr_output(TOUT_ERROR,
+    "Line %i of file '%s' has more than %i characters, "
+    "that is not allowed\n", file, max);
   exit(EXIT_FAILURE);
 }
 
@@ -286,25 +288,27 @@ invalidfield(char *line,   /* Contents of the line                          */
              int nmb,      /* File number                                   */
              int fld,      /* Field with the error                          */
              char *fldn){  /* Name of the field                             */
-  transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-               "Line %i of file '%s': Field %i (%s) does not have a valid "
-               "value:\n%s.\n", nmb, atmfilename, fld, fldn, line);
+  tr_output(TOUT_ERROR,
+    "Line %i of file '%s': Field %i (%s) does not have a valid "
+    "value:\n%s.\n", nmb, atmfilename, fld, fldn, line);
   exit(EXIT_FAILURE);
 }
 
 
 /* \fcnfh
    Check that val is positive. Throw error message if not.                  */
-static inline void
+static void
 checkposvalue(PREC_RES val, /* Value to check                               */
               int field,    /* Field where it was read                      */
               long line){   /* Line from which it was read                  */
 
-  if(val<0)
-    transiterror(TERR_SERIOUS,
-                 "While reading the %i-th field in line %li of atmosphere "
-                 "file %s, a negative value was found (%g).\n", field,
-                 line-1, atmfilename, val);
+  if(val<0) {
+    tr_output(TOUT_ERROR,
+      "While reading the %i-th field in line %li of atmosphere "
+      "file %s, a negative value was found (%g).\n", field,
+      line-1, atmfilename, val);
+    exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -344,7 +348,7 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
         fgetupto_err(line, maxline, fp, &atmerr, tr->f_atm, at->begline++);
         /* Count the number of words (molecules) in line:                   */
         nmol = countfields(line, ' ');
-        transitprint(15, verblevel, "The number of molecules is %d.\n", nmol);
+        tr_output(TOUT_RESULT, "The number of molecules is %d.\n", nmol);
 
         /* Allocate Molecules names:                                        */
         mol->name    = (char **)calloc(nmol,             sizeof(char *));
@@ -352,24 +356,24 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
         for(i=1; i<nmol; i++)
           mol->name[i] = mol->name[0] + i*maxeisoname;
         /* Read and store the molecule names:                               */
-        transitprint(1, verblevel, "Molecules with abundance profile:\n  ");
+        tr_output(TOUT_DEBUG, "Molecules with abundance profile:\n  ");
         lp = line;
         /* Read and store names:                                            */
         for (i=0; i<nmol; i++){
           getname(lp, mol->name[i]);
           lp = nextfield(lp);
           if (i < nmol-1)
-            transitprint(1, verblevel, "%s, ", mol->name[i]);
+            tr_output(TOUT_DEBUG, "%s, ", mol->name[i]);
           else
-            transitprint(1, verblevel, "%s.\n", mol->name[i]);
+            tr_output(TOUT_DEBUG, "%s.\n", mol->name[i]);
         }
       }
       continue;
     case 0:     /* Throw error if EOF:                                      */
-      transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-                   "readatm :: EOF unexpectedly found at line %i "
-                   "of file %s while no t,p data points have been read.\n",
-                   at->begline, tr->f_atm);
+      tr_output(TOUT_ERROR,
+        "readatm :: EOF unexpectedly found at line %i "
+        "of file %s while no t,p data points have been read.\n",
+        at->begline, tr->f_atm);
       exit(EXIT_FAILURE);
       continue;
 
@@ -386,10 +390,10 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
         at->mass = 1;      /* Mass abundance (mass mixing ratio)            */
         break;
       default:
-        transiterror(TERR_SERIOUS,
-                     "'q' option in the atmosphere file can only be followed "
-                     "by 'm' (for abundances by mass) or 'n' (for abundances "
-                     "by number). '%s' is invalid.\n", line);
+        tr_output(TOUT_ERROR,
+          "'q' option in the atmosphere file can only be followed "
+          "by 'm' (for abundances by mass) or 'n' (for abundances "
+          "by number). '%s' is invalid.\n", line);
         break;
       }
       continue;
@@ -412,8 +416,8 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
         at->atm.tfct = atof(line+2);
         break;
       default:
-        transiterror(TERR_SERIOUS, "Invalid unit factor indication in "
-                                   "atmosphere file.\n");
+        tr_output(TOUT_ERROR,
+          "Invalid unit factor indication in atmosphere file.\n");
         exit(EXIT_FAILURE);
       }
       continue;
@@ -429,8 +433,8 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
     break;
   }
 
-  transitprint(3, verblevel, "Read all keywords in atmosphere file without "
-                             "problems.\n");
+  tr_output(TOUT_RESULT, "Read all keywords in atmosphere file without "
+    "problems.\n");
 
   /* Set total number of molecules in atmosphere:                           */
   mol->nmol = at->n_aiso = nmol;
@@ -452,10 +456,13 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
   }
   /* Check that there was at least one isotope defined and re-allocate
      array sizes to their final size:                                       */
-  if(!nmol)
-    transiterror(TERR_SERIOUS, "No species were found in the atmospheric file, "
-                               "make sure to specify them with the comment/"
-                               "header in the previous line '#SPECIES'.\n");
+  if(!nmol) {
+    tr_output(TOUT_ERROR,
+      "No species were found in the atmospheric file, "
+      "make sure to specify them with the comment/"
+      "header in the previous line '#SPECIES'.\n");
+    exit(EXIT_FAILURE);
+  }
 
   /* Set position of beginning of data:                                     */
   at->begpos = ftell(fp) - strlen(line) - 1;
@@ -489,7 +496,7 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
             prop_samp *rads,         /* Radius sampling                     */
             int nrad){               /* Remainder molecules' factor         */
 
-  transitprint(1, verblevel, "Start reading abundances.\n");
+  tr_output(TOUT_INFO, "Start reading abundances.\n");
   /* Find abundance related quantities for each radius                      */
   int lines = at->begline;
   PREC_NREC r = 0;  /* Radius index (number of radii being read)            */
@@ -563,7 +570,7 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
           molec[i].q[r] *= pow(10.0, tr->qscale[j]);
       }
       if (r==0)
-        transitprint(30, verblevel, "density[%d, %li]: %.9f.\n",
+        tr_output(TOUT_DEBUG, "density[%d, %li]: %.9f.\n",
                                     i, r, molec[i].q[r]);
 
       sumq += molec[i].q[r];      /* Add the abundances       */
@@ -589,15 +596,15 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
        to one (within allowq threshold):                                    */
     sumq = checkaddmm(at->mm+r, r, molec, mol, at->n_aiso, at->mass);
     if(fabs(sumq-1.0) > allowq)
-      transiterror(TERR_WARNING, "In radius %i (%g km), abundances don't add "
-                                 "up to 1.0: %.9g\n", r, at->rads.v[r], sumq);
+      tr_output(TOUT_WARN,
+        "In radius %i (%g km), abundances don't add "
+        "up to 1.0: %.9g\n", r, at->rads.v[r], sumq);
 
     /* Calculate densities using ideal gas law:                             */
     if (r>=0){
-      transitprint(30, verblevel, "Abund: %.9f, mmm: %.3f, mass: %.3f, "
-                                "p: %.3f, T: %.3f.\n", molec[2].q[r], at->mm[r],
-                                   mol->mass[2], at->atm.p[r]*at->atm.pfct,
-                                   at->atm.t[r]*at->atm.tfct);
+      tr_output(TOUT_DEBUG, "Abund: %.9f, mmm: %.3f, mass: %.3f, "
+        "p: %.3f, T: %.3f.\n", molec[2].q[r], at->mm[r], mol->mass[2],
+        at->atm.p[r]*at->atm.pfct, at->atm.t[r]*at->atm.tfct);
     }
     for(i=0; i<at->n_aiso; i++){
       molec[i].d[r] = stateeqnford(at->mass, molec[i].q[r], at->mm[r],
@@ -618,9 +625,9 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
     molec[i].q = (PREC_ATM *)realloc(molec[i].q, nrad*sizeof(PREC_ATM));
     molec[i].n = nrad;
   }
-  transitprint(1, verblevel, "Read %li layers between pressures %.3e and "
-                             "%.3e barye.\n", r, at->atm.p[0  ]*at->atm.pfct,
-                                                 at->atm.p[r-1]*at->atm.pfct);
+  tr_output(TOUT_RESULT, "Read %li layers between pressures %.3e and "
+    "%.3e barye.\n", r, at->atm.p[0  ]*at->atm.pfct,
+    at->atm.p[r-1]*at->atm.pfct);
 
   /* Check that the atmospheric layers are sorted from the bottom to
      the top layer:                                                         */
@@ -635,13 +642,16 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
     }
   }
 
-  if (sorted == 0 && reversed == 0)
-    transiterror(TERR_SERIOUS, "The atmospheric layers are neither sorted "
-                               "from the bottom up, not from the top down.\n");
+  if (sorted == 0 && reversed == 0) {
+    tr_output(TOUT_ERROR,
+      "The atmospheric layers are neither sorted "
+      "from the bottom up, not from the top down.\n");
+    exit(EXIT_FAILURE);
+  }
   else if (reversed == 1){
-    transiterror(TERR_WARNING, "The atmospheric layers are in reversed "
-                               "order (top-bottom).  Resorting to be from "
-                               "the bottom-up.\n");
+    tr_output(TOUT_WARN,
+      "The atmospheric layers are in reversed order (top-bottom). "
+      "Resorting to be from the bottom-up.\n");
     /* Swap atmospheric-layer values:                                       */
     for (i=0; i<nrad/2; i++){
       swap(rads->v,   i, nrad-1-i);
@@ -722,7 +732,7 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
     lp = nextfield(lp);
     radius[i] = strtod(lp, NULL)/2.0;
     lp = fgets(line, maxlinelen, elist);
-    transitprint(30, verblevel, "Read species:'%6s',  ID:%3d,  mass:%7.4f,  "
+    tr_output(TOUT_DEBUG, "Read species:'%6s',  ID:%3d,  mass:%7.4f,  "
       "radius:%5.2f.\n", rname[i], molID[i], mmass[i], radius[i]);
   }
 
@@ -730,19 +740,20 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
   for (i=0; i<nmol; i++){
     /* Set the radius:                                                      */
     j = findstring(mol->name[i], rname, ndatamol);
-    if (j == -1){
-      transiterror(TERR_SERIOUS, "The atmospheric species '%s' is not "
-                   "present in the list of known species:\n '%s'.\n",
-                    mol->name[i], filename);
+    if (j == -1) {
+      tr_output(TOUT_ERROR,
+        "The atmospheric species '%s' is not present in the list "
+        "of known species:\n '%s'.\n", mol->name[i], filename);
+      exit(EXIT_FAILURE);
     }
     mol->radius[i] = radius[j] * ANGSTROM;
     /* Set the universal molecular ID:                                      */
     mol->ID[i]     = molID[j];
     /* Set the mass:                                                        */
     mol->mass[i]   = mmass[j];
-    transitprint(1, verblevel, "Molecule %9s (ID: %3i) has radius %4.2f A "
-                 "and mass %7.4f u.\n", mol->name[i], mol->ID[i],
-                                        mol->radius[i]/ANGSTROM, mol->mass[i]);
+    tr_output(TOUT_RESULT, "Molecule %9s (ID: %3i) has radius %4.2f A "
+      "and mass %7.4f u.\n", mol->name[i], mol->ID[i],
+      mol->radius[i]/ANGSTROM, mol->mass[i]);
   }
 }
 
@@ -764,9 +775,9 @@ reloadatm(struct transit *tr,
   /* Update atmfile temperature array:                                      */
   for (i=0; i<nlayers; i++){
     at->atm.t[i] = input[i];
-    transitprint(20, verblevel, "%8.3f  ", at->atm.t[i]);
+    tr_output(TOUT_DEBUG, "%8.3f  ", at->atm.t[i]);
   }
-  transitprint(20, verblevel, "\n");
+  tr_output(TOUT_DEBUG, "\n");
 
   /* Update atmfile abundance arrays:                                       */
   for (j=0; j<nmol; j++)
@@ -778,8 +789,9 @@ reloadatm(struct transit *tr,
   for (i=0; i<nlayers; i++){
     sumq = checkaddmm(at->mm+i, i, at->molec, mol, nmol, at->mass);
     if(fabs(sumq-1.0) > allowq)
-      transiterror(TERR_WARNING, "In radius %i (%g km), abundances don't add "
-                                 "up to 1.0: %.9g\n", i, at->rads.v[i], sumq);
+      tr_output(TOUT_WARN,
+        "In radius %i (%g km), abundances don't add "
+        "up to 1.0: %.9g\n", i, at->rads.v[i], sumq);
 
     /* Re-calculate densities:                                              */
     for(j=0; j<nmol; j++)
@@ -789,19 +801,23 @@ reloadatm(struct transit *tr,
   }
 
   /* Re-calculate radius:                                                   */
-  transitprint(30, verblevel, "Old radius boundaries: [%.1f, %.1f]\n",
-                   at->rads.v[0], at->rads.v[nlayers-1]);
+  tr_output(TOUT_DEBUG, "Old radius boundaries: [%.1f, %.1f]\n",
+    at->rads.v[0], at->rads.v[nlayers-1]);
   /* Check that r0, p0, and gsurf were defined:                             */
-  if (tr->p0 == 0 || tr->r0 == 0 || tr->gsurf == 0)
-    transiterror(TERR_SERIOUS, "Surface gravity (%.1f) or reference pressure "
-      "(%.3e) or radius (%.1f) were not defined.\n", tr->gsurf, tr->p0, tr->r0);
+  if (tr->p0 == 0 || tr->r0 == 0 || tr->gsurf == 0) {
+    tr_output(TOUT_ERROR,
+      "Surface gravity (%.1f) or reference pressure "
+      "(%.3e) or radius (%.1f) were not defined.\n",
+      tr->gsurf, tr->p0, tr->r0);
+    exit(EXIT_FAILURE);
+  }
   radpress(tr->gsurf, tr->p0, tr->r0, at->atm.t,
            at->mm, at->atm.p, at->rads.v, nlayers, at->rads.fct);
   /* Actualize other variables of at->rads:                                 */
   at->rads.i = at->rads.v[0];
   at->rads.f = at->rads.v[nlayers-1];
-  transitprint(30, verblevel, "New radius boundaries: [%.1f, %.1f]\n",
-                   tr->ds.at->rads.v[0], tr->ds.at->rads.v[nlayers-1]);
+  tr_output(TOUT_DEBUG, "New radius boundaries: [%.1f, %.1f]\n",
+    tr->ds.at->rads.v[0], tr->ds.at->rads.v[nlayers-1]);
 
   /* Re-resample transit arrays:                                            */
   makeradsample(tr);
@@ -835,8 +851,10 @@ int radpress(double g,         /* Surface gravity (m/s^2)                   */
 
   /* Reference pressure is no in given range:                               */
   if (i0 == -1){
-    transiterror(TERR_CRITICAL, "Reference pressure level (%.3e) not found "
-               "in range [%.3e, %.3e].\n", p0, pressure[0], pressure[nlayer-1]);
+    tr_output(TOUT_ERROR,
+      "Reference pressure level (%.3e) not found "
+      "in range [%.3e, %.3e].\n", p0, pressure[0], pressure[nlayer-1]);
+    exit(EXIT_FAILURE);
     return 0;
   }
 
@@ -844,17 +862,17 @@ int radpress(double g,         /* Surface gravity (m/s^2)                   */
   rad0 = radius[i0] + (radius[i0+1]-radius[i0]) *
          log(p0/pressure[i0]) / log(pressure[i0+1]/pressure[i0]);
 
-  transitprint(20, verblevel, "PRESSURE:\n");
+  tr_output(TOUT_DEBUG, "PRESSURE:\n");
   for (i=0; i<nlayer; i++)
-    transitprint(20,verblevel, "%.3e, ", pressure[i]);
-  transitprint(20, verblevel, "\n");
+    tr_output(TOUT_DEBUG, "%.3e, ", pressure[i]);
+  tr_output(TOUT_DEBUG, "\n");
 
   /* Adjust radius array to force radius(p0) = r0:                          */
-  transitprint(20, verblevel, "RADIUS:\n");
+  tr_output(TOUT_DEBUG, "RADIUS:\n");
   for (i=0; i<nlayer; i++){
     radius[i] = r0 + (radius[i] - rad0)/rfct;
-    transitprint(20, verblevel, "%.1f, ", radius[i]);
+    tr_output(TOUT_DEBUG, "%.1f, ", radius[i]);
   }
-  transitprint(20, verblevel, "\n");
+  tr_output(TOUT_DEBUG, "\n");
   return 1;
 }

@@ -88,6 +88,11 @@ stateeqnford(_Bool mass,  /* Abundance by mass (1) or by number (0)         */
   return rho * mi;
 }
 
+#define tr_output(level, ...) do { \
+  if (((level) & TOUT_VERBMASK) <= verblevel) tr_output_fcn(level, __FILE__, \
+    __LINE__, __VA_ARGS__); \
+} while(0)
+
 #define DEBUG_ERROR
 #ifdef  DEBUG_ERROR
 #define DBGERR | TERR_DBG
@@ -104,36 +109,37 @@ stateeqnford(_Bool mass,  /* Abundance by mass (1) or by number (0)         */
 
 long fw_status;
 #define fw(fcn, failurecondition, ...) do{               \
-    if((fw_status=fcn(__VA_ARGS__)) failurecondition)    \
-      transiterror(TERR_SERIOUS,                         \
+    if((fw_status=fcn(__VA_ARGS__)) failurecondition) {  \
+      tr_output(TOUT_ERROR,                              \
                    #fcn "() returned error code %li\n",  \
                    fw_status);                           \
+      exit(EXIT_FAILURE);                                \
+    }                                                    \
                                        }while(0)
-
-
-#define transitassert(a, ...) if(a) transiterror(TERR_CRITICAL, __VA_ARGS__)
-
-#define transitprint(thislevel, verblevel, ...) do{                         \
-  if(thislevel <= verblevel)  fprintf(stdout, __VA_ARGS__); }while(0)
 
 /* Add flag to transit if present in hint and change hint flag value:       */
 #define transitacceptflag(transit, hint, flag) do{                          \
         transit |= hint&flag; hint &= ~(flag); }while(0)
 
-#define transitallocerror(nmb)                                              \
-        transiterror(TERR_CRITICAL,                                         \
-                     "transit:: %s: Allocation failed for %i allocation\n"  \
-                     "units in line %i. Impossible to continue.\n",         \
-                     __FILE__, nmb, __LINE__)
+#define transitallocerror(nmb) do { \
+  tr_output(TOUT_ERROR | TOUT_LOCATE | TOUT_BANNER, \
+    "Allocation failed for %i allocation units. Impossible to continue.\n", \
+    nmb); \
+  exit(EXIT_FAILURE); \
+} while(0)
+
 #define free_null(x) do{free(x);x=NULL;}while(0)
 
 #ifdef NODEBUG_TRANSIT
-#define transitDEBUG(...) ((void)0)
 #define transitASSERT(...) ((void)0)
 #else
 #define free(x)  do{free(x);x=NULL;}while(0)
-#define transitASSERT(a,...) if(a) transiterror(TERR_CRITICAL,__VA_ARGS__)
-#define transitDEBUG(...) transitprint(__VA_ARGS__)
+#define transitASSERT(a,...) do { \
+  if(a) { \
+    tr_output(TOUT_ERROR | TOUT_LOCATE, __VA_ARGS__); \
+    exit(EXIT_FAILURE); \
+  } \
+} while(0)
 #endif
 
 /* Maximum name length: */
@@ -143,8 +149,7 @@ long fw_status;
 #define _Bool short
 #endif
 
-extern int transit_nowarn;
-extern int verblevel;      /* Verbose level > 10 is only for debuging       */
+extern int verblevel;      /* Verbose level > 4 is only for debuging       */
 extern int maxline;        /* Initialized in transitstd                     */
 extern int version;
 extern int revision;

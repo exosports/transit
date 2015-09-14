@@ -54,8 +54,6 @@ Thank you for using transit!
 #include <transit.h>
 
 /* keeps tracks of number of errors that where allowed to continue. */
-static int terr_allown=0;
-int transit_nowarn=0;
 int verblevel;
 int maxline=1000;
 
@@ -66,104 +64,72 @@ inline void transitdot(int thislevel,
     fwrite(".", 1, 1, stderr);
 }
 
-int
-transiterror_fcn(int flags,
-                 const char *file,
-                 const long line,
-                 const char *str,
-                  ...){
-  va_list ap;
+void
+tr_output_fcn (int flags,
+               const char *file,
+               const long line,
+               const char *str,
+               ...) {
 
-  va_start(ap, str);
-  int ret = vtransiterror_fcn(flags, file, line, str, ap);
-  va_end(ap);
-
-  return ret;
+  va_list format;
+  va_start(format, str);
+  tr_output_vfcn(flags, file, line, str, format);
+  va_end(format);
 }
 
+void
+tr_output_vfcn (int flags,
+                const char *file,
+                const long line,
+                const char *str,
+                va_list format) {
 
-/*\fcnfh
-  transiterror: Error function for Transit package.
+  // Obtain the level of output from the flag data.
+  int level = flags & TOUT_VERBMASK;
 
-  @returns Number of characters wrote to the standard error file
-             descriptor if PERR\_ALLOWCONT is set, otherwise, it ends
-             execution of program.
-           0 if it is a warning call and 'transit\_nowarn' is 1
-*/
-int vtransiterror_fcn(int flags,
-                      const char *file,
-                      const long line,
-                      const char *str,
-                      va_list ap){
-  char prepre_error[] =
-                     "\n******************************************************";
-  char pre_error[] = "\n*** Transit";
-  char error[7][22] = {"",
-                       " :: SYSTEM ERROR ***\n",  /* Produced by the code */
-                       " :: USER ERROR ***\n",    /* Produced by the user */
-                       " :: Warning ***\n",
-                       " :: Not implemented",
-                       " :: Not implemented",
-                       " :: Not implemented"
-  };
-  char *errormessage, *out;
-  int len, lenout, xtr;
-  char post_error[] =
-                     "******************************************************\n";
+  // Choose output location: stdout or stderr.
+  FILE *output = (level == TOUT_ERROR) ? stderr : stdout;
 
+  // If the caller has chosen to use a banner, print the preceeding line.
+  if (flags & TOUT_BANNER)
+    fprintf(output, "\n--------------------------------------------------\n");
 
-  if(transit_nowarn && (flags & TERR_NOFLAGBITS)==TERR_WARNING)
-    return 0;
+  /* Always print debugging information (file and line number) for errors and
+   * warnings. Selectively print this information for other messages based on
+   * the TOUT_LOCATE flag.
+   */
+  if (level == TOUT_ERROR)
+    fprintf(output, "Transit ERROR :: (%s, line %lu)\n", file, line);
 
-  len = strlen(pre_error);
-  if(!(flags & TERR_NOPREAMBLE))
-    len += strlen(error[flags & TERR_NOFLAGBITS]) + strlen(post_error) +
-           strlen(prepre_error);
-  /* Symbols + digits + file: */
-  int debugchars = 0;
-  if(flags&TERR_DBG) debugchars = 5 + 6 + strlen(file);
-  len    += strlen(str) + 1 + debugchars;
-  lenout  = len;
+  else if (level == TOUT_WARN)
+    fprintf(output, "Transit WARNING :: (%s, line %lu)\n", file, line);
 
-  errormessage = (char *)calloc(len   +10, sizeof(char));
-  out          = (char *)calloc(lenout+10, sizeof(char));
+  else if (flags & TOUT_LOCATE) {
 
-  if(!(flags & TERR_NOPREAMBLE))
-    strcat(errormessage, prepre_error);
-  strcat(errormessage, pre_error);
-  if(flags & TERR_DBG){
-    char debugprint[debugchars];
-    sprintf(debugprint," (%s|%li)", file, line);
-    strcat(errormessage, debugprint);
+    switch(level) {
+      case TOUT_INFO:
+        fprintf(output, "Transit INFO :: (%s, line %lu)\n", file, line);
+        break;
+
+      case TOUT_RESULT:
+        fprintf(output, "Transit RESULT :: (%s, line %lu)\n", file, line);
+        break;
+
+      case TOUT_DEBUG:
+        fprintf(output, "Transit DEBUG :: (%s, line %lu)\n", file, line);
+        break;
+
+      default:
+        break;
+    }
   }
 
-  if(!(flags&TERR_NOPREAMBLE))
-    strcat(errormessage, error[flags&TERR_NOFLAGBITS]);
-  strcat(errormessage, str);
-  if(!(flags&TERR_NOPREAMBLE))
-    strcat(errormessage, post_error);
+  // Print the output message itself.
+  vfprintf(output, str, format);
 
-  va_list aq;
-  va_copy(aq, ap);
-  xtr = vsnprintf(out, lenout, errormessage, ap)+1;
-  va_end(ap);
-
-  if(xtr > lenout){
-    out = (char *)realloc(out, xtr+1);
-    xtr = vsnprintf(out, xtr+1, errormessage, aq)+1;
-  }
-  va_end(aq);
-  free(errormessage);
-
-  fwrite(out, sizeof(char), xtr-1, stderr);
-  free(out);
-
-  if (flags&TERR_ALLOWCONT || (flags&TERR_NOFLAGBITS)==TERR_WARNING){
-    terr_allown++;
-    return xtr;
-  }
-
-  exit(EXIT_FAILURE);
+  // If the caller has chosen to use a banner, print the succeeding line.
+  if (flags & TOUT_BANNER)
+    fprintf(output, "--------------------------------------------------\n");
 }
 
 
@@ -229,30 +195,30 @@ verbfileopen(char *in,     /* Input filename              */
   case 1:
     return fp;
   case 0:
-    transiterror(TERR_SERIOUS, "No file was given to open.\n");
+    tr_output(TOUT_ERROR, "No file was given to open.\n");
     return NULL;
   /* File doesn't exist: */
   case -1:
-    transiterror(TERR_SERIOUS, "%s file '%s' doesn't exist.\n", desc, in);
+    tr_output(TOUT_ERROR, "%s file '%s' doesn't exist.\n", desc, in);
     return NULL;
   /* Filetype not valid: */
   case -2:
-    transiterror(TERR_SERIOUS, "%s file '%s' is not of a valid kind "
+    tr_output(TOUT_ERROR, "%s file '%s' is not of a valid kind "
                                "(it is a dir or device)\n", desc, in);
     return NULL;
   /* File not openable: */
   case -3:
-    transiterror(TERR_SERIOUS, "%s file '%s' is not openable. Probably "
+    tr_output(TOUT_ERROR, "%s file '%s' is not openable. Probably "
                                "because of permissions.\n", desc, in);
     return NULL;
   /* stat returned -1: */
   case -4:
-    transiterror(TERR_SERIOUS,
+    tr_output(TOUT_ERROR,
                  "Error happened for %s file '%s', stat() returned -1, "
                  "but file exists.\n", desc, in);
     return NULL;
   default:
-    transiterror(TERR_SERIOUS,
+    tr_output(TOUT_ERROR,
                  "Something weird in file %s, line %i.\n", __FILE__, __LINE__);
   }
   return NULL;
@@ -297,8 +263,10 @@ transitcheckcalled(const long pi,   /* Progress indicator variable          */
   }
   va_end(ap);
   /* Print out the error: */
-  if(stop)
-    transiterror(TERR_CRITICAL, mess, fcn);
+  if(stop) {
+    tr_output(TOUT_ERROR, mess, fcn);
+    exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -416,9 +384,9 @@ void
 linetoolong(int max,     /* Maxiumum length of an accepted line */
             char *file,  /* File from which we were reading     */
             int line){   /* Line who was being read             */
-  transiterror(TERR_SERIOUS|TERR_ALLOWCONT,
-               "Line %i of file '%s' has more than %i characters, "
-               "that is not allowed.\n", file, max);
+  tr_output(TOUT_ERROR,
+    "Line %i of file '%s' has more than %i characters, "
+    "that is not allowed.\n", file, max);
   exit(EXIT_FAILURE);
 }
 
@@ -430,7 +398,7 @@ timestart(struct timeval tv,  /* timeval structure                          */
   gettimeofday(&tv, NULL);
   /* Calculate time in seconds:                                             */
   double sec = tv.tv_sec + 1e-6*tv.tv_usec;
-  transitprint(1, verblevel, "%s\n", str);
+  tr_output(TOUT_INFO, "%s\n", str);
   return sec;
 }
 
@@ -448,7 +416,7 @@ timecheck(int verblevel,      /* Verbosity level         */
   /* Calculate time in seconds: */
   double sec = tv.tv_sec + 1e-6*tv.tv_usec;
   /* Print time stamp:          */
-  transitprint(1, verblevel, "Check point: %02li - %02li %s:  dt = %.4f "
-                             "sec.\n\n", iter, index, str, sec-t0);
+  tr_output(TOUT_RESULT, "Check point: %02li - %02li %s:  dt = %.4f "
+    "sec.\n\n", iter, index, str, sec-t0);
   return sec;
 }

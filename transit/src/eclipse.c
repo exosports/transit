@@ -234,9 +234,11 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
     last = rnn;
 
   /* Checks if we have enough radii to do spline, at least 3:               */
-  if(last < 3)
-    transiterror(TERR_CRITICAL, "Less than 3 items (%i given) for radial "
-                                "integration.\n", last);
+  if(last < 3) {
+    tr_output(TOUT_ERROR,
+      "Less than 3 items (%i given) for radial integration.\n", last);
+    exit(EXIT_FAILURE);
+  }
 
   /* Integrate along tau up to tau = toomuch:                               */
   hsum    = calloc(last/2, sizeof(double));
@@ -290,7 +292,7 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
   struct optdepth *tau = tr->ds.tau;
 
   /* Integrate for each wavelength:                                         */
-  transitprint(4, verblevel, "Integrating over wavelength.\n");
+  tr_output(TOUT_RESULT, "Integrating over wavelength.\n");
 
   /* Printing process variable:                                             */
   int nextw = wn->n/10;
@@ -316,11 +318,11 @@ emergent_intens(struct transit *tr){  /* Transit structure                  */
     /* Prints to screen the progress status:                                */
     if(w == nextw){
       nextw += wn->n/10;
-      transitprint(10, verblevel, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
+      tr_output(TOUT_DEBUG, "%i%% ", (10*(int)(10*w/wn->n+0.9999999999)));
     }
   }
-
-  transitprint(4, verblevel, "\nDone.\n");
+  tr_output(TOUT_DEBUG, "\n");
+  tr_output(TOUT_RESULT, "Done.\n");
 
   /* Sets progress indicator, and prints output:                             */
   tr->pi |= TRPI_MODULATION; /* FINDME: this is not a modulation calculation */
@@ -410,10 +412,10 @@ printintens(struct transit *tr){
     outf = fopen(our_fileName, "w");
   }
   else{
-    transitprint(1, verblevel, "No intensity file.\n");
+    tr_output(TOUT_INFO, "No intensity file requested.\n");
     return;
   }
-  transitprint(1, verblevel, "\nPrinting intensity in '%s'\n",
+  tr_output(TOUT_INFO, "\nPrinting intensity in '%s'\n",
                              tr->f_outintens ? our_fileName:"standard output");
 
   /* Print the header:                                                      */
@@ -465,8 +467,8 @@ printflux(struct transit *tr){
   if(tr->f_outflux && tr->f_outflux[0] != '-')
     outf = fopen(our_fileName, "w");
 
-  transitprint(1, verblevel, "\nPrinting flux in '%s'\n",
-               tr->f_outflux ? our_fileName:"standard output");
+  tr_output(TOUT_INFO, "\nPrinting flux in '%s'\n",
+    tr->f_outflux ? our_fileName : "standard output");
 
   /* Print the header:                                                      */
   fprintf(outf, "#wvl [um]%*sFlux [erg/s/cm]\n", 6, " ");
