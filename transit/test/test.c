@@ -120,8 +120,18 @@ int _tr_test(int argc, char **argv) {
 #endif
   tr_setup_tests();
 
-  // Define tests and batches to run here
+  int num_args;
+  num_args = 3;
+
+  char *arg_str[3];
+  arg_str[0] = "";
+  arg_str[1] = "-c";
+  arg_str[2] = "./test/fixtures/CH4_test/transit_demo.cfg";
+  
+  tr_run_main(num_args, arg_str);
 
   tr_finish_tests();
   return 0;
 }
+
+
