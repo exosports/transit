@@ -51,80 +51,21 @@ USA
 Thank you for using transit!
 ******************************* END LICENSE ******************************/
 
-
-/* Test Framework for Transit
- * Created by AJ Foster <aj.foster@knights.ucf.edu>
- *
- * The following, along with include/test.h, creates a framework for testing
- * Transit. Below you can find a brief introduction to its usage. For more
- * information and examples, see:
- *   https://github.com/exosports/transit/wiki/Testing-Transit
- *
- * This test framework has several layers:
- *
- * - Assertions are individual checks that test, for example, the equality of
- *   two values. Assertions have messages attached to describe the failure.
- * - Tests are named collections of assertions. Think of tests as functions
- *   that run several assertions for a specific function or use case. Only one
- *   failing assertion will occur per test (the rest are skipped).
- * - Batches are collections of tests. Think of batches as functions that run
- *   multiple tests relating to the same .c file.
- *
- *
- * Format
- * ------
- *
- * The main() function of test.c must begin with tr_setup_tests() and end with
- * tr_finish_tests(). Inside of these, you can call test batches using
- * tr_run_batch(batch_name) or individual tests with tr_run_test(test_name).
- *
- * Test batches are functions, and must have the TR_BATCH return type. They
- * begin with tr_setup_batch() and end with tr_finish_batch(). Inside of a
- * batch, you can call individual tests using tr_run_test(test_name). Tests
- * should return NULL.
- *
- * Tests are also functions and should have the TR_TEST return type. Within a
- * test you can use any number of assertions. For a full list of assertions, see
- * the Wiki page or include/test.h.
- *
- *
- * Example
- * -------
- *
- * TR_TEST test_the_truth () {
- *   tr_assert(1, "One does not evaluate as true.");
- *   return NULL;
- * }
- *
- * TR_BATCH example_test_batch () {
- *   tr_setup_batch();
- *   tr_run_test(test_the_truth);
- *   tr_finish_batch();
- * }
- *
- * int main (...) {
- *   tr_setup_tests();
- *   tr_run_batch(example_test_batch);
- *   tr_finish_tests();
- *   return 0;
- * }
- *
- */
-
 #include <test.h>
-#include "test_transit.c"
 
-#ifdef TEST_TRANSIT
-int main(int argc, char **argv) {
-#else
-int _tr_test(int argc, char **argv) {
-#endif
-  tr_setup_tests();
+TR_TEST no_lines(){
+  /* Set command line arguments for the integration test */
+  int num_args;
+  num_args = 3;
 
-  tr_run_test(no_lines);
+  char *args[3];
+  args[0] = "";
+  args[1] = "-c";
+  args[2] = "./test/fixtures/no_lines/transit_nolines.cfg";
 
-  tr_finish_tests();
-  return 0;
+  /* Run transit with set command line arguments within the test suite */
+  tr_run_main(num_args, args);
+
+  // Put some assertions here
+  return NULL;
 }
-
-
