@@ -122,6 +122,7 @@ int _tr_test(int argc, char **argv) {
   tr_setup_tests();
 
   tr_run_test(no_lines);
+  tr_run_test(one_line);
 
   tr_finish_tests();
   return 0;

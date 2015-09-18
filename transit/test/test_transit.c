@@ -69,3 +69,20 @@ TR_TEST no_lines(){
   // Put some assertions here
   return NULL;
 }
+
+TR_TEST one_line(){
+  /* Set command line arguments for the integration test */
+  int num_args;
+  num_args = 3;
+
+  char *args[3];
+  args[0] = "";
+  args[1] = "-c";
+  args[2] = "./test/fixtures/no_lines/transit_oneline.cfg";  
+
+  /* Run transit with set command line arguments within the test suite */
+  tr_run_main(num_args, args);
+
+  // Put some assertions here
+  return NULL;
+}
