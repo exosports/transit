@@ -25,7 +25,7 @@ alt=""border="10" /></a>
 * Andrew S. D. Foster (UCF)
 
 ### Getting Started:
-Get the Transit user's manual [here](doc/transitUM.pdf).
+You can get the Transit User Manual [here](http://planets.ucf.edu/bart-docs/transit_user_manual.pdf).
 
 ### Install and Compile:
 To obtain the Transit code download the latest stable version from the releases page (TBD). Alternatively, clone the repository to your local machine with the following terminal commands.  First, create a top-level directory to place the code:  
