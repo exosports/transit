@@ -75,27 +75,26 @@ Dr.~Joseph \textsc{Harrington}
 
 This document describes the University of Central Florida's computer
 program {\tt Transit}.  The program calculates the transmission or
-emission flux spectrum of a planetary atmosphere with
-% remove planetary, say a hydrostatic atm.  Then say, we use it for planets.
+emission flux spectrum of a hydrostatic atmosphere with
 application to extrasolar-planet transit and eclipse observations,
-respectively.  {\tt Transit} calculates the spectra by solving for
-1-dimensional line-by-line radiative-transfer equation for a
-plane-parallel atmospheric model.  A separate document \findme{point
+respectively.  {\tt Transit} calculates the spectra by solving the
+one-dimensional line-by-line radiative-transfer equation for an
+ atmospheric model.  A separate document \findme{point
   to file} describes in detail the theory and assumptions adopted by
 {\tt Transit}.
 
-This manual describes the {\tt Transit} program usage for the user
-(Sections \ref{sec:installation} through \ref{sec:running}) and
-potential developer (Sections
-\ref{sec:organization}-\ref{sec:routines}).  Section
-\ref{sec:installation} indicates how to obtain the code and the system
-requirements.  Section \ref{sec:inputs} describes the inputs necessary
+This manual describes the {\tt Transit} program usage for the user.
+Section \ref{sec:installation} indicates how to obtain the code and the system
+requirements.  
+Section \ref{sec:quick-example} presents a Transit demonstration run
+with minimal inputs.
+Section \ref{sec:walkthrough} briefly describes a general picture of
+the code, the required inputs, and the outputs.
+Section \ref{sec:inputs} further details the inputs necessary
 for execution.  Section \ref{sec:outputs} describes the output files
 produced by the code. Section \ref{sec:running} show an example
-execution of the code.  
-Section \ref{sec:design} describes the program design.  Sections
-\ref{sec:organization} and \ref{sec:routines} details the data
-structures and routines, respectively.
+execution of the code.
+Section \ref{sec:organization} details the data structures.
 
 
 \subsection{Transit Package Overview}
@@ -170,7 +169,7 @@ planetary atmospheres. \newline
 
 This project was completed with the support of the NASA Planetary
 Atmospheres Program, grant NNX12AI69G, held by Principal Investigator
-Joseph Harrington. Principal developers included graduate students
+Joseph Harrington.  Principal developers included graduate students
 Patricio E. Cubillos and Jasmina Blecic, programmer Madison Stemm, and
 undergraduate Andrew S. D. Foster.  The included 'transit' radiative
 transfer code is based on an earlier program of the same name written
@@ -199,7 +198,7 @@ or modifying this code, you agree to these conditions. We do encourage
 sharing any modifications with us and discussing them openly. \newline
 
 \noindent We welcome your feedback, but do not guarantee
-support. Please send feedback or inquiries to: \newline
+support.  Please send feedback or inquiries to: \newline
 
 \noindent Patricio Cubillos $<$pcubillos[at]fulbrightmail.org$>$  \\
 \noindent Jasmina Blecic    $<$jasmina[at]physics.ucf.edu$>$      \\
@@ -273,8 +272,6 @@ the {\tttm pylineread} TIPS code: \newline
 
 \noindent To remove the program binaries, execute: \newline
 {\tttb make clean} \\
-
-\noindent Note that there will be warnings.
 
 \newpage
 
@@ -475,7 +472,8 @@ arguments to specify the input variables.  The examples folder ({\tttm
 #   - http://kurucz.harvard.edu/molecules/h2o/h2opartfn.dat
 #   - Total Internal Partition Sums (TIPS) *
 #   - http://kurucz.harvard.edu/molecules/tio/tiopart.dat
-# (*): Transit incorporates a modified version of the TIPS code
+
+# (*): TIPS code is implicit in Transit, set part_list to 'implicit'.
 
 # Path(s) to the database line lists:
 # (assuming that the user put the files in a databases folder)
@@ -508,7 +506,8 @@ verb     = 10
 
 {\pylineread}'s configuration files follow the
 \href{https://docs.python.org/2/library/configparser.html}
-{ConfigParser}\footnote{docs.python.org/2/library/configparser.html}
+{ConfigParser}\footnote{\href{https://docs.python.org/2/library/configparser.html}
+{docs.python.org/2/library/configparser.html}}
 format.  The {\tttm[Parameters]} line defines the section read by
 ConfigParser.  Multiple arguments can be separated either with blank
 spaces or put in separated lines.  The db\_list, part\_list, and
@@ -526,14 +525,13 @@ obtain such files.
 \centering
 \caption{Line-Transition Databases for Pylineread}
 \label{table:DBs}
-\begin{tabular}{ccl}
+\begin{tabular}{lll}
 \hline
 \hline
 Database & Molecule & URL \\
 \hline
 Partridge \& Schwenke & H\sb{2}O  & \href{http://kurucz.harvard.edu/molecules/h2o/h2ofastfix.bin}{kurucz.harvard.edu/molecules/h2o/h2ofastfix.bin} \\
-HITRAN   & H\sb{2}O, CO\sb{2},    & \href{http://cfa.harvard.edu/hitran/}{cfa.harvard.edu/hitran} \\
-         & CH\sb{4}, + others     &  \\
+HITRAN   & H\sb{2}O, CO\sb{2}, CH\sb{4}, ...   & \href{http://cfa.harvard.edu/hitran/}{cfa.harvard.edu/hitran} \\
 HITEMP   & H\sb{2}O, CO\sb{2}, CO & \href{http://cfa.harvard.edu/hitran}{cfa.harvard.edu/hitran} \\
 Schwenke & TiO  & \href{http://kurucz.harvard.edu/molecules/tio/tioschwenke.bin}{kurucz.harvard.edu/molecules/tio/tioschwenke.bin} \\
 \hline
@@ -543,20 +541,19 @@ Schwenke & TiO  & \href{http://kurucz.harvard.edu/molecules/tio/tioschwenke.bin}
 \subsubsection{Partition-Function Files}
 
 Table \ref{table:PFs} lists the partition-function files and source
-URLs for the databases listed in Table \ref{table:DBs}.  
-For the HITRAN and HITEMP databases, 
-{\pylineread} provides a 
-%{\tttm transit/pylineread/src/fortran/src/},
-a modified version of the Total Internal Partition Sums
+URLs for the databases listed in Table \ref{table:DBs}.  For the
+HITRAN and HITEMP databases, {\pylineread} provides a modified version
+of the Total Internal Partition Sums
 \citep[TIPS,][]{LaraiaEtal2011icarusTIPS}
 code\footnote{\href{http://faculty.uml.edu/robert\_gamache/software/index.htm}{faculty.uml.edu/robert\_gamache/software/index.htm}},
-to calculate the partition functions.
+to calculate the partition functions.  In this case, set the flag
+{\tttm 'implicit'} in the {\tttm 'part\_list'} field.
 
 \begin{table}[ht]
 \centering
 \caption{Partition-Function Data for Pylineread}
 \label{table:PFs}
-\begin{tabular}{ccl}
+\begin{tabular}{lll}
 \hline
 \hline
 Database              & Temperature & URL \\
@@ -1573,99 +1570,6 @@ The data stored in the opacity file are:
 \end{itemize}
 
 
-\section{Routines}
-\label{sec:routines}
-\findme{TBD}
-
-\subsection{Pylineread Module}
-\findme{TBD}
-
-pylineread routines ({\tttm transit/pylineread/src/}): \\
-\routine{pylineread.py}{\findme{Explain me}. (*)}
-\routine{driver.py}{\findme{Explain me}.}
-\routine{db\_pands.py}{\findme{Explain me}.}
-\routine{db\_voplez.py}{\findme{Explain me}.}
-\routine{db\_hitran.py}{\findme{Explain me}.}
-\routine{db\_tioschwenke.py}{\findme{Explain me}.}
-\routine{utils.py}{\findme{Explain me}.}
-\routine{constants.py}{\findme{Explain me}.} \vspace{0.3cm}
-
-\findme{Replace with CTIPS information.}
-Fortran routines ({\tttm transit/pylineread/src/fortran/}): \\
-\routine{BART\_BD\_ISO\_82\_TO\_85.for}{\findme{Explain me}.}
-\routine{BD\_ISO\_2011.for}{\findme{Explain me}.}
-\routine{BD\_MOL\_2011.for}{\findme{Explain me}.}
-\routine{ISOTOPS.CMN}{\findme{Explain me}.}
-\routine{MOLEC.CMN}{\findme{Explain me}.}
-\routine{README\_TIPS}{\findme{Explain me}.}
-\routine{SPECIES\_2011.CMN}{\findme{Explain me}.}
-\routine{TIPS\_BART.for}{\findme{Explain me}.} \vspace{0.3cm}
-
-Asterisk (*) indicates files that must be executable.
-
-\subsection{Transit Module}
-\findme{TBD}
-
-Transit routines ({\tttm transit/transit/src/}, in order of
-execution): \\
-\routine{transit.c}{Main routine that calls the rest of the
-  subroutines.}
-
-\routine{argum.c}{Read and process the user input
-  parameters.}
-
-\routine{makesample.c}{Create the spectrum, layer, and temperature
-  arrays.}
-
-\routine{readatm.c}{Read and process the input atmospheric file.}
-
-\routine{readlineinfo.c}{Read and process the input TLI
-  (transition-lines information) file.}
-
-\routine{crosssec.c}{Read and process the cross-section absorption
-  files.}
-
-\routine{idxrefraction.c}{Calculate the index of refraction of the
-  ray-light path.}
-
-\routine{opacity.c}{Compute the line-broadening profiles and tabulated
-  grid of opacities.}
-
-\routine{extinction.c}{Compute the extinction coefficient at a given
-  layer.}
-
-\routine{tau.c}{Calculate the extinction coefficient at each layer for
-  transit geometry.}
-
-\routine{slantpath.c}{Calculate the transit ray-path and integrated
-  the extinction to calculate the optical depth.}
-
-\routine{observable.c}{Integrate the optical depth compute the transit
-  modulation.}
-
-\routine{eclipse.c}{Compute the extinction coefficient and optical
-  depth.  Integrate the optical depth to calculate the planet
-  intensity. Integrate the intensity to obtain the planetary emission
-  spectrum (flux).}
-
-\routine{transitstd.c}{\findme{Explain me}.}
-
-\routine{geometry.c}{\findme{Explain me}.}
-
-\routine{MPItransit.c}{Main transit routine for use with the BART
-  project.} \vspace{0.3cm}
-
-\subsection{PU Module}
-pu routines ({\tttm /transit/pu/src/}): \\
-\routine{iomisc.c}{\findme{Explain me}.}
-\routine{numerical.c}{\findme{Explain me}.}
-\routine{procopt.c}{\findme{Explain me}.}
-\routine{voigt.c}{\findme{Explain me}.}
-\routine{messagep.c}{\findme{Explain me}.}
-\routine{sampling.c}{\findme{Explain me}.}
-\routine{xmalloc.c}{\findme{Explain me}.} %\vspace{0.3cm}
-
-
 \section{Be Kind}
 \label{sec:bekind}
 Please cite these papers if you found this package useful for your
@@ -1689,11 +1593,7 @@ How to comply with reproducible research.
 What to do if you do not edit the code.
 What to do if you edit the code.
 
-\nobibliography{transit_user_manual}
-
-\section{Further Reading}
-\label{sec:furtherreading}
-\findme{TBD, do we need this section?}
+% \nobibliography{transit_user_manual}
 
 \bibliography{transit_user_manual}
 \end{document}
