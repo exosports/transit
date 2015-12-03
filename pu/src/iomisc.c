@@ -1080,7 +1080,7 @@ void
 getname(char *line,
         char *name){
   /* Copy characters from line into name:                                   */
-  while (*line != ' ' && *line != '\n' && *line != '\0'){
+  while (*line != ' ' && *line != '\n' && *line != '\0' && *line != '\r'){
     *name++ = *line++;
   }
   /* Append the terminating null-character:                                 */
