@@ -339,7 +339,6 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
                         at->begline++)){
     /* Ignore comments and blank lines:                                     */
     case '\n':
-    case '\r':
       continue;
     case '#':
       getname(line+1, keyword);
@@ -440,7 +439,7 @@ getmnfromfile(FILE *fp,                /* Pointer to atmospheric file       */
   /* Set total number of molecules in atmosphere:                           */
   mol->nmol = at->n_aiso = nmol;
 
-  /**/
+  /* Apply abundance scale factor if any:                                   */
   if (tr->nqmol > 0){
     tr->qmol = (int *)calloc(tr->nqmol, sizeof(int));
     lp = tr->ds.th->qmol;

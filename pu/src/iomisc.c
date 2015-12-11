@@ -196,24 +196,26 @@ settoolongerr(void (*errfcn)(int, char *, int),
    character in 'line' if exists.  If no newline nor end-of-file
    is reached before 'max' chars have been read, call errfcn.
 
-   @returns: 0, if end of file is reached while no characters were read.
-             1, if no error function was given.
-             The first character read, otherwise.                          */
+   Return:  0,  if end of file is reached while no characters were read.
+           -1,  if the line is longer than max.
+           '\n' if the line is empty or there are only blank characters
+                Else, the first character read.                             */
 inline char
-fgetupto_err(char *line,  /* Where input is stored                         */
-             int max,     /* Maximum number of characters to read          */
-             FILE *fp,    /* File pointer to read from                     */
+fgetupto_err(char *line,  /* Where input is stored                          */
+             int max,     /* Maximum number of characters to read           */
+             FILE *fp,    /* File pointer to read from                      */
              void (*errfcn)(int, char *, int),
                           /* Error funtion to call in case a newline is not
-                             the last character read and we reached 'max'  */
-             char *name,  /* Second argument for errfcn                    */
-             long curr){  /* Third argument for errfcn                     */
+                             the last character read and we reached 'max'   */
+             char *name,  /* Second argument for errfcn                     */
+             long curr){  /* Third argument for errfcn                      */
   char *lp;
-  int n=0;      /* Size of output (does not include `\\0')  */
+  int n=0;      /* Length of line                                           */
 
-  if((lp=fgets(line, max, fp))==NULL)
-    return 0;   /* End-of-line case   */
-  while(*lp++)  /* Get length of char */
+  if ((lp=fgets(line, max, fp))==NULL)
+    return 0;   /* End-of-file case                                         */
+
+  while(*lp++)  /* Get length of char                                       */
     n++;
 
   if(n==0){
@@ -223,22 +225,30 @@ fgetupto_err(char *line,  /* Where input is stored                         */
     exit(EXIT_FAILURE);
   }
 
-  /* Strip off \n character:        */
-  if(line[n-1] == '\n'){
+  /* Strip off line-feed character (\n):                                    */
+  if (line[n-1] == '\n'){
     line[--n] = '\0';
-    if(!n) /* Zero-length output    */
-      return '\n';
-    return *line;
+  }
+  /* Strip off carriage-return character (\r):                              */
+  if (n > 0  &&  line[n-1] == '\r'){
+    line[--n] = '\0';
+  }
+  /* Strip off blank characters:                                            */
+  while (n > 0  && (line[n-1] == ' ' || line[n-1] == '\t')){
+    line[--n] = '\0';
   }
 
-  /* End of line without a newline: */
-  else if(n<max-1)
+  /* Empty/blank line:                                                      */
+  if (n == 0)
+    return '\n';
+  /* Line with content:                                                     */
+  if (n < max-1)
     return *line;
-
-  /* Line too long:                 */
-  if(errfcn)
+  /* Line too long:                                                         */
+  if (errfcn)
     errfcn(max, name, curr);
   return -1;
+
 }
 
 
