@@ -1,7 +1,5 @@
-/* Revision        March 19th,   2014 Jasmina Blecic
-                   implemented switch eclipse/transit, added new functions  */
-/* Revision        April 26th,   2014 Jasmina Blecic
-                   implemented intensity grid and flux, added new functions */
+// Copyright (C) 2015-2016 University of Central Florida. All rights reserved.
+// Transit is under an open-source, reproducible-research license (see LICENSE).
 
 #if __STDC__ || defined(__cplusplus)
 #define P_(s) s
