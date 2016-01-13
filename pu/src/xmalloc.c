@@ -1,8 +1,10 @@
-/* 
+// Copyright (C) 2015-2016 University of Central Florida. All rights reserved.
+// Transit is under an open-source, reproducible-research license (see LICENSE).
 
+/* 
    xmalloc.c -- malloc with out of memory checking
 
-   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 99 Free Software Foundation, Inc.
+   Copyright (C) 1990-1999 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by

@@ -1,25 +1,5 @@
-/*
- * flags_tr.h - Various flags for the transit program
- *
- * Copyright (C) 2003-2006 Patricio Rojo (pato@astro.cornell.edu)
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of version 2 of the GNU General 
- * Public License as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
- */
-
-/* Revision        April 26th,   2014 Jasmina Blecic
-                   added flag for intensity grid          */
+// Copyright (C) 2015-2016 University of Central Florida. All rights reserved.
+// Transit is under an open-source, reproducible-research license (see LICENSE).
 
 #ifndef _FLAGS_TR_H
 #define _FLAGS_TR_H

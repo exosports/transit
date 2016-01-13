@@ -1,3 +1,6 @@
+// Copyright (C) 2015-2016 University of Central Florida. All rights reserved.
+// Transit is under an open-source, reproducible-research license (see LICENSE).
+
 #ifndef _SPLINE_H
 #define _SPLINE_H
 
