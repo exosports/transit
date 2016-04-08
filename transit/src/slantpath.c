@@ -514,12 +514,11 @@ printmod(struct transit *tr){
   int rn;
 
   /* Open file: */
-  if(tr->f_outmod && tr->f_outmod[0] != '-')
-    outf = fopen(tr->f_outmod, "w");
+  if(tr->f_outspec && tr->f_outspec[0] != '-')
+    outf = fopen(tr->f_outspec, "w");
 
-  tr_output(TOUT_INFO,
-    "\nPrinting in-transit/out-transit modulation in '%s'.\n",
-    tr->f_outmod?tr->f_outmod:"standard output");
+  tr_output(TOUT_INFO, "\nPrinting modulation spectrum in '%s'.\n",
+            tr->f_outspec?tr->f_outspec:"standard output");
 
   /* Print: */
   char wlu[20], /* Wavelength units name */
