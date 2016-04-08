@@ -66,11 +66,10 @@ processparameters(int argc,            /* Number of command-line args  */
     //CLA_GTIMEFCT,
     //CLA_GMASSRAD,
     //CLA_GMASSRADFCT,
-    CLA_OUTMOD,
     CLA_TOOMUCH,
     CLA_OUTTOOMUCH,
     CLA_OUTSAMPLE,
-    CLA_OUTFLUX,
+    CLA_OUTSPEC,
     CLA_OUTINTENS,
     CLA_TAULEVEL,
     CLA_MODLEVEL,
@@ -129,9 +128,6 @@ processparameters(int argc,            /* Number of command-line args  */
     /* Input and output options:              */
     {NULL,          0,             HELPTITLE,         NULL, NULL,
      "INPUT/OUTPUT OPTIONS:"},
-    {"outmod",     CLA_OUTMOD,      required_argument, "-",  "filename",
-     "Output modulation spectrum filename, a dash (-) directs to standard "
-     "output."},
     {"atm",        CLA_ATMOSPHERE, required_argument, "NULL",  "atmfile",
      "File containing atmospheric info (Radius, pressure, temperature). A dash"
      " (-) indicates alternative input."},
@@ -144,9 +140,8 @@ processparameters(int argc,            /* Number of command-line args  */
     {"outsample",  CLA_OUTSAMPLE,  required_argument, NULL, "filename",
      "Outputs sampling information. A dash (-) indicates standard input. By "
      "default there is no such output."},
-    {"outflux",  CLA_OUTFLUX,  required_argument, NULL, "filename",
-     "Outputs flux information. A dash (-) indicates standard input. By "
-     "default there is no such output."},
+    {"outspec",  CLA_OUTSPEC,  required_argument, "outspectrum", "filename",
+     "Output modulation (transit) or flux (eclipse) spectrum file."},
     {"outintens",  CLA_OUTINTENS,  required_argument, NULL, "filename",
      "Outputs intensity information. A dash (-) indicates standard input. By "
      "default there is no such output."},
@@ -428,9 +423,10 @@ processparameters(int argc,            /* Number of command-line args  */
       hints->f_molfile = (char *)realloc(hints->f_molfile, strlen(optarg)+1);
       strcpy(hints->f_molfile, optarg);
       break;
-    case CLA_OUTMOD:     /* Modulation output file name           */
-      hints->f_outmod = (char *)realloc(hints->f_outmod, strlen(optarg)+2);
-      strcpy(hints->f_outmod, optarg);
+    case CLA_OUTSPEC:    /* Output spectrum file name                       */
+      //if(hints->f_outspec) free_null(hints->f_outspec);
+      hints->f_outspec = (char *)realloc(hints->f_outspec, strlen(optarg)+2);
+      strcpy(hints->f_outspec, optarg);
       break;
     case CLA_OUTSAMPLE:  /* Sampling output file name  */
       if(hints->f_outsample) free_null(hints->f_outsample);
@@ -443,11 +439,6 @@ processparameters(int argc,            /* Number of command-line args  */
         hints->f_toomuch = (char *)calloc(strlen(optarg)+1, sizeof(char));
         strcpy(hints->f_toomuch, optarg);
       }
-      break;
-    case CLA_OUTFLUX:  /* Flux output file name  */
-      if(hints->f_outflux) free_null(hints->f_outflux);
-      hints->f_outflux = (char *)calloc(strlen(optarg)+2, sizeof(char));
-      strcpy(hints->f_outflux, optarg);
       break;
     case CLA_OUTINTENS:  /* Intensity output file name  */
       if(hints->f_outintens) free_null(hints->f_outintens);
@@ -697,20 +688,12 @@ acceptgenhints(struct transit *tr){
   /* Pointer to transithint:                       */
   struct transithint *th = tr->ds.th;
 
-  /* Accept modulation output file:                  */
-  if(th->f_outmod)
-    tr->f_outmod = th->f_outmod;
+  /* Accept output spectrum file:                  */
+  if(th->f_outspec)
+    tr->f_outspec = th->f_outspec;
   else{ /* File not specified, use standard output */
-    tr->f_outmod    = (char *)calloc(2, sizeof(char));
-    tr->f_outmod[0] = '-';
-  }
-
-  /* Accept flux output file:                           */
-  if(th->f_outflux)
-    tr->f_outflux = th->f_outflux;
-  else{ /* File not specified, use standard output */
-    tr->f_outflux    = (char *)calloc(2, sizeof(char));
-    tr->f_outflux[0] = '-';
+    tr->f_outspec = (char *)calloc(2, sizeof(char));
+    tr->f_outspec[0] = '-';
   }
 
   /* Accept toomuch, outsample, and intensity output files:    */
@@ -833,8 +816,7 @@ savehint(FILE *out,
   /* Save strings:                                                          */
   savestr(out, hints->f_atm);
   savestr(out, hints->f_line);
-  savestr(out, hints->f_outmod);
-  savestr(out, hints->f_outflux);
+  savestr(out, hints->f_outspec);
   savestr(out, hints->f_outintens);
   savestr(out, hints->f_toomuch);
   savestr(out, hints->f_outsample);
@@ -876,9 +858,7 @@ resthint(FILE *in,
   if(rn<0) return rn; else res += rn;
   rn = reststr(in, &hint->f_line);
   if(rn<0) return rn; else res += rn;
-  rn = reststr(in, &hint->f_outmod);
-  if(rn<0) return rn; else res += rn;
-  rn = reststr(in, &hint->f_outflux);
+  rn = reststr(in, &hint->f_outspec);
   if(rn<0) return rn; else res += rn;
   rn = reststr(in, &hint->f_outintens);
   if(rn<0) return rn; else res += rn;
@@ -931,8 +911,7 @@ freemem_hints(struct transithint *h){
   /* Free strings which are copied into transit:                            */
   free(h->f_atm);
   free(h->f_line);
-  free(h->f_outmod);
-  free(h->f_outflux);
+  free(h->f_outspec);
   free(h->f_outintens);
   free(h->f_toomuch);
   free(h->f_outsample);

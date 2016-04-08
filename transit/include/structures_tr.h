@@ -303,10 +303,9 @@ struct transithint{
   char *f_atm,          /* Atmosphere filename                              */
        *f_line,         /* TLI filename                                     */
        *f_opa,          /* Opacity filename                                 */
-       *f_outmod,       /* Output modulation filename                       */
+       *f_outspec,      /* Output spectrum filename                         */
        *f_toomuch,      /* Output toomuch filename                          */
        *f_outsample,    /* Output sample filename                           */
-       *f_outflux,      /* Output flux filename                             */
        *f_outintens,    /* Output intensity filename                        */
        *f_molfile;      /* Known molecular info filename                    */
   PREC_NREC ot;         /* Radius index at which to print output from tau   */
@@ -319,32 +318,32 @@ struct transithint{
   float timesalpha;     /* Number of alphas that have to be contained in a
                            calculated profile, one side only                */
   int voigtfine;        /* Fine-binning for Voigt function in kapwl(), if
-                           accepted it goes to tr.ds.op.vf                   */
-  int nDop, nLor;       /* Number of broadening width samples                */
-  float dmin, dmax, lmin, lmax; /* Broadening-width samples boundaries       */
-  int verbnoise;        /* Noisiest verbose level in a non debugging run     */ 
+                           accepted it goes to tr.ds.op.vf                  */
+  int nDop, nLor;       /* Number of broadening width samples               */
+  float dmin, dmax, lmin, lmax; /* Broadening-width samples boundaries      */
+  int verbnoise;        /* Noisiest verbose level in a non debugging run    */ 
   _Bool mass;           /* Whether the abundances read by getatm are by
-                           mass or number                                    */
-  _Bool opabreak;       /* Break after opacity calculation flag              */
-  _Bool opashare;       /* Attempt to place opacity grid in shared memory.   */
-  long fl;              /* flags                                             */
-  _Bool userefraction;  /* Whether to use variable refraction                */
-  _Bool savefiles    ;  /* Whether to save files                             */
-  double p0, r0;        /* Pressure and radius reference level               */
-  double gsurf;         /* Surface gravity                                   */
+                           mass or number                                   */
+  _Bool opabreak;       /* Break after opacity calculation flag             */
+  _Bool opashare;       /* Attempt to place opacity grid in shared memory.  */
+  long fl;              /* flags                                            */
+  _Bool userefraction;  /* Whether to use variable refraction               */
+  _Bool savefiles    ;  /* Whether to save files                            */
+  double p0, r0;        /* Pressure and radius reference level              */
+  double gsurf;         /* Surface gravity                                  */
 
   double toomuch;       /* Optical depth values greater than this won't be
-                           calculated: the extinction is assumed to be zero  */
-  int taulevel;         /* Tau integration level of precision                */
-  int modlevel;         /* Modulation integration level of precision         */
-  char *solname;        /* Name of the type of solution                      */
-  struct geometry sg;   /* System geometry                                   */
-  struct saves save;    /* Saves indicator of program stats                  */
+                           calculated: the extinction is assumed to be zero */
+  int taulevel;         /* Tau integration level of precision               */
+  int modlevel;         /* Modulation integration level of precision        */
+  char *solname;        /* Name of the type of solution                     */
+  struct geometry sg;   /* System geometry                                  */
+  struct saves save;    /* Saves indicator of program stats                 */
 
   struct extcloud cl;
   struct detailout det;
 
-  double ethresh;       /* Lower extinction-coefficient threshold            */
+  double ethresh;       /* Lower extinction-coefficient threshold           */
   char **csfile;
   int ncross;
 
@@ -355,10 +354,9 @@ struct transit{
   char *f_atm,       /* Atmosphere filename                                 */
        *f_line,      /* TLI filename                                        */
        *f_opa,       /* Opacity filename                                    */
-       *f_outmod,    /* Output modulation filename                          */
+       *f_outspec,   /* Output spectrum filename                            */
        *f_toomuch,   /* Output toomuch filename                             */
        *f_outsample, /* Output sample filename                              */
-       *f_outflux,   /* Output flux filename                                */
        *f_outintens, /* Output intensity filename                           */
        *f_molfile;   /* Known molecular info filename                       */
   PREC_NREC ot;      /* Radius index at which to print output from tau      */

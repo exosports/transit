@@ -408,17 +408,12 @@ printflux(struct transit *tr){
   PREC_RES *Flux = tr->ds.out->o;
   int rn;
 
-  /* Adds string to the output files to differentiate between outputs:      */
-  char our_fileName[512];
-  strncpy(our_fileName, tr->f_outflux, 512);
-  //strcat(our_fileName, ".-Flux");
-
   /* Open file:                                                             */
-  if(tr->f_outflux && tr->f_outflux[0] != '-')
-    outf = fopen(our_fileName, "w");
+  if(tr->f_outspec && tr->f_outspec[0] != '-')
+    outf = fopen(tr->f_outspec, "w");
 
-  tr_output(TOUT_INFO, "\nPrinting flux in '%s'\n",
-    tr->f_outflux ? our_fileName : "standard output");
+  tr_output(TOUT_INFO, "\nPrinting day-side emission flux spectrum in '%s'\n",
+            tr->f_outspec? tr->f_outspec:"standard output");
 
   /* Print the header:                                                      */
   fprintf(outf, "#wvl [um]%*sFlux [erg/s/cm]\n", 6, " ");
