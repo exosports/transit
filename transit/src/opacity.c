@@ -95,8 +95,9 @@ opacity(struct transit *tr){
 
     /* If reserving the hint segment was unsuccessful, give up:             */
     if (op.hintID == -1) {
-
-      tr_output(TOUT_WARN, "Could not get hint shared memory ID.\n");
+      int shmget_errno = errno;
+      tr_output(TOUT_WARN, "Could not get hint shared memory ID.\n"
+        "shmget() returned %d: %s\n", shmget_errno, strerror(shmget_errno));
 
       /* Read the grid of opacities from file:                              */
       tr_output(TOUT_INFO, "Reading opacity file: '%s'.\n", tr->f_opa);
@@ -112,8 +113,9 @@ opacity(struct transit *tr){
 
     /* If attaching was unsuccessful, give up.                              */
     if (op.hint == (struct opacityhint *) -1) {
-
-      tr_output(TOUT_WARN, "Could not attach to hint shared memory.\n");
+      int shmat_errno = errno;
+      tr_output(TOUT_WARN, "Could not attach to hint shared memory.\n"
+        "shmat() returned %d: %s\n", shmat_errno, strerror(shmat_errno));
 
       /* Read the grid of opacities from file:                              */
       tr_output(TOUT_INFO, "Reading opacity file: '%s'.\n", tr->f_opa);
@@ -577,7 +579,9 @@ attachopacity(struct transit *tr){ /* transit struct                        */
 
   /* If allocation failed, abort:                                           */
   if (op->mainID == -1) {
-    tr_output(TOUT_WARN, "Failed to allocate main shared memory.\n");
+    int shmget_errno = errno;
+    tr_output(TOUT_WARN, "Failed to allocate main shared memory.\n"
+      "shmget() returned %d: %s\n", shmget_errno, strerror(shmget_errno));
     return 1;
   }
 
@@ -585,7 +589,9 @@ attachopacity(struct transit *tr){ /* transit struct                        */
   op->mainaddr = shmat(op->mainID, (void *) 0, 0);
 
   if (op->mainaddr == (void *) -1) {
-    tr_output(TOUT_WARN, "Failed to attach to main shared memory.\n");
+    int shmat_errno = errno;
+    tr_output(TOUT_WARN, "Failed to attach to main shared memory.\n"
+      "shmat() returned %d: %s\n", shmat_errno, strerror(shmat_errno));
     return 1;
   }
 
