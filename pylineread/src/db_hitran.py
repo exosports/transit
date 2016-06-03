@@ -264,7 +264,7 @@ class hitran(dbdriver):
     return PFzero / self.gi
 
 
-  def dbread(self, iwl, fwl, verbose, *args):
+  def dbread(self, iwl, fwl, verbose, procnum, return_dict, *args):
     """
     Read a HITRAN or HITEMP database (dbfile) between wavelengths iwl and fwl.
 
@@ -278,6 +278,10 @@ class hitran(dbdriver):
        Final wavelength limit (in microns).
     verbose: Integer
        Verbosity threshold.
+    procnum: Integer
+       Index of the process which calls the function
+    return_dict: Dict
+       Dictionary to contain return values (indexed by process number)
     pffile: String
        Partition function filename.
 
@@ -401,4 +405,5 @@ class hitran(dbdriver):
 
     ut.lrprint(verbose-14, "GF values: " + str(gf))
     data.close()
+    return_dict[procnum] = (wlength, gf2, elow, isoID)
     return wlength, gf2, elow, isoID

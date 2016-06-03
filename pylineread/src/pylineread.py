@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants as sc
 import sys, os, time
+import multiprocessing as mp
 
 import ConfigParser
 import argparse
@@ -109,7 +110,6 @@ def parseargs():
   args = parser.parse_args(remaining_argv)
 
   return args
-
 
 if __name__ == "__main__":
   """
@@ -289,27 +289,44 @@ if __name__ == "__main__":
   gf      = np.array([], np.double)
   elow    = np.array([], np.double)
   isoID   = np.array([], int)
+
+  jobs = []
+  manager = mp.Manager()
+  return_dict = manager.dict()
+  
   # Read from file and write the transition info:
   for db in np.arange(Nfiles):
-    # Get database index:
+    # Read databases:
+    #ti = time.time()
+    p = mp.Process(target = driver[db].dbread, args = (cla.iwav, cla.fwav,
+                                                       cla.verb,
+                                                       db, return_dict,
+                                                       pflist[db]))
+    jobs.append(p)
+    p.start()
+    
+    #transDB = driver[db].dbread(cla.iwav, cla.fwav, cla.verb, pflist[db])
+    #tf = time.time()
+    #ut.lrprint(verbose-3, "Reading time: {:8.3f} seconds".format(tf-ti))
+
+  for proc in jobs:
+      proc.join()
+
+  transDB = return_dict
+  
+  for db in np.arange(Nfiles):
     dbname = driver[db].name
     idb = DBnames.index(dbname)
-
-    # Read databases:
-    ti = time.time()
-    transDB = driver[db].dbread(cla.iwav, cla.fwav, cla.verb, pflist[db])
-    tf = time.time()
-    ut.lrprint(verbose-3, "Reading time: {:8.3f} seconds".format(tf-ti))
     
-    wlength = np.concatenate((wlength, transDB[0]))    
-    gf      = np.concatenate((gf,      transDB[1]))    
-    elow    = np.concatenate((elow,    transDB[2]))    
-    isoID   = np.concatenate((isoID,   transDB[3]+acum[idb]))    
+    wlength = np.concatenate((wlength, transDB[db][0]))    
+    gf      = np.concatenate((gf,      transDB[db][1]))    
+    elow    = np.concatenate((elow,    transDB[db][2]))    
+    isoID   = np.concatenate((isoID,   transDB[db][3]+acum[idb]))    
 
-    ut.lrprint(verbose-8, "Isotope in-database indices: {}".format(
-                           np.unique(transDB[3])))
-    ut.lrprint(verbose-8, "Isotope correlative indices: {}\n".format(
-                           np.unique(transDB[3]+acum[idb])))
+    # ut.lrprint(verbose-8, "Isotope in-database indices: {}".format(
+    #                        np.unique(transDB[3])))
+    # ut.lrprint(verbose-8, "Isotope correlative indices: {}\n".format(
+    #                        np.unique(transDB[3]+acum[idb])))
 
   # Total number of transitions:
   nTransitions = np.size(wlength)

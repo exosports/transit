@@ -139,7 +139,7 @@ class tioschwenke(dbdriver):
     return PFlines[self.pf_isonames].split()[1:]  # Skip first word
 
 
-  def dbread(self, iwl, fwl, verbose, *args):
+  def dbread(self, iwl, fwl, verbose, procnum, return_dict, *args):
     """
     Read the Partridge and Schwenke H2O database (dbfile) between the
     wavelengths iwl and fwl.
@@ -152,6 +152,10 @@ class tioschwenke(dbdriver):
        Final wavelength limit (in microns).
     verbose: Integer
        Verbosity threshold.
+    procnum: Integer
+       Index of the process which calls the function
+    return_dict: Dict
+       Dictionary to contain return values (indexed by process number)
     args:
        Additional arguments, not needed for pands.
  
@@ -243,4 +247,5 @@ class tioschwenke(dbdriver):
     isoID[:]   = np.abs(ieli) - 8950
     ut.lrprint(verbose, "Done.\n")
     data.close()
+    return_dict[procnum] = (wlength, gf, elow, isoID)
     return wlength, gf, elow, isoID

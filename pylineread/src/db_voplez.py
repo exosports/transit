@@ -150,7 +150,7 @@ class voplez(dbdriver):
     return Temp, PF
 
 
-  def dbread(self, iwl, fwl, verbose, *args):
+  def dbread(self, iwl, fwl, verbose, procnum, return_dict, *args):
     """
     Read the B. Plez VO database between the wavelengths iwl and fwl.
  
@@ -162,6 +162,10 @@ class voplez(dbdriver):
        Final wavelength limit (in microns).
     verbose: Integer
        Verbosity threshold.
+    procnum: Integer
+       Index of the process which calls the function
+    return_dict: Dict
+       Dictionary to contain return values (indexed by process number)
     args:
        Additional arguments, not needed for voplez.
  
@@ -241,4 +245,5 @@ class voplez(dbdriver):
 
     ut.lrprint(verbose, "Done.\n")
     data.close()
+    return_dict[procnum] = (wlength, gf, elow, isoID)
     return wlength, gf, elow, isoID
