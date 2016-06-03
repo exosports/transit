@@ -294,24 +294,28 @@ if __name__ == "__main__":
   manager = mp.Manager()
   return_dict = manager.dict()
   
+  ti = time.time()
+  
   # Read from file and write the transition info:
   for db in np.arange(Nfiles):
     # Read databases:
-    #ti = time.time()
     p = mp.Process(target = driver[db].dbread, args = (cla.iwav, cla.fwav,
                                                        cla.verb,
                                                        db, return_dict,
                                                        pflist[db]))
+
     jobs.append(p)
     p.start()
-    
-    #transDB = driver[db].dbread(cla.iwav, cla.fwav, cla.verb, pflist[db])
+
     #tf = time.time()
     #ut.lrprint(verbose-3, "Reading time: {:8.3f} seconds".format(tf-ti))
 
   for proc in jobs:
       proc.join()
-
+      
+  tf = time.time()
+  ut.lrprint(verbose-3, "Total reading time: {:8.3f} seconds".format(tf-ti))
+  
   transDB = return_dict
   
   for db in np.arange(Nfiles):
@@ -323,10 +327,10 @@ if __name__ == "__main__":
     elow    = np.concatenate((elow,    transDB[db][2]))    
     isoID   = np.concatenate((isoID,   transDB[db][3]+acum[idb]))    
 
-    # ut.lrprint(verbose-8, "Isotope in-database indices: {}".format(
-    #                        np.unique(transDB[3])))
-    # ut.lrprint(verbose-8, "Isotope correlative indices: {}\n".format(
-    #                        np.unique(transDB[3]+acum[idb])))
+    ut.lrprint(verbose-8, "Isotope in-database indices: {}".format(
+                           np.unique(transDB[db][3])))
+    ut.lrprint(verbose-8, "Isotope correlative indices: {}\n".format(
+                           np.unique(transDB[db][3]+acum[idb])))
 
   # Total number of transitions:
   nTransitions = np.size(wlength)
