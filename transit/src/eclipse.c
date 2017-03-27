@@ -160,10 +160,8 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
     //            "  (%d)\n", i, w, B[i], tau[i], dtau[i], last);
     //}
   }
-
-  res = -integ_trapz(dtau, B, last+1);
-  //if (fabs(w-4901) < 0.5)
-  //  tr_output(TOUT_RESULT, "I = %.5e\n", res);
+  /*    Background emission, medium emission                                */
+  res = B[last]*dtau[last] - integ_trapz(dtau, B, last+1);
   return res;
 }
 
