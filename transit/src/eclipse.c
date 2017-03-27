@@ -138,15 +138,10 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
   long rnn  = rad->n;
   long i;
 
-  /* Auxiliary variables for Simson integration:                            */
-  double *hsum, *hratio, *hfactor, *h;
-
   /* Blackbody function at each layer:                                      */
   PREC_RES B[rnn];
-
   /* Integration parts:                                                     */
-  PREC_RES tauInteg[rnn],  /* Integrand function                            */
-           tauIV[rnn];     /* Tau integration variable                      */
+  PREC_RES dtau[rnn];      /* Tau integration variable                      */
 
   /* Integrate for each of the planet's layer starting from the
      outermost until the closest layer.
@@ -157,55 +152,19 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
         B_\nu = 2 h {\bar\nu}^3 c^2 \frac{1}
                 {\exp(\frac{h \bar \nu c}{k_B T})-1}                        */
   for(i=0; i <= last; i++){
-    tauIV[i] = tau[i];
-    B[i] =  (2.0 * H * w * w * w * wfct * wfct * wfct * LS * LS)
-          / (exp(H * w * wfct * LS / (KB * temp[rnn-1-i])) - 1.0);
-    tauInteg[i] = B[i] * exp(-tau[i]/ cos(angle));
+    dtau[i] = exp(-tau[i]/cos(angle));
+    B[i] = (2.0 * H * pow(w*wfct,3.0) * LS * LS) /
+            (exp(H * w*wfct * LS / (KB * temp[rnn-1-i])) - 1.0);
+    //if (fabs(w-4901) < 0.5){
+    //  tr_output(TOUT_RESULT, "wl[%2d]= %.6f,  B=%.5e,  tau=%.5e,  dtau=%.5e"
+    //            "  (%d)\n", i, w, B[i], tau[i], dtau[i], last);
+    //}
   }
 
-  /* Added 0 at the end when tau reach toomuch, so the spline looks nice    */
-  /* Add all other layers to be 0.                                          */
-  for(; i<rnn; i++){
-    tauInteg[i] = 0;
-    /* Geometric progression is used to provide enough elements
-       for integral to work. It does not change the final outcome/result.   */
-    tauIV[i] = tauIV[i-1] + 1;
-   }
-
-  /* Adding additional 0 layer, plus the last represent number of elements
-     is -1, so we need to add one more. 2 in total.                         */
-  last += 2;
-
-  /* If atmosphere is transparent, and at last level tau has not reached
-     tau.toomuch, last is set to max number of layers (rnn, instead of rnn-1
-     because we added 2 on the previous step). The code requests never
-     to go over it.                                                         */
-  if(last > rnn)
-    last = rnn;
-
-  /* Checks if we have enough radii to do spline, at least 3:               */
-  if(last < 3) {
-    tr_output(TOUT_ERROR,
-      "Less than 3 items (%i given) for radial integration.\n", last);
-    exit(EXIT_FAILURE);
-  }
-
-  /* Integrate along tau up to tau = toomuch:                               */
-  hsum    = calloc(last/2, sizeof(double));
-  hratio  = calloc(last/2, sizeof(double));
-  hfactor = calloc(last/2, sizeof(double));
-  h       = calloc(last-1, sizeof(double));
-
-  makeh(tauIV, h, last);
-  geth(h, hsum, hratio, hfactor, last);
-  res = simps(tauInteg, h, hsum, hratio, hfactor, last);
-
-  free(hsum);
-  free(hratio);
-  free(hfactor);
-  free(h);
-
-  return res/cos(angle);
+  res = -integ_trapz(dtau, B, last+1);
+  //if (fabs(w-4901) < 0.5)
+  //  tr_output(TOUT_RESULT, "I = %.5e\n", res);
+  return res;
 }
 
 
