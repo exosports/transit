@@ -144,9 +144,7 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
   PREC_RES dtau[rnn];      /* Tau integration variable                      */
 
   /* Integrate for each of the planet's layer starting from the
-     outermost until the closest layer.
-     The order is opposite since tau starts from the top and
-     radius array starts from the bottom.                                   */
+     outermost until the closest layer.                                     */
 
   /* Planck function (erg/s/sr/cm) for wavenumbers:
         B_\nu = 2 h {\bar\nu}^3 c^2 \frac{1}
@@ -155,10 +153,6 @@ eclipse_intens(struct transit *tr,  /* Transit structure                    */
     dtau[i] = exp(-tau[i]/cos(angle));
     B[i] = (2.0 * H * pow(w*wfct,3.0) * LS * LS) /
             (exp(H * w*wfct * LS / (KB * temp[rnn-1-i])) - 1.0);
-    //if (fabs(w-4901) < 0.5){
-    //  tr_output(TOUT_RESULT, "wl[%2d]= %.6f,  B=%.5e,  tau=%.5e,  dtau=%.5e"
-    //            "  (%d)\n", i, w, B[i], tau[i], dtau[i], last);
-    //}
   }
   /*    Background emission, medium emission                                */
   res = B[last]*dtau[last] - integ_trapz(dtau, B, last+1);

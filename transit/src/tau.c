@@ -100,11 +100,11 @@ tau(struct transit *tr){
     hfct = ip->fct;
   }
   /* Request at least four layers to calculate a spline interpolation:     */
-  if(nh < 4) {
-    tr_output(TOUT_ERROR, "At least four layers (%d given) are required "
-      "(three for spline, one for the analitical part).\n", nh);
-    exit(EXIT_FAILURE);
-  }
+  //if(nh < 4) {
+  //  tr_output(TOUT_ERROR, "At least four layers (%d given) are required "
+  //    "(three for spline, one for the analitical part).\n", nh);
+  //  exit(EXIT_FAILURE);
+  //}
 
   PREC_RES *tau_wn;              /* Optical depth array                     */
   PREC_ATM *temp = tr->atm.t,    /* Temperature array                       */
