@@ -100,17 +100,17 @@ class dbdriver(object):
     while bounded:
       # Update irec:
       irec = icheck
-      # Check index boundaries:
-      if irec == imin or irec == imax:
-        break
       # Check wavelength boundaries:
       if searchup:
+        if irec == imax:  # Check index boundaries
+          break
         icheck += 1
         bounded = self.readwl(dbfile, icheck) < wavelength
       else:
+        if irec == imin:  # Check index boundaries
+          break
         icheck -= 1
         bounded = self.readwl(dbfile, icheck) > wavelength
-
 
     # Move file pointer to begining:
     dbfile.seek(0)
