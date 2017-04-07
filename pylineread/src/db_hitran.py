@@ -355,7 +355,7 @@ class hitran(dbdriver):
       # Print a checkpoint statement every 1/20th interval
       if verbose > 1:
         pos = float(data.tell()/self.recsize)
-        if (pos/interval)%1 == 0.0:
+        if interval != 0 and (pos/interval)%1 == 0.0:
           ut.lrprint(verbose-1, "checkpoint %d/20..."%chk)
           chk += 1
           ut.lrprint(verbose-3, "Wavenumber: %s, S0: %s, Elow: "
