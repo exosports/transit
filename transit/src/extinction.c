@@ -359,8 +359,8 @@ computemolext(struct transit *tr, /* transit struct                         */
     Nmol = 1;
 
   /* Temporary extinction array:                                            */
-  ktmp    = (double **)malloc(Nmol            * sizeof(double *));
-  ktmp[0] = (double  *)malloc(Nmol*tr->owns.n * sizeof(double  ));
+  ktmp    = (double **)malloc(Nmol           * sizeof(double *));
+  ktmp[0] = (double  *)calloc(Nmol*tr->owns.n, sizeof(double  ));
   for (i=1; i<Nmol; i++)
     ktmp[i] = ktmp[0] + tr->owns.n * i;
 
