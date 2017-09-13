@@ -11,8 +11,8 @@
 mkfile_dir := $(dir $(lastword $(MAKEFILE_LIST)))
 
 # `make [clean]` should run `make [clean]` on all of the modules.
-all: make_pu make_transit make_ctips
-clean: clean_pu clean_transit clean_ctips
+all: make_pu make_transit make_tips
+clean: clean_pu clean_transit clean_tips
 
 # The following builds the various modules using their respective `make`
 # tasks.
@@ -28,10 +28,10 @@ make_transit: make_pu
 	@cd $(mkfile_dir)/transit/ && make
 	@echo "Finished compiling transit."
 
-make_ctips:
-	@echo "\nCompiling CTIPS for pylineread..."
-	@cd $(mkfile_dir)/pylineread/src/ctips/ && make
-	@echo "Finished compiling CTIPS."
+make_tips:
+	@echo "\nCompiling PYTIPS for pylineread..."
+	@cd $(mkfile_dir)/pylineread/src/pytips/ && make
+	@echo "Finished compiling PYTIPS."
 
 
 # The following tasks clean the various modules using their respective
@@ -48,7 +48,7 @@ clean_transit:
 	@cd $(mkfile_dir)/transit/ && make clean
 	@echo "Finished cleaning transit."
 
-clean_ctips:
-	@echo "\nCleaning CTIPS for pylineread..."
-	@cd $(mkfile_dir)/pylineread/src/ctips/ && make clean
-	@echo "Finished cleaning CTIPS."
+clean_tips:
+	@echo "\nCleaning PYTIPS for pylineread..."
+	@cd $(mkfile_dir)/pylineread/src/pytips/ && make clean
+	@echo "Finished cleaning PYTIPS."

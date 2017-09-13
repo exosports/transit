@@ -13,9 +13,9 @@ from driver import dbdriver
 #db_hitran.py dir:
 DBHdir = os.path.dirname(os.path.realpath(__file__))
 
-# CTIPS
-sys.path.append(DBHdir + "/ctips/lib")
-import ctips as ct
+# TIPS
+sys.path.append(DBHdir + "/pytips")
+import pytips as tips
 
 class hitran(dbdriver):
   def __init__(self, dbfile, pffile):
@@ -99,7 +99,7 @@ class hitran(dbdriver):
 
     Notes:
     ------
-    This function is a wrapper of the CTIPS library written by
+    This function is a wrapper of the TIPS library written by
     Patricio Cubillos, which is itself a C implementation of the
     Fortran TIPS routine by R. R. Gamache.
     The range of temperatures is limited to: 70K -- 3000K.
@@ -147,9 +147,8 @@ class hitran(dbdriver):
       mol = np.repeat(molID, len(Temp))
       iso = np.repeat(int(self.isotopes[i]), len(Temp))
 
-      # Call CTIPS with the given arrays:
-      PF[i] = ct.tips(mol, iso, Temp)
-      PF[i] /= self.gi[i]
+      # Call TIPS with the given arrays:
+      PF[i] = tips.tips(mol, iso, Temp)
 
     return Temp, PF
 
@@ -222,7 +221,7 @@ class hitran(dbdriver):
 
     Notes:
     ------
-    This function is a wrapper of the CTIPS library written by
+    This function is a wrapper of the TIPS library written by
     Patricio Cubillos, which is itself a C implementation of the
     Fortran TIPS routine by R. R. Gamache.
     The range of temperatures is limited to: 70K -- 3000K.
@@ -260,7 +259,7 @@ class hitran(dbdriver):
     iso = np.asarray(self.isotopes, dtype=int)
     temp = np.repeat(self.T0, Niso)
 
-    PFzero = ct.tips(mol, iso, temp)
+    PFzero = tips.tips(mol, iso, temp)
     return PFzero / self.gi
 
 
