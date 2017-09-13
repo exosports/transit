@@ -14,8 +14,8 @@ from driver import dbdriver
 DBHdir = os.path.dirname(os.path.realpath(__file__))
 
 # CTIPS
-sys.path.append(DBHdir + "/ctips/lib")
-import ctips as ct
+sys.path.append(DBHdir + "/pytips")
+import pytips as tips
 
 class hitran(dbdriver):
   def __init__(self, dbfile, pffile):
@@ -148,7 +148,7 @@ class hitran(dbdriver):
       iso = np.repeat(int(self.isotopes[i]), len(Temp))
 
       # Call CTIPS with the given arrays:
-      PF[i] = ct.tips(mol, iso, Temp)
+      PF[i] = tips.tips(mol, iso, Temp)
       PF[i] /= self.gi[i]
 
     return Temp, PF
@@ -260,7 +260,7 @@ class hitran(dbdriver):
     iso = np.asarray(self.isotopes, dtype=int)
     temp = np.repeat(self.T0, Niso)
 
-    PFzero = ct.tips(mol, iso, temp)
+    PFzero = tips.tips(mol, iso, temp)
     return PFzero / self.gi
 
 
