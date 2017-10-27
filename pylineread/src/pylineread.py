@@ -315,7 +315,7 @@ if __name__ == "__main__":
     # Read databases:
     p = mp.Process(target = driver[db].dbread, args = (cla.iwav, cla.fwav,
                                                        cla.verb,
-                                                       db, return_dict,
+                                                       db, transDB,
                                                        pflist[db]))
 
     jobs.append(p)
