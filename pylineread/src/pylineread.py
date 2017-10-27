@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants as sc
 import sys, os, time
+import multiprocessing as mp
 
 import ConfigParser
 import argparse
@@ -36,6 +37,8 @@ def parseargs():
   2013        madison   Initial implementation.        
   2014-03-06  patricio  Updated from optparse to argparse. Added documentation
                         and config_file option.    pcubillos@fulbrightmail.org
+  2017-10-27  mhimes    Added multiprocessing. Added ncores (number of cores) 
+                        and defn (HITRAN molecules definition file) config args
   """
   # Parser to process a configuration file:
   cparser = argparse.ArgumentParser(description=__doc__, add_help=False,
@@ -77,6 +80,9 @@ def parseargs():
   parser.add_argument("-q", "--quiet",         action="store_false",
                        help="Set verbosity level to 0.",
                        dest="verb")
+  parser.add_argument("-n", "--ncores", action="store", 
+                      help="Maximum number of cores",
+                      dest="ncores", type=int, default=1)
   # Database Options:
   group = parser.add_argument_group("Database Options")
   group.add_argument("-o", "--output",         action  = "store",
@@ -96,6 +102,10 @@ def parseargs():
                           "'ts' for Schwenke's TiO, or 'vo' for Plez's VO.",
                      choices=('ps', 'hit', 'ts', 'vo'),
                      dest="dbtype")
+  # HITRAN definitions file
+  group.add_argument("-n", "--defn",           action="store", 
+                     help="Path/to/file of HITRAN definitions file", 
+                     dest="defn")
   # Wavelength Options:
   group = parser.add_argument_group("Wavelength Options")
   group.add_argument("-i", "--wl-init",       action="store",
@@ -126,16 +136,19 @@ if __name__ == "__main__":
   2014-03-05  patricio  Added documentation and updated Madison's code.
                                                  pcubillos@fulbrightmail.org
   2014-07-27  patricio  Updated to version 5.0
+  2017-10-27  mhimes    Implemented multiprocessing, defn argument for HITRAN
   """
 
   # Process command-line-arguments:
   cla = parseargs()
   # Unpack parameters:
   verbose    = cla.verb
+  ncores     = cla.ncores
   dblist     = cla.db_list
   pflist     = cla.part_list
   dbtype     = cla.dbtype 
   outputfile = cla.output
+  defn       = cla.defn
 
   # Number of files:
   Nfiles = len(dblist)
@@ -145,7 +158,7 @@ if __name__ == "__main__":
     if   dbtype[i] == "ps":
       driver.append(ps.pands(dblist[i],       pflist[i]))
     elif dbtype[i] == "hit":
-      driver.append(hit.hitran(dblist[i],     pflist[i]))
+      driver.append(hit.hitran(dblist[i],     pflist[i], defn))
     elif dbtype[i] == "ts":
       driver.append(ts.tioschwenke(dblist[i], pflist[i]))
     elif dbtype[i] == "vo":
@@ -289,27 +302,62 @@ if __name__ == "__main__":
   gf      = np.array([], np.double)
   elow    = np.array([], np.double)
   isoID   = np.array([], int)
+
+  # Initialize these for multiprocessing
+  jobs = []
+  manager = mp.Manager()
+  transDB = manager.dict()
+
+  ti = time.time()
+  
   # Read from file and write the transition info:
+  for db in np.arange(Nfiles):
+    # Read databases:
+    p = mp.Process(target = driver[db].dbread, args = (cla.iwav, cla.fwav,
+                                                       cla.verb,
+                                                       db, return_dict,
+                                                       pflist[db]))
+
+    jobs.append(p)
+    p.start()
+
+    # Limit number of running processes
+    while True:
+      procs = 0
+      # Count the running processes
+      for proc in jobs:
+        if proc.is_alive():
+          procs += 1
+      # If less processes running than the limit, exit loop to start more
+      if procs < ncores:
+        break
+      # Chill for a sec
+      time.sleep(.1)
+
+  # Join the results together
+  for proc in jobs:
+      proc.join()
+      
+  # Print out the time it took to read the files
+  tf = time.time()
+  ut.lrprint(verbose-3, "Total reading time: {:8.3f} seconds".format(tf-ti))
+
+  # Store the info
   for db in np.arange(Nfiles):
     # Get database index:
     dbname = driver[db].name
     idb = DBnames.index(dbname)
 
-    # Read databases:
-    ti = time.time()
-    transDB = driver[db].dbread(cla.iwav, cla.fwav, cla.verb, pflist[db])
-    tf = time.time()
-    ut.lrprint(verbose-3, "Reading time: {:8.3f} seconds".format(tf-ti))
-    
-    wlength = np.concatenate((wlength, transDB[0]))    
-    gf      = np.concatenate((gf,      transDB[1]))    
-    elow    = np.concatenate((elow,    transDB[2]))    
-    isoID   = np.concatenate((isoID,   transDB[3]+acum[idb]))    
+    # Concatenate the results accordingly
+    wlength = np.concatenate((wlength, transDB[db][0]))    
+    gf      = np.concatenate((gf,      transDB[db][1]))    
+    elow    = np.concatenate((elow,    transDB[db][2]))    
+    isoID   = np.concatenate((isoID,   transDB[db][3]+acum[idb]))    
 
     ut.lrprint(verbose-8, "Isotope in-database indices: {}".format(
-                           np.unique(transDB[3])))
+                           np.unique(transDB[db][3])))
     ut.lrprint(verbose-8, "Isotope correlative indices: {}\n".format(
-                           np.unique(transDB[3]+acum[idb])))
+                           np.unique(transDB[db][3]+acum[idb])))
 
   # Total number of transitions:
   nTransitions = np.size(wlength)
