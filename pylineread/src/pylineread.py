@@ -80,7 +80,7 @@ def parseargs():
   parser.add_argument("-q", "--quiet",         action="store_false",
                        help="Set verbosity level to 0.",
                        dest="verb")
-  parser.add_argument("-n", "--ncores", action="store", 
+  parser.add_argument("-N", "--ncores", action="store", 
                       help="Maximum number of cores",
                       dest="ncores", type=int, default=1)
   # Database Options:
