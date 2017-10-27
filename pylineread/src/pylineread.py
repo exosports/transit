@@ -297,6 +297,7 @@ if __name__ == "__main__":
   ut.lrprint(verbose-5, "Cumulative number of isotopes per DB: {}".format(acum))
   ut.lrprint(verbose, "Done.")
 
+  # Initialize arrays to be filled
   ut.lrprint(verbose, "\nWriting transition info to tli file:")
   wlength = np.array([], np.double)
   gf      = np.array([], np.double)
@@ -306,7 +307,7 @@ if __name__ == "__main__":
   # Initialize these for multiprocessing
   jobs = []
   manager = mp.Manager()
-  transDB = manager.dict()
+  return_dict = manager.dict()
 
   ti = time.time()
   
@@ -314,10 +315,9 @@ if __name__ == "__main__":
   for db in np.arange(Nfiles):
     # Read databases:
     p = mp.Process(target = driver[db].dbread, args = (cla.iwav, cla.fwav,
-                                                       cla.verb,
-                                                       db, transDB,
+                                                       cla.verb, 
+                                                       db, return_dict,
                                                        pflist[db]))
-
     jobs.append(p)
     p.start()
 
@@ -329,7 +329,7 @@ if __name__ == "__main__":
         if proc.is_alive():
           procs += 1
       # If less processes running than the limit, exit loop to start more
-      if procs < ncores:
+      if procs <= ncores:
         break
       # Chill for a sec
       time.sleep(.1)
@@ -342,13 +342,15 @@ if __name__ == "__main__":
   tf = time.time()
   ut.lrprint(verbose-3, "Total reading time: {:8.3f} seconds".format(tf-ti))
 
+  transDB = return_dict
+
   # Store the info
   for db in np.arange(Nfiles):
     # Get database index:
     dbname = driver[db].name
     idb = DBnames.index(dbname)
 
-    # Concatenate the results accordingly
+    # Combine the results into 1 array
     wlength = np.concatenate((wlength, transDB[db][0]))    
     gf      = np.concatenate((gf,      transDB[db][1]))    
     elow    = np.concatenate((elow,    transDB[db][2]))    
