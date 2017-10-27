@@ -50,12 +50,13 @@ class hitran(dbdriver):
     self.recwnlen  =  12 # Wavenumber record length
     self.reclinend =  25 # Line intensity end position
     self.recelend  =  55 # Low Energy     end position
-    self.T0       = 296.0 # K
+    self.T0        = 296.0 # K
 
     self.molID = self.getMolec()
+    self.defn  = defn
     # Get info from HITRAN configuration file:
     self.molecule, self.isotopes, self.mass, self.isoratio, self.gi = \
-                                               self.getHITinfo(self.molID, defn)
+                                          self.getHITinfo(self.molID, self.defn)
     # Database name: 
     self.name = "HITRAN " + self.molecule
 
@@ -198,8 +199,8 @@ class hitran(dbdriver):
 
     """
     # Read HITRAN configuration file from inputs folder:
-    if defn:
-      hfile = open(defn, 'r')
+    if self.defn:
+      hfile = open(self.defn, 'r')
     else:
       hfile = open(DBHdir + '/../inputs/hitran.dat', 'r')
     lines = hfile.readlines()
@@ -271,7 +272,7 @@ class hitran(dbdriver):
     return PFzero / self.gi
 
 
-  def dbread(self, iwl, fwl, verbose, *args):
+  def dbread(self, iwl, fwl, verbose, procnum, return_dict, *args):
     """
     Read a HITRAN or HITEMP database (dbfile) between wavelengths iwl and fwl.
 
@@ -285,6 +286,10 @@ class hitran(dbdriver):
        Final wavelength limit (in microns).
     verbose: Integer
        Verbosity threshold.
+    procnum: Integer
+       Index of the process which calls the function
+    return_dict: Dict
+       Dictionary to contain return values (indexed by process number)
     pffile: String
        Partition function filename.
 
@@ -362,7 +367,7 @@ class hitran(dbdriver):
       # Print a checkpoint statement every 1/20th interval
       if verbose > 1:
         pos = float(data.tell()/self.recsize)
-        if interval != 0 and (pos/interval)%1 == 0.0:
+        if (pos/interval)%1 == 0.0:
           ut.lrprint(verbose-1, "checkpoint %d/20..."%chk)
           chk += 1
           ut.lrprint(verbose-3, "Wavenumber: %s, S0: %s, Elow: "
@@ -408,4 +413,5 @@ class hitran(dbdriver):
 
     ut.lrprint(verbose-14, "GF values: " + str(gf))
     data.close()
+    return_dict[procnum] = (wlength, gf2, elow, isoID)
     return wlength, gf2, elow, isoID
