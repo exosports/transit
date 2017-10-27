@@ -18,7 +18,7 @@ sys.path.append(DBHdir + "/pytips")
 import pytips as tips
 
 class hitran(dbdriver):
-  def __init__(self, dbfile, pffile):
+  def __init__(self, dbfile, pffile, defn):
     """
     Initialize the basic database info.
 
@@ -28,10 +28,13 @@ class hitran(dbdriver):
        File with the Database info as given from HITRAN.
     pffile: String
        File with the partition function.
+    defn  : String
+       Path/to/file for HITRAN configuration file.
 
     Modification History:
     ---------------------
     2014-08-01  patricio  Added documentation.
+    2017-10-27  mhimes    Added defn argument.
     """
     super(hitran, self).__init__(dbfile, pffile)
 
@@ -52,7 +55,7 @@ class hitran(dbdriver):
     self.molID = self.getMolec()
     # Get info from HITRAN configuration file:
     self.molecule, self.isotopes, self.mass, self.isoratio, self.gi = \
-                                                    self.getHITinfo(self.molID)
+                                               self.getHITinfo(self.molID, defn)
     # Database name: 
     self.name = "HITRAN " + self.molecule
 
@@ -174,7 +177,7 @@ class hitran(dbdriver):
     return molID #self.molname[molID-1]
 
 
-  def getHITinfo(self, molID):
+  def getHITinfo(self, molID, defn):
     """
     Get HITRAN info from configuration file.
 
@@ -182,6 +185,8 @@ class hitran(dbdriver):
     -----------
     molID: Integer
        Molecule ID as given in HITRAN database
+    defn : String
+       Path/to/file for HITRAN configuration file
 
     Returns:
     --------
@@ -193,7 +198,10 @@ class hitran(dbdriver):
 
     """
     # Read HITRAN configuration file from inputs folder:
-    hfile = open(DBHdir + '/../inputs/hitran.dat', 'r')
+    if defn:
+      hfile = open(defn, 'r')
+    else:
+      hfile = open(DBHdir + '/../inputs/hitran.dat', 'r')
     lines = hfile.readlines()
     hfile.close()
   
