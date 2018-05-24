@@ -97,6 +97,9 @@ COMP_FLAG = $(WARN_FLAG) $(INCL_FLAG) $(LIBR_FLAG) $(OTHR_FLAG)
 
 # Archive flags
 #
+PLATFORM := $(shell uname)
+# These next options are only needed on linux builds
+ifeq ($(PLATFORM), Linux)
 ARCH_FLAG = -Wl,--whole-archive
 
 # Flags for linking the m library
@@ -106,6 +109,7 @@ LIBM_FLAG = -Wl,--no-whole-archive -lm
 # Flags for naming the library
 #
 NAME_FLAG = -Wl,-soname -Wl,libpu.so.1
+endif
 
 # Library linking must be last in the GCC command
 #

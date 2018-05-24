@@ -75,7 +75,12 @@ fixup_null_alloc (n)
   if (n == 0)
     p = malloc ((size_t) 1);
   if (p == 0)
-    error (xmalloc_exit_failure, 0, _("Memory exhausted"));
+    #if __linux__
+      // on linux if there is no more memory the program
+      // will fail out nicely, other platforms will fail with
+      // standard platform error messages
+      error (xmalloc_exit_failure, 0, _("Memory exhausted"));
+    #endif
   return p;
 }
 
