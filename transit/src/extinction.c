@@ -532,7 +532,7 @@ computemolext(struct transit *tr, /* transit struct                         */
   }
   /* Downsample ktmp to the final sampling size:                            */
   for (m=0; m < Nmol; m++)
-    downsample(ktmp[m], kiso[m], dnwn, tr->owns.o/ofactor);
+    resample(ktmp[m], kiso[m], dnwn, tr->owns.o/ofactor);
 
   tr_output(TOUT_DEBUG, "Number of co-added lines:     %8li  (%5.2f%%)\n",
     nadd,  nadd*100.0/nlines);

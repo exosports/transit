@@ -21,7 +21,8 @@ extern double integ_trasim P_((double dx, double *y, long n));
 extern double integ_trapz  P_((double *x, double *y, long n));
 extern double interp_parab P_((double *x, double *y, double xr));
 extern double interp_line P_((double *x, double *y, double xr));
-extern int  downsample P_((double *input, double *out, int n, int scale));
+extern int resample   P_((double *input, double *out, int n, int scale));
+extern int downsample P_((double *input, double *out, int n, int scale));
 extern double powi P_((double x, int n));
 extern _Bool fixedcmp P_((double d1, double d2, int prec));
 /* Simpson integration functions:                                          */

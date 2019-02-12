@@ -276,6 +276,23 @@ fixedcmp(double d1,
 }
 
 
+/* Resample an array by a integer factor of points                        */
+int
+resample(double *input,  /* Input array                                   */
+         double *out,    /* Output array                                  */
+         int n,          /* Number of elements in the input array         */
+         int scale){     /* Resampling factor                             */
+  /* Simple resample to low-res array by taking corresponding values
+     from hi-res array.                                                   */
+  int j;
+  int m = 1 + (n-1)/scale;   /* Number of points in the resampled array   */
+  for (j=0; j<m; j++){
+    out[j] = input[scale*j];
+  }
+  return 0;
+}
+
+
 /* Downsample an array by a integer factor of points                        */
 int
 downsample(double *input,  /* Input array                                   */
