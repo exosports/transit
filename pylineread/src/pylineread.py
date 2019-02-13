@@ -364,11 +364,25 @@ if __name__ == "__main__":
   # Total number of transitions:
   nTransitions = np.size(wlength)
 
+
+  # Calculate the total number of transitions per isotope:
+  Nisotran = np.bincount(isoID)
+  Nisotran = Nisotran[np.where(Nisotran>0)]  # Remove zeroes
+  ut.lrprint(verbose-5, "Transitions per isotope:\n{}".format(Nisotran))
+
   # Sort the line transitions (by isotope, then by wavelength):
   ti = time.time()
-  isort = sorted(zip(np.arange(nTransitions), isoID, wlength),
-                 key=lambda x:(x[1], x[2]))
-  isort = list(zip(*isort)[0])
+  #isort = sorted(zip(np.arange(nTransitions), isoID, wlength),
+  #               key=lambda x:(x[1], x[2]))
+  #isort = list(zip(*isort)[0])
+  isort = np.argsort(isoID)
+  # Sort each isotope by wavenumber:
+  ihi = 0
+  for j in np.arange(len(Nisotran)):
+    ilo  = ihi
+    ihi += Nisotran[j]
+    wlsort = np.argsort(wlength[isort][ilo:ihi])
+    isort[ilo:ihi] = isort[ilo:ihi][wlsort]
 
   tf = time.time()
   ut.lrprint(verbose-3, "Sort time:    {:8.3f} seconds".format(tf-ti))
@@ -376,11 +390,6 @@ if __name__ == "__main__":
   gf      = gf     [isort]
   elow    = elow   [isort]
   isoID   = isoID  [isort]
-
-  # Calculate the total number of transitions per isotope:
-  Nisotran = np.bincount(isoID)
-  Nisotran = Nisotran[np.where(Nisotran>0)]  # Remove zeroes
-  ut.lrprint(verbose-5, "Transitions per isotope:\n{}".format(Nisotran))
 
   # FINDME: Implement well this:
   if False:
