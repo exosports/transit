@@ -13,6 +13,7 @@ extern int acceptsoltype P_((ray_solution **sol, char *hname));
 extern int acceptgenhints P_((struct transit *tr));
 extern void savehint P_((FILE *out, struct transithint *hints));
 extern int resthint P_((FILE *in, struct transithint *hint));
+extern int mkpath P_((char* path, mode_t mode));
 extern void printintro P_((void));
 extern void freemem_hints P_((struct transithint *h));
 extern void freemem_cloud P_((struct extcloud *c));

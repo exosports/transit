@@ -14,6 +14,11 @@
 #include <version_tr.h>
 #include <math.h>
 #include <procopt.h>
+#include <libgen.h>
+#include <string.h>
+#include <assert.h>
+#include <sys/stat.h>
+
 
 /* Transit ray solutions:                                                   */
 const static ray_solution *raysols[] = {&slantpath,   /* see slantpath.c    */
@@ -427,23 +432,27 @@ processparameters(int argc,            /* Number of command-line args  */
       //if(hints->f_outspec) free_null(hints->f_outspec);
       hints->f_outspec = (char *)realloc(hints->f_outspec, strlen(optarg)+2);
       strcpy(hints->f_outspec, optarg);
+      mkpath(hints->f_outspec, 0755);
       break;
     case CLA_OUTSAMPLE:  /* Sampling output file name  */
       if(hints->f_outsample) free_null(hints->f_outsample);
       hints->f_outsample = (char *)calloc(strlen(optarg)+1, sizeof(char));
       strcpy(hints->f_outsample, optarg);
+      mkpath(hints->f_outsample, 0755);
       break;
     case CLA_OUTTOOMUCH: /* toomuch output file name   */
       if(hints->f_toomuch) free_null(hints->f_toomuch);
       if(*optarg != '\0'){
         hints->f_toomuch = (char *)calloc(strlen(optarg)+1, sizeof(char));
         strcpy(hints->f_toomuch, optarg);
+        mkpath(hints->f_toomuch, 0755);
       }
       break;
     case CLA_OUTINTENS:  /* Intensity output file name  */
       if(hints->f_outintens) free_null(hints->f_outintens);
       hints->f_outintens = (char *)calloc(strlen(optarg)+2, sizeof(char));
       strcpy(hints->f_outintens, optarg);
+      mkpath(hints->f_outintens, 0755);
       break;
     case CLA_SAVEFILES: /* output files with tau, extionction, CIA         */
       isYes = strncmp(optarg, "yes", 3)==0;
@@ -884,6 +893,23 @@ resthint(FILE *in,
   if(rn<0) return rn; else res += rn;
 
   return res;
+}
+
+/* This function ensures that output path directories exist */
+int
+mkpath(char* path, mode_t mode){
+  assert(path && *path);
+  char* p;
+  for (p=strchr(path+1, '/'); p; p=strchr(p+1, '/')){
+    *p='\0';
+    if (mkdir(path, mode)==-1){
+      if (errno!=EEXIST){
+        *p='/'; return -1;
+      }
+    }
+    *p='/';
+  }
+  return 0;
 }
 
 
