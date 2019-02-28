@@ -432,27 +432,27 @@ processparameters(int argc,            /* Number of command-line args  */
       //if(hints->f_outspec) free_null(hints->f_outspec);
       hints->f_outspec = (char *)realloc(hints->f_outspec, strlen(optarg)+2);
       strcpy(hints->f_outspec, optarg);
-      mkpath(hints->f_outspec, 0755);
+      mkpath(hints->f_outspec, 0777);
       break;
     case CLA_OUTSAMPLE:  /* Sampling output file name  */
       if(hints->f_outsample) free_null(hints->f_outsample);
       hints->f_outsample = (char *)calloc(strlen(optarg)+1, sizeof(char));
       strcpy(hints->f_outsample, optarg);
-      mkpath(hints->f_outsample, 0755);
+      mkpath(hints->f_outsample, 0777);
       break;
     case CLA_OUTTOOMUCH: /* toomuch output file name   */
       if(hints->f_toomuch) free_null(hints->f_toomuch);
       if(*optarg != '\0'){
         hints->f_toomuch = (char *)calloc(strlen(optarg)+1, sizeof(char));
         strcpy(hints->f_toomuch, optarg);
-        mkpath(hints->f_toomuch, 0755);
+        mkpath(hints->f_toomuch, 0777);
       }
       break;
     case CLA_OUTINTENS:  /* Intensity output file name  */
       if(hints->f_outintens) free_null(hints->f_outintens);
       hints->f_outintens = (char *)calloc(strlen(optarg)+2, sizeof(char));
       strcpy(hints->f_outintens, optarg);
-      mkpath(hints->f_outintens, 0755);
+      mkpath(hints->f_outintens, 0777);
       break;
     case CLA_SAVEFILES: /* output files with tau, extionction, CIA         */
       isYes = strncmp(optarg, "yes", 3)==0;
