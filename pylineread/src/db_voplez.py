@@ -82,7 +82,7 @@ class voplez(dbdriver):
     Notes:
     ------
     The partition function is valid for the range of temperatures from
-    1000K to 7000K.
+    1000K to 7000K. It is extrapolated down to 0K.
 
     Sample Return:
     Temp = np.linspace(1000., 7000., 13):

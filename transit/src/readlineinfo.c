@@ -424,10 +424,10 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
       *isotran,          /* Number of transitions per isotope in TLI        */
       start,             /* Position of first LT for isotope in TLI         */
       i,                 /* for-loop index                                  */
-      offset=0,          /* Isotope offset (in number of transitions)       */
-      wl_loc, iso_loc,   /* Offsets for isoID, Elow, and gf data            */
-      el_loc, gf_loc,    /* (in memory)                                     */
-      rn;                /* Return IDs                                      */
+      offset=0;          /* Isotope offset (in number of transitions)       */
+  long long wl_loc, iso_loc,   /* Offsets for isoID, Elow, and gf data      */
+            el_loc, gf_loc;    /* (in memory)                               */
+  int rn;                /* Return IDs                                      */
   /* Indices of first and last transitions to be stored                     */
   long ifirst, ilast;
 
