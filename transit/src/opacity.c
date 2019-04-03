@@ -564,7 +564,8 @@ attachopacity(struct transit *tr){ /* transit struct                        */
   op->Nlayer = oh->Nlayer;
   op->Nmol = oh->Nmol;
 
-  int main_shm_size  /* Size of the main shared memory, starting with: grid */
+  /* Size of the main shared memory, starting with: grid */
+  long long main_shm_size  
     = sizeof(PREC_RES) * op->Nmol * op->Ntemp * op->Nlayer * op->Nwave
     + sizeof(int) * op->Nmol          /* op->molID  */
     + sizeof(PREC_RES) * op->Ntemp    /* op->temp   */
