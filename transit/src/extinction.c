@@ -293,7 +293,7 @@ computemolext(struct transit *tr, /* transit struct                         */
   struct line_transition *lt=&(tr->ds.li->lt);
 
   PREC_NREC ln;
-  int i, m=0,
+  int i, m=0, mm,
       *idop, *ilor;
   long j, maxj, minj, offset;
 
@@ -311,8 +311,7 @@ computemolext(struct transit *tr, /* transit struct                         */
   double fdoppler, florentz, /* Doppler and Lorentz-broadening factors      */
          csdiameter;         /* Collision diameter                          */
   double propto_k;
-  double *kmax, *kmin,       /* Maximum and minimum values of propto_k      */
-         **ktmp;
+  double *kmax, *kmin;       /* Maximum and minimum values of propto_k      */
 
   PREC_VOIGTP *alphal, *alphad;
 
@@ -325,7 +324,7 @@ computemolext(struct transit *tr, /* transit struct                         */
   double maxwidth=0,   /* Maximum width between Lorentz and Doppler         */
          minwidth=1e5; /* Minimum width among isotopes in a Layer           */
 
-  int ofactor;  /* Dynamic oversampling factor                              */
+  int ofactor=tr->owns.o;  /* Dynamic oversampling factor                   */
 
   long nadd  = 0, /* Number of co-added lines                               */
        nskip = 0, /* Number of skipped lines                                */
@@ -333,13 +332,12 @@ computemolext(struct transit *tr, /* transit struct                         */
 
   /* Wavenumber array variables:                                            */
   PREC_RES  *wn = tr->wns.v;
-  PREC_NREC onwn = tr->owns.n,
-            dnwn;
+  PREC_NREC  nwn = tr->wns.n,
+            onwn = tr->owns.n;
 
   /* Wavenumber sampling intervals:                                         */
   PREC_RES  dwn = tr->wns.d /tr->wns.o,   /* Output array                   */
-           odwn = tr->owns.d/tr->owns.o,  /* Oversampling array             */
-           ddwn;                          /* Dynamic sampling array         */
+           odwn = tr->owns.d/tr->owns.o;  /* Oversampling array             */
 
   /* Allocate alpha Lorentz and Doppler arrays:                             */
   alphal = (PREC_VOIGTP *)calloc(niso, sizeof(PREC_VOIGTP));
@@ -358,11 +356,10 @@ computemolext(struct transit *tr, /* transit struct                         */
   else
     Nmol = 1;
 
-  /* Temporary extinction array:                                            */
-  ktmp    = (double **)malloc(Nmol           * sizeof(double *));
-  ktmp[0] = (double  *)calloc(Nmol*tr->owns.n, sizeof(double  ));
-  for (i=1; i<Nmol; i++)
-    ktmp[i] = ktmp[0] + tr->owns.n * i;
+  /* Zero the extinction array:                                             */
+  for (mm=0; mm < Nmol; mm++)
+    for (i=0; i < nwn; i++)
+      kiso[mm][i] = 0.0;
 
   /* Constant factors for line widths:                                      */
   fdoppler = sqrt(2*KB*temp/AMU) * SQRTLN2 / LS;
@@ -398,18 +395,6 @@ computemolext(struct transit *tr, /* transit struct                         */
   }
 
   tr_output(TOUT_DEBUG, "Minimum width in layer: %.9f\n", minwidth);
-  /* Set oversampling resolution:                                           */
-  for (i=1; i < tr->ndivs; i++)
-    if (tr->odivs[i]*(dwn/tr->owns.o) >= 0.5 * minwidth){
-      break;
-    }
-  ofactor = tr->odivs[i-1];         /* Dynamic-sampling oversampling factor */
-  ddwn    = odwn * ofactor;         /* Dynamic-sampling grid interval       */
-  dnwn    = 1 + (onwn-1) / ofactor; /* Number of dynamic-sampling values    */
-  tr_output(TOUT_DEBUG, "Dynamic-sampling grid interval: %.9f  "
-               "(scale factor:%i)\n", ddwn, ofactor);
-  tr_output(TOUT_DEBUG, "Number of dynamic-sampling values:%li\n",
-                                dnwn);
 
   /* Determine the maximum and minimum line-strength per isotope:           */
   for(ln=0; ln<nlines; ln++){
@@ -442,7 +427,7 @@ computemolext(struct transit *tr, /* transit struct                         */
   }
 
   /* Compute the spectra, proceed for every line:                           */
-  for(ln=0; ln<nlines; ln++){
+  for (ln=0; ln<nlines; ln++){
     wavn = 1.0/(lt->wl[ln]*lt->wfct);
     i    = lt->isoid[ln];
     if (permol)
@@ -487,13 +472,8 @@ computemolext(struct transit *tr, /* transit struct                         */
     if (permol == 0)
       propto_k *= density[iso->imol[i]];
 
-    /* Index of closest (but not larger than) dynamic-sampling wavenumber:  */
-    idwn = (wavn - tr->wns.i)/ddwn;
-
-    // transitprint(1000, 2, "own[nown:%li]=%.3f  (wf=%.3f)\n",
-    //                       onwn, tr->owns.v[onwn-1], tr->wns.f);
-    // transitprint(1000, 2, "wavn=%.3f   own[%i]=%.3f\n",
-    //                       wavn, iown, tr->owns.v[iown]);
+    /* Index of closest (but not larger than) coarse-sampling wavenumber:   */
+    idwn = (wavn - tr->wns.i)/dwn;
 
     /* FINDME: de-hard code this threshold                                  */
     /* Update Doppler width according to the current wavenumber:            */
@@ -503,36 +483,32 @@ computemolext(struct transit *tr, /* transit struct                         */
     }
 
     /* Sub-sampling offset between center of line and dyn-sampled wn:       */
-    subw = iown - idwn*ofactor;
+    subw   = iown - idwn*ofactor;
     /* Offset between the profile and the wavenumber-array indices:         */
-    offset = ofactor*idwn - profsize[idop[i]][ilor[i]] + subw;
+    offset = iown - profsize[idop[i]][ilor[i]];
     /* Range that contributes to the opacity:                               */
     /* Set the lower and upper indices of the profile to be used:           */
     minj = idwn - (profsize[idop[i]][ilor[i]] - subw) / ofactor;
     maxj = idwn + (profsize[idop[i]][ilor[i]] + subw) / ofactor;
     if (minj < 0)
       minj = 0;
-    if (maxj > dnwn)
-      maxj = dnwn;
-
-    // tr_output(TOUT_DEBUG, "minj:%li  maxj:%li  subw:%li  offset:%li  "
-    //   "index1:%li\nf=np.array([",
-    //   minj, maxj, subw, offset, ofactor*minj - offset);
+    if (maxj >= nwn)
+      maxj = nwn-1;
 
     /* Add the contribution from this line to the opacity spectrum:         */
     /* Adding in more complex but faster array indexing based on simpler
      * pointer arrithmatic                                                  */
     PREC_VOIGT * tmp_point = profile[idop[i]][ilor[i]];
     int beg_j = ofactor*minj - offset;
-    for(j=minj; j<maxj; ++j){
-      ktmp[m][j] += propto_k * tmp_point[beg_j];
-      beg_j += ofactor;
+    for(j=minj; j<=maxj; ++j){
+        if (beg_j > 2*profsize[idop[i]][ilor[i]])
+            break;
+        if (beg_j >= 0)
+            kiso[m][j] += propto_k * tmp_point[beg_j];
+        beg_j += ofactor;
     }
     neval++;
   }
-  /* Downsample ktmp to the final sampling size:                            */
-  for (m=0; m < Nmol; m++)
-    resample(ktmp[m], kiso[m], dnwn, tr->owns.o/ofactor);
 
   tr_output(TOUT_DEBUG, "Number of co-added lines:     %8li  (%5.2f%%)\n",
     nadd,  nadd*100.0/nlines);
@@ -542,8 +518,6 @@ computemolext(struct transit *tr, /* transit struct                         */
     neval, neval*100.0/nlines);
 
   /* Free allocated memory:                                                 */
-  free(ktmp[0]);
-  free(ktmp);
   free(alphal);
   free(alphad);
   free(idop);
