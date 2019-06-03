@@ -499,7 +499,7 @@ computemolext(struct transit *tr, /* transit struct                         */
     /* Adding in more complex but faster array indexing based on simpler
      * pointer arrithmatic                                                  */
     PREC_VOIGT * tmp_point = profile[idop[i]][ilor[i]];
-    int beg_j = ofactor*minj - offset;
+    int beg_j = ofactor*minj - offset + subw;
     for(j=minj; j<=maxj; ++j){
         if (beg_j > 2*profsize[idop[i]][ilor[i]])
             break;
