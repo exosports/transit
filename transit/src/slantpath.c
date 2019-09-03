@@ -85,9 +85,9 @@ totaltau1(PREC_RES b,    /* Impact parameter                                */
   }
 
   /* Integrate Extinction along ray path:                                   */
-  hsum    = calloc(nrad/2, sizeof(double));
-  hratio  = calloc(nrad/2, sizeof(double));
-  hfactor = calloc(nrad/2, sizeof(double));
+  hsum    = calloc((nrad-1)/2, sizeof(double));
+  hratio  = calloc((nrad-1)/2, sizeof(double));
+  hfactor = calloc((nrad-1)/2, sizeof(double));
   h       = calloc(nrad-1, sizeof(double));
 
   makeh(s, h, nrad);
@@ -203,9 +203,9 @@ totaltau2(PREC_RES b,      /* Impact parameter                              */
   }
 
   /* Allocate auxillary integration arrays                                  */
-  hsum    = calloc((nrad-rs)/2, sizeof(double));
-  hratio  = calloc((nrad-rs)/2, sizeof(double));
-  hfactor = calloc((nrad-rs)/2, sizeof(double));
+  hsum    = calloc((nrad-rs-1)/2, sizeof(double));
+  hratio  = calloc((nrad-rs-1)/2, sizeof(double));
+  hfactor = calloc((nrad-rs-1)/2, sizeof(double));
   h       = calloc(nrad-rs-1,   sizeof(double));
 
   /* Allocate array to hold integration range                               */
@@ -397,9 +397,9 @@ modulation1(PREC_RES *tau,        /* Optical depth array                    */
   }
 
   /* Integrate along radius:                                                */
-  hsum    = calloc(last/2, sizeof(double));
-  hratio  = calloc(last/2, sizeof(double));
-  hfactor = calloc(last/2, sizeof(double));
+  hsum    = calloc((last-1)/2, sizeof(double));
+  hratio  = calloc((last-1)/2, sizeof(double));
+  hfactor = calloc((last-1)/2, sizeof(double));
   h       = calloc(last-1, sizeof(double));
 
 

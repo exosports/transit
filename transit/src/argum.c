@@ -219,9 +219,9 @@ processparameters(int argc,            /* Number of command-line args  */
 
     /* Voigt profile options:                                               */
     {NULL, 0, HELPTITLE, NULL, NULL, "Voigt profile options:"},
-    {"ndop",    CLA_NDOP, required_argument, "40",   "integer",
+    {"ndop",    CLA_NDOP, required_argument, "60",   "integer",
     "Number of Doppler-broadening width samples."},
-    {"nlor",    CLA_NLOR, required_argument, "40",   "integer",
+    {"nlor",    CLA_NLOR, required_argument, "60",   "integer",
     "Number of Lorentz-broadening width samples."},
     {"dmin",    CLA_DMIN, required_argument, "1e-3", "float",
     "Minimum Doppler-broadening width (in cm-1)."},

@@ -85,9 +85,9 @@ eclipsetau(struct transit *tr,
     s[i] = s[i-1] + (rad[i] - rad[i-1]);
   }
 
-  hsum    = calloc(nrad/2, sizeof(double));
-  hratio  = calloc(nrad/2, sizeof(double));
-  hfactor = calloc(nrad/2, sizeof(double));
+  hsum    = calloc((nrad-1)/2, sizeof(double));
+  hratio  = calloc((nrad-1)/2, sizeof(double));
+  hfactor = calloc((nrad-1)/2, sizeof(double));
   h       = calloc(nrad-1, sizeof(double));
 
   /* Integrate extinction along the path:                                   */

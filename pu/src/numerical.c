@@ -408,7 +408,7 @@ geth(double *h,
   /* Check for even number of samples (odd number of intervals):            */
   even = n%2;
   /* Calculate size of h arrays                                             */
-  size = n/2;
+  size = (n-1)/2;
 
   if(even)
     even = 0;
