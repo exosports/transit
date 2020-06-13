@@ -2,6 +2,7 @@
 # Transit is under an open-source, reproducible-research license (see LICENSE).
 
 import sys, os
+import six
 import numpy as np
 import subprocess as sp
 import scipy.constants as sc
@@ -311,7 +312,10 @@ class hitran(dbdriver):
     2014-07-06  patricio  Updated to return 1D arrays.
     """
     # Open HITRAN file for reading:
-    data = open(self.dbfile, "r")
+    if six.PY2:
+        data = open(self.dbfile, "r")
+    else:
+        data = open(self.dbfile, "r", newline='\n')
     # Read first line to get the record size:
     data.seek(0)
     line = data.readline()

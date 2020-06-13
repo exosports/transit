@@ -775,52 +775,80 @@ reloadatm(struct transit *tr,
 }
 
 
-int radpress(double g,         /* Surface gravity (m/s^2)                   */
+int radpress(double g0,        /* Surface gravity (cm/s^2)                  */
              double p0,        /* Reference pressure                        */
              double r0,        /* Reference height                          */
              double *temp,     /* Temperature (K)                           */
              double *mu,       /* Mean molecular mass (g/mol)               */
              double *pressure, /* Pressure array                            */
              double *radius,   /* Radius array                              */
-             int nlayer,       /* Number of layers                          */
+             int nlayers,      /* Number of layers                          */
              double rfct){     /* Radius-array units                        */
-  double rad0;   /* Radius at reference pressure                            */
-  int i, i0=-1;  /* Indices                                                 */
+  double temp0, mu0; /* Temperature, mean moecular mass at p0               */
+  double g;       /* Gravity at a given layer                               */
+  int i, i0=-1;   /* Indices                                                */
+  double minimum=1E+37;   /* Running minimum, to determine i0               */
 
-  /* Start from zero altitude, adjust later:                                */
-  radius[0] = 0.0;
-  for (i=1; i<nlayer; i++){
-    /* Cumulative trapezoidal integration to solve: dz = -H*dlog(p):        */
-    radius[i] = radius[i-1] - 0.5*log(pressure[i]/pressure[i-1]) *
-                              (KB/g/AMU) * (temp[i]/mu[i] + temp[i-1]/mu[i-1]);
-    /* Find index of layers around p0 such:  press[i-1] <= p0 < press[i]:   */
-    if (fabs(pressure[i-1]-p0) <  fabs(pressure[i]-pressure[i-1]))
-      if (fabs(pressure[i]-p0) <= fabs(pressure[i]-pressure[i-1]))
-        i0 = i-1;
+  /* Find pressure index closest to p0                                      */
+  for (i=0; i<nlayers; i++){
+    if (fabs(pressure[i]-p0) < minimum){
+      i0 = i;
+      minimum = fabs(pressure[i]-p0);
+    }
   }
+  /* Temp, mean mol. mass, radius & gravity at this layer                   */
+  if (pressure[i0] > p0){
+    temp0 = temp[i0] + ((temp[i0+1]-temp[i0])/log(pressure[i0+1]/pressure[i0])) * 
+                       log(p0/pressure[i0]);
+    mu0   = mu[i0]   + ((mu[i0+1]  -mu[i0]  )/log(pressure[i0+1]/pressure[i0])) * 
+                       log(p0/pressure[i0]);
+    radius[i0] = r0 + 0.5 * (temp[i0] / mu[i0] + temp0 / mu0) * 
+                      (KB/AMU * log(p0/pressure[i0]) / g0) / rfct;
+  }
+  else{
+    temp0 = temp[i0] + ((temp[i0-1]-temp[i0])/log(pressure[i0-1]/pressure[i0])) * 
+                       log(p0/pressure[i0]);
+    mu0   = mu[i0]   + ((mu[i0-1]  -mu[i0]  )/log(pressure[i0-1]/pressure[i0])) * 
+                       log(p0/pressure[i0]);
+    radius[i0] = r0 - 0.5 * (temp[i0] / mu[i0] + temp0 / mu0) * 
+                      (KB/AMU * log(pressure[i0]/p0) / g0) / rfct;
+  }
+  g = g0 * pow(r0 / radius[i0], 2);
 
-  /* Reference pressure is no in given range:                               */
+  /* Reference pressure is not in given range:                              */
   if (i0 == -1){
     tr_output(TOUT_ERROR,
       "Reference pressure level (%.3e) not found "
-      "in range [%.3e, %.3e].\n", p0, pressure[0], pressure[nlayer-1]);
+      "in range [%.3e, %.3e].\n", p0, pressure[0], pressure[nlayers-1]);
     exit(EXIT_FAILURE);
     return 0;
   }
 
-  /* Log-linearly interpolate to get radius at p0:                          */
-  rad0 = radius[i0] + (radius[i0+1]-radius[i0]) *
-         log(p0/pressure[i0]) / log(pressure[i0+1]/pressure[i0]);
+  /* Calculate radii below p0                                               */
+  for (i=i0-1; i>=0; i--){
+    radius[i] = radius[i+1] - 0.5 * (temp[i] / mu[i] + temp[i+1] / mu[i+1]) * 
+                              (KB/AMU * log(pressure[i]/pressure[i+1]) / g) / 
+                              rfct;
+    g = g * pow(radius[i+1] / radius[i], 2);
+  }
+
+  g = g0 * pow(r0 / radius[i0], 2);
+
+  /* Calculate radii above p0                                               */
+  for (i=i0+1; i<nlayers; i++){
+    radius[i] = radius[i-1] + 0.5 * (temp[i] / mu[i] + temp[i-1] / mu[i-1]) * 
+                              (KB/AMU * log(pressure[i-1]/pressure[i]) / g) / 
+                              rfct;
+    g = g * pow(radius[i-1] / radius[i], 2);
+  }
 
   tr_output(TOUT_DEBUG, "PRESSURE:\n");
-  for (i=0; i<nlayer; i++)
+  for (i=0; i<nlayers; i++)
     tr_output(TOUT_DEBUG, "%.3e, ", pressure[i]);
   tr_output(TOUT_DEBUG, "\n");
 
-  /* Adjust radius array to force radius(p0) = r0:                          */
   tr_output(TOUT_DEBUG, "RADIUS:\n");
-  for (i=0; i<nlayer; i++){
-    radius[i] = r0 + (radius[i] - rad0)/rfct;
+  for (i=0; i<nlayers; i++){
     tr_output(TOUT_DEBUG, "%.1f, ", radius[i]);
   }
   tr_output(TOUT_DEBUG, "\n");

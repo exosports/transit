@@ -10,7 +10,12 @@ import scipy.constants as sc
 import sys, os, time
 import multiprocessing as mp
 
-import ConfigParser
+from six.moves import configparser
+import six
+if six.PY2:
+    ConfigParser = configparser.SafeConfigParser
+else:
+    ConfigParser = configparser.ConfigParser
 import argparse
 import struct
 import heapq as hq
@@ -54,7 +59,7 @@ def parseargs():
     if not os.path.isfile(args.config_file):
       ut.printexit("Configuration file '{:s}' does not exist.".
                     format(args.config_file))
-    config = ConfigParser.SafeConfigParser()
+    config = ConfigParser()
     config.read([args.config_file])
     if "Parameters" not in config.sections():
       ut.printexit("Invalid configuration file: '{:s}'.".
@@ -137,6 +142,7 @@ if __name__ == "__main__":
                                                  pcubillos@fulbrightmail.org
   2014-07-27  patricio  Updated to version 5.0
   2017-10-27  mhimes    Implemented multiprocessing, defn argument for HITRAN
+  2020-06-12  mhimes    Python 2/3 compatibility
   """
 
   # Process command-line-arguments:
@@ -180,10 +186,17 @@ if __name__ == "__main__":
   # Hardcoded implementation of lineread's "magic number" check for endianness
   # derived from binary encoding the letters TLI into binary location
   # and checking the order
+  if six.PY2:
+    bigmagic    = '\xab\xb3\xb6\xff'
+    littlemagic = '\xff\xb6\xb3\xab'
+  else:
+    bigmagic    = b'\xab\xb3\xb6\xff'
+    littlemagic = b'\xff\xb6\xb3\xab'
+
   if endianness == 'big':
-    magic = '\xab\xb3\xb6\xff'
+    magic = bigmagic
   if endianness == 'little':
-    magic = '\xff\xb6\xb3\xab'
+    magic = littlemagic
 
   # TLI header: Tells endianness of binary, TLI version, and number of
   # databases used.
@@ -247,13 +260,22 @@ if __name__ == "__main__":
     lenDBname = len(DBnames[idb])
     lenMolec  = len(driver[i].molecule)
 
+    if six.PY2:
+        enc = "c"
+    else:
+        enc = "B"
+
     # Store length of database name, database name, number of temperatures,
     #  and number of isotopes in TLI file:
-    TLIout.write(struct.pack("h{:d}c".format(lenDBname),
-                             lenDBname, *DBnames[idb]))
+    TLIout.write(struct.pack("h{:d}".format(lenDBname)+enc,
+                             lenDBname, 
+                             *(DBnames[idb] if six.PY2 else 
+                               DBnames[idb].encode())))
     # Store the molecule name:
-    TLIout.write(struct.pack("h{:d}c".format(lenMolec),
-                             lenMolec, *driver[i].molecule))
+    TLIout.write(struct.pack("h{:d}".format(lenMolec)+enc,
+                             lenMolec, 
+                             *(driver[i].molecule if six.PY2 else 
+                               driver[i].molecule.encode())))
     # Store the number of temperature samples and isotopes:
     TLIout.write(struct.pack("hh", Ntemp, Niso))
     ut.lrprint(verbose-8, "\nDatabase ({:d}/{:d}): '{:s} ({:s} molecule)'\n"
@@ -276,7 +298,8 @@ if __name__ == "__main__":
       # Store length of isotope name, isotope name, and isotope mass:
       lenIsoname = len(isoNames[j])
       Iname = str(isoNames[j])
-      TLIout.write(struct.pack("h{:d}c".format(lenIsoname), lenIsoname, *Iname))
+      TLIout.write(struct.pack("h{:d}".format(lenIsoname)+enc, lenIsoname, 
+                               *(Iname if six.PY2 else Iname.encode())))
       TLIout.write(struct.pack("d", iso_mass[j]))
       TLIout.write(struct.pack("d", iso_ratio[j]))
 
@@ -407,7 +430,7 @@ if __name__ == "__main__":
     plt.savefig("wavelength.png")
 
   # Pack:
-  transinfo = ""
+  transinfo = "" if six.PY2 else b""
   # Write the number of transitions:
   TLIout.write(struct.pack("i", nTransitions))
   ut.lrprint(verbose-3, "Writing {:d} transition lines.".format(nTransitions))
