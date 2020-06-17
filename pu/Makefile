@@ -86,7 +86,7 @@ LIBR_FLAG = -L/usr/X11R6/lib
 OTHR_FLAG = -ffast-math \
 						-fgnu89-inline \
 						-fPIC \
-						-O3 \
+						-O2 \
 						-std=c99 \
 						-g3 \
 						-gdwarf-2

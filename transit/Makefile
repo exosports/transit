@@ -91,7 +91,7 @@ OTHR_FLAG = -DTRANSIT \
 						-ffast-math \
 						-fgnu89-inline \
 						-fPIC \
-						-O3 \
+						-O2 \
 						-std=c99 \
 						-g3 \
 						-gdwarf-2
