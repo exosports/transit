@@ -77,7 +77,7 @@ class dbdriver(object):
     # Start binary search:
     while ihi - ilo > 1:
       # Middle record index:
-      irec = (ihi + ilo)/2
+      irec = (ihi + ilo)//2
  
       # Read wavelength, depending on linelist format:
       rec_wl = self.readwl(dbfile, irec)
