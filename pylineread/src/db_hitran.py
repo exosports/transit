@@ -322,7 +322,7 @@ class hitran(dbdriver):
     self.recsize = len(line)
     # Get Total number of transitions in file:
     data.seek(0, 2)
-    nlines   = data.tell() / self.recsize
+    nlines   = data.tell() // self.recsize
     # Get Molecule ID:
     molID = int(self.molID)
 
