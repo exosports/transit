@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # CCDEPS-GCC (C) 2002 Emile van Bergen. Distribution of this file is allowed
 # under the conditions detailed in the GNU General Public License (GPL). See 
