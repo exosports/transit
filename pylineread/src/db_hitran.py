@@ -15,7 +15,7 @@ from driver import dbdriver
 DBHdir = os.path.dirname(os.path.realpath(__file__))
 
 # TIPS
-sys.path.append(os.path.join(DBHdir, "pytips")
+sys.path.append(os.path.join(DBHdir, "pytips"))
 import pytips as tips
 
 class hitran(dbdriver):
