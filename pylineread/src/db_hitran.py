@@ -15,7 +15,7 @@ from driver import dbdriver
 DBHdir = os.path.dirname(os.path.realpath(__file__))
 
 # TIPS
-sys.path.append(DBHdir + "/pytips")
+sys.path.append(os.path.join(DBHdir, "pytips")
 import pytips as tips
 
 class hitran(dbdriver):
@@ -203,7 +203,7 @@ class hitran(dbdriver):
     if self.defn:
       hfile = open(self.defn, 'r')
     else:
-      hfile = open(DBHdir + '/../inputs/hitran.dat', 'r')
+      hfile = open(os.path.join(DBHdir, '..', 'inputs', 'hitran.dat'), 'r')
     lines = hfile.readlines()
     hfile.close()
   
