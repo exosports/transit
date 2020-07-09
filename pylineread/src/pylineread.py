@@ -352,10 +352,10 @@ if __name__ == "__main__":
         if proc.is_alive():
           procs += 1
       # If less processes running than the limit, exit loop to start more
-      if procs <= ncores:
+      if procs < ncores:
         break
-      # Chill for a sec
-      time.sleep(.1)
+      # Wait to avoid wasting CPU cycles
+      time.sleep(1)
 
   # Join the results together
   for proc in jobs:
