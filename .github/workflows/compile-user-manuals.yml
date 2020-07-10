@@ -15,7 +15,7 @@ jobs:
         with:
           root_file: transit_user_manual.tex
           working_directory: ./doc/transit_user_manual/
-      - name: Compile LaTeX document User Manual
+      - name: Compile LaTeX document Code Manual
         uses: dante-ev/latex-action@master
         with:
           root_file: transit_code_manual.tex
