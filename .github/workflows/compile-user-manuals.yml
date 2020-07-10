@@ -1,0 +1,31 @@
+name: Compile User Manuals
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Compile the PDFs
+      - name: Set up Git repository
+        uses: actions/checkout@v2
+      - name: Compile LaTeX document User Manual
+        uses: dante-ev/latex-action@master
+        with:
+          root_file: transit_user_manual.tex
+          working_directory: ./doc/transit_user_manual/
+      - name: Compile LaTeX document User Manual
+        uses: dante-ev/latex-action@master
+        with:
+          root_file: transit_code_manual.tex
+          working_directory: ./doc/transit_code_manual/
+
+      # Publish to GitHub Pages
+      - name: Deploy Site
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./
+          force_orphan: true

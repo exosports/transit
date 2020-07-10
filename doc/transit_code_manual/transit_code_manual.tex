@@ -3,7 +3,7 @@
 % Please note this document will be automatically compiled and hosted online
 % after each commit to master. Because of this, renaming or moving the
 % document should be done carefully. To see the compiled document, go to
-% http://planets.ucf.edu/bart-docs/transit_code_manual.pdf
+% https://exosports.github.io/transit/doc/Transit_Code_Manual.html
 
 \documentclass[letterpaper,12pt]{article}
 \input{top-transit}
@@ -60,7 +60,9 @@ Dr.~Joseph \textsc{Harrington}\\ \vspace{1.2cm}
 
 \section{Introduction}
 \label{sec:intro}
-This document is intended to provide the \texttt{transit} user with the information necessary to modify the code for their own uses. It describes all headers, custom variable types, structures, and functions used within the \texttt{transit} program. We also include information about which functions allocate, fill in, and free data arrays. 
+This document\footnote{Most recent version of the manual available at 
+\href{https://exosports.github.io/transit/doc/Transit_Code_Manual.html}{https://exosports.github.io/transit/doc/Transit\_Code\_Manual.html}} 
+is intended to provide the \texttt{transit} user with the information necessary to modify the code for their own uses. It describes all headers, custom variable types, structures, and functions used within the \texttt{transit} program. We also include information about which functions allocate, fill in, and free data arrays. 
 
 The \texttt{transit} program is structure-oriented. All the variables used by \texttt{transit} are held in structures, as listed in Section \ref{structures}. These structures are passed around to functions which allocate, fill out, and free the variables within the structures. In Section \ref{structures} all arrays within the program are cross-referenced with the functions that alter them.
 
