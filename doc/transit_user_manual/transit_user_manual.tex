@@ -331,7 +331,7 @@ plt.show()
 
 \begin{figure}[htb]
 \centerline{
-\includegraphics[width=0.8\textwidth, clip]{figs/Methane_emission_spectra.ps}}
+\includegraphics[width=0.8\textwidth, clip]{figs/Methane_emission_spectra.pdf}}
 \caption{\small Methane emission spectra.}
 \label{fig:demo}
 \end{figure}
@@ -552,8 +552,7 @@ For the HITRAN and HITEMP databases,
 {\pylineread} provides a 
 %{\tttm transit/pylineread/src/fortran/src/},
 a modified version of the Total Internal Partition Sums
-%\citep[TIPS,][]{LaraiaEtal2011icarusTIPS}
-(TIPS, Laraia et al. 2011)
+\citep[TIPS,][]{LaraiaEtal2011icarusTIPS}
 code\footnote{\href{http://faculty.uml.edu/robert\_gamache/software/index.htm}{faculty.uml.edu/robert\_gamache/software/index.htm}},
 to calculate the partition functions.
 
@@ -608,17 +607,10 @@ the {\tttm hitran.dat} is given below: \newline
 The first, second, and third columns are the molecular ID, molecule
 names, and isotope ID, respectively, as given by the HITRAN database.
 The fourth column ($g\sb{i}$) are the state-independent statistical
-weights 
-%\citep[from][]{FischerEtal2003jqsrtTIPS}, 
-(from Fischer et al. 2003), 
-the fifth column are
-the isotopic ratios 
-%\citep[from][]{Simeckova2006jqsrtHITRAN}, 
-(from Simeckova 2006), 
-and the
-last column are the isotopic masses 
-%\citep[calculated from][]{Lide2008ChemistryHandbook}.
-(calculated from Lide 2008).
+weights \citep[from][]{FischerEtal2003jqsrtTIPS}, the fifth column are
+the isotopic ratios \citep[from][]{Simeckova2006jqsrtHITRAN}, and the
+last column are the isotopic masses \citep[calculated
+from][]{Lide2008ChemistryHandbook}.
 
 \subsection{Transit}
 \label{sec:input-transit}
@@ -880,7 +872,7 @@ calculation at all layers (see Figure \ref{fig:broadening}).
 
 \begin{figure}[htb]
 \centerline{
-\includegraphics[width=0.55\textwidth, clip]{figs/widths.ps}}
+\includegraphics[width=0.55\textwidth, clip]{figs/widths.pdf}}
 \caption{\small \label{fig:broadening} Doppler and Lorentz half-width
   at half maximum (HWHM) line broadening for the water molecule at 11
   {\microns}, for a H$\sb{2}$/He-dominated atmosphere.  Since the

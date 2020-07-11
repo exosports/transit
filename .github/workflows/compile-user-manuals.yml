@@ -15,7 +15,6 @@ jobs:
         with:
           root_file: transit_user_manual.tex
           working_directory: ./doc/transit_user_manual/
-          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode --enable-write18
       - name: Compile LaTeX document Code Manual
         uses: dante-ev/latex-action@master
         with:
