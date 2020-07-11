@@ -20,6 +20,7 @@ jobs:
         with:
           root_file: transit_code_manual.tex
           working_directory: ./doc/transit_code_manual/
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode -f
 
       # Publish to GitHub Pages
       - name: Deploy Site
