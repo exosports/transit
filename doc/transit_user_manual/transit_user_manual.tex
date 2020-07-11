@@ -552,7 +552,8 @@ For the HITRAN and HITEMP databases,
 {\pylineread} provides a 
 %{\tttm transit/pylineread/src/fortran/src/},
 a modified version of the Total Internal Partition Sums
-\citep[TIPS,][]{LaraiaEtal2011icarusTIPS}
+%\citep[TIPS,][]{LaraiaEtal2011icarusTIPS}
+(TIPS, Laraia et al. 2011)
 code\footnote{\href{http://faculty.uml.edu/robert\_gamache/software/index.htm}{faculty.uml.edu/robert\_gamache/software/index.htm}},
 to calculate the partition functions.
 
@@ -607,10 +608,17 @@ the {\tttm hitran.dat} is given below: \newline
 The first, second, and third columns are the molecular ID, molecule
 names, and isotope ID, respectively, as given by the HITRAN database.
 The fourth column ($g\sb{i}$) are the state-independent statistical
-weights \citep[from][]{FischerEtal2003jqsrtTIPS}, the fifth column are
-the isotopic ratios \citep[from][]{Simeckova2006jqsrtHITRAN}, and the
-last column are the isotopic masses \citep[calculated
-from][]{Lide2008ChemistryHandbook}.
+weights 
+%\citep[from][]{FischerEtal2003jqsrtTIPS}, 
+(from Fischer et al. 2003), 
+the fifth column are
+the isotopic ratios 
+%\citep[from][]{Simeckova2006jqsrtHITRAN}, 
+(from Simeckova 2006), 
+and the
+last column are the isotopic masses 
+%\citep[calculated from][]{Lide2008ChemistryHandbook}.
+(calculated from Lide 2008).
 
 \subsection{Transit}
 \label{sec:input-transit}
@@ -1700,6 +1708,7 @@ What to do if you edit the code.
 \label{sec:furtherreading}
 \findme{TBD, do we need this section?}
 
-\bibliography{transit_user_manual}
+% .bst is broken, removing bib for now
+%\bibliography{transit_user_manual}
 \end{document}
 
