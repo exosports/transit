@@ -1103,7 +1103,7 @@ FUNCTION {article}
   if$
   format.journal.pages
   format.adsurl output
-  format.eprint output
+%  format.eprint output
   format.note output
   fin.entry
 }
@@ -1138,7 +1138,7 @@ FUNCTION {book}
 %    }
 %  if$
   format.pages output
-%  format.eprint output
+  format.eprint output
   format.ISBN output
   format.adsurl output
   format.note output
