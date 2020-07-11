@@ -1138,7 +1138,7 @@ FUNCTION {book}
 %    }
 %  if$
   format.pages output
-  format.eprint output
+%  format.eprint output
   format.ISBN output
   format.adsurl output
   format.note output
