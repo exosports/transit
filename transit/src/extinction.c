@@ -587,15 +587,21 @@ void
 computeextscat(double *e,
                long n,
                struct extscat *sc,
-               double *rad,
-               double trad,
+               double *pressure,
                double *temp,
-               double tcft,
                double wn){
   long i;
+  double logext = sc->logext;
+  int flag = sc->flag;
+
+  /* If there are no clouds, set array to zero:                             */
+  if(!flag){
+    memset(e, 0, n*sizeof(double));
+    return;
+  }
 
   for(i=0; i<n; i++)
-    e[i] = 0;
+    e[i] = pow(10.0,logext) * 4.911e-23 * pressure[i]/temp[i] * pow(wn,4.0);
 }
 
 
@@ -605,42 +611,29 @@ void
 computeextcloud(double *e,
                long n,
                struct extcloud *cl,
-               prop_samp *rad,
+               double *pressure,
                double *temp,
                double tcft,
                double wn){
   long i;
-  double *radius  = rad->v,  /* Atmospheric-model layer's radius            */
-       rfct       = rad->fct,
-       extinction = cl->cloudext,
-       top        = cl->cloudtop * rfct,
-       bottom     = cl->cloudbot * rfct,
-       slope;
+  double logp = cl->logp,
+       extinction = cl->cloudext;
 
   /* If there are no clouds, set array to zero:                             */
-  if(extinction == 0){
+  if(!extinction){
     memset(e, 0, n*sizeof(double));
     return;
   }
 
-  /* Slope of extinction per altitude:                                      */
-  slope = extinction / (bottom - top);
-
   /* Find radius index right below the cloud top layer:                     */
   for(i=n-1; i>=0; i--){
-    if(radius[i]*rfct <= top)
+    if(pressure[i] >= pow(10.0,logp))
       break;
-    e[i] = 0;  /* The extinction is zero above the cloud                    */
+    e[i] = 0.0;  /* The extinction is zero above the cloud                    */
   }
 
   /* Set cloud extinction between cloud top and bottom:                     */
   for(; i>=0; i--){
-    if(radius[i] * rfct <= bottom)
-      break;
-    e[i] = slope * (radius[i]*rfct - top);
+    e[i] = extinction;
   }
-
-  /* Keep constant extinction until the bottom:                             */
-  for(; i>=0; i--)
-      e[i] = extinction;
 }

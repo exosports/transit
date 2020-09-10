@@ -255,6 +255,7 @@ struct outputray{
 };
 
 struct extcloud{
+  double logp;      /* log10(top pressure)                                  */
   double cloudext;  /* Maximum opacity in [cm-1]                            */
   double cloudtop;  /* Radius at which clouds start                         */
   double cloudbot;  /* Radius at which clouds has it maximum extinction
@@ -262,7 +263,8 @@ struct extcloud{
 };
 
 struct extscat{
-  double prm;
+  double logext;
+  int flag;
 };
 
 struct saves{
@@ -328,7 +330,7 @@ struct transithint{
   _Bool opashare;       /* Attempt to place opacity grid in shared memory.  */
   long fl;              /* flags                                            */
   _Bool userefraction;  /* Whether to use variable refraction               */
-  _Bool savefiles    ;  /* Whether to save files                            */
+  _Bool savefiles;      /* Whether to save files                            */
   double p0, r0;        /* Pressure and radius reference level              */
   double gsurf;         /* Surface gravity                                  */
 
@@ -341,6 +343,8 @@ struct transithint{
   struct saves save;    /* Saves indicator of program stats                 */
 
   struct extcloud cl;
+  double scattering_logext;
+  int scattering_flag;
   struct detailout det;
 
   double ethresh;       /* Lower extinction-coefficient threshold           */
