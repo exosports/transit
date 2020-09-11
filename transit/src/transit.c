@@ -14,6 +14,8 @@ void transit_init(int argc, char **argv);
 int  get_no_samples(void);
 void get_waveno_arr(double *waveno_arr, int waveno);
 void set_radius(double refradius);
+void set_cloudtop(double cloudtop);
+void set_scattering(double scattering);
 void run_transit(double *re_input, int transint, double *transit_out,
                  int transit_out_size);
 void do_transit(double *transit_out);
@@ -94,6 +96,16 @@ void get_waveno_arr(double * waveno_arr, int waveno){
 
 void set_radius(double refradius){
   transit.r0 = refradius;
+}
+
+
+void set_cloudtop(double cloudtop){
+  transit.ds.cl->logp = cloudtop;
+}
+
+
+void set_scattering(double scattering){
+  transit.ds.sc->logext = scattering;
 }
 
 

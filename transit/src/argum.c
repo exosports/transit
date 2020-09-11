@@ -67,10 +67,6 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_ALLOWQ,
     CLA_GORBPAR,
     CLA_GORBPARFCT,
-    //CLA_GTIME,        /* FINDME: Ask Pato what was the purpose of these   */
-    //CLA_GTIMEFCT,
-    //CLA_GMASSRAD,
-    //CLA_GMASSRADFCT,
     CLA_TOOMUCH,
     CLA_OUTTOOMUCH,
     CLA_OUTSAMPLE,
@@ -80,6 +76,8 @@ processparameters(int argc,            /* Number of command-line args  */
     CLA_MODLEVEL,
     CLA_ETHRESH,
     CLA_CLOUD,
+    CLA_CLOUDTOP,
+    CLA_SCATTERING,
     CLA_TRANSPARENT,
     CLA_DETEXT,
     CLA_DETCIA,
@@ -247,6 +245,10 @@ processparameters(int argc,            /* Number of command-line args  */
      "cloudtop, up cloudext at cloudbot.  Then keep a constant extinction "
      "until the bottom of the atmosphere.  cloudext has units of cm-1, "
      "cloudtop and cloudbot units are given by radfct."},
+    {"cloudtop", CLA_CLOUDTOP, required_argument, NULL,
+     "cloudtop", "Cloud-deck top pressure (log-bar)."},
+    {"scattering", CLA_SCATTERING, required_argument, NULL,
+     "scattering", "Scattering extinction in some log-units."},
     {"detailext",  CLA_DETEXT,      required_argument, NULL,
      "filename:wn1,wn2,...",
      "Save extinction at specified wavenumbers in filename."},
@@ -646,7 +648,7 @@ processparameters(int argc,            /* Number of command-line args  */
 
       hints->cl.cloudbot = strtod(optarg+1, NULL);
       /* Safety check that top > bottom:                                    */
-      if((hints->cl.cloudtop < hints->cl.cloudbot) ||
+      if((hints->cl.cloudtop > hints->cl.cloudbot) ||
          (hints->cl.cloudbot <= 0 && hints->cl.cloudtop != 0)) {
         tr_output(TOUT_ERROR, "Syntax error in '--cloud', the cloud top "
                  "(%g) needs to be larger than the cloud bottom (%g) and both "
@@ -654,6 +656,17 @@ processparameters(int argc,            /* Number of command-line args  */
         exit(EXIT_FAILURE);
       }
       break;
+
+    case CLA_CLOUDTOP:
+      hints->cl.logp = atof(optarg);
+      hints->cl.cloudext = 100.0;  // flag
+      break;
+
+    case CLA_SCATTERING:
+      hints->scattering_logext = atof(optarg);
+      hints->scattering_flag = 1;
+      break;
+
     case CLA_INTENS_GRID:    /* Intensity grid                              */
       hints->angles = xstrdup(optarg);
       break;
@@ -810,6 +823,18 @@ acceptgenhints(struct transit *tr){
   }
   else
     tr->nqmol = 0;
+
+  /* Set cloud structure:                                                   */
+  static struct extcloud cl;
+  cl.logp = th->cl.logp;
+  cl.cloudext = th->cl.cloudext;  /* Maximum cloud extinction               */
+  tr->ds.cl = &cl;
+  /* Scattering extinction struct         */
+  static struct extscat sc;
+  sc.logext = th->scattering_logext;
+  sc.flag = th->scattering_flag;
+  tr->ds.sc = &sc;
+
   return 0;
 }
 

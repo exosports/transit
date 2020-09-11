@@ -62,6 +62,9 @@ tau(struct transit *tr){
   struct optdepth *tau=tr->ds.tau;       /* Def optical depth structure     */
 
   struct extinction *ex = tr->ds.ex;     /* Extinction struct               */
+  struct extcloud *cl = tr->ds.cl;
+  struct extscat *sc = tr->ds.sc;
+
   PREC_RES **e = ex->e;                  /* Extinction coefficient          */
   PREC_RES (*fcn)() = tr->sol->optdepth; /* eclipsetau or transittau func.  */
 
@@ -107,6 +110,7 @@ tau(struct transit *tr){
   //}
 
   PREC_RES *tau_wn;              /* Optical depth array                     */
+  PREC_ATM *press = tr->atm.p;   /* Pressure array                          */
   PREC_ATM *temp = tr->atm.t,    /* Temperature array                       */
            tfct  = tr->atm.tfct; /* Temperature units                       */
 
@@ -123,7 +127,6 @@ tau(struct transit *tr){
   double e_s[rnn],                  /* Extinction from scattering           */
          e_c[rnn];                  /* Extinction from clouds               */
   PREC_CS **e_cs = tr->ds.cross->e; /* Cross-section extinction             */
-  struct extscat *sc = tr->ds.sc;   /* Scattering extinction struct         */
 
   /* FINDME: TRANSIT ONLY */
   tr->save.ext = th->save.ext;  /* Ext. coefficient save/restore filename   */
@@ -141,13 +144,6 @@ tau(struct transit *tr){
   the main structure.  In particular, it only passes whether TRU_OUTTAU
   was 1 or 0 as specified by the user. */
   transitacceptflag(tr->fl, th->fl, TRU_TAUBITS);
-
-  /* Set cloud structure:                                                   */
-  static struct extcloud cl;
-  cl.cloudext = th->cl.cloudext;  /* Maximum cloud extinction               */
-  cl.cloudtop = th->cl.cloudtop;  /* Top layer radius                       */
-  cl.cloudbot = th->cl.cloudbot;  /* Radius of maxe                         */
-  tr->ds.cl = &cl;
 
   /* Has the extinction coefficient been calculated boolean:                */
   _Bool *comp = ex->computed;
@@ -202,8 +198,8 @@ tau(struct transit *tr){
     }
 
     /* Calculate extinction from scattering, clouds, and CIA at each level: */
-    computeextscat(e_s,  rnn, sc, rad->v, rad->fct, temp, tfct, wn->v[wi]*wfct);
-    computeextcloud(e_c, rnn, &cl, rad, temp, tfct, wn->v[wi]*wfct);
+    computeextscat(e_s, rnn, sc, press, temp, wn->v[wi]*wfct);
+    computeextcloud(e_c, rnn, cl, press, temp, tfct, wn->v[wi]*wfct);
 
     /* Put the extinction values in a new array, the values may be
        temporarily overwritten by (fcn)(), but they should be restored:     */
