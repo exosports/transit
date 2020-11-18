@@ -26,6 +26,7 @@ import db_pands  as ps
 import db_hitran as hit
 import db_tioschwenke as ts
 import db_voplez as vo
+import db_repack as rep
 
 
 def parseargs():
@@ -39,10 +40,10 @@ def parseargs():
 
   Modification History:
   ---------------------
-  2013        madison   Initial implementation.        
+  2013        madison   Initial implementation.
   2014-03-06  patricio  Updated from optparse to argparse. Added documentation
                         and config_file option.    pcubillos@fulbrightmail.org
-  2017-10-27  mhimes    Added multiprocessing. Added ncores (number of cores) 
+  2017-10-27  mhimes    Added multiprocessing. Added ncores (number of cores)
                         and defn (HITRAN molecules definition file) config args
   """
   # Parser to process a configuration file:
@@ -85,7 +86,7 @@ def parseargs():
   parser.add_argument("-q", "--quiet",         action="store_false",
                        help="Set verbosity level to 0.",
                        dest="verb")
-  parser.add_argument("-N", "--ncores", action="store", 
+  parser.add_argument("-N", "--ncores", action="store",
                       help="Maximum number of cores",
                       dest="ncores", type=int, default=1)
   # Database Options:
@@ -108,8 +109,8 @@ def parseargs():
                      choices=('ps', 'hit', 'ts', 'vo'),
                      dest="dbtype")
   # HITRAN definitions file
-  group.add_argument("-n", "--defn",           action="store", 
-                     help="Path/to/file of HITRAN definitions file", 
+  group.add_argument("-n", "--defn",           action="store",
+                     help="Path/to/file of HITRAN definitions file",
                      dest="defn")
   # Wavelength Options:
   group = parser.add_argument_group("Wavelength Options")
@@ -152,7 +153,7 @@ if __name__ == "__main__":
   ncores     = cla.ncores
   dblist     = cla.db_list
   pflist     = cla.part_list
-  dbtype     = cla.dbtype 
+  dbtype     = cla.dbtype
   outputfile = cla.output
   defn       = cla.defn
 
@@ -169,6 +170,8 @@ if __name__ == "__main__":
       driver.append(ts.tioschwenke(dblist[i], pflist[i]))
     elif dbtype[i] == "vo":
       driver.append(vo.voplez(dblist[i],      pflist[i]))
+    elif dbtype[i] == "repack":
+      driver.append(rep.repack(dblist[i], pflist[i], defn))
     else:
       ut.printexit("Unknown Database type ({:d}): '{:s}'".
                     format(i+1, dbtype[i]))
@@ -213,7 +216,7 @@ if __name__ == "__main__":
     if dbname in DBnames:
       DBskip.append(i) # Ommit repeated databases
     else:
-      DBnames.append(dbname) 
+      DBnames.append(dbname)
   Ndb = len(DBnames)
   header += struct.pack("h", Ndb)
   TLIout.write(header)
@@ -268,13 +271,13 @@ if __name__ == "__main__":
     # Store length of database name, database name, number of temperatures,
     #  and number of isotopes in TLI file:
     TLIout.write(struct.pack("h{:d}".format(lenDBname)+enc,
-                             lenDBname, 
-                             *(DBnames[idb] if six.PY2 else 
+                             lenDBname,
+                             *(DBnames[idb] if six.PY2 else
                                DBnames[idb].encode())))
     # Store the molecule name:
     TLIout.write(struct.pack("h{:d}".format(lenMolec)+enc,
-                             lenMolec, 
-                             *(driver[i].molecule if six.PY2 else 
+                             lenMolec,
+                             *(driver[i].molecule if six.PY2 else
                                driver[i].molecule.encode())))
     # Store the number of temperature samples and isotopes:
     TLIout.write(struct.pack("hh", Ntemp, Niso))
@@ -290,7 +293,7 @@ if __name__ == "__main__":
                            format(Temp[0], Temp[1], Temp[Ntemp-1]))
 
     # For each isotope, write the relevant partition function information
-    # to file.  Keep a tally of isotopes for multiple databse support 
+    # to file.  Keep a tally of isotopes for multiple databse support
     for j in np.arange(Niso):
       ut.lrprint(verbose-9, "  Isotope ({:d}/{:d}): '{:s}'".
                               format(j+1, Niso, isoNames[j]))
@@ -298,7 +301,7 @@ if __name__ == "__main__":
       # Store length of isotope name, isotope name, and isotope mass:
       lenIsoname = len(isoNames[j])
       Iname = str(isoNames[j])
-      TLIout.write(struct.pack("h{:d}".format(lenIsoname)+enc, lenIsoname, 
+      TLIout.write(struct.pack("h{:d}".format(lenIsoname)+enc, lenIsoname,
                                *(Iname if six.PY2 else Iname.encode())))
       TLIout.write(struct.pack("d", iso_mass[j]))
       TLIout.write(struct.pack("d", iso_ratio[j]))
@@ -333,12 +336,12 @@ if __name__ == "__main__":
   return_dict = manager.dict()
 
   ti = time.time()
-  
+
   # Read from file and write the transition info:
   for db in np.arange(Nfiles):
     # Read databases:
     p = mp.Process(target = driver[db].dbread, args = (cla.iwav, cla.fwav,
-                                                       cla.verb, 
+                                                       cla.verb,
                                                        db, return_dict,
                                                        pflist[db]))
     jobs.append(p)
@@ -360,7 +363,7 @@ if __name__ == "__main__":
   # Join the results together
   for proc in jobs:
       proc.join()
-      
+
   # Print out the time it took to read the files
   tf = time.time()
   ut.lrprint(verbose-3, "Total reading time: {:8.3f} seconds".format(tf-ti))
@@ -374,10 +377,10 @@ if __name__ == "__main__":
     idb = DBnames.index(dbname)
 
     # Combine the results into 1 array
-    wlength = np.concatenate((wlength, transDB[db][0]))    
-    gf      = np.concatenate((gf,      transDB[db][1]))    
-    elow    = np.concatenate((elow,    transDB[db][2]))    
-    isoID   = np.concatenate((isoID,   transDB[db][3]+acum[idb]))    
+    wlength = np.concatenate((wlength, transDB[db][0]))
+    gf      = np.concatenate((gf,      transDB[db][1]))
+    elow    = np.concatenate((elow,    transDB[db][2]))
+    isoID   = np.concatenate((isoID,   transDB[db][3]+acum[idb]))
 
     ut.lrprint(verbose-8, "Isotope in-database indices: {}".format(
                            np.unique(transDB[db][3])))
