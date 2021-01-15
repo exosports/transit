@@ -601,7 +601,7 @@ computeextscat(double *e,
   }
 
   for(i=0; i<n; i++)
-    e[i] = pow(10.0,logext) * E0H2 * pressure[i] / temp[i] * pow(wn,RAYSLOPE);
+    e[i] = pow(10.0,logext) * E0H2 * pressure[i] / temp[i] * pow(wn,RAYEXP);
 }
 
 
