@@ -42,7 +42,7 @@
 #define E0H2 (4.911e-23) /* Lecavelier Des Etangs et al. (2008), e_0 selected 
                             such that e_ray = H2 Rayleigh scattering of solar 
                             composition atmosphere when K_ray = 1            */
-#define RAYSLOPE (4)     /* Rayleigh scattering slope                        */
+#define RAYEXP (4)       /* Rayleigh scattering exoponent                    */
 
 #define MAXNAMELEN 20
 
