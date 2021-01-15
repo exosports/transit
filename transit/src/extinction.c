@@ -601,7 +601,7 @@ computeextscat(double *e,
   }
 
   for(i=0; i<n; i++)
-    e[i] = pow(10.0,logext) * 4.911e-23 * pressure[i]/temp[i] * pow(wn,4.0);
+    e[i] = pow(10.0,logext) * E0H2 * pressure[i] / temp[i] * pow(wn,4.0);
 }
 
 

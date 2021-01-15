@@ -39,6 +39,9 @@
 
 #define ONEOSQRT2PI (0.3989422804)         /* 1.0/sqrt(2pi)                  */
 #define SQRTLN2  (0.83255461115769775635)  /* sqrt(ln(2))                    */
+#define E0H2 (4.911e-23) /* Lecavelier Des Etangs et al. (2008), e_0 selected 
+                            such that e_ray = H2 Rayleigh scattering of solar 
+                            composition atmosphere when K_ray = 1            */
 
 #define MAXNAMELEN 20
 
