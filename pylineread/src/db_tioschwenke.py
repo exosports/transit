@@ -184,7 +184,7 @@ class tioschwenke(dbdriver):
  
     # Get the number of lines in the file:
     data.seek(0, 2)                     # Set pointer at the file's end
-    nlines = data.tell() / self.recsize # Number of lines (bytes/record_size)
+    nlines = data.tell() // self.recsize # Number of lines (bytes/record_size)
  
     # Rewrite wavelength limits as given in the Database file:
     iwav = iwl * c.MTC / c.NTC         # Microns to nanometer
@@ -210,7 +210,7 @@ class tioschwenke(dbdriver):
     # When the wavelength surpasses the max wavelength, stop the loop
     chk = 1  # Check-point counter
     i   = 0  # Stored record index
-    interval = float((frec - irec)/20)  # Check-point interval
+    interval = (frec - irec)//20  # Check-point interval
 
     iw   = np.zeros(nread, int)
     ieli = np.zeros(nread, np.short)
@@ -225,7 +225,7 @@ class tioschwenke(dbdriver):
  
       # Print a checkpoint statement every 1/20th interval:
       if verbose > 1:
-        pos = float(data.tell()/self.recsize)
+        pos = float(data.tell()//self.recsize)
         if (pos/interval)%1 == 0.0:
           ut.lrprint(verbose-1, "checkpoint %d/20..."%chk)
           chk += 1

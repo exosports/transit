@@ -188,7 +188,7 @@ class voplez(dbdriver):
     # Open the file:
     data = open(self.dbfile, "r")
     data.seek(0, 2)
-    nlines   = data.tell() / self.recsize
+    nlines   = data.tell() // self.recsize
 
     # Find the record index for iwl and fwl:
     irec_init = self.binsearch(data, iwl, 0,         nlines-1, 1)
@@ -210,7 +210,7 @@ class voplez(dbdriver):
     # When the wavelength surpasses the max wavelength, stop the loop
     chk = 1  # Check-point counter
     i   = 0  # Stored record index
-    interval = float((irec_fin - irec_init)/20)  # Check-point interval
+    interval = (irec_fin - irec_init)//20  # Check-point interval
 
     wnumber = np.zeros(nread)
     gf      = np.zeros(nread)
@@ -226,7 +226,7 @@ class voplez(dbdriver):
 
       # Print a checkpoint statement every 1/20th interval:
       if verbose > 1:
-        pos = float(data.tell()/self.recsize)
+        pos = float(data.tell()//self.recsize)
         if (pos/interval)%1 == 0.0:
           ut.lrprint(verbose-1, "checkpoint %d/20..."%chk)
           chk += 1

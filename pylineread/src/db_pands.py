@@ -177,7 +177,7 @@ class pands(dbdriver):
  
     # Get the number of lines in the file:
     data.seek(0, 2)                      # Set pointer at the file's end
-    nlines   = data.tell()/ self.recsize # Number of lines (8 bytes per line)
+    nlines = data.tell()//self.recsize # Number of lines (8 bytes per line)
  
     # Rewrite wavelength limits as given in the P&S file:
     iwav = iwl * c.MTC / c.NTC         # Microns to nanometer
@@ -203,7 +203,7 @@ class pands(dbdriver):
     # When the wavelength surpasses the max wavelength, stop the loop
     chk = 1  # Check-point counter
     i   = 0  # Stored record index
-    interval = float((frec - irec)/20)  # Check-point interval
+    interval = float((frec - irec)//20)  # Check-point interval
 
     iw   = np.zeros(nread, int)
     ielo = np.zeros(nread, np.short)
