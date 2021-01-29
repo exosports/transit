@@ -61,7 +61,7 @@ header = lines[0].split()
 
 species = header[0].split("-")
 size    = int(header[3]) + 1
-number_temps = len(lines) / size
+number_temps = len(lines) // size
 number_waves = int(header[3])
 
 # Initialize arrays:
