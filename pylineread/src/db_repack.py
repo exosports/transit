@@ -201,7 +201,7 @@ class repack(dbdriver):
     return isotopes, mass, isoratio, gi    
 
  
-  def dbread(self, iwl, fwl, verbose, procnum, return_dict, *args):
+  def dbread(self, iwl, fwl, verbose, *args):
     """
     Read a HITRAN or HITEMP database (dbfile) between wavelengths iwl and fwl.
 
@@ -215,10 +215,6 @@ class repack(dbdriver):
        Final wavelength limit (in microns).
     verbose: Integer
        Verbosity threshold.
-    procnum: Integer
-       Index of the process which calls the function
-    return_dict: Dict
-       Dictionary to contain return values (indexed by process number)
     pffile: String
        Partition function filename.
 
@@ -274,5 +270,4 @@ class repack(dbdriver):
 
     data.close()
     isoID = np.array([self.iso_dict[iso] for iso in isoID])
-    return_dict[procnum] = (1e4/wnumber, gf, elow, isoID)
     return 1e4/wnumber, gf, elow, isoID

@@ -20,7 +20,7 @@ C1   = 4 * sc.epsilon_0 * sc.m_e * sc.c**2 / sc.e**2 * 0.01  # cm^-1
 C2   = sc.h * sc.c / sc.k * 100.0        # cm / Kelvin units
 
 # Version Constants:
-TLI_VERSION = 5  # TLI version
+TLI_VERSION = 6  # TLI version
 LR_VERSION  = 5  # Lineread version
 LR_REVISION = 0  # Lineread revision
 

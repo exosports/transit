@@ -326,12 +326,12 @@ computemolext(struct transit *tr, /* transit struct                         */
 
   int ofactor=tr->owns.o;  /* Dynamic oversampling factor                   */
 
-  long nadd  = 0, /* Number of co-added lines                               */
-       nskip = 0, /* Number of skipped lines                                */
-       neval = 0; /* Number of evaluated profiles                           */
+  PREC_NREC nadd  = 0, /* Number of co-added lines                          */
+            nskip = 0, /* Number of skipped lines                           */
+            neval = 0; /* Number of evaluated profiles                      */
 
   /* Wavenumber array variables:                                            */
-  PREC_RES  *wn = tr->wns.v;
+  PREC_RES   *wn = tr->wns.v;
   PREC_NREC  nwn = tr->wns.n,
             onwn = tr->owns.n;
 
@@ -510,11 +510,11 @@ computemolext(struct transit *tr, /* transit struct                         */
     neval++;
   }
 
-  tr_output(TOUT_DEBUG, "Number of co-added lines:     %8li  (%5.2f%%)\n",
+  tr_output(TOUT_DEBUG, "Number of co-added lines:     %8lli  (%5.2f%%)\n",
     nadd,  nadd*100.0/nlines);
-  tr_output(TOUT_DEBUG, "Number of skipped profiles:   %8li  (%5.2f%%)\n",
+  tr_output(TOUT_DEBUG, "Number of skipped profiles:   %8lli  (%5.2f%%)\n",
     nskip, nskip*100.0/nlines);
-  tr_output(TOUT_DEBUG, "Number of evaluated profiles: %8li  (%5.2f%%)\n",
+  tr_output(TOUT_DEBUG, "Number of evaluated profiles: %8lli  (%5.2f%%)\n",
     neval, neval*100.0/nlines);
 
   /* Free allocated memory:                                                 */

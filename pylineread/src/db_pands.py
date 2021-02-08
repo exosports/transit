@@ -132,7 +132,7 @@ class pands(dbdriver):
     return Temp, PF
 
 
-  def dbread(self, iwl, fwl, verbose, procnum, return_dict, *args):
+  def dbread(self, iwl, fwl, verbose, *args):
     """
     Read the Partridge and Schwenke H2O database (dbfile) between the
     wavelengths iwl and fwl.
@@ -145,10 +145,6 @@ class pands(dbdriver):
        Final wavelength limit (in microns).
     verbose: Integer
        Verbosity threshold.
-    procnum: Integer
-       Index of the process which calls the function
-    return_dict: Dict
-       Dictionary to contain return values (indexed by process number)
     args:
        Additional arguments, not needed for pands.
  
@@ -239,5 +235,4 @@ class pands(dbdriver):
 
     ut.lrprint(verbose, "Done.\n")
     data.close()
-    return_dict[procnum] = (wlength, gf, elow, isoID)
     return wlength, gf, elow, isoID

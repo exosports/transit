@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants as sc
 import sys, os, time
-import multiprocessing as mp
 
 from six.moves import configparser
 import six
@@ -250,9 +249,9 @@ if __name__ == "__main__":
 
     # Get partition function values:
     Temp, partDB = driver[i].getpf(verbose)
-    isoNames  = driver[i].isotopes
-    iso_mass  = driver[i].mass
-    iso_ratio = driver[i].isoratio
+    isoNames     = driver[i].isotopes
+    iso_mass     = driver[i].mass
+    iso_ratio    = driver[i].isoratio
 
     # Number of temperature samples:
     Ntemp = len(Temp)
@@ -330,66 +329,28 @@ if __name__ == "__main__":
   elow    = np.array([], np.double)
   isoID   = np.array([], int)
 
-  # Initialize these for multiprocessing
-  jobs = []
-  manager = mp.Manager()
-  return_dict = manager.dict()
-
   ti = time.time()
 
   # Read from file and write the transition info:
   for db in np.arange(Nfiles):
-    # Read databases:
-    p = mp.Process(target = driver[db].dbread, args = (cla.iwav, cla.fwav,
-                                                       cla.verb,
-                                                       db, return_dict,
-                                                       pflist[db]))
-    jobs.append(p)
-    p.start()
-
-    # Limit number of running processes
-    while True:
-      procs = 0
-      # Count the running processes
-      for proc in jobs:
-        if proc.is_alive():
-          procs += 1
-      # If less processes running than the limit, exit loop to start more
-      if procs < ncores:
-        break
-      # Wait to avoid wasting CPU cycles
-      time.sleep(1)
-
-  # Join the results together
-  for proc in jobs:
-      proc.join()
-
-  # Print out the time it took to read the files
-  tf = time.time()
-  ut.lrprint(verbose-3, "Total reading time: {:8.3f} seconds".format(tf-ti))
-
-  transDB = return_dict
-
-  # Store the info
-  for db in np.arange(Nfiles):
+    transDB = driver[db].dbread(cla.iwav, cla.fwav, cla.verb, pflist[db])
     # Get database index:
     dbname = driver[db].name
     idb = DBnames.index(dbname)
 
     # Combine the results into 1 array
-    wlength = np.concatenate((wlength, transDB[db][0]))
-    gf      = np.concatenate((gf,      transDB[db][1]))
-    elow    = np.concatenate((elow,    transDB[db][2]))
-    isoID   = np.concatenate((isoID,   transDB[db][3]+acum[idb]))
+    wlength = np.concatenate((wlength, transDB[0]))    
+    gf      = np.concatenate((gf,      transDB[1]))    
+    elow    = np.concatenate((elow,    transDB[2]))    
+    isoID   = np.concatenate((isoID,   transDB[3]+acum[idb]))    
 
     ut.lrprint(verbose-8, "Isotope in-database indices: {}".format(
-                           np.unique(transDB[db][3])))
+                           np.unique(transDB[3])))
     ut.lrprint(verbose-8, "Isotope correlative indices: {}\n".format(
-                           np.unique(transDB[db][3]+acum[idb])))
+                           np.unique(transDB[3]+acum[idb])))
 
   # Total number of transitions:
   nTransitions = np.size(wlength)
-
 
   # Calculate the total number of transitions per isotope:
   Nisotran = np.bincount(isoID)
@@ -435,7 +396,7 @@ if __name__ == "__main__":
   # Pack:
   transinfo = "" if six.PY2 else b""
   # Write the number of transitions:
-  TLIout.write(struct.pack("i", nTransitions))
+  TLIout.write(struct.pack("Q", nTransitions))
   ut.lrprint(verbose-3, "Writing {:d} transition lines.".format(nTransitions))
   # Write the number of transitions for each isotope:
   nIso = len(Nisotran)
@@ -443,7 +404,7 @@ if __name__ == "__main__":
   # all the existing isotopes for an species, whereas nIso accounts only
   # for the isotopes that do have line transitions in the given range.
   TLIout.write(struct.pack("i",nIso))
-  TLIout.write(struct.pack(str(nIso)+"i", *list(Nisotran)))
+  TLIout.write(struct.pack(str(nIso)+"Q", *list(Nisotran)))
 
   # Write the Line-transition data:
   ti = time.time()

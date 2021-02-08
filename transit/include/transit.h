@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <alloca.h>
 
-#define compattliversion 5
+#define compattliversion 6
 
 #include <flags_tr.h>
 #include <constants_tr.h>

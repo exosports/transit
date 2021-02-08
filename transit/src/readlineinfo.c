@@ -232,8 +232,8 @@ readtli_bin(FILE *fp,
   /* Update structure values:                                               */
   li->ni  = iso->n_i  = niso;  /* Number of isotopes                        */
   li->ndb = iso->n_db = ndb;   /* Number of databases                       */
-  /* Position of first line data (there's still one integer to be read):    */
-  li->endinfo = ftell(fp) + sizeof(int);
+  /* Position of first line data                                            */
+  li->endinfo = ftell(fp);
   li->wi = iniw;            /* Initial wavelength                           */
   li->wf = finw;            /* Final wavelength                             */
   /* Allocate isotope's variable data                                       */
@@ -418,18 +418,18 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
 
   struct line_transition *lt = &li->lt;  /* line_transition structure       */
   FILE *fp;              /* Data file pointer                               */
-  int nlines,            /* Number of line transitions                      */
-      niso,              /* Number of isotopes in line transition data      */
+  int niso,              /* Number of isotopes in line transition data      */
       nread,             /* Number of transitions to read for each isotope  */
-      *isotran,          /* Number of transitions per isotope in TLI        */
-      start,             /* Position of first LT for isotope in TLI         */
-      i,                 /* for-loop index                                  */
-      offset=0;          /* Isotope offset (in number of transitions)       */
-  long long wl_loc, iso_loc,   /* Offsets for isoID, Elow, and gf data      */
-            el_loc, gf_loc;    /* (in memory)                               */
+      i;                 /* for-loop index                                  */
+  PREC_NREC nlines,            /* Number of line transitions                */
+            wl_loc, iso_loc,   /* Offsets for isoID, Elow, and gf data      */
+            el_loc, gf_loc,    /* (in memory)                               */
+            *isotran,          /* Number of transitions per isotope in TLI  */
+            start,             /* Position of first LT for isotope in TLI   */
+            offset=0;          /* Isotope offset (in number of transitions) */
   int rn;                /* Return IDs                                      */
   /* Indices of first and last transitions to be stored                     */
-  long ifirst, ilast;
+  PREC_NREC ifirst, ilast;
 
   /* Auxiliary variables to keep wavelength limits:                         */
   PREC_LNDATA iniw = 1.0/(tr->wns.f*tr->wns.fct) / TLI_WAV_UNITS;
@@ -455,18 +455,16 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
   }
 
   /* Read total number of transitions in TLI file:                          */
-  /* FINDME: May be better to put endinfo to the right position
-             (i.e., avoid this  -sizeof(int)):                              */
-  fseek(fp, li->endinfo - sizeof(int), SEEK_SET);
-  fread(&nlines, sizeof(int), 1, fp);
+  fseek(fp, li->endinfo, SEEK_SET);
+  fread(&nlines, sizeof(PREC_NREC), 1, fp);
   tr_output(TOUT_INFO, "TLI has %d transition lines.\n", nlines);
 
   /* Number of isotopes in line transition data:                            */
   fread(&niso, sizeof(int), 1, fp);
   tr_output(TOUT_DEBUG, "TLI has %d isotopes.\n", niso);
   /* Number of transitions per isotope:                                     */
-  isotran = calloc(niso, sizeof(int));
-  fread(isotran, sizeof(int), niso, fp);
+  isotran = calloc(niso, sizeof(PREC_NREC));
+  fread(isotran, sizeof(PREC_NREC), niso, fp);
   for (i=0; i<niso; i++){
     tr_output(TOUT_DEBUG, "Ntransitions[%d]: %d.\n", i, isotran[i]);
   }
@@ -523,7 +521,7 @@ int readdatarng(struct transit *tr,   /* transit structure                  */
     /* Count the number of lines:                                           */
     li->n_l += nread;
     /* Move the wl offset to next isotope:                                  */
-    start += isotran[i]*sizeof(double);
+    start  += isotran[i]*sizeof(double);
     offset += isotran[i];
   }
 

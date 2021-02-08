@@ -660,7 +660,7 @@ printsample(FILE *out,        /* File pointer to write out                  */
     fprintf(out, "Oversample: %i\n", samp->o);
 
   /* Print sample size:                                                     */
-  fprintf(out, "Number of elements: %li\n", samp->n);
+  fprintf(out, "Number of elements: %lli\n", samp->n);
 
   /* Print sample array:                                                    */
   if(!(fl&TRF_NOVALUE)){
