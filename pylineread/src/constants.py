@@ -21,7 +21,7 @@ C2   = sc.h * sc.c / sc.k * 100.0        # cm / Kelvin units
 
 # Version Constants:
 TLI_VERSION = 6  # TLI version
-LR_VERSION  = 5  # Lineread version
+LR_VERSION  = 0  # Lineread version
 LR_REVISION = 0  # Lineread revision
 
 # H2O Isotopic Physical Constants:
