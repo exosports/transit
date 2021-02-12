@@ -64,10 +64,9 @@ mkdir run/
 cd run/  
 ```
 
-Download the methane line-transition database from the HITRAN server:
+Download the HITRAN 2012 methane line-transition database at https://hitran.org/lbl/. Extract it:
 ```shell
-wget --user=HITRAN --password=getdata -N https://www.cfa.harvard.edu/HITRAN/HITRAN2008/HITRAN2008/By-Molecule/Compressed-files/06_hit08.zip  
-unzip 06_hit08.zip
+unzip 06_hit12.zip
 ```
 
 Copy the pylineread configuration file and run pylineread to make the transition-line-information (TLI) file:
