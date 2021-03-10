@@ -199,11 +199,8 @@ class hitran(dbdriver):
     gi:       State-independent statistical weight
 
     """
-    # Read HITRAN configuration file from inputs folder:
-    if self.defn:
-      hfile = open(self.defn, 'r')
-    else:
-      hfile = open(os.path.join(DBHdir, '..', 'inputs', 'hitran.dat'), 'r')
+    # Read HITRAN configuration file
+    hfile = open(self.defn, 'r')
     lines = hfile.readlines()
     hfile.close()
   
@@ -217,10 +214,10 @@ class hitran(dbdriver):
       if lines[i][0:2] == molID:
         line = lines[i].split()
         molname  = line[1]
-        gi.      append(  int(line[3]))
+        gi.      append(  int(line[4]))
         isotopes.append(      line[2] )
-        isoratio.append(float(line[4]))
-        mass.    append(float(line[5]))
+        isoratio.append(float(line[5]))
+        mass.    append(float(line[6]))
 
     return molname, isotopes, mass, isoratio, gi    
 

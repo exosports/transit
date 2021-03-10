@@ -27,6 +27,8 @@ import db_tioschwenke as ts
 import db_voplez as vo
 import db_repack as rep
 
+PYLINEDIR = os.path.dirname(os.path.realpath(__file__))
+
 
 def parseargs():
   """
@@ -109,8 +111,10 @@ def parseargs():
                      dest="dbtype")
   # HITRAN definitions file
   group.add_argument("-n", "--defn",           action="store",
-                     help="Path/to/file of HITRAN definitions file",
-                     dest="defn")
+                     help="Path/to/file of isotopologue definitions file",
+                     dest="defn", type=str, 
+                     default=os.path.join(PYLINEDIR, '..', 'inputs', 
+                                          'isotopologues.dat'))
   # Wavelength Options:
   group = parser.add_argument_group("Wavelength Options")
   group.add_argument("-i", "--wl-init",       action="store",
@@ -170,7 +174,7 @@ if __name__ == "__main__":
     elif dbtype[i] == "vo":
       driver.append(vo.voplez(dblist[i],      pflist[i]))
     elif dbtype[i] == "repack":
-      driver.append(rep.repack(dblist[i], pflist[i], defn))
+      driver.append(rep.repack(dblist[i],     pflist[i], defn))
     else:
       ut.printexit("Unknown Database type ({:d}): '{:s}'".
                     format(i+1, dbtype[i]))

@@ -35,11 +35,11 @@ class repack(dbdriver):
     self.defn = defn
     self.isotopes = self.get_isotopes()
     # Get info from HITRAN configuration file:
-    isotopes, mass, isoratio, gi = self.get_info(self.defn)  # HITRAN
+    isotopes, mass, isoratio, gi = self.getEMinfo(self.defn)
     iso_index = []
     for iso in isotopes:
         for j,isotope in enumerate(self.isotopes):
-            if np.all(np.in1d(list(iso), list(isotope))):
+            if iso == isotope:
                 iso_index.append(j)
     iso_index = np.array(iso_index)
     self.mass = np.array(mass)[iso_index]
@@ -159,7 +159,7 @@ class repack(dbdriver):
     return molID #self.molname[molID-1]
 
 
-  def get_info(self, defn):
+  def getEMinfo(self, defn):
     """
     Get HITRAN info from configuration file.
 
@@ -176,11 +176,8 @@ class repack(dbdriver):
     gi:       State-independent statistical weight
 
     """
-    # Read HITRAN configuration file from inputs folder:
-    if self.defn:
-      hfile = open(self.defn, 'r')
-    else:
-      hfile = open(os.path.join(DBHdir, '..', 'inputs', 'hitran.dat'), 'r')
+    # Read HITRAN configuration file
+    hfile = open(self.defn, 'r')
     lines = hfile.readlines()
     hfile.close()
   
@@ -193,10 +190,10 @@ class repack(dbdriver):
     for i in np.arange(len(lines)):
       if len(lines[i].split())>2  and lines[i].split()[1] == self.molecule:
         line = lines[i].split()
-        gi.      append(  int(line[3]))
-        isotopes.append(      line[2] )
-        isoratio.append(float(line[4]))
-        mass.    append(float(line[5]))
+        gi.      append(  int(line[4]))
+        isotopes.append(      line[3] )
+        isoratio.append(float(line[5]))
+        mass.    append(float(line[6]))
 
     return isotopes, mass, isoratio, gi    
 
