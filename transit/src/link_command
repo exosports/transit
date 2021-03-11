@@ -1,0 +1,15 @@
+gcc -shared argum.o
+cia.o
+eclipse.o
+extinction.o
+geometry.o
+idxrefraction.o
+makesample.o
+opacity.o
+readatm.o
+readlineinfo.o
+slantpath.o
+tau.o
+transit.o
+transit_wrap.o
+transitstd.o ../../pu/src/voigt.o ../../pu/src/procopt.o ../../pu/src/iomisc.o ../../pu/src/numerical.o ../../pu/src/xmalloc.o ../../pu/src/sampling.o ../../pu/src/spline.o -o _transit_module.so

@@ -1,0 +1,55 @@
+\BOOKMARK [1][-]{section.1}{1 Team Members}{}% 1
+\BOOKMARK [1][-]{section.2}{2 Introduction}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{2.1 Transit Package Overview}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{2.2 License}{section.2}% 4
+\BOOKMARK [1][-]{section.3}{3 Installation}{}% 5
+\BOOKMARK [2][-]{subsection.3.1}{3.1 System Requirements}{section.3}% 6
+\BOOKMARK [2][-]{subsection.3.2}{3.2 Install and Compile}{section.3}% 7
+\BOOKMARK [1][-]{section.4}{4 Quick Example}{}% 8
+\BOOKMARK [1][-]{section.5}{5 Quick Walkthrough}{}% 9
+\BOOKMARK [1][-]{section.6}{6 Program Inputs}{}% 10
+\BOOKMARK [2][-]{subsection.6.1}{6.1 Pylineread}{section.6}% 11
+\BOOKMARK [3][-]{subsubsection.6.1.1}{6.1.1 Pylineread Command-Line Arguments}{subsection.6.1}% 12
+\BOOKMARK [3][-]{subsubsection.6.1.2}{6.1.2 Configuration File}{subsection.6.1}% 13
+\BOOKMARK [3][-]{subsubsection.6.1.3}{6.1.3 Opacity Line-List Files}{subsection.6.1}% 14
+\BOOKMARK [3][-]{subsubsection.6.1.4}{6.1.4 Partition-Function Files}{subsection.6.1}% 15
+\BOOKMARK [3][-]{subsubsection.6.1.5}{6.1.5 HITRAN Data File}{subsection.6.1}% 16
+\BOOKMARK [2][-]{subsection.6.2}{6.2 Transit}{section.6}% 17
+\BOOKMARK [3][-]{subsubsection.6.2.1}{6.2.1 Transit Command-Line Arguments}{subsection.6.2}% 18
+\BOOKMARK [4][-]{paragraph.6.2.1.1}{6.2.1.1 Spectrum Wavenumber Sampling}{subsubsection.6.2.1}% 19
+\BOOKMARK [4][-]{paragraph.6.2.1.2}{6.2.1.2 Atmospheric-Layer Sampling}{subsubsection.6.2.1}% 20
+\BOOKMARK [4][-]{paragraph.6.2.1.3}{6.2.1.3 Extinction-Coefficient Calculation}{subsubsection.6.2.1}% 21
+\BOOKMARK [4][-]{paragraph.6.2.1.4}{6.2.1.4 Line-by-Line Calculation}{subsubsection.6.2.1}% 22
+\BOOKMARK [4][-]{paragraph.6.2.1.5}{6.2.1.5 Voigt-Profile Calculation}{subsubsection.6.2.1}% 23
+\BOOKMARK [4][-]{paragraph.6.2.1.6}{6.2.1.6 Cloud Opacity}{subsubsection.6.2.1}% 24
+\BOOKMARK [3][-]{subsubsection.6.2.2}{6.2.2 Configuration File}{subsection.6.2}% 25
+\BOOKMARK [3][-]{subsubsection.6.2.3}{6.2.3 Atmospheric File}{subsection.6.2}% 26
+\BOOKMARK [3][-]{subsubsection.6.2.4}{6.2.4 Transit Line Information \(TLI\) File}{subsection.6.2}% 27
+\BOOKMARK [3][-]{subsubsection.6.2.5}{6.2.5 Cross-section File}{subsection.6.2}% 28
+\BOOKMARK [3][-]{subsubsection.6.2.6}{6.2.6 Opacity File}{subsection.6.2}% 29
+\BOOKMARK [3][-]{subsubsection.6.2.7}{6.2.7 Molecules Data File}{subsection.6.2}% 30
+\BOOKMARK [1][-]{section.7}{7 Program Outputs}{}% 31
+\BOOKMARK [2][-]{subsection.7.1}{7.1 Pylineread Output}{section.7}% 32
+\BOOKMARK [2][-]{subsection.7.2}{7.2 Transit Output}{section.7}% 33
+\BOOKMARK [3][-]{subsubsection.7.2.1}{7.2.1 Opacity File}{subsection.7.2}% 34
+\BOOKMARK [3][-]{subsubsection.7.2.2}{7.2.2 Flux Spectrum File}{subsection.7.2}% 35
+\BOOKMARK [3][-]{subsubsection.7.2.3}{7.2.3 Intensity Spectrum File}{subsection.7.2}% 36
+\BOOKMARK [3][-]{subsubsection.7.2.4}{7.2.4 Sampling Information File}{subsection.7.2}% 37
+\BOOKMARK [3][-]{subsubsection.7.2.5}{7.2.5 Max Optical-Depth File}{subsection.7.2}% 38
+\BOOKMARK [1][-]{section.8}{8 Running Transit}{}% 39
+\BOOKMARK [2][-]{subsection.8.1}{8.1 Running Pylineread}{section.8}% 40
+\BOOKMARK [2][-]{subsection.8.2}{8.2 Running Transit}{section.8}% 41
+\BOOKMARK [2][-]{subsection.8.3}{8.3 Utilizing Shared Memory}{section.8}% 42
+\BOOKMARK [3][-]{subsubsection.8.3.1}{8.3.1 System Requirements}{subsection.8.3}% 43
+\BOOKMARK [3][-]{subsubsection.8.3.2}{8.3.2 Size Allowances}{subsection.8.3}% 44
+\BOOKMARK [3][-]{subsubsection.8.3.3}{8.3.3 Cleaning Up}{subsection.8.3}% 45
+\BOOKMARK [1][-]{section.9}{9 Code Organization}{}% 46
+\BOOKMARK [2][-]{subsection.9.1}{9.1 TLI File Format}{section.9}% 47
+\BOOKMARK [3][-]{subsubsection.9.1.1}{9.1.1 Opacity File Format}{subsection.9.1}% 48
+\BOOKMARK [1][-]{section.10}{10 Routines}{}% 49
+\BOOKMARK [2][-]{subsection.10.1}{10.1 Pylineread Module}{section.10}% 50
+\BOOKMARK [2][-]{subsection.10.2}{10.2 Transit Module}{section.10}% 51
+\BOOKMARK [2][-]{subsection.10.3}{10.3 PU Module}{section.10}% 52
+\BOOKMARK [1][-]{section.11}{11 Be Kind}{}% 53
+\BOOKMARK [1][-]{section.12}{12 Reproducible Research}{}% 54
+\BOOKMARK [1][-]{section.13}{13 Further Reading}{}% 55
