@@ -246,6 +246,7 @@ struct molecules{
   char **name;        /* Molecules' names                                   */
   PREC_ZREC *mass;    /* Molecules' masses                                  */
   PREC_ZREC *radius;  /* Molecules' radii                                   */
+  PREC_ZREC *pol;     /* Molecules' polarizability                          */
   int *ID;            /* Molecule universal ID                              */
 };
 

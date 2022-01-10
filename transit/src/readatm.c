@@ -82,6 +82,7 @@ getatm(struct transit *tr){
   mol.ID     = (int       *)calloc(nmol, sizeof(int));
   mol.mass   = (PREC_ZREC *)calloc(nmol, sizeof(PREC_ZREC));
   mol.radius = (PREC_ZREC *)calloc(nmol, sizeof(PREC_ZREC));
+  mol.pol    = (PREC_ZREC *)calloc(nmol, sizeof(PREC_ZREC));
   mol.molec  = (prop_mol  *)calloc(nmol, sizeof(prop_mol));
 
   /* Get (pseudo-fixed) molecular data values from 'molecules.dat' file:    */
@@ -619,15 +620,16 @@ readatmfile(FILE *fp,                /* Atmospheric file                    */
 }
 
 
-/* Read and store non-layer-dependent molecular data (mass, radius, ID)
-   and store in mol struct.                                                 */
+/* Read and store non-layer-dependent molecular data (mass, radius, ID, 
+   polarizability) and store in mol struct.                                 */
 void
 getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
   int nmol = at->n_aiso;
   FILE *elist;
 
   double *mmass,       /* Molecular mass from list                          */
-         *radius;      /* Molecular radii from list                         */
+         *radius,      /* Molecular radii from list                         */
+         *pol;         /* Molecular polarizability from list                */
   int *molID;          /* Molecular universal ID                            */
   long dinit;          /* Data initial position in File pointer             */
   int ndatamol=0,      /* Number of species in file                         */
@@ -659,10 +661,11 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
   fseek(elist, dinit, SEEK_SET);
   lp = fgets(line, maxlinelen, elist);
 
-  /* Allocate molecule ID, mass, names, and radii:                          */
+  /* Allocate molecule ID, mass, names, polarizability, and radii:          */
   molID    = (int    *)calloc(ndatamol,            sizeof(int));
   mmass    = (double *)calloc(ndatamol,            sizeof(double));
   radius   = (double *)calloc(ndatamol,            sizeof(double));
+  pol      = (double *)calloc(ndatamol,            sizeof(double));
   rname    = (char  **)calloc(ndatamol,            sizeof(char *));
   rname[0] = (char   *)calloc(ndatamol*MAXNAMELEN, sizeof(char));
   for (i=1; i<ndatamol; i++)
@@ -681,6 +684,10 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
     /* Get molecule's radius:                                               */
     lp = nextfield(lp);
     radius[i] = strtod(lp, NULL)/2.0;
+    /* Get molecule's polarizability:                                       */
+    lp = nextfield(lp); // Skip over the radius source
+    lp = nextfield(lp);
+    pol[i] = strtod(lp, NULL);
     lp = fgets(line, maxlinelen, elist);
     tr_output(TOUT_DEBUG, "Read species:'%6s',  ID:%3d,  mass:%7.4f,  "
       "radius:%5.2f.\n", rname[i], molID[i], mmass[i], radius[i]);
@@ -701,6 +708,8 @@ getmoldata(struct atm_data *at, struct molecules *mol, char *filename){
     mol->ID[i]     = molID[j];
     /* Set the mass:                                                        */
     mol->mass[i]   = mmass[j];
+    /* Set the polarizability:                                              */
+    mol->pol[i]    = pol[j];
     tr_output(TOUT_RESULT, "Molecule %9s (ID: %3i) has radius %4.2f A "
       "and mass %7.4f u.\n", mol->name[i], mol->ID[i],
       mol->radius[i]/ANGSTROM, mol->mass[i]);

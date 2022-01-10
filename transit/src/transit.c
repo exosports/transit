@@ -23,7 +23,7 @@ void do_transit(double *transit_out);
 
 void transit_init(int argc, char **argv){
   /* The purpose of this function is to set up and initialize all the
-     structures nessisary to run the transit code.                          */
+     structures necessary to run the transit code.                          */
   memset(&transit, 0, sizeof(struct transit));
   verblevel=2;
 
