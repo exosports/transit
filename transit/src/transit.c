@@ -15,7 +15,7 @@ int  get_no_samples(void);
 void get_waveno_arr(double *waveno_arr, int waveno);
 void set_radius(double refradius);
 void set_cloudtop(double cloudtop);
-void set_scattering(double scattering);
+void set_scattering(int flag, double scattering);
 void run_transit(double *re_input, int transint, double *transit_out,
                  int transit_out_size);
 void do_transit(double *transit_out);
@@ -104,7 +104,8 @@ void set_cloudtop(double cloudtop){
 }
 
 
-void set_scattering(double scattering){
+void set_scattering(int flag, double scattering){
+  transit.ds.sc->flag   = flag;
   transit.ds.sc->logext = scattering;
 }
 
