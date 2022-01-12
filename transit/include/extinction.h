@@ -29,10 +29,11 @@ extern void computeextscat P_((double *e, long n,
                                struct extscat *sc,
                                double *pressure,
                                double *temp,
+                               struct molecules *mol,
                                double wn));
 
 extern void computeextcloud P_((double *e, long n,
                                 struct extcloud *cl, double *pressure,
-                                double *temp, double tcft,
+                                double *temp, double tfct,
                                 double wn));
 #undef P_

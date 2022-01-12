@@ -248,7 +248,9 @@ processparameters(int argc,            /* Number of command-line args  */
     {"cloudtop", CLA_CLOUDTOP, required_argument, NULL,
      "cloudtop", "Cloud-deck top pressure (log-bar)."},
     {"scattering", CLA_SCATTERING, required_argument, NULL,
-     "scattering", "Scattering extinction in some log-units."},
+     "scattering", "Scattering parameter.  "
+     "Options: 'polar' for Villanueva et al. (2022) method; "
+     "a float, giving the extinction in some log-units."},
     {"detailext",  CLA_DETEXT,      required_argument, NULL,
      "filename:wn1,wn2,...",
      "Save extinction at specified wavenumbers in filename."},
@@ -663,8 +665,16 @@ processparameters(int argc,            /* Number of command-line args  */
       break;
 
     case CLA_SCATTERING:
-      hints->scattering_logext = atof(optarg);
-      hints->scattering_flag = 1;
+      if(!strcmp(optarg, "polar"))
+      {
+        hints->scattering_logext = 0.0;
+        hints->scattering_flag = 2;
+      }
+      else
+      {
+        hints->scattering_logext = atof(optarg);
+        hints->scattering_flag = 1;
+      }
       break;
 
     case CLA_INTENS_GRID:    /* Intensity grid                              */

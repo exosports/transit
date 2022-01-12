@@ -153,6 +153,7 @@ Table \ref{table:constants} lists the user-defined constants used in \texttt{tra
 \hline
 Name         & Value                                       & Description \\
 \hline
+AMAGAT       & 2.68678e19 cm\sp{-3}                        &  Amagat unit \\
 RHOSTP       & 1.29e-3 g cm\sp{-3}                         &  Density at STP \\
 PI           & 3.141592653589793                           &  Pi \\
 DEGREES      & PI/180.0                                    &  Radians per degree \\
@@ -160,6 +161,7 @@ GGRAV        & 6.673e-8 erg cm g\sp{2}                     &  Gravitational cons
 HOUR         & 3600.0 s                                    &  Seconds per hour   \\
 AU           & 14959786896040.492 cm                       &  Centimeters per AU  \\
 ANGSTROM     & 1e-8 cm                                     &  Centimeters per angstrom  \\
+MICRON       & 1e-4 cm                                     &  Centimeters per micron  \\
 SUNMASS      & 1.9891e33 g                                 &  Mass of the sun  \\
 SUNRADIUS    & 6.95508e10 cm                               &  Radius of the sun \\
 AMU          & 1.66053886e-24 g                            &  Grams per atomic mass unit \\
@@ -172,8 +174,11 @@ H            & 6.6260755e-27 erg s                         &  Planck constant \\
 HC           & H*LS erg cm                                 &  Planck constant $\times$ speed of light \\
 SIGCTE       & (PI*EC\sp{2})/(LS\sp{2}*ME*AMU) cm g\sp{-1} &  Cross-section constant \\
 EXPCTE       & (H*LS)/KB cm K                              &  Exponent constant \\
+NAVOGADRO    & 6.02214076e23 mol\sp{-1}                    &  Avogadro's number \\
 ONEOSQRT2PI  & 0.3989422804                                &  1/sqrt(2pi) \\
 SQRTLN2      & 0.83255461115769775635                      &  sqrt(ln(2)) \\
+E0H2         & 4.911e-23                                   &  Rayleigh scattering slope from Lecavelier Des Etangs et al. (2008) \\
+RAYEXP       & 4                                           &  Rayleigh scattering exponent \\
 MAXNAMELEN   & 20                                          &  Maximum length of name strings \\
 \hline
 \end{tabular}
@@ -581,25 +586,29 @@ Molecule information.
 struct molecules{
   int nmol;           /* Number of molecules                                */
   prop_mol *molec;    /* Molecular properties                               */
-    /* ALLOCATED:	getatm						    */
-    /* FILLED OUT:	makeradsample					    */
-    /* FREED: 		free_mol					    */ 
+    /* ALLOCATED:	getatm                          */
+    /* FILLED OUT:	makeradsample                   */
+    /* FREED: 		free_mol                        */ 
   char **name;        /* Molecules' names                                   */
-    /* ALLOCATED:	getmnfromfile					    */
-    /* FILLED OUT:	getmnfromfile					    */
-    /* FREED: 		freemem_molecules				    */ 
+    /* ALLOCATED:	getmnfromfile                   */
+    /* FILLED OUT:	getmnfromfile                   */
+    /* FREED: 		freemem_molecules               */ 
   PREC_ZREC *mass;    /* Molecules' masses                                  */
-    /* ALLOCATED:	getatm						    */
-    /* FILLED OUT:	getmoldata					    */
-    /* FREED: 		freemem_molecules				    */ 
+    /* ALLOCATED:	getatm                          */
+    /* FILLED OUT:	getmoldata                      */
+    /* FREED: 		freemem_molecules               */ 
   PREC_ZREC *radius;  /* Molecules' radii                                   */
-    /* ALLOCATED:	getatm						    */
-    /* FILLED OUT:	getmoldata					    */
-    /* FREED: 		freemem_molecules				    */ 
+    /* ALLOCATED:	getatm                          */
+    /* FILLED OUT:	getmoldata                      */
+    /* FREED: 		freemem_molecules               */ 
+  PREC_ZREC *pol;  /* Molecules' polarizability                             */
+    /* ALLOCATED:	getatm                          */
+    /* FILLED OUT:	getmoldata                      */
+    /* FREED: 		freemem_molecules               */ 
   int *ID;            /* Molecule universal ID                              */
     /* ALLOCATED:	getatm						    */
     /* FILLED OUT:	getmoldata					    */
-    /* FREED: 		FINDME: this isn't freed!			    */ 
+    /* FREED: 		freemem_molecules               */ 
 };
 \end{plain}
 
@@ -608,9 +617,9 @@ Flux
 \begin{plain}
 struct outputray{
   PREC_RES *o;     /* Output as seen before interaction with telescope      */
-    /* ALLOCATED:	flux, modulation				    */
-    /* FILLED OUT:	flux, modulation1, moldulationm1		    */
-    /* FREED: 		freemem_outputray				    */ 
+    /* ALLOCATED:	flux, modulation                    */
+    /* FILLED OUT:	flux, modulation1, moldulationm1    */
+    /* FREED: 		freemem_outputray                   */ 
 };
 \end{plain}
 

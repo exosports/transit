@@ -198,7 +198,7 @@ tau(struct transit *tr){
     }
 
     /* Calculate extinction from scattering, clouds, and CIA at each level: */
-    computeextscat(e_s, rnn, sc, press, temp, wn->v[wi]*wfct);
+    computeextscat(e_s, rnn, sc, press, temp, tr->ds.mol, wn->v[wi]*wfct);
     computeextcloud(e_c, rnn, cl, press, temp, tfct, wn->v[wi]*wfct);
 
     /* Put the extinction values in a new array, the values may be

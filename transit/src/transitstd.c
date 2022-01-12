@@ -232,6 +232,7 @@ freemem_molecules(struct molecules *mol, long *pi){
   free(mol->mass);
   free(mol->radius);
   free(mol->pol);
+  free(mol->ID);
   /* FINDME: Define a pi for molec */
 }
 

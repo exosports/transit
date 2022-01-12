@@ -589,19 +589,38 @@ computeextscat(double *e,
                struct extscat *sc,
                double *pressure,
                double *temp,
+               struct molecules *mol,
                double wn){
-  long i;
+  long i, j;
   double logext = sc->logext;
   int flag = sc->flag;
 
-  /* If there are no clouds, set array to zero:                             */
-  if(!flag){
-    memset(e, 0, n*sizeof(double));
-    return;
+  switch(flag)
+  {
+    case 0:
+      /* If there is no scattering, set array to zero:                      */
+      memset(e, 0, n*sizeof(double));
+      break;
+    case 1:
+      /* H2 atmosphere approximation method 
+         described in Lecavelier Des Etangs et al. (2008)                   */
+      for(i=0; i<n; i++)
+        e[i] = pow(10.0,logext) * E0H2 * pressure[i] / temp[i] * pow(wn,RAYEXP);
+      break;
+    case 2:
+      /* Based on experimental polarizabilities
+         From Chapter 4, Section 3.4 of PSG's handbook: 
+         https://psg.gsfc.nasa.gov/images/help/handbook.pdf
+         Eqn units are m2/molecules, must convert to Transit's units (cm-1) */
+      /* Zero the array so that we can sum contribution from each molecule  */
+      memset(e, 0, n*sizeof(double));
+      for(i=0; i<n; i++){
+        for(j=0; j<mol->nmol; j++){
+          e[i] += PI * 8e-32 / 3. * pow(mol->pol[j], 2) * pow(2. * PI * wn * MICRON, 4) * mol->molec[j].d[i] / mol->mass[j] * NAVOGADRO;
+        }
+      }
+      break;
   }
-
-  for(i=0; i<n; i++)
-    e[i] = pow(10.0,logext) * E0H2 * pressure[i] / temp[i] * pow(wn,RAYEXP);
 }
 
 
@@ -613,7 +632,7 @@ computeextcloud(double *e,
                struct extcloud *cl,
                double *pressure,
                double *temp,
-               double tcft,
+               double tfct,
                double wn){
   long i;
   double logp = cl->logp,
