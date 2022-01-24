@@ -325,7 +325,13 @@ interpcs(struct transit *tr){
         dens *= mol->molec[icsmol].d[i] / (AMU * mol->mass[icsmol] * AMAGAT);
       }
       for(j=0; j < tr->wns.n; j++){
-        cross->e[j][i] += e[j][i] * dens;
+        /* FINDME: Bicubic interplation on CIA files with zeros in the 
+                   temperature/wavenumber grid can lead to bogus opacities.  
+                   This bandage handles the case when the bogus opacities 
+                   are negative.  bicubicinterpolate() should be changed to 
+                   better handle this scenario.                             */
+        if(e[j][i] > 0)
+          cross->e[j][i] += e[j][i] * dens;
       }
     }
   }
