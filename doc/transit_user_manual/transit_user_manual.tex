@@ -268,7 +268,7 @@ place the code: \newline
 {\tttb cd tmp/transit\_demo} \\
 
 \noindent Clone the repository to your working directory: \newline
-{\tttb git clone https://github.com/exosports/transit transit} \\
+{\tttb git clone --recursive https://github.com/exosports/transit transit} \\
 
 \noindent Compile the {\tttm pu} and {\tttm transit} code, as well as
 the {\tttm pylineread} TIPS code: \newline
@@ -315,7 +315,7 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append("../transit/scripts/")
 import readtransit as rt
-wlength, flux = rt.readspectrum("CH4_demo_spectrum.dat.-Flux", 0)
+wlength, flux = rt.readspectrum("CH4_demo_spectrum.dat", 0)
 
 plt.figure(0, (8,5))
 plt.clf()
