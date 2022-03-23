@@ -633,9 +633,12 @@ computeextcloud(double *e,
                double *pressure,
                double *temp,
                double tfct,
+               double *density,
                double wn){
   long i;
-  double logp = cl->logp,
+  int flag = cl->flag;
+  double cloudtop = pow(10, cl->cloudtop),
+         cloudbot = pow(10, cl->cloudbot), 
        extinction = cl->cloudext;
 
   /* If there are no clouds, set array to zero:                             */
@@ -644,15 +647,33 @@ computeextcloud(double *e,
     return;
   }
 
-  /* Find radius index right below the cloud top layer:                     */
+  /* Find layer index right below the cloud top layer:                      */
   for(i=n-1; i>=0; i--){
-    if(pressure[i] >= pow(10.0,logp))
+    if(pressure[i] >= cloudtop)
       break;
-    e[i] = 0.0;  /* The extinction is zero above the cloud                    */
+    e[i] = 0.0;  /* The extinction is zero above the cloud                  */
   }
 
   /* Set cloud extinction between cloud top and bottom:                     */
-  for(; i>=0; i--){
-    e[i] = extinction;
+  switch(flag)
+  {
+    case 1: // Constant extinction
+      for(i=n-1; i>=0; i--){
+        if(pressure[i] <= cloudbot)
+          break;
+        e[i] = extinction;
+      }
+      break;
+    case 2: // Constant opacity
+      for(i=n-1; i>=0; i--){
+        if(pressure[i] <= cloudbot)
+          break;
+        e[i] = extinction * density[i];
+      }
+      break;
+  }
+
+  for(i=n-1; i>=0; i--){
+    e[i] = 0.0;  /* The extinction is zero below the cloud                  */
   }
 }

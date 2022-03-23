@@ -35,5 +35,6 @@ extern void computeextscat P_((double *e, long n,
 extern void computeextcloud P_((double *e, long n,
                                 struct extcloud *cl, double *pressure,
                                 double *temp, double tfct,
+                                double *density,
                                 double wn));
 #undef P_

@@ -70,7 +70,7 @@ tau(struct transit *tr){
 
   long wi, ri = 0; /* Indices for wavenumber, and radius                    */
   int rn;          /* Functions output code                                 */
-  int i;
+  int i, j;
 
   FILE *totEx   = NULL,
        *cloudEx = NULL,
@@ -125,7 +125,9 @@ tau(struct transit *tr){
                                       used for progress printing            */
 
   double e_s[rnn],                  /* Extinction from scattering           */
-         e_c[rnn];                  /* Extinction from clouds               */
+         e_c[rnn],                  /* Extinction from clouds               */
+         mean_dens[rnn];            /* Mean density of each layer           */
+  double mean_mm;                   /* Mean molar mass                      */
   PREC_CS **e_cs = tr->ds.cross->e; /* Cross-section extinction             */
 
   /* FINDME: TRANSIT ONLY */
@@ -187,6 +189,21 @@ tau(struct transit *tr){
   }
 
   tr_output(TOUT_INFO, "Calculating optical depth at various radii:\n");
+  /* Mean mass density is needed for certain cloud models:                  */
+  for(i=0; i<rnn; i++){
+    // Calculate for i-th layer
+    mean_mm = 0;
+    for(j=0; j<tr->ds.at->n_aiso; j++){
+      // Add contribution of j-th species
+      // molec.d is density [g/cm3], mol->mass [g/mol], molec.q [unitless], 
+      // so this gives the mean molar density [mol/cm3]
+      mean_dens[i] += tr->ds.at->molec[j].d[i] / tr->ds.mol->mass[j] * tr->ds.at->molec[j].q[i];
+      // mean molar mass [g/mol]
+      mean_mm += tr->ds.mol->mass[j] * tr->ds.at->molec[j].q[i];
+    }
+    // mean molar density [mol/cm3] * mean molar mass [g/mol] = mean mass density [g/cm3]
+    mean_dens[i] *= mean_mm;
+  }
   /* For each wavenumber:                                                   */
   for(wi=0; wi<wnn; wi++){
     tau_wn = tau->t[wi];
@@ -199,7 +216,7 @@ tau(struct transit *tr){
 
     /* Calculate extinction from scattering, clouds, and CIA at each level: */
     computeextscat(e_s, rnn, sc, press, temp, tr->ds.mol, wn->v[wi]*wfct);
-    computeextcloud(e_c, rnn, cl, press, temp, tfct, wn->v[wi]*wfct);
+    computeextcloud(e_c, rnn, cl, press, temp, tfct, mean_dens, wn->v[wi]*wfct);
 
     /* Put the extinction values in a new array, the values may be
        temporarily overwritten by (fcn)(), but they should be restored:     */

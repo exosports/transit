@@ -100,7 +100,9 @@ void set_radius(double refradius){
 
 
 void set_cloudtop(double cloudtop){
-  transit.ds.cl->logp = cloudtop;
+  transit.ds.cl->cloudtop = cloudtop;
+  transit.ds.cl->cloudbot = cloudtop + 10;
+  transit.ds.cl->cloudext = 100;
 }
 
 

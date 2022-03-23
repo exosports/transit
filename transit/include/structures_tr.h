@@ -256,16 +256,15 @@ struct outputray{
 };
 
 struct extcloud{
-  double logp;      /* log10(top pressure)                                  */
-  double cloudext;  /* Maximum opacity in [cm-1]                            */
-  double cloudtop;  /* Radius at which clouds start                         */
-  double cloudbot;  /* Radius at which clouds has it maximum extinction
-                      'cloudext'.                                           */
+  double cloudext;  /* Maximum opacity in [cm-1] or [cm2/g]                 */
+  double cloudtop;  /* Pressure at which clouds start                       */
+  double cloudbot;  /* Pressure at which clouds end                         */
+  int flag;         /* Sets the cloud model                                 */
 };
 
 struct extscat{
-  double logext;
-  int flag;
+  double logext; /* Scattering slope                                        */
+  int flag;      /* Sets the scattering model                               */
 };
 
 struct saves{

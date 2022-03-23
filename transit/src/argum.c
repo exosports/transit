@@ -240,7 +240,7 @@ processparameters(int argc,            /* Number of command-line args  */
      "Minimum extinction-coefficient ratio (w.r.t. maximum in a layer) to "
      "consider in the calculation."},
     {"cloud",      CLA_CLOUD,      required_argument, NULL,
-     "cloudext,cloudtop,cloudbot",
+     "cloudtype,cloudext,cloudtop,cloudbot",
      "Gray-opacity layer with extinction linearly increasing from 0 at "
      "cloudtop, up cloudext at cloudbot.  Then keep a constant extinction "
      "until the bottom of the atmosphere.  cloudext has units of cm-1, "
@@ -634,24 +634,36 @@ processparameters(int argc,            /* Number of command-line args  */
       break;
 
     case CLA_CLOUD:      /* Cloud arguments:                                */
-      hints->cl.cloudext = strtod(optarg, &optarg);
+      if(!strcmp(optarg, "ext"))
+        hints->cl.flag = 1; // Constant extinction
+      else if(!strcmp(optarg, "opa"))
+        hints->cl.flag = 2; // Constant opacity
+      optarg += 3;
       if(*optarg != ','  ||  optarg[1] == '\0') {
-        tr_output(TOUT_ERROR, "Syntax error in option '--cloudrad', "
-          "parameters need to be given as cloudext,cloudtop,cloudbot.\n");
+        tr_output(TOUT_ERROR, "Syntax error in option '--cloud', "
+          "parameters need to be given as cloudtype,cloudext,cloudtop,cloudbot.\n");
         exit(EXIT_FAILURE);
       }
 
+      hints->cl.cloudext = strtod(optarg+1, &optarg);
+      if(*optarg != ','  ||  optarg[1] == '\0') {
+        tr_output(TOUT_ERROR, "Syntax error in option '--cloud', "
+          "parameters need to be given as cloudtype,cloudext,cloudtop,cloudbot.\n");
+        exit(EXIT_FAILURE);
+      }
+
+
       hints->cl.cloudtop = strtod(optarg+1, &optarg);
       if(*optarg != ','  ||  optarg[1] == '\0') {
-        tr_output(TOUT_ERROR, "Syntax error in option '--cloudrad', "
-          "parameters need to be given as cloudext,cloudtop,cloudbot.\n");
+        tr_output(TOUT_ERROR, "Syntax error in option '--cloud', "
+          "parameters need to be given as cloudtype,cloudext,cloudtop,cloudbot.\n");
         exit(EXIT_FAILURE);
       }
 
       hints->cl.cloudbot = strtod(optarg+1, NULL);
       /* Safety check that top > bottom:                                    */
       if((hints->cl.cloudtop > hints->cl.cloudbot) ||
-         (hints->cl.cloudbot <= 0 && hints->cl.cloudtop != 0)) {
+         (hints->cl.cloudbot <= 0) || (hints->cl.cloudtop <= 0)) {
         tr_output(TOUT_ERROR, "Syntax error in '--cloud', the cloud top "
                  "(%g) needs to be larger than the cloud bottom (%g) and both "
                  "greater than 0.\n", hints->cl.cloudtop, hints->cl.cloudbot);
@@ -660,18 +672,23 @@ processparameters(int argc,            /* Number of command-line args  */
       break;
 
     case CLA_CLOUDTOP:
-      hints->cl.logp = atof(optarg);
-      hints->cl.cloudext = 100.0;  // flag
+      hints->cl.cloudtop = atof(optarg);
+      // Ensure cloud extends to high enough pressure to absorb all radiation
+      hints->cl.cloudbot = hints->cl.cloudtop + 10;
+      hints->cl.cloudext = 100.0; // Large extinction so the cloud is opaque
+      hints->cl.flag     = 1; // Constant extinction
       break;
 
     case CLA_SCATTERING:
       if(!strcmp(optarg, "polar"))
       {
+        /* Polarizability method of Villanueva et al. (2022)                */
         hints->scattering_logext = 0.0;
         hints->scattering_flag = 2;
       }
       else
       {
+        /* Approximation method of Lecavelier Des Etangs et al. (2008)      */
         hints->scattering_logext = atof(optarg);
         hints->scattering_flag = 1;
       }
@@ -836,8 +853,10 @@ acceptgenhints(struct transit *tr){
 
   /* Set cloud structure:                                                   */
   static struct extcloud cl;
-  cl.logp = th->cl.logp;
+  cl.cloudtop = th->cl.cloudtop;
+  cl.cloudbot = th->cl.cloudbot;
   cl.cloudext = th->cl.cloudext;  /* Maximum cloud extinction               */
+  cl.flag     = th->cl.flag;
   tr->ds.cl = &cl;
   /* Scattering extinction struct         */
   static struct extscat sc;
