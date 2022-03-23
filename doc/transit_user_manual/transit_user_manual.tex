@@ -773,24 +773,14 @@ execute: \newline
   extinction-coefficient ratio (w.r.t. maximum in a given layer) to
   consider in the calculation. [default: 1e-8].}
 
-\argument{{-}{-}cloudrad=$<$radup,raddown$>$}{ If set (in conjunction
-  with cloudext), define a cloud layer (gray opacity component) where
-  a gray opacity component linearly increases from radup to raddown,
-  where the opacity will reach cloudext.  From raddown below keep
-  constant opacity.  Use '{-}{-}cloudfct' units; if not defined, use
-  radfct.}
+\argument{{-}{-}cloud=$<$cloudtype,cloudext,cloudtop,cloudbot$>$}{Full cloud model.  Cloudtype can be 'ext' for constant extinction, or 'opa' for constant opacity.  Cloudext sets the extinction or opacity, as appropriate.  Cloudtop sets the cloudtop pressure in base-10 logarithm.  Cloudbot is like cloudtop, but for the bottom of the cloud.}
 
-\argument{{-}{-}cloudext=$<$extinction$>$}{Maximum extinction of the
-  cloud, which opacity will linearly increase from 'radup' to
-  'raddown'.}
-
-\argument{{-}{-}cloudfct=$<$factor$>$}{Radius units conversion factor
-  to cgs for {-}{-}cloudrad.}
+\argument{{-}{-}cloudtop=$<$logp$>$}{Basic cloud model.  Takes only a cloudtop pressure in base-10 logarithm.  At greater pressures, the cloud is opaque.}
 
 \argument{{-}{-}scattering=$<$arg$>$}{Sets the Rayleigh scattering model. 
-  If ``polar'', uses the polarization method of the NASA Planetary Spectrum 
-  Generator.  If a number, it gives the power of ten scaling factor for the 
-  method of Lecavelier Des Etangs et al. (2008).}
+  If ``polar'', uses the polarizability method of the NASA Planetary Spectrum 
+  Generator.  If a number, it gives the power-of-ten scaling factor for the 
+  method of Lecavelier Des Etangs et al.~(2008).}
 
 \argument{{-}{-}detailext=$<$filename:wn1,wn2,...$>$}{Save extinction at
   specified wavenumbers in filename.}
@@ -990,11 +980,25 @@ profile.
 
 \paragraph{Cloud Opacity}
 
-Transit allows for a basic gray-opacity (cloud) layer.  The two values
-of {\tttm `cloudrad'} define a the top and bottom radii of a layer
-where the opacity linearly increasing from zero (at {\tttb radup}) up
-to {\tttb cloudext} at {\tttb raddown}.  Below this level, the
-opacity remains constant at {\tttb cloudext}.
+Transit allows for a basic gray-opacity (cloud) layer.  For a simple 
+cloud model, {\tttm `cloudtop'} defines a cloudtop pressure (in 
+base-10 logarithm), and all layers with pressures greater than that 
+have an opaque cloud.  For a more complex cloud, {\tttm `cloud'} defines 
+a cloud type (constant extinction, or constant opacity), an extinction/opacity 
+value, the log10 cloudtop pressure, and the log10 cloud bottom pressure.  
+Between the cloudtop and cloud bottom, the extinction/opacity is constant.  
+Above or below the cloud, extinction is zero.
+
+\paragraph{Scattering}
+
+Transit allows for two basic scattering models.  Setting 
+{\tttm `scattering = polar'} uses the polarizability method of the NASA 
+Planetary Spectrum Generator, which uses experimental data in an analytical 
+formula (no free parameters).  Setting {\tttm `scattering'} to a float value 
+will use the approximation method of Lecavelier Des Etangs et al.~(2008), 
+which is applicable to a H2 atmosphere.  This float value defines the 
+power-of-ten scaling factor for the scattering extinction.
+
 
 
 \subsubsection{Configuration File}

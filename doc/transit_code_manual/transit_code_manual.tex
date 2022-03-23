@@ -627,10 +627,10 @@ struct outputray{
 Cloud extinction information.
 \begin{plain}
 struct extcloud{
-  double cloudext;     /* Maximum opacity in [cm-1]                          */
-  double cloudtop;     /* Radius at which clouds start                       */
-  double cloudbot;     /* Radius at which clouds has it maximum thickness
-                          'cloudext'.                                        */
+  double cloudext;  /* Maximum opacity in [cm-1]                            */
+  double cloudtop;  /* Pressure at which clouds start                       */
+  double cloudbot;  /* Pressure at which clouds end                         */
+  int flag;         /* Sets the cloud model                                 */
 };
 \end{plain}
 
@@ -638,7 +638,8 @@ struct extcloud{
 Scattering extinction information.
 \begin{plain}
 struct extscat{
-  double prm;
+  double logext; /* Scattering slope                                        */
+  int flag;      /* Sets the scattering model                               */
 };
 \end{plain}
 
@@ -1266,7 +1267,7 @@ void freemem\_detailfld(struct detailfld *f)}
 \item[-] Set \ttred{tr.ds.th.toomuch} (maximum optical depth to make calculations, above which it is assumed no light transmits) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.taulevel} (optical depth integration level) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.modlevel} (modulation integration level) from command line arguments/config file.
-\item[-] Set \ttred{tr.ds.th.cl.cloudext, tr.ds.th.cl.cloudtop, tr.ds.th.cl.cloudbot} (maximum cloud extinction, initial cloud radius, and final cloud radius) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.cl.flag, tr.ds.th.cl.cloudext, tr.ds.th.cl.cloudtop, tr.ds.th.cl.cloudbot} (cloud model type, maximum cloud extinction, initial cloudtop pressure, and final cloud-bottom pressure) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.angles} (intensity angles) from command line arguments/config file.
 \end{enumerate}
 
@@ -2684,14 +2685,14 @@ int interpolmolext(struct transit *tr, PREC\_NREC r, PREC\_RES **kiso)}
   molecular extinction.}  \\
 
 \function{
-void computeextscat(double *e, long n, struct extscat *sc, double *rad, \\
-                    double trad, double *temp, double tcft, double wn)}
-\tgray{Compute scattering contribution to extinction. Currently fills the scattering extinction array with 0's (no extinction due to scattering).} \\
+void computeextscat(double *e, long n, struct extscat *sc, double *pressure, \\
+                    double *temp, struct molecules *mol, double wn)}
+\tgray{Compute scattering contribution to extinction. Either no scattering (fills array with 0s), the H2 approximation method of Lecavelier Des Etangs et al. (2008), or the experimental polarizabilities approach of NASA PSG (Villanueva et al. 2018).} \\
 
 \function{
-void computeextcloud(double *e, long n, struct extscat *sc, double *rad, \\
-                     double trad, double *temp, double tcft, double wn)}
-\tgray{Compute cloud contribution to extinction. Cloud extinction is linear, increasing from top of the clouds to the bottom of the clouds.} \\
+void computeextcloud(double *e, long n, struct extcloud *cl, double *pressure, \\
+                     double *temp, double tcft, double *density, double wn)}
+\tgray{Compute cloud contribution to extinction. Either no clouds (fills array with 0s), constant extinction, or constant opacity.} \\
 
 \subsubsection{getprofile}
 \paragraph{Variables Modified}
@@ -2827,7 +2828,10 @@ Lorentz line-broadening widths (Equations \ref{eqn:doppler} and
 
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] Loop over each radius layer. Set scattering extinction to 0 at all layers.
+\item[-] Determines which scattering model to use via a switch.
+\item[-] No scattering case: set scattering extinction to 0 at all layers.
+\item[-] Approximation of Lecavelier Des Etangs et al. (2008) case: loop over each layer, calculating the scattering extinction according to the user-supplied log-scaled scale factor.
+\item[-] Polarizability approach of NASA PSG case: set scattering extinction array to 0s, loop over each layer, loop over each molecule and add the scattering extinction due to that molecule in that layer.
 \end{enumerate}
 
 \subsubsection{computeextcloud:}
@@ -2838,11 +2842,12 @@ Lorentz line-broadening widths (Equations \ref{eqn:doppler} and
 
 \paragraph{Walkthrough}
 \begin{enumerate}[leftmargin=10pt, noitemsep, parsep=0pt, topsep=0ex]
-\item[-] If there are no clouds, set the cloud extinction array to zero everywhere.
-\item[-] Calculate the amount of extinction per distance due to the clouds.
-\item[-] Loop down through the radius layers, setting the cloud extinction to 0 until reaching the clouds.
-\item[-] Loop down through the radius layers, starting from the top of the clouds, setting the cloud extinction to a linearly increasing amount according to the extinction per distance until reaching the bottom of the clouds.
-\item[-] Loop through the remaining radius layers, setting the cloud extinction to the total extinction due to clouds.
+\item[-] If there are no clouds, set the cloud extinction array to zero everywhere and return.
+\item[-] Determine the layer index closest to the cloudtop pressure.
+\item[-] Determines which cloud model to use via a switch.
+\item[-] Constant extinction case: assigns the given extinction to each layer between the cloud top and bottom.
+\item[-] Constant opacity case: for each layer between the cloud top and bottom, calculates the extinction by multiplying with the density of that layer.
+\item[-] Set extinction to 0s for all layers below the cloud bottom.
 \end{enumerate}
 
 \newpage
