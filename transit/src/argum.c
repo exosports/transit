@@ -634,9 +634,9 @@ processparameters(int argc,            /* Number of command-line args  */
       break;
 
     case CLA_CLOUD:      /* Cloud arguments:                                */
-      if(!strcmp(optarg, "ext"))
+      if(strstr(optarg, "ext") != NULL)
         hints->cl.flag = 1; // Constant extinction
-      else if(!strcmp(optarg, "opa"))
+      else if(strstr(optarg, "opa") != NULL)
         hints->cl.flag = 2; // Constant opacity
       optarg += 3;
       if(*optarg != ','  ||  optarg[1] == '\0') {

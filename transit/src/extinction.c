@@ -658,22 +658,22 @@ computeextcloud(double *e,
   switch(flag)
   {
     case 1: // Constant extinction
-      for(i=n-1; i>=0; i--){
-        if(pressure[i] <= cloudbot)
+      for(; i>=0; i--){
+        if(pressure[i] >= cloudbot)
           break;
         e[i] = extinction;
       }
       break;
     case 2: // Constant opacity
-      for(i=n-1; i>=0; i--){
-        if(pressure[i] <= cloudbot)
+      for(; i>=0; i--){
+        if(pressure[i] >= cloudbot)
           break;
         e[i] = extinction * density[i];
       }
       break;
   }
 
-  for(i=n-1; i>=0; i--){
+  for(; i>=0; i--){
     e[i] = 0.0;  /* The extinction is zero below the cloud                  */
   }
 }
