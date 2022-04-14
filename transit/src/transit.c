@@ -100,9 +100,11 @@ void set_radius(double refradius){
 
 
 void set_cloudtop(double cloudtop){
+  /* TODO: update this function (and BART) to allow for other cloud models  */
   transit.ds.cl->cloudtop = cloudtop;
   transit.ds.cl->cloudbot = cloudtop + 10;
   transit.ds.cl->cloudext = 100;
+  transit.ds.cl->flag     = 1;
 }
 
 
