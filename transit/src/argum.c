@@ -664,8 +664,8 @@ processparameters(int argc,            /* Number of command-line args  */
       /* Safety check that top > bottom:                                    */
       if(hints->cl.cloudtop > hints->cl.cloudbot) {
         tr_output(TOUT_ERROR, "Syntax error in '--cloud', the cloud top "
-                 "(%g) needs to be larger than the cloud bottom (%g) and both "
-                 "greater than 0.\n", hints->cl.cloudtop, hints->cl.cloudbot);
+                 "(%g) needs to be less than the cloud bottom (%g) .\n", 
+                 hints->cl.cloudtop, hints->cl.cloudbot);
         exit(EXIT_FAILURE);
       }
       break;
