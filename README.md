@@ -23,6 +23,7 @@ alt=""border="10" /></a>
 * Madison Stemm (UCF)
 * Ryan Challener (UCF)
 * Andrew S. D. Foster (UCF)
+* Michael D. Himes (UCF)
 
 ### Getting Started:
 You can get the Transit User Manual [here](https://exosports.github.io/transit/doc/Transit_User_Manual.html).  For details about the inner workings of the code, you can find the Transit Code Manual [here](https://exosports.github.io/transit/doc/Transit_Code_Manual.html).
@@ -105,9 +106,13 @@ plt.show()
 
 ### Be Kind:
 Please reference these papers if you found this module useful for your research:  
-  [Cubillos et al. 2015: The Bayesian Atmospheric Radiative-Transifer Code for Exoplanet Modeling I](), in preparation.  
-  [Blecic et al. 2015: The Bayesian Atmospheric Radiative-Transifer Code for Exoplanet Modeling II](), in preparation.  
-  [Harrington et al. 2015: The Bayesian Atmospheric Radiative-Transifer Code for Exoplanet Modeling III](), in preparation.  
+
+  [Harrington et al. 2022. An Open-source Bayesian Atmospheric Radiative Transfer (BART) Code. I. Design, Tests, and Application to Exoplanet HD 189733b. Planet. Sci. J. 3 80.](https://iopscience.iop.org/article/10.3847/PSJ/ac3513)
+
+  [Cubillos et al. 2022. An Open-source Bayesian Atmospheric Radiative Transfer (BART) Code. II. The Transit Radiative Transfer Module and Retrieval of HAT-P-11b. Planet. Sci. J. 3 81.](https://iopscience.iop.org/article/10.3847/PSJ/ac348b)
+
+  [Blecic et al. 2022. An Open-source Bayesian Atmospheric Radiative Transfer (BART) Code. III. Initialization, Atmospheric Profile Generator, Post-processing Routines. Planet. Sci. J. 3 82.](https://iopscience.iop.org/article/10.3847/PSJ/ac3515)
+
 Thanks!
 
 
