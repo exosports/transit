@@ -2,6 +2,7 @@
 // Transit is under an open-source, reproducible-research license (see LICENSE).
 
 #include <transit.h>
+// #define PI 3.14159265359
 
 /* FUNCTION: Wrapper to calculate a Voigt profile
    Return: 1/2 of the number of points in the profile                       */
@@ -639,7 +640,10 @@ computeextcloud(double *e,
   int flag = cl->flag;
   double cloudtop = pow(10, cl->cloudtop),
          cloudbot = pow(10, cl->cloudbot), 
-       extinction = cl->cloudext;
+       extinction = cl->cloudext,
+       K, x, a = 4, k = 5, Q = 50, r = 1.16,
+       gamma = 14, rfac = 10E-2, sigma = 5.31E-31,
+       refWave = 350, wvfrac, tau = 10E10;
 
   /* If there are no clouds, set array to zero:                             */
   if(!extinction){
@@ -669,6 +673,31 @@ computeextcloud(double *e,
         if(pressure[i] >= cloudbot)
           break;
         e[i] = extinction * density[i];
+      }
+      break;
+    case 3: // Fisher & Heng (2018)
+      for(; i>=0; i--){
+        if(pressure[i] >= cloudbot)
+          break;
+        x = (2 * PI * r) / (pow(wn, -1) * 10000);
+        K = (k) / (Q * pow(x, -a) + pow(x, 0.2));
+        e[i] = extinction * K * density[i];
+      }
+      break;
+    case 4: // Pinhas et al (2019)
+       for(; i>=0; i--){
+        if(pressure[i] >= cloudbot)
+          break; 
+        wvfrac = (pow(wn, -1) * 10000) / refWave;
+        k = density[i] * rfac * (sigma * 10000) * pow(wvfrac, -1*gamma);
+        e[i] = k * extinction;
+      }
+      break;
+    case 5: // Barstow et al (2017)
+       for(; i>=0; i--){
+        if(pressure[i] >= cloudbot)
+          break; 
+        e[i] = tau * pow(pow(wn,-1), 4) * extinction;
       }
       break;
   }
