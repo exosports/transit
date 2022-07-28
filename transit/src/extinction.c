@@ -639,7 +639,16 @@ computeextcloud(double *e,
   int flag = cl->flag;
   double cloudtop = pow(10, cl->cloudtop),
          cloudbot = pow(10, cl->cloudbot), 
-       extinction = cl->cloudext;
+       extinction = cl->cloudext, 
+            gamma = cl->gamma,
+                Q = cl->Q,
+                r = cl->r,
+              sig = cl->sig;
+  double      *nH = cl->nH;
+  double        x = 2 * PI * r * wn;
+  double    refwn = pow(cl->refwn, gamma);
+  double      kBP = extinction * pow(wn, gamma); // Scaling factor for B17 and P19
+  double      kFH = extinction / (Q * pow(x, -1 * gamma) + pow(x, 0.2)); // Scaling factor for F18
 
   /* If there are no clouds, set array to zero:                             */
   if(!extinction){
@@ -655,22 +664,27 @@ computeextcloud(double *e,
   }
 
   /* Set cloud extinction between cloud top and bottom:                     */
-  switch(flag)
-  {
-    case 1: // Constant extinction
-      for(; i>=0; i--){
-        if(pressure[i] >= cloudbot)
-          break;
+  for(; i>=0; i--){
+    if(pressure[i] >= cloudbot)
+      break;
+    switch(flag)
+    {
+      case 1: // Constant extinction
         e[i] = extinction;
-      }
-      break;
-    case 2: // Constant opacity
-      for(; i>=0; i--){
-        if(pressure[i] >= cloudbot)
-          break;
+        break;
+      case 2: // Constant opacity
         e[i] = extinction * density[i];
-      }
-      break;
+        break;
+      case 3: // Barstow et al (2017)
+        e[i] = kBP * density[i];
+        break;
+      case 4: // Fisher & Heng (2018)
+        e[i] = kFH * density[i];
+        break;
+      case 5: // Pinhas et al (2019)
+        e[i] = nH[i] * kBP * sig / refwn * density[i];
+        break;
+    }
   }
 
   for(; i>=0; i--){

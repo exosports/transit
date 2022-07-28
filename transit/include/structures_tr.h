@@ -256,10 +256,18 @@ struct outputray{
 };
 
 struct extcloud{
-  double cloudext;  /* Maximum opacity in [cm-1] or [cm2/g]                 */
+  double cloudext;  /* Maximum opacity in (cm-1, 'ext' type), 
+                       (cm2/g, 'opa' type), or 
+                       scaling factor ('B17', 'F18', and 'P19' types)       */
   double cloudtop;  /* Pressure at which clouds start                       */
   double cloudbot;  /* Pressure at which clouds end                         */
-  int flag;         /* Sets the cloud model                                 */
+  int flag;         /* Sets the cloud model type                            */
+  double gamma;     /* Scattering slope index (B17, F18, and P19 only)      */
+  double Q;         /* Ext efficiency peak wavenumber (F18 only)            */
+  double r;         /* Effective particle radius (F18 only)                 */
+  double* nH;       /* H2 number density (P19 only) - set in tau.c          */
+  double sig;       /* Molecular scattering opacity at `refwn` (P19 only)   */
+  double refwn;     /* Reference wavenumber for `sig` (P19 only)            */
 };
 
 struct extscat{

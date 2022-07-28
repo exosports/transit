@@ -627,10 +627,18 @@ struct outputray{
 Cloud extinction information.
 \begin{plain}
 struct extcloud{
-  double cloudext;  /* Maximum opacity in [cm-1]                            */
+  double cloudext;  /* Maximum opacity in (cm-1, 'ext' type), 
+                       (cm2/g, 'opa' type), or 
+                       scaling factor ('B17', 'F18', and 'P19' types)       */
   double cloudtop;  /* Pressure at which clouds start                       */
   double cloudbot;  /* Pressure at which clouds end                         */
-  int flag;         /* Sets the cloud model                                 */
+  int flag;         /* Sets the cloud model type                            */
+  double gamma;     /* Scattering slope index (B17, F18, and P19 only)      */
+  double Q;         /* Ext efficiency peak wavelength (F18 only)            */
+  double r;         /* Effective particle radius (F18 only)                 */
+  double* nH;       /* H2 number density (P19 only) - set in tau.c          */
+  double sig;       /* Molecular scattering opacity at `refwn` (P19 only)   */
+  double refwn;     /* Reference wavenumber for `sig` (P19 only)            */
 };
 \end{plain}
 
@@ -1267,7 +1275,7 @@ void freemem\_detailfld(struct detailfld *f)}
 \item[-] Set \ttred{tr.ds.th.toomuch} (maximum optical depth to make calculations, above which it is assumed no light transmits) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.taulevel} (optical depth integration level) from command line arguments/config file.
 \item[-] Set \ttred{tr.ds.th.modlevel} (modulation integration level) from command line arguments/config file.
-\item[-] Set \ttred{tr.ds.th.cl.flag, tr.ds.th.cl.cloudext, tr.ds.th.cl.cloudtop, tr.ds.th.cl.cloudbot} (cloud model type, maximum cloud extinction, initial cloudtop pressure, and final cloud-bottom pressure) from command line arguments/config file.
+\item[-] Set \ttred{tr.ds.th.cl.flag, tr.ds.th.cl.cloudext, tr.ds.th.cl.cloudtop, tr.ds.th.cl.cloudbot, tr.ds.th.cl.gamma, tr.ds.th.cl.Q, tr.ds.th.cl.r, tr.ds.th.cl.sig, tr.ds.th.cl.refwn} (cloud model type, maximum cloud extinction/opacity, initial cloudtop pressure, final cloud-bottom pressure, scattering slope, peak extinction efficiency, effective particle radius, opacity at `refwn`, reference wavenumber for `sig`) from command line arguments/config file/assumed defaults if not given.
 \item[-] Set \ttred{tr.ds.th.angles} (intensity angles) from command line arguments/config file.
 \end{enumerate}
 
@@ -2634,7 +2642,7 @@ void saveidxref(FILE *out, PREC\_NREC nrad, struct idxref *ir)}
 
 \newpage
 \subsection{extinction.c:}
-This file contains routines associated with computing molecular extinction. That includes a wrapper function to calculate Voigt profiles, a function to compute molecular extinction, and a function to interpolate the molecular extinction. There are also functions which compute extinction from other sources (\ttblue{computeextscat, computeextcloud}) although they are not fully implemented. Functions \ttblue{savefile\_extinct, restfile\_extinct, restextinct} are unused. Figure \ref{fig:extinctionc} shows the function structure of extinction.c.
+This file contains routines associated with computing molecular extinction. That includes a wrapper function to calculate Voigt profiles, a function to compute molecular extinction, and a function to interpolate the molecular extinction. There are also functions which compute extinction from other sources (\ttblue{computeextscat, computeextcloud}). Functions \ttblue{savefile\_extinct, restfile\_extinct, restextinct} are unused. Figure \ref{fig:extinctionc} shows the function structure of extinction.c.
 
 \begin{figure}
 \includegraphics{fig/extinctionc}
@@ -2692,7 +2700,7 @@ void computeextscat(double *e, long n, struct extscat *sc, double *pressure, \\
 \function{
 void computeextcloud(double *e, long n, struct extcloud *cl, double *pressure, \\
                      double *temp, double tcft, double *density, double wn)}
-\tgray{Compute cloud contribution to extinction. Either no clouds (fills array with 0s), constant extinction, or constant opacity.} \\
+\tgray{Compute cloud contribution to extinction. Either no clouds (fills array with 0s), constant extinction, constant opacity, parameterization based on Barstow et al. 2017/Barstow 2020, parameterization based on Fisher \& Heng 2018, and parameterization based on Pinhas et al. 2019.} \\
 
 \subsubsection{getprofile}
 \paragraph{Variables Modified}
@@ -2847,6 +2855,7 @@ Lorentz line-broadening widths (Equations \ref{eqn:doppler} and
 \item[-] Determines which cloud model to use via a switch.
 \item[-] Constant extinction case: assigns the given extinction to each layer between the cloud top and bottom.
 \item[-] Constant opacity case: for each layer between the cloud top and bottom, calculates the extinction by multiplying with the density of that layer.
+\item[-] Parameterizations based on Barstow et al. 2017, Fisher \& Heng 2018, and Pinhas et al. 2019: calculates the wavelength-dependent extinction for each layer.
 \item[-] Set extinction to 0s for all layers below the cloud bottom.
 \end{enumerate}
 
@@ -2928,8 +2937,8 @@ variable \ttred{tr.sol} in the function \ttblue{acceptgenhints} from
 \item[-] Copy \ttred{tr.save.ext} from {\tt th.save.ext} (extinction
   output filename).
 \item[-] Call to {\tt init\_optdepth} to initialize {\tt tr.tau}.
-\item[-] Set \ttred{tr.cl.cloudext, tr.cl.cloudtop, tr.cl.cloudbottom}
-  (Cloud maximum opacity, top layer radius, layer radius of cloudext).
+\item[-] Set \ttred{tr.cl.nH} (number density of H2, for Pinhas et al. 2019 cloud model) and mean mass density
+  (for all cloud models except constant extinction).
 \item[-] Call to {\tt computemolext} or {\tt interpolmolext} to calculate
   \ttred{tr.ds.ex.e} (extinction coefficient).
 \item[-] Call to {\tt eclipsetau} or {\tt transittau} to calculate

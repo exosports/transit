@@ -775,7 +775,7 @@ execute: \newline
   extinction-coefficient ratio (w.r.t. maximum in a given layer) to
   consider in the calculation. [default: 1e-8].}
 
-\argument{{-}{-}cloud=$<$cloudtype,cloudext,cloudtop,cloudbot$>$}{Full cloud model.  Cloudtype can be 'ext' for constant extinction, or 'opa' for constant opacity.  Cloudext sets the extinction or opacity, as appropriate.  Cloudtop sets the cloudtop pressure in base-10 logarithm.  Cloudbot is like cloudtop, but for the bottom of the cloud.}
+\argument{{-}{-}cloud=$<$cloudtype,cloudext,cloudtop,cloudbot,gamma,Q,r,sig,refwn$>$}{Full cloud model.  Cloudtype can be `ext' for constant extinction, `opa' for constant opacity, `B17' for a parameterization based on Barstow et al. 2017/Barstow 2020, `F18' for a parameterization based on Fisher \& Heng 2018, or `P19' for a parameterization based on Pinhas et al. 2019.  Cloudext sets the extinction or opacity, as appropriate.  Cloudtop sets the cloudtop pressure in base-10 logarithm.  Cloudbot is like cloudtop, but for the bottom of the cloud. All models require the aforementioned parameters; the following parameters are only required for certain models.  Gamma sets the scattering slope index (only for B17, F18, and P19).  Q controls the wavenumber where the extinction efficiency peaks (F18 only). r sets the effective particle radius (F18 only).  sig sets the molecular scattering opacity at `refwn` (P19 only).  refwn sets the reference wavenumber for `sig` (P19 only).  If a parameter is not required by a model, do not include a value for it.  For example, if using P19, the user will only specify cloudtype,cloudext,cloudtop,cloudbot,gamma,sig,refwn.}
 
 \argument{{-}{-}cloudtop=$<$logp$>$}{Basic cloud model.  Takes only a cloudtop pressure in base-10 logarithm.  At greater pressures, the cloud is opaque.}
 
@@ -986,10 +986,20 @@ Transit allows for a basic gray-opacity (cloud) layer.  For a simple
 cloud model, {\tttm `cloudtop'} defines a cloudtop pressure (in 
 base-10 logarithm), and all layers with pressures greater than that 
 have an opaque cloud.  For a more complex cloud, {\tttm `cloud'} defines 
-a cloud type (constant extinction, or constant opacity), an extinction/opacity 
-value, the log10 cloudtop pressure, and the log10 cloud bottom pressure.  
+a cloud type (constant extinction; constant opacity; or parameterizations 
+based on Barstow et al. 2017/Barstow 2020, Fisher \& Heng 2018, or Pinhas et 
+al. 2019; see the {\tttm cloud} argument in Section \ref{sec:transitCLA} for 
+details), an extinction/opacity value, the log10 cloudtop pressure, 
+and the log10 cloud bottom pressure.  
 Between the cloudtop and cloud bottom, the extinction/opacity is constant.  
 Above or below the cloud, extinction is zero.
+For the more complex models of B17, F18, and P19, additional parameters are 
+required:
+\begin{enumerate}
+\item[-] B17: scattering slope index
+\item[-] F18: scattering slope index, parameter related to extinction efficiency peak wavenumber, effective particle radius
+\item[-] P19: scattering slope index, molecular scattering opacity at the reference wavenumber, the reference wavenumber
+\end{enumerate}
 
 \paragraph{Scattering}
 

@@ -638,6 +638,12 @@ processparameters(int argc,            /* Number of command-line args  */
         hints->cl.flag = 1; // Constant extinction
       else if(strstr(optarg, "opa") != NULL)
         hints->cl.flag = 2; // Constant opacity
+      else if(strstr(optarg, "B17") != NULL)
+        hints->cl.flag = 3;
+      else if(strstr(optarg, "F18") != NULL)
+        hints->cl.flag = 4;
+      else if(strstr(optarg, "P19") != NULL)
+        hints->cl.flag = 5;
       optarg += 3;
       if(*optarg != ','  ||  optarg[1] == '\0') {
         tr_output(TOUT_ERROR, "Syntax error in option '--cloud', "
@@ -660,13 +666,46 @@ processparameters(int argc,            /* Number of command-line args  */
         exit(EXIT_FAILURE);
       }
 
-      hints->cl.cloudbot = strtod(optarg+1, NULL);
+      if(hints->cl.flag <= 2){
+        hints->cl.cloudbot = strtod(optarg+1, NULL);
+        hints->cl.gamma = 1;
+        hints->cl.Q     = 1;
+        hints->cl.r     = 1;
+        hints->cl.sig   = 1;
+        hints->cl.refwn = 1;
+      }
+      else
+        hints->cl.cloudbot = strtod(optarg+1, &optarg);
       /* Safety check that top > bottom:                                    */
       if(hints->cl.cloudtop > hints->cl.cloudbot) {
         tr_output(TOUT_ERROR, "Syntax error in '--cloud', the cloud top "
                  "(%g) needs to be less than the cloud bottom (%g) .\n", 
                  hints->cl.cloudtop, hints->cl.cloudbot);
         exit(EXIT_FAILURE);
+      }
+
+      // Get additional parameters for B17, F18, and P19 models
+      if(hints->cl.flag == 3){
+        hints->cl.gamma = strtod(optarg+1, NULL);
+        hints->cl.Q     = 1;
+        hints->cl.r     = 1;
+        hints->cl.sig   = 1;
+        hints->cl.refwn = 1;
+      }
+      else if(hints->cl.flag >= 3){
+        hints->cl.gamma = strtod(optarg+1, &optarg);
+        if(hints->cl.flag == 4){
+          hints->cl.Q = strtod(optarg+1, &optarg);
+          hints->cl.r = strtod(optarg+1, NULL);
+          hints->cl.sig   = 1;
+          hints->cl.refwn = 1;
+        }
+        else if(hints->cl.flag == 5){
+          hints->cl.sig   = strtod(optarg+1, &optarg);
+          hints->cl.refwn = strtod(optarg+1, NULL);
+          hints->cl.Q     = 1;
+          hints->cl.r     = 1;
+        }
       }
       break;
 
@@ -856,6 +895,11 @@ acceptgenhints(struct transit *tr){
   cl.cloudbot = th->cl.cloudbot;
   cl.cloudext = th->cl.cloudext;  /* Maximum cloud extinction               */
   cl.flag     = th->cl.flag;
+  cl.gamma    = th->cl.gamma;
+  cl.Q        = th->cl.Q;
+  cl.r        = th->cl.r;
+  cl.sig      = th->cl.sig;
+  cl.refwn    = th->cl.refwn;
   tr->ds.cl = &cl;
   /* Scattering extinction struct         */
   static struct extscat sc;

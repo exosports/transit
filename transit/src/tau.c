@@ -126,7 +126,8 @@ tau(struct transit *tr){
 
   double e_s[rnn],                  /* Extinction from scattering           */
          e_c[rnn],                  /* Extinction from clouds               */
-         mean_dens[rnn];            /* Mean density of each layer           */
+         mean_dens[rnn],            /* Mean density of each layer           */
+         nH[rnn];                   /* Number density of H2                 */
   double mean_mm;                   /* Mean molar mass                      */
   PREC_CS **e_cs = tr->ds.cross->e; /* Cross-section extinction             */
 
@@ -189,6 +190,8 @@ tau(struct transit *tr){
   }
 
   tr_output(TOUT_INFO, "Calculating optical depth at various radii:\n");
+  // Set nH to zeros
+  memset(nH, 0, rnn*sizeof(double));
   /* Mean mass density is needed for certain cloud models:                  */
   for(i=0; i<rnn; i++){
     // Calculate for i-th layer
@@ -198,12 +201,17 @@ tau(struct transit *tr){
       // molec.d is density [g/cm3], mol->mass [g/mol], molec.q [unitless], 
       // so this gives the mean molar density [mol/cm3]
       mean_dens[i] += tr->ds.at->molec[j].d[i] / tr->ds.mol->mass[j] * tr->ds.at->molec[j].q[i];
+      // Store H2 number density - remains 0 if H2 not in atmosphere
+      if(!strcmp("H2", tr->ds.mol->name[j]))
+        nH[i] = tr->ds.at->molec[j].d[i] / tr->ds.mol->mass[j] * tr->ds.at->molec[j].q[i] * NAVOGADRO;
       // mean molar mass [g/mol]
       mean_mm += tr->ds.mol->mass[j] * tr->ds.at->molec[j].q[i];
     }
     // mean molar density [mol/cm3] * mean molar mass [g/mol] = mean mass density [g/cm3]
     mean_dens[i] *= mean_mm;
   }
+  // Add nH into cloud object
+  cl->nH = nH;
   /* For each wavenumber:                                                   */
   for(wi=0; wi<wnn; wi++){
     tau_wn = tau->t[wi];
