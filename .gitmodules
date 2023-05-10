@@ -1,0 +1,3 @@
+[submodule "pylineread/src/pytips"]
+	path = pylineread/src/pytips
+	url = https://github.com/pcubillos/pytips
