@@ -9,6 +9,7 @@ long itr=0;
 struct timeval tv;
 double t0=0.0;
 int    init_run=0;
+long fw_status=0;
 
 void transit_init(int argc, char **argv);
 int  get_no_samples(void);
