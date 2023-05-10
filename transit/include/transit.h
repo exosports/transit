@@ -87,7 +87,7 @@ stateeqnford(_Bool mass,  /* Abundance by mass (1) or by number (0)         */
     vtransiterror_fcn(flag DBGERR, __FILE__, __LINE__, __VA_ARGS__)
 
 
-long fw_status;
+extern long fw_status;
 #define fw(fcn, failurecondition, ...) do{               \
     if((fw_status=fcn(__VA_ARGS__)) failurecondition) {  \
       tr_output(TOUT_ERROR,                              \
