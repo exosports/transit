@@ -16,6 +16,12 @@ int  get_no_samples(void);
 void get_waveno_arr(double *waveno_arr, int waveno);
 void set_radius(double refradius);
 void set_cloudtop(double cloudtop);
+void set_cloudopacity(double cloudtop, double cloudext);
+void set_cloud_barstow(double cloudtop, double cloudext, double gamma);
+void set_cloud_fisher(double cloudtop, double cloudbot, double cloudext,
+	              double gamma, double r, double Q);
+void set_cloud_pinhas(double cloudtop, double cloudext, double gamma,
+	              double sig, double refwn);
 void set_scattering(int flag, double scattering);
 void run_transit(double *re_input, int transint, double *transit_out,
                  int transit_out_size);
@@ -101,11 +107,57 @@ void set_radius(double refradius){
 
 
 void set_cloudtop(double cloudtop){
+  /* This function sets the properties for an opaque gray cloud             */
   /* TODO: update this function (and BART) to allow for other cloud models  */
   transit.ds.cl->cloudtop = cloudtop;
   transit.ds.cl->cloudbot = cloudtop + 10;
   transit.ds.cl->cloudext = 100;
   transit.ds.cl->flag     = 1;
+}
+
+
+void set_cloudopacity(double cloudtop, double cloudext){
+  /* This function sets properties for a gray cloud with constant opacity   */
+  transit.ds.cl->cloudtop = cloudtop;
+  transit.ds.cl->cloudbot = cloudtop + 10;
+  transit.ds.cl->cloudext = cloudext;
+  transit.ds.cl->flag     = 2;
+}
+
+
+void set_cloud_barstow(double cloudtop, double cloudext, double gamma){
+  /* Set parameters for Barstow et al 2017 cloud model                      */
+  transit.ds.cl->cloudtop = cloudtop;
+  transit.ds.cl->cloudbot = cloudtop + 10;
+  transit.ds.cl->cloudext = cloudext;
+  transit.ds.cl->gamma    = gamma;
+  transit.ds.cl->flag     = 3;
+}
+
+
+void set_cloud_fisher(double cloudtop, double cloudbot, double cloudext,
+	              double gamma, double r, double Q){
+  /* Set parameters for Fisher & Heng 2018 cloud model                      */
+  transit.ds.cl->cloudtop = cloudtop;
+  transit.ds.cl->cloudbot = cloudbot;
+  transit.ds.cl->cloudext = cloudext;
+  transit.ds.cl->gamma    = gamma;
+  transit.ds.cl->r        = r;
+  transit.ds.cl->Q        = Q;
+  transit.ds.cl->flag     = 4;
+}
+
+
+void set_cloud_pinhas(double cloudtop, double cloudext, double gamma,
+	              double sig, double refwn){
+  /* Set parameters for Pinhas et al 2019 cloud model                       */
+  transit.ds.cl->cloudtop = cloudtop;
+  transit.ds.cl->cloudbot = cloudtop + 10;
+  transit.ds.cl->cloudext = cloudext;
+  transit.ds.cl->gamma    = gamma;
+  transit.ds.cl->sig      = sig;
+  transit.ds.cl->refwn    = refwn;
+  transit.ds.cl->flag     = 5;
 }
 
 
