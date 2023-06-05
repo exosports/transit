@@ -17,7 +17,7 @@ extern void set_cloudtop(double cloudtop);
 extern void set_cloudopacity(double cloudtop, double cloudext);
 extern void set_cloud_barstow(double cloudtop, double cloudext, double gamma);
 extern void set_cloud_fisher(double cloudtop, double cloudbot, double cloudext,
-                      double gamma, double r, double Q);
+                      double gamma, double Q, double r);
 extern void set_cloud_pinhas(double cloudtop, double cloudext, double gamma,
                       double sig, double refwn);
 extern void set_scattering(int flag, double scattering);
@@ -108,7 +108,7 @@ extern void set_cloudtop(double cloudtop);
 extern void set_cloudopacity(double cloudtop, double cloudext);
 extern void set_cloud_barstow(double cloudtop, double cloudext, double gamma);
 extern void set_cloud_fisher(double cloudtop, double cloudbot, double cloudext,
-                      double gamma, double r, double Q);
+                      double gamma, double Q, double r);
 extern void set_cloud_pinhas(double cloudtop, double cloudext, double gamma,
                       double sig, double refwn);
 extern void set_scattering(int flag, double scattering);
